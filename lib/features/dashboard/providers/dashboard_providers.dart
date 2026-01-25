@@ -138,6 +138,29 @@ final recentTransactionsProvider =
       });
     });
 
+/// Provider for all transactions (no limit)
+final allTransactionsProvider = StreamProvider<List<TransactionWithCategory>>((
+  ref,
+) {
+  final db = ref.watch(databaseProvider);
+
+  final query = db.select(db.transactions).join([
+    leftOuterJoin(
+      db.categories,
+      db.categories.id.equalsExp(db.transactions.categoryId),
+    ),
+  ])..orderBy([OrderingTerm.desc(db.transactions.timestamp)]);
+
+  return query.watch().map((rows) {
+    return rows.map((row) {
+      return TransactionWithCategory(
+        transaction: row.readTable(db.transactions),
+        category: row.readTableOrNull(db.categories),
+      );
+    }).toList();
+  });
+});
+
 /// Transaction with its category
 class TransactionWithCategory {
   final Transaction transaction;

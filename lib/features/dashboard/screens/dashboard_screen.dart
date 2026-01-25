@@ -8,6 +8,7 @@ import '../widgets/balance_card.dart';
 import '../widgets/forecast_card.dart';
 import '../widgets/category_pie_chart.dart';
 import '../widgets/recent_transactions.dart';
+import '../../transactions/screens/all_transactions_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -66,7 +67,11 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                   TextButton(
                     onPressed: () {
-                      // TODO: Navigate to all transactions
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const AllTransactionsScreen(),
+                        ),
+                      );
                     },
                     child: const Text('See All'),
                   ),
