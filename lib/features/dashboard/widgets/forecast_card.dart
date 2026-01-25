@@ -19,7 +19,7 @@ class ForecastCard extends ConsumerWidget {
 
     return statsAsync.when(
       loading: () => const SizedBox(height: 100),
-      error: (_, __) => const SizedBox(),
+      error: (error, stack) => const SizedBox(),
       data: (stats) {
         final statusColor = _getStatusColor(stats.forecastStatus);
         final statusIcon = _getStatusIcon(stats.forecastStatus);

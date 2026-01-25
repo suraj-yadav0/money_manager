@@ -129,6 +129,10 @@ class RecentTransactions extends ConsumerWidget {
       'laptop': Icons.laptop,
       'trending_up': Icons.trending_up,
       'attach_money': Icons.attach_money,
+      'card_giftcard': Icons.card_giftcard,
+      'savings': Icons.savings,
+      'show_chart': Icons.show_chart,
+      'family_restroom': Icons.family_restroom,
     };
     return iconMap[iconName] ?? Icons.receipt;
   }

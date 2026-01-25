@@ -69,7 +69,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration {
@@ -80,7 +80,55 @@ class AppDatabase extends _$AppDatabase {
         await _seedDefaultRules();
         await _createDefaultUserSettings();
       },
+      onUpgrade: (Migrator m, int from, int to) async {
+        if (from < 2) {
+          await _seedNewCategoriesV2();
+        }
+      },
     );
+  }
+
+  /// Seed new categories for version 2
+  Future<void> _seedNewCategoriesV2() async {
+    final newCategories = [
+      CategoriesCompanion.insert(
+        name: 'Gifts',
+        icon: 'card_giftcard',
+        type: const Value('expense'),
+      ),
+      CategoriesCompanion.insert(
+        name: 'Savings',
+        icon: 'savings',
+        type: const Value('expense'),
+      ),
+      CategoriesCompanion.insert(
+        name: 'Investments',
+        icon:
+            'show_chart', // distinct from 'trending_up' used by Investment income
+        type: const Value('expense'),
+      ),
+      CategoriesCompanion.insert(
+        name: 'Family',
+        icon: 'family_restroom',
+        type: const Value('expense'),
+      ),
+    ];
+
+    await batch((batch) {
+      // Use insertMode: InsertMode.replace or check existence?
+      // Since names are unique, we just try to insert.
+      // However, drift batch insert doesn't easily support ignore on conflict per row without raw sql in some versions.
+      // But standard insert throws.
+      // Let's safe-guard by checking or just inserting.
+      // For simplicity in this environment, I'll rely on the fact that these shouldn't exist.
+      // But to be robust against re-runs or partial states, I should be careful.
+      // Actually, standard batch insert is fine for migration of a known previous state.
+      batch.insertAll(
+        categories,
+        newCategories,
+        mode: InsertMode.insertOrIgnore,
+      );
+    });
   }
 
   /// Seed default expense categories
@@ -123,13 +171,33 @@ class AppDatabase extends _$AppDatabase {
         type: const Value('expense'),
       ),
       CategoriesCompanion.insert(
-        name: 'Personal Care',
+        name: 'Self Care',
         icon: 'spa',
         type: const Value('expense'),
       ),
       CategoriesCompanion.insert(
         name: 'Groceries',
         icon: 'local_grocery_store',
+        type: const Value('expense'),
+      ),
+      CategoriesCompanion.insert(
+        name: 'Gifts',
+        icon: 'card_giftcard',
+        type: const Value('expense'),
+      ),
+      CategoriesCompanion.insert(
+        name: 'Savings',
+        icon: 'savings',
+        type: const Value('expense'),
+      ),
+      CategoriesCompanion.insert(
+        name: 'Investments',
+        icon: 'show_chart',
+        type: const Value('expense'),
+      ),
+      CategoriesCompanion.insert(
+        name: 'Family',
+        icon: 'family_restroom',
         type: const Value('expense'),
       ),
       CategoriesCompanion.insert(

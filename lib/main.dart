@@ -29,7 +29,7 @@ class MoneyManagerApp extends ConsumerWidget {
         data: (onboarded) =>
             onboarded ? const AppShell() : const OnboardingScreen(),
         loading: () => const _SplashScreen(),
-        error: (_, __) => const OnboardingScreen(),
+        error: (error, stack) => const OnboardingScreen(),
       ),
     );
   }

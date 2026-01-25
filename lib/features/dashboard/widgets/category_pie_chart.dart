@@ -18,7 +18,7 @@ class CategoryPieChart extends ConsumerWidget {
 
     return statsAsync.when(
       loading: () => const SizedBox(height: 200),
-      error: (_, __) => const SizedBox(),
+      error: (error, stack) => const SizedBox(),
       data: (stats) {
         if (stats.categoryBreakdown.isEmpty) {
           return Card(
