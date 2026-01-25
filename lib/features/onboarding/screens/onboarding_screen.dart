@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -51,9 +52,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -257,7 +258,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget _buildReadyStep() {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final income = double.tryParse(_incomeController.text.replaceAll(',', '')) ?? 0;
+    final income =
+        double.tryParse(_incomeController.text.replaceAll(',', '')) ?? 0;
 
     return Column(
       key: const ValueKey('ready'),
@@ -279,10 +281,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         const SizedBox(height: 32),
         Text(
           "You're all set!",
-          style: GoogleFonts.outfit(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-          ),
+          style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         Card(
@@ -320,7 +319,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       ),
                     ),
                     Text(
-                      Formatters.currency(income / Formatters.daysInCurrentMonth()),
+                      Formatters.currency(
+                        income / Formatters.daysInCurrentMonth(),
+                      ),
                       style: GoogleFonts.outfit(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -358,6 +359,3 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 }
-
-// For Drift Value class
-import 'package:drift/drift.dart' show Value;
