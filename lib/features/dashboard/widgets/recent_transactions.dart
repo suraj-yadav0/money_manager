@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/providers/app_state_provider.dart';
+import '../../transactions/screens/add_transaction_screen.dart';
 import '../providers/dashboard_providers.dart';
 
 /// Recent transactions list widget
@@ -60,40 +62,57 @@ class RecentTransactions extends ConsumerWidget {
 
               return Column(
                 children: [
-                  ListTile(
-                    leading: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: isExpense
-                            ? colorScheme.errorContainer.withAlpha(100)
-                            : AppTheme.success.withAlpha(30),
-                        borderRadius: BorderRadius.circular(12),
+                  InkWell(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              AddTransactionScreen(transactionToEdit: item),
+                        ),
+                      );
+                    },
+                    onLongPress: () => _confirmDelete(context, ref, item),
+                    child: ListTile(
+                      leading: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: isExpense
+                              ? colorScheme.errorContainer.withAlpha(100)
+                              : AppTheme.success.withAlpha(30),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          _getCategoryIcon(item.category?.icon),
+                          color: isExpense
+                              ? colorScheme.error
+                              : AppTheme.success,
+                          size: 22,
+                        ),
                       ),
-                      child: Icon(
-                        _getCategoryIcon(item.category?.icon),
-                        color: isExpense ? colorScheme.error : AppTheme.success,
-                        size: 22,
+                      title: Text(
+                        item.category?.name ?? 'Unknown',
+                        style: theme.textTheme.titleSmall,
                       ),
-                    ),
-                    title: Text(
-                      item.category?.name ?? 'Unknown',
-                      style: theme.textTheme.titleSmall,
-                    ),
-                    subtitle: Text(
-                      item.transaction.note?.isNotEmpty == true
-                          ? item.transaction.note!
-                          : Formatters.relativeDate(item.transaction.timestamp),
-                      style: theme.textTheme.bodySmall,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    trailing: Text(
-                      '${isExpense ? '-' : '+'}${Formatters.currency(item.transaction.amount)}',
-                      style: GoogleFonts.outfit(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: isExpense ? colorScheme.error : AppTheme.success,
+                      subtitle: Text(
+                        item.transaction.note?.isNotEmpty == true
+                            ? item.transaction.note!
+                            : Formatters.relativeDate(
+                                item.transaction.timestamp,
+                              ),
+                        style: theme.textTheme.bodySmall,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: Text(
+                        '${isExpense ? '-' : '+'}${Formatters.currency(item.transaction.amount)}',
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: isExpense
+                              ? colorScheme.error
+                              : AppTheme.success,
+                        ),
                       ),
                     ),
                   ),
@@ -135,5 +154,49 @@ class RecentTransactions extends ConsumerWidget {
       'family_restroom': Icons.family_restroom,
     };
     return iconMap[iconName] ?? Icons.receipt;
+  }
+
+  Future<void> _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    TransactionWithCategory item,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Transaction'),
+        content: const Text(
+          'Are you sure you want to delete this transaction?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.danger),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final db = ref.read(databaseProvider);
+      await (db.delete(
+        db.transactions,
+      )..where((t) => t.id.equals(item.transaction.id))).go();
+
+      // Refresh dashboard
+      ref.invalidate(monthlyStatsProvider);
+      ref.invalidate(recentTransactionsProvider);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Transaction deleted')));
+      }
+    }
   }
 }

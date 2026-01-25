@@ -12,7 +12,9 @@ import '../../dashboard/providers/dashboard_providers.dart';
 import '../services/categorization_engine.dart';
 
 class AddTransactionScreen extends ConsumerStatefulWidget {
-  const AddTransactionScreen({super.key});
+  final TransactionWithCategory? transactionToEdit;
+
+  const AddTransactionScreen({super.key, this.transactionToEdit});
 
   @override
   ConsumerState<AddTransactionScreen> createState() =>
@@ -29,6 +31,23 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   DateTime _selectedDate = DateTime.now();
   bool _isLoading = false;
   bool _isSuggestingCategory = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.transactionToEdit != null) {
+      final tx = widget.transactionToEdit!.transaction;
+      final cat = widget.transactionToEdit!.category;
+
+      _amountController.text = Formatters.currency(
+        tx.amount,
+      ).replaceAll(',', '');
+      _noteController.text = tx.note ?? '';
+      _type = TransactionType.values.firstWhere((e) => e.name == tx.type);
+      _selectedCategory = cat;
+      _selectedDate = tx.timestamp;
+    }
+  }
 
   @override
   void dispose() {
@@ -69,19 +88,38 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       final db = ref.read(databaseProvider);
       final amount = double.parse(_amountController.text.replaceAll(',', ''));
 
-      await db
-          .into(db.transactions)
-          .insert(
-            TransactionsCompanion.insert(
-              amount: amount,
-              type: _type.name,
-              categoryId: _selectedCategory!.id,
-              timestamp: _selectedDate,
-              note: Value(
-                _noteController.text.isNotEmpty ? _noteController.text : null,
+      if (widget.transactionToEdit != null) {
+        // Update existing
+        await (db.update(db.transactions)..where(
+              (t) => t.id.equals(widget.transactionToEdit!.transaction.id),
+            ))
+            .write(
+              TransactionsCompanion(
+                amount: Value(amount),
+                type: Value(_type.name),
+                categoryId: Value(_selectedCategory!.id),
+                timestamp: Value(_selectedDate),
+                note: Value(
+                  _noteController.text.isNotEmpty ? _noteController.text : null,
+                ),
               ),
-            ),
-          );
+            );
+      } else {
+        // Insert new
+        await db
+            .into(db.transactions)
+            .insert(
+              TransactionsCompanion.insert(
+                amount: amount,
+                type: _type.name,
+                categoryId: _selectedCategory!.id,
+                timestamp: _selectedDate,
+                note: Value(
+                  _noteController.text.isNotEmpty ? _noteController.text : null,
+                ),
+              ),
+            );
+      }
 
       // Learn from this transaction if note is provided
       if (_noteController.text.isNotEmpty) {
@@ -121,7 +159,11 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_type.isExpense ? 'Add Expense' : 'Add Income'),
+        title: Text(
+          widget.transactionToEdit != null
+              ? 'Edit Transaction'
+              : (_type.isExpense ? 'Add Expense' : 'Add Income'),
+        ),
         actions: [
           TextButton(
             onPressed: _isLoading ? null : _saveTransaction,
