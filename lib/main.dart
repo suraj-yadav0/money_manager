@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'core/theme/app_theme.dart';
+import 'core/navigation/app_shell.dart';
 import 'features/onboarding/screens/onboarding_screen.dart';
-import 'features/dashboard/screens/dashboard_screen.dart';
 import 'core/providers/app_state_provider.dart';
 
 void main() {
@@ -27,7 +27,7 @@ class MoneyManagerApp extends ConsumerWidget {
       themeMode: ThemeMode.system,
       home: isOnboarded.when(
         data: (onboarded) =>
-            onboarded ? const DashboardScreen() : const OnboardingScreen(),
+            onboarded ? const AppShell() : const OnboardingScreen(),
         loading: () => const _SplashScreen(),
         error: (_, __) => const OnboardingScreen(),
       ),

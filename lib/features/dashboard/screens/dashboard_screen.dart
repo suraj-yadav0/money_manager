@@ -8,7 +8,6 @@ import '../widgets/balance_card.dart';
 import '../widgets/forecast_card.dart';
 import '../widgets/category_pie_chart.dart';
 import '../widgets/recent_transactions.dart';
-import '../../transactions/screens/add_transaction_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -75,19 +74,10 @@ class DashboardScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               const RecentTransactions(),
-              const SizedBox(height: 80), // Space for FAB
+              const SizedBox(height: 100), // Space for bottom nav + FAB
             ],
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
-          );
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Add Expense'),
       ),
     );
   }

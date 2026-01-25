@@ -4,10 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/database/database.dart';
+import '../../../core/navigation/app_shell.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/utils/constants.dart';
 import '../../../core/utils/formatters.dart';
-import '../../dashboard/screens/dashboard_screen.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -29,13 +29,29 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Future<void> _completeOnboarding() async {
-    if (!_formKey.currentState!.validate()) return;
+    // Income was already validated when moving from step 1 to step 2
+    if (_incomeController.text.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter your income')));
+      return;
+    }
 
     setState(() => _isLoading = true);
 
     try {
       final db = ref.read(databaseProvider);
-      final income = double.parse(_incomeController.text.replaceAll(',', ''));
+      final income =
+          double.tryParse(_incomeController.text.replaceAll(',', '')) ?? 0;
+
+      if (income <= 0) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please enter a valid income')),
+          );
+        }
+        return;
+      }
 
       // Update user settings
       await (db.update(db.userSettings)..where((t) => t.id.equals(1))).write(
@@ -46,9 +62,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       );
 
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const DashboardScreen()),
-        );
+        Navigator.of(
+          context,
+        ).pushReplacement(MaterialPageRoute(builder: (_) => const AppShell()));
       }
     } catch (e) {
       if (mounted) {
