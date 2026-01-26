@@ -44,6 +44,7 @@ class GoalsScreen extends ConsumerWidget {
         icon: const Icon(Icons.add),
         label: const Text('New Goal'),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
     );
   }
 
