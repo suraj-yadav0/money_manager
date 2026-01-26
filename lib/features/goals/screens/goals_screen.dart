@@ -545,83 +545,143 @@ class _GoalDetailsSheet extends ConsumerWidget {
     GoalContribution contribution,
     Goal goal,
   ) async {
-    final amountController = TextEditingController(
-      text: contribution.amount.toStringAsFixed(0),
-    );
-    final noteController = TextEditingController(text: contribution.note ?? '');
-    final colorScheme = Theme.of(context).colorScheme;
-
-    await showDialog(
+    final result = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Edit Contribution'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: amountController,
-              decoration: InputDecoration(
-                labelText: 'Amount',
-                prefixText: '₹ ',
-                filled: true,
-                fillColor: colorScheme.surfaceContainerHighest.withAlpha(100),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-              keyboardType: TextInputType.number,
-              autofocus: true,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: noteController,
-              decoration: InputDecoration(
-                labelText: 'Note (optional)',
-                filled: true,
-                fillColor: colorScheme.surfaceContainerHighest.withAlpha(100),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-              textCapitalization: TextCapitalization.sentences,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              final newAmount = double.tryParse(
-                amountController.text.replaceAll(',', ''),
-              );
-              if (newAmount != null && newAmount > 0) {
-                final goalService = ref.read(goalServiceProvider);
-                await goalService.updateContribution(
-                  contribution: contribution,
-                  newAmount: newAmount,
-                  newNote: noteController.text.isNotEmpty
-                      ? noteController.text
-                      : null,
-                );
-                ref.invalidate(goalContributionsProvider(goal.id));
-                ref.invalidate(activeGoalsProvider);
-                ref.invalidate(activeGoalProvider);
-                if (ctx.mounted) Navigator.pop(ctx);
-              }
-            },
-            child: const Text('Save'),
-          ),
-        ],
+      builder: (ctx) => _EditContributionDialog(
+        contribution: contribution,
+        onSave: (amount, note) async {
+          final goalService = ref.read(goalServiceProvider);
+          await goalService.updateContribution(
+            contribution: contribution,
+            newAmount: amount,
+            newNote: note,
+          );
+          return true;
+        },
       ),
     );
 
-    amountController.dispose();
-    noteController.dispose();
+    if (result == true) {
+      // Invalidate after dialog closes to avoid issues
+      ref.invalidate(goalContributionsProvider(goal.id));
+      ref.invalidate(activeGoalsProvider);
+      ref.invalidate(activeGoalProvider);
+    }
+  }
+}
+
+class _EditContributionDialog extends StatefulWidget {
+  final GoalContribution contribution;
+  final Future<bool> Function(double amount, String? note) onSave;
+
+  const _EditContributionDialog({
+    required this.contribution,
+    required this.onSave,
+  });
+
+  @override
+  State<_EditContributionDialog> createState() =>
+      _EditContributionDialogState();
+}
+
+class _EditContributionDialogState extends State<_EditContributionDialog> {
+  late TextEditingController _amountController;
+  late TextEditingController _noteController;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _amountController = TextEditingController(
+      text: widget.contribution.amount.toStringAsFixed(0),
+    );
+    _noteController = TextEditingController(
+      text: widget.contribution.note ?? '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final amount = double.tryParse(_amountController.text.replaceAll(',', ''));
+    if (amount == null || amount <= 0) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final success = await widget.onSave(
+        amount,
+        _noteController.text.isNotEmpty ? _noteController.text : null,
+      );
+      if (success && mounted) {
+        Navigator.of(context).pop(true);
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return AlertDialog(
+      title: const Text('Edit Contribution'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _amountController,
+            decoration: InputDecoration(
+              labelText: 'Amount',
+              prefixText: '₹ ',
+              filled: true,
+              fillColor: colorScheme.surfaceContainerHighest.withAlpha(100),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            keyboardType: TextInputType.number,
+            autofocus: true,
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _noteController,
+            decoration: InputDecoration(
+              labelText: 'Note (optional)',
+              filled: true,
+              fillColor: colorScheme.surfaceContainerHighest.withAlpha(100),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            textCapitalization: TextCapitalization.sentences,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _isLoading ? null : _save,
+          child: _isLoading
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Save'),
+        ),
+      ],
+    );
   }
 }
 
