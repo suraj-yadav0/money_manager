@@ -64,6 +64,21 @@ class Formatters {
     return _timeFormat.format(date);
   }
 
+  /// Format date and time: 25 Jan 2026, 5:30 PM
+  static String dateTime(DateTime date) {
+    return '${_shortDateFormat.format(date)}, ${_timeFormat.format(date)}';
+  }
+
+  /// Format compact number: 1.5K, 2.3L
+  static String compactNumber(double amount) {
+    if (amount >= 100000) {
+      return '${(amount / 100000).toStringAsFixed(1)}L';
+    } else if (amount >= 1000) {
+      return '${(amount / 1000).toStringAsFixed(1)}K';
+    }
+    return amount.toStringAsFixed(0);
+  }
+
   /// Format month: January 2026
   static String month(DateTime date) {
     return _monthFormat.format(date);

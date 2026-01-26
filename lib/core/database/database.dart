@@ -42,7 +42,7 @@ class UserSettings extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
 
-/// Goal table - savings goals (single goal for MVP)
+/// Goal table - savings goals
 class Goals extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text()();
@@ -50,6 +50,16 @@ class Goals extends Table {
   DateTimeColumn get deadline => dateTime()();
   RealColumn get savedAmount => real().withDefault(const Constant(0))();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+/// Goal contributions table - tracks individual savings contributions
+class GoalContributions extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get goalId => integer().references(Goals, #id)();
+  RealColumn get amount => real()();
+  TextColumn get note => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
 
@@ -63,13 +73,20 @@ class CategorizationRules extends Table {
 }
 
 @DriftDatabase(
-  tables: [Transactions, Categories, UserSettings, Goals, CategorizationRules],
+  tables: [
+    Transactions,
+    Categories,
+    UserSettings,
+    Goals,
+    GoalContributions,
+    CategorizationRules,
+  ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration {
@@ -83,6 +100,13 @@ class AppDatabase extends _$AppDatabase {
       onUpgrade: (Migrator m, int from, int to) async {
         if (from < 2) {
           await _seedNewCategoriesV2();
+        }
+        if (from < 3) {
+          await m.createTable(goalContributions);
+          // Add isCompleted column to existing goals table
+          await customStatement(
+            'ALTER TABLE goals ADD COLUMN is_completed INTEGER NOT NULL DEFAULT 0',
+          );
         }
       },
     );

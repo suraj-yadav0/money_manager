@@ -4,6 +4,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/database/database.dart';
 import '../../../core/providers/app_state_provider.dart';
 
+/// Provider for all goals (active and completed)
+final allGoalsProvider = StreamProvider<List<Goal>>((ref) {
+  final db = ref.watch(databaseProvider);
+  return (db.select(db.goals)..orderBy([
+        (g) => OrderingTerm.desc(g.isActive),
+        (g) => OrderingTerm.desc(g.createdAt),
+      ]))
+      .watch();
+});
+
+/// Provider for all active goals
+final activeGoalsProvider = StreamProvider<List<Goal>>((ref) {
+  final db = ref.watch(databaseProvider);
+  return (db.select(db.goals)
+        ..where((g) => g.isActive.equals(true))
+        ..orderBy([(g) => OrderingTerm.desc(g.createdAt)]))
+      .watch();
+});
+
 /// Provider for the active (most recent) goal
 final activeGoalProvider = StreamProvider<Goal?>((ref) {
   final db = ref.watch(databaseProvider);
@@ -12,6 +31,14 @@ final activeGoalProvider = StreamProvider<Goal?>((ref) {
         ..orderBy([(g) => OrderingTerm.desc(g.createdAt)])
         ..limit(1))
       .watchSingleOrNull();
+});
+
+/// Provider for a specific goal by ID
+final goalByIdProvider = StreamProvider.family<Goal?, int>((ref, goalId) {
+  final db = ref.watch(databaseProvider);
+  return (db.select(
+    db.goals,
+  )..where((g) => g.id.equals(goalId))).watchSingleOrNull();
 });
 
 /// Provider for goal progress percentage
@@ -24,4 +51,117 @@ final goalProgressProvider = Provider<double>((ref) {
     },
     orElse: () => 0,
   );
+});
+
+/// Provider for contributions of a specific goal
+final goalContributionsProvider =
+    StreamProvider.family<List<GoalContribution>, int>((ref, goalId) {
+      final db = ref.watch(databaseProvider);
+      return (db.select(db.goalContributions)
+            ..where((c) => c.goalId.equals(goalId))
+            ..orderBy([(c) => OrderingTerm.desc(c.createdAt)]))
+          .watch();
+    });
+
+/// Service class for goal operations
+class GoalService {
+  final AppDatabase db;
+
+  GoalService(this.db);
+
+  /// Add a contribution to a goal
+  Future<void> addContribution({
+    required int goalId,
+    required double amount,
+    String? note,
+  }) async {
+    await db.transaction(() async {
+      // Insert the contribution record
+      await db
+          .into(db.goalContributions)
+          .insert(
+            GoalContributionsCompanion.insert(
+              goalId: goalId,
+              amount: amount,
+              note: Value(note),
+            ),
+          );
+
+      // Update the goal's savedAmount
+      final goal = await (db.select(
+        db.goals,
+      )..where((g) => g.id.equals(goalId))).getSingle();
+
+      final newSavedAmount = goal.savedAmount + amount;
+      final isCompleted = newSavedAmount >= goal.targetAmount;
+
+      await (db.update(db.goals)..where((g) => g.id.equals(goalId))).write(
+        GoalsCompanion(
+          savedAmount: Value(newSavedAmount),
+          isCompleted: Value(isCompleted),
+        ),
+      );
+    });
+  }
+
+  /// Create a new goal
+  Future<int> createGoal({
+    required String name,
+    required double targetAmount,
+    required DateTime deadline,
+  }) async {
+    return await db
+        .into(db.goals)
+        .insert(
+          GoalsCompanion.insert(
+            name: name,
+            targetAmount: targetAmount,
+            deadline: deadline,
+          ),
+        );
+  }
+
+  /// Update an existing goal
+  Future<void> updateGoal({
+    required int goalId,
+    String? name,
+    double? targetAmount,
+    DateTime? deadline,
+  }) async {
+    await (db.update(db.goals)..where((g) => g.id.equals(goalId))).write(
+      GoalsCompanion(
+        name: name != null ? Value(name) : const Value.absent(),
+        targetAmount: targetAmount != null
+            ? Value(targetAmount)
+            : const Value.absent(),
+        deadline: deadline != null ? Value(deadline) : const Value.absent(),
+      ),
+    );
+  }
+
+  /// Delete a goal and its contributions
+  Future<void> deleteGoal(int goalId) async {
+    await db.transaction(() async {
+      // Delete all contributions for this goal
+      await (db.delete(
+        db.goalContributions,
+      )..where((c) => c.goalId.equals(goalId))).go();
+
+      // Delete the goal
+      await (db.delete(db.goals)..where((g) => g.id.equals(goalId))).go();
+    });
+  }
+
+  /// Archive a completed goal
+  Future<void> archiveGoal(int goalId) async {
+    await (db.update(db.goals)..where((g) => g.id.equals(goalId))).write(
+      const GoalsCompanion(isActive: Value(false)),
+    );
+  }
+}
+
+/// Provider for goal service
+final goalServiceProvider = Provider<GoalService>((ref) {
+  final db = ref.watch(databaseProvider);
+  return GoalService(db);
 });

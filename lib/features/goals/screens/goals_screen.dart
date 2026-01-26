@@ -3,46 +3,46 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/database/database.dart';
-import '../../../core/providers/app_state_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../providers/goals_provider.dart';
+import '../widgets/add_contribution_sheet.dart';
+import '../widgets/edit_goal_sheet.dart';
+import '../widgets/goal_card.dart';
 
 class GoalsScreen extends ConsumerWidget {
   const GoalsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final goalAsync = ref.watch(activeGoalProvider);
+    final goalsAsync = ref.watch(activeGoalsProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Savings Goal',
+          'Savings Goals',
           style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
         ),
       ),
-      body: goalAsync.when(
+      body: goalsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
-        data: (goal) {
-          if (goal == null) {
+        data: (goals) {
+          if (goals.isEmpty) {
             return _NoGoalView(
               onCreateGoal: () => _showCreateGoalSheet(context, ref),
             );
           }
-          return _GoalProgressView(goal: goal);
+          return _GoalsListView(
+            goals: goals,
+            onCreateGoal: () => _showCreateGoalSheet(context, ref),
+          );
         },
       ),
-      floatingActionButton: goalAsync.maybeWhen(
-        data: (goal) => goal == null
-            ? FloatingActionButton.extended(
-                onPressed: () => _showCreateGoalSheet(context, ref),
-                icon: const Icon(Icons.add),
-                label: const Text('Set Goal'),
-              )
-            : null,
-        orElse: () => null,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showCreateGoalSheet(context, ref),
+        icon: const Icon(Icons.add),
+        label: const Text('New Goal'),
       ),
     );
   }
@@ -87,7 +87,7 @@ class _NoGoalView extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'No Active Goal',
+              'No Savings Goals',
               style: GoogleFonts.outfit(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -114,16 +114,152 @@ class _NoGoalView extends StatelessWidget {
   }
 }
 
-class _GoalProgressView extends StatelessWidget {
-  final Goal goal;
+class _GoalsListView extends ConsumerWidget {
+  final List<Goal> goals;
+  final VoidCallback onCreateGoal;
 
-  const _GoalProgressView({required this.goal});
+  const _GoalsListView({required this.goals, required this.onCreateGoal});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: goals.length,
+      itemBuilder: (context, index) {
+        final goal = goals[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: GoalCard(
+            goal: goal,
+            onTap: () => _showGoalDetails(context, ref, goal),
+            onAddContribution: () => _showAddContribution(context, ref, goal),
+            onEdit: () => _showEditGoal(context, ref, goal),
+            onDelete: () => _confirmDelete(context, ref, goal),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showGoalDetails(BuildContext context, WidgetRef ref, Goal goal) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => _GoalDetailsSheet(goal: goal),
+    );
+  }
+
+  void _showAddContribution(BuildContext context, WidgetRef ref, Goal goal) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => AddContributionSheet(goal: goal),
+    ).then((result) {
+      if (result == true && context.mounted) {
+        // Check if goal was just completed
+        final updatedGoal = ref.read(goalByIdProvider(goal.id)).value;
+        if (updatedGoal?.isCompleted == true && !goal.isCompleted) {
+          _showCelebration(context, updatedGoal!);
+        }
+      }
+    });
+  }
+
+  void _showEditGoal(BuildContext context, WidgetRef ref, Goal goal) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => EditGoalSheet(goal: goal),
+    );
+  }
+
+  Future<void> _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    Goal goal,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Goal?'),
+        content: Text(
+          'Are you sure you want to delete "${goal.name}"? '
+          'This will also delete all contribution history.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final goalService = ref.read(goalServiceProvider);
+      await goalService.deleteGoal(goal.id);
+      ref.invalidate(activeGoalsProvider);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Goal deleted')));
+      }
+    }
+  }
+
+  void _showCelebration(BuildContext context, Goal goal) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('🎉', style: TextStyle(fontSize: 64)),
+            const SizedBox(height: 16),
+            Text(
+              'Goal Completed!',
+              style: GoogleFonts.outfit(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Congratulations! You\'ve reached your goal of ${Formatters.currency(goal.targetAmount)} for "${goal.name}"!',
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Awesome!'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bottom sheet showing goal details and contribution history
+class _GoalDetailsSheet extends ConsumerWidget {
+  final Goal goal;
+
+  const _GoalDetailsSheet({required this.goal});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final progress = goal.savedAmount / goal.targetAmount;
+    final contributionsAsync = ref.watch(goalContributionsProvider(goal.id));
     final daysRemaining = goal.deadline.difference(DateTime.now()).inDays;
     final remainingAmount = goal.targetAmount - goal.savedAmount;
     final monthsRemaining = (daysRemaining / 30).ceil();
@@ -131,142 +267,185 @@ class _GoalProgressView extends StatelessWidget {
         ? remainingAmount / monthsRemaining
         : remainingAmount;
 
-    final isOnTrack =
-        progress >=
-        (1 - daysRemaining / goal.deadline.difference(goal.createdAt).inDays);
-    final statusColor = isOnTrack ? AppTheme.success : AppTheme.warning;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Goal Card
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      expand: false,
+      builder: (context, scrollController) {
+        return Column(
+          children: [
+            // Handle bar
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: colorScheme.onSurfaceVariant.withAlpha(100),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                controller: scrollController,
+                padding: const EdgeInsets.all(16),
                 children: [
+                  // Goal header
                   Row(
                     children: [
-                      Icon(Icons.flag, color: colorScheme.primary),
-                      const SizedBox(width: 8),
+                      Icon(Icons.flag, color: colorScheme.primary, size: 28),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           goal.name,
                           style: GoogleFonts.outfit(
-                            fontSize: 20,
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: statusColor.withAlpha(30),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          isOnTrack ? 'On Track' : 'Behind',
-                          style: TextStyle(
-                            color: statusColor,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                  // Progress
+                  const SizedBox(height: 24),
+
+                  // Stats cards
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        Formatters.currency(goal.savedAmount),
-                        style: GoogleFonts.outfit(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.primary,
+                      Expanded(
+                        child: _StatCard(
+                          icon: Icons.savings,
+                          label: 'Saved',
+                          value: Formatters.currency(goal.savedAmount),
+                          color: AppTheme.success,
                         ),
                       ),
-                      Text(
-                        '/ ${Formatters.currency(goal.targetAmount)}',
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _StatCard(
+                          icon: Icons.flag,
+                          label: 'Target',
+                          value: Formatters.currency(goal.targetAmount),
+                          color: colorScheme.primary,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: LinearProgressIndicator(
-                      value: progress.clamp(0.0, 1.0),
-                      backgroundColor: colorScheme.surfaceContainerHighest,
-                      valueColor: AlwaysStoppedAnimation(statusColor),
-                      minHeight: 12,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _StatCard(
+                          icon: Icons.calendar_today,
+                          label: 'Days Left',
+                          value: daysRemaining > 0
+                              ? '$daysRemaining'
+                              : 'Overdue',
+                          color: daysRemaining > 0
+                              ? colorScheme.primary
+                              : AppTheme.danger,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _StatCard(
+                          icon: Icons.trending_up,
+                          label: 'Save/Month',
+                          value: Formatters.currency(monthlySuggestion),
+                          color: AppTheme.success,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Contribution history
+                  Text(
+                    'Contribution History',
+                    style: GoogleFonts.outfit(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${(progress * 100).toStringAsFixed(1)}% complete',
-                    style: theme.textTheme.bodySmall,
+                  const SizedBox(height: 12),
+                  contributionsAsync.when(
+                    loading: () => const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20),
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                    error: (e, _) => Text('Error: $e'),
+                    data: (contributions) {
+                      if (contributions.isEmpty) {
+                        return Container(
+                          padding: const EdgeInsets.all(32),
+                          decoration: BoxDecoration(
+                            color: colorScheme.surfaceContainerHighest
+                                .withAlpha(100),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.history,
+                                size: 40,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'No contributions yet',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      return Column(
+                        children: contributions.map((c) {
+                          return ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppTheme.success.withAlpha(30),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                Icons.add,
+                                color: AppTheme.success,
+                                size: 20,
+                              ),
+                            ),
+                            title: Text(
+                              '+${Formatters.currency(c.amount)}',
+                              style: GoogleFonts.outfit(
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.success,
+                              ),
+                            ),
+                            subtitle: Text(
+                              c.note ?? Formatters.dateTime(c.createdAt),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            trailing: Text(
+                              Formatters.relativeDate(c.createdAt),
+                              style: theme.textTheme.bodySmall,
+                            ),
+                          );
+                        }).toList(),
+                      );
+                    },
                   ),
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-
-          // Stats
-          Row(
-            children: [
-              Expanded(
-                child: _StatCard(
-                  icon: Icons.calendar_today,
-                  label: 'Days Left',
-                  value: daysRemaining > 0 ? '$daysRemaining' : 'Overdue',
-                  color: daysRemaining > 0
-                      ? colorScheme.primary
-                      : AppTheme.danger,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _StatCard(
-                  icon: Icons.trending_up,
-                  label: 'Save/Month',
-                  value: Formatters.currency(monthlySuggestion),
-                  color: AppTheme.success,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Deadline
-          Card(
-            child: ListTile(
-              leading: Icon(Icons.event, color: colorScheme.primary),
-              title: const Text('Deadline'),
-              subtitle: Text(Formatters.date(goal.deadline)),
-              trailing: Text(
-                daysRemaining > 0 ? 'In $daysRemaining days' : 'Overdue',
-                style: TextStyle(
-                  color: daysRemaining > 0
-                      ? colorScheme.onSurfaceVariant
-                      : AppTheme.danger,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 }
@@ -345,20 +524,16 @@ class _CreateGoalSheetState extends ConsumerState<_CreateGoalSheet> {
     setState(() => _isLoading = true);
 
     try {
-      final db = widget.ref.read(databaseProvider);
+      final goalService = widget.ref.read(goalServiceProvider);
       final amount = double.parse(_amountController.text.replaceAll(',', ''));
 
-      await db
-          .into(db.goals)
-          .insert(
-            GoalsCompanion.insert(
-              name: _nameController.text,
-              targetAmount: amount,
-              deadline: _deadline,
-            ),
-          );
+      await goalService.createGoal(
+        name: _nameController.text,
+        targetAmount: amount,
+        deadline: _deadline,
+      );
 
-      widget.ref.invalidate(activeGoalProvider);
+      widget.ref.invalidate(activeGoalsProvider);
 
       if (mounted) {
         Navigator.of(context).pop();
@@ -376,6 +551,8 @@ class _CreateGoalSheetState extends ConsumerState<_CreateGoalSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Padding(
       padding: EdgeInsets.only(
         left: 16,
@@ -397,22 +574,34 @@ class _CreateGoalSheetState extends ConsumerState<_CreateGoalSheet> {
           const SizedBox(height: 20),
           TextField(
             controller: _nameController,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Goal Name',
               hintText: 'e.g., Emergency Fund, Vacation',
+              filled: true,
+              fillColor: colorScheme.surfaceContainerHighest.withAlpha(100),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
             ),
             textCapitalization: TextCapitalization.words,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           TextField(
             controller: _amountController,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Target Amount',
               prefixText: '₹ ',
+              filled: true,
+              fillColor: colorScheme.surfaceContainerHighest.withAlpha(100),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
             ),
             keyboardType: TextInputType.number,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           ListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text('Deadline'),
