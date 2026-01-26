@@ -406,35 +406,124 @@ class _GoalDetailsSheet extends ConsumerWidget {
 
                       return Column(
                         children: contributions.map((c) {
-                          return ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: Container(
-                              padding: const EdgeInsets.all(8),
+                          return Dismissible(
+                            key: Key('contribution_${c.id}'),
+                            background: Container(
+                              alignment: Alignment.centerLeft,
+                              padding: const EdgeInsets.only(left: 20),
                               decoration: BoxDecoration(
-                                color: AppTheme.success.withAlpha(30),
+                                color: colorScheme.primaryContainer,
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Icon(
-                                Icons.add,
-                                color: AppTheme.success,
-                                size: 20,
+                              child: Icon(
+                                Icons.edit,
+                                color: colorScheme.primary,
                               ),
                             ),
-                            title: Text(
-                              '+${Formatters.currency(c.amount)}',
-                              style: GoogleFonts.outfit(
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.success,
+                            secondaryBackground: Container(
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.only(right: 20),
+                              decoration: BoxDecoration(
+                                color: colorScheme.errorContainer,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                Icons.delete,
+                                color: colorScheme.error,
                               ),
                             ),
-                            subtitle: Text(
-                              c.note ?? Formatters.dateTime(c.createdAt),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            trailing: Text(
-                              Formatters.relativeDate(c.createdAt),
-                              style: theme.textTheme.bodySmall,
+                            confirmDismiss: (direction) async {
+                              if (direction == DismissDirection.endToStart) {
+                                // Delete - show confirmation
+                                return await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: const Text(
+                                          'Delete Contribution?',
+                                        ),
+                                        content: Text(
+                                          'Delete ${Formatters.currency(c.amount)} contribution?',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(ctx, false),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          FilledButton(
+                                            onPressed: () =>
+                                                Navigator.pop(ctx, true),
+                                            style: FilledButton.styleFrom(
+                                              backgroundColor:
+                                                  colorScheme.error,
+                                            ),
+                                            child: const Text('Delete'),
+                                          ),
+                                        ],
+                                      ),
+                                    ) ??
+                                    false;
+                              } else {
+                                // Edit - show edit dialog
+                                await _showEditContributionDialog(
+                                  context,
+                                  ref,
+                                  c,
+                                  goal,
+                                );
+                                return false; // Don't dismiss
+                              }
+                            },
+                            onDismissed: (direction) async {
+                              if (direction == DismissDirection.endToStart) {
+                                final goalService = ref.read(
+                                  goalServiceProvider,
+                                );
+                                await goalService.deleteContribution(c);
+                                ref.invalidate(
+                                  goalContributionsProvider(goal.id),
+                                );
+                                ref.invalidate(activeGoalsProvider);
+                                ref.invalidate(activeGoalProvider);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Contribution deleted'),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            child: ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.success.withAlpha(30),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.add,
+                                  color: AppTheme.success,
+                                  size: 20,
+                                ),
+                              ),
+                              title: Text(
+                                '+${Formatters.currency(c.amount)}',
+                                style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.success,
+                                ),
+                              ),
+                              subtitle: Text(
+                                c.note ?? Formatters.dateTime(c.createdAt),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              trailing: Text(
+                                Formatters.relativeDate(c.createdAt),
+                                style: theme.textTheme.bodySmall,
+                              ),
                             ),
                           );
                         }).toList(),
@@ -448,6 +537,91 @@ class _GoalDetailsSheet extends ConsumerWidget {
         );
       },
     );
+  }
+
+  Future<void> _showEditContributionDialog(
+    BuildContext context,
+    WidgetRef ref,
+    GoalContribution contribution,
+    Goal goal,
+  ) async {
+    final amountController = TextEditingController(
+      text: contribution.amount.toStringAsFixed(0),
+    );
+    final noteController = TextEditingController(text: contribution.note ?? '');
+    final colorScheme = Theme.of(context).colorScheme;
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Edit Contribution'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: amountController,
+              decoration: InputDecoration(
+                labelText: 'Amount',
+                prefixText: '₹ ',
+                filled: true,
+                fillColor: colorScheme.surfaceContainerHighest.withAlpha(100),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              keyboardType: TextInputType.number,
+              autofocus: true,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: noteController,
+              decoration: InputDecoration(
+                labelText: 'Note (optional)',
+                filled: true,
+                fillColor: colorScheme.surfaceContainerHighest.withAlpha(100),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              textCapitalization: TextCapitalization.sentences,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              final newAmount = double.tryParse(
+                amountController.text.replaceAll(',', ''),
+              );
+              if (newAmount != null && newAmount > 0) {
+                final goalService = ref.read(goalServiceProvider);
+                await goalService.updateContribution(
+                  contribution: contribution,
+                  newAmount: newAmount,
+                  newNote: noteController.text.isNotEmpty
+                      ? noteController.text
+                      : null,
+                );
+                ref.invalidate(goalContributionsProvider(goal.id));
+                ref.invalidate(activeGoalsProvider);
+                ref.invalidate(activeGoalProvider);
+                if (ctx.mounted) Navigator.pop(ctx);
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    amountController.dispose();
+    noteController.dispose();
   }
 }
 

@@ -77,10 +77,11 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
   Future<void> _saveTransaction() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedCategory == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please select a category')));
+    // Category is optional if a goal is selected (goal acts as the category)
+    if (_selectedCategory == null && _selectedGoal == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a category or goal')),
+      );
       return;
     }
 
@@ -89,6 +90,28 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     try {
       final db = ref.read(databaseProvider);
       final amount = double.parse(_amountController.text.replaceAll(',', ''));
+
+      // If goal is selected but no category, use 'Savings' category
+      int categoryId;
+      if (_selectedCategory != null) {
+        categoryId = _selectedCategory!.id;
+      } else {
+        // Find the Savings category
+        final savingsCategory = await (db.select(
+          db.categories,
+        )..where((c) => c.name.equals('Savings'))).getSingleOrNull();
+        if (savingsCategory != null) {
+          categoryId = savingsCategory.id;
+        } else {
+          // Fallback: use first expense category
+          final firstCategory =
+              await (db.select(db.categories)
+                    ..where((c) => c.type.equals('expense'))
+                    ..limit(1))
+                  .getSingle();
+          categoryId = firstCategory.id;
+        }
+      }
 
       if (widget.transactionToEdit != null) {
         // Update existing
@@ -99,7 +122,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               TransactionsCompanion(
                 amount: Value(amount),
                 type: Value(_type.name),
-                categoryId: Value(_selectedCategory!.id),
+                categoryId: Value(categoryId),
                 goalId: Value(_selectedGoal?.id),
                 timestamp: Value(_selectedDate),
                 note: Value(
@@ -115,7 +138,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               TransactionsCompanion.insert(
                 amount: amount,
                 type: _type.name,
-                categoryId: _selectedCategory!.id,
+                categoryId: categoryId,
                 goalId: Value(_selectedGoal?.id),
                 timestamp: _selectedDate,
                 note: Value(

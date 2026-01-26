@@ -158,6 +158,78 @@ class GoalService {
       const GoalsCompanion(isActive: Value(false)),
     );
   }
+
+  /// Delete a contribution and update goal's savedAmount
+  Future<void> deleteContribution(GoalContribution contribution) async {
+    await db.transaction(() async {
+      // Get the goal
+      final goal = await (db.select(
+        db.goals,
+      )..where((g) => g.id.equals(contribution.goalId))).getSingle();
+
+      // Update the goal's savedAmount
+      final newSavedAmount = (goal.savedAmount - contribution.amount).clamp(
+        0.0,
+        double.infinity,
+      );
+      final isCompleted = newSavedAmount >= goal.targetAmount;
+
+      await (db.update(
+        db.goals,
+      )..where((g) => g.id.equals(contribution.goalId))).write(
+        GoalsCompanion(
+          savedAmount: Value(newSavedAmount),
+          isCompleted: Value(isCompleted),
+        ),
+      );
+
+      // Delete the contribution
+      await (db.delete(
+        db.goalContributions,
+      )..where((c) => c.id.equals(contribution.id))).go();
+    });
+  }
+
+  /// Update a contribution amount
+  Future<void> updateContribution({
+    required GoalContribution contribution,
+    required double newAmount,
+    String? newNote,
+  }) async {
+    await db.transaction(() async {
+      // Get the goal
+      final goal = await (db.select(
+        db.goals,
+      )..where((g) => g.id.equals(contribution.goalId))).getSingle();
+
+      // Calculate difference and update goal's savedAmount
+      final difference = newAmount - contribution.amount;
+      final newSavedAmount = (goal.savedAmount + difference).clamp(
+        0.0,
+        double.infinity,
+      );
+      final isCompleted = newSavedAmount >= goal.targetAmount;
+
+      await (db.update(
+        db.goals,
+      )..where((g) => g.id.equals(contribution.goalId))).write(
+        GoalsCompanion(
+          savedAmount: Value(newSavedAmount),
+          isCompleted: Value(isCompleted),
+        ),
+      );
+
+      // Update the contribution
+      await (db.update(
+        db.goalContributions,
+      )..where((c) => c.id.equals(contribution.id))).write(
+        GoalContributionsCompanion(
+          amount: Value(newAmount),
+          note: newNote != null ? Value(newNote) : const Value.absent(),
+        ),
+      );
+    });
+  }
 }
 
 /// Provider for goal service
