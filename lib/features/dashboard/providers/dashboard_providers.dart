@@ -16,6 +16,7 @@ class MonthlyStats {
   final double projectedBalance;
   final ForecastStatus forecastStatus;
   final Map<String, double> categoryBreakdown;
+  final double goalAllocations; // Amount allocated to savings goals
 
   MonthlyStats({
     required this.totalIncome,
@@ -26,6 +27,7 @@ class MonthlyStats {
     required this.projectedBalance,
     required this.forecastStatus,
     required this.categoryBreakdown,
+    this.goalAllocations = 0,
   });
 
   factory MonthlyStats.empty() => MonthlyStats(
@@ -37,6 +39,7 @@ class MonthlyStats {
     projectedBalance: 0,
     forecastStatus: ForecastStatus.safe,
     categoryBreakdown: {},
+    goalAllocations: 0,
   );
 }
 
@@ -59,6 +62,7 @@ final monthlyStatsProvider = FutureProvider<MonthlyStats>((ref) async {
   // Calculate totals
   double totalIncome = monthlyIncome;
   double totalExpenses = 0;
+  double goalAllocatedAmount = 0;
   Map<int, double> categoryTotals = {};
 
   for (final tx in transactions) {
@@ -68,6 +72,10 @@ final monthlyStatsProvider = FutureProvider<MonthlyStats>((ref) async {
       totalExpenses += tx.amount;
       categoryTotals[tx.categoryId] =
           (categoryTotals[tx.categoryId] ?? 0) + tx.amount;
+      // Track goal allocations separately
+      if (tx.goalId != null) {
+        goalAllocatedAmount += tx.amount;
+      }
     }
   }
 
@@ -79,6 +87,11 @@ final monthlyStatsProvider = FutureProvider<MonthlyStats>((ref) async {
   for (final entry in categoryTotals.entries) {
     final name = categoryMap[entry.key] ?? 'Other';
     categoryBreakdown[name] = entry.value;
+  }
+
+  // Add goal allocations as a separate entry if any exist
+  if (goalAllocatedAmount > 0) {
+    categoryBreakdown['🎯 Savings Goals'] = goalAllocatedAmount;
   }
 
   // Calculate metrics
@@ -110,6 +123,7 @@ final monthlyStatsProvider = FutureProvider<MonthlyStats>((ref) async {
     projectedBalance: projectedBalance,
     forecastStatus: forecastStatus,
     categoryBreakdown: categoryBreakdown,
+    goalAllocations: goalAllocatedAmount,
   );
 });
 
