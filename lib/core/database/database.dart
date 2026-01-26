@@ -13,6 +13,8 @@ class Transactions extends Table {
   RealColumn get amount => real()();
   TextColumn get type => text()(); // 'income' | 'expense'
   IntColumn get categoryId => integer().references(Categories, #id)();
+  IntColumn get goalId =>
+      integer().nullable().references(Goals, #id)(); // Optional goal link
   DateTimeColumn get timestamp => dateTime()();
   TextColumn get note => text().nullable()();
   BoolColumn get isRecurring => boolean().withDefault(const Constant(false))();
@@ -86,7 +88,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration {
@@ -106,6 +108,12 @@ class AppDatabase extends _$AppDatabase {
           // Add isCompleted column to existing goals table
           await customStatement(
             'ALTER TABLE goals ADD COLUMN is_completed INTEGER NOT NULL DEFAULT 0',
+          );
+        }
+        if (from < 4) {
+          // Add optional goal_id column to transactions table
+          await customStatement(
+            'ALTER TABLE transactions ADD COLUMN goal_id INTEGER REFERENCES goals(id)',
           );
         }
       },

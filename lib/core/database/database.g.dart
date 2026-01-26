@@ -405,928 +405,6 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
   }
 }
 
-class $TransactionsTable extends Transactions
-    with TableInfo<$TransactionsTable, Transaction> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $TransactionsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
-    aliasedName,
-    false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
-  );
-  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
-  @override
-  late final GeneratedColumn<double> amount = GeneratedColumn<double>(
-    'amount',
-    aliasedName,
-    false,
-    type: DriftSqlType.double,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _typeMeta = const VerificationMeta('type');
-  @override
-  late final GeneratedColumn<String> type = GeneratedColumn<String>(
-    'type',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
-    'categoryId',
-  );
-  @override
-  late final GeneratedColumn<int> categoryId = GeneratedColumn<int>(
-    'category_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES categories (id)',
-    ),
-  );
-  static const VerificationMeta _timestampMeta = const VerificationMeta(
-    'timestamp',
-  );
-  @override
-  late final GeneratedColumn<DateTime> timestamp = GeneratedColumn<DateTime>(
-    'timestamp',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _noteMeta = const VerificationMeta('note');
-  @override
-  late final GeneratedColumn<String> note = GeneratedColumn<String>(
-    'note',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _isRecurringMeta = const VerificationMeta(
-    'isRecurring',
-  );
-  @override
-  late final GeneratedColumn<bool> isRecurring = GeneratedColumn<bool>(
-    'is_recurring',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("is_recurring" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
-  );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    amount,
-    type,
-    categoryId,
-    timestamp,
-    note,
-    isRecurring,
-    createdAt,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'transactions';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<Transaction> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('amount')) {
-      context.handle(
-        _amountMeta,
-        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_amountMeta);
-    }
-    if (data.containsKey('type')) {
-      context.handle(
-        _typeMeta,
-        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_typeMeta);
-    }
-    if (data.containsKey('category_id')) {
-      context.handle(
-        _categoryIdMeta,
-        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_categoryIdMeta);
-    }
-    if (data.containsKey('timestamp')) {
-      context.handle(
-        _timestampMeta,
-        timestamp.isAcceptableOrUnknown(data['timestamp']!, _timestampMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_timestampMeta);
-    }
-    if (data.containsKey('note')) {
-      context.handle(
-        _noteMeta,
-        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
-      );
-    }
-    if (data.containsKey('is_recurring')) {
-      context.handle(
-        _isRecurringMeta,
-        isRecurring.isAcceptableOrUnknown(
-          data['is_recurring']!,
-          _isRecurringMeta,
-        ),
-      );
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  Transaction map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Transaction(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      amount: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}amount'],
-      )!,
-      type: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}type'],
-      )!,
-      categoryId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}category_id'],
-      )!,
-      timestamp: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}timestamp'],
-      )!,
-      note: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}note'],
-      ),
-      isRecurring: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}is_recurring'],
-      )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
-    );
-  }
-
-  @override
-  $TransactionsTable createAlias(String alias) {
-    return $TransactionsTable(attachedDatabase, alias);
-  }
-}
-
-class Transaction extends DataClass implements Insertable<Transaction> {
-  final int id;
-  final double amount;
-  final String type;
-  final int categoryId;
-  final DateTime timestamp;
-  final String? note;
-  final bool isRecurring;
-  final DateTime createdAt;
-  const Transaction({
-    required this.id,
-    required this.amount,
-    required this.type,
-    required this.categoryId,
-    required this.timestamp,
-    this.note,
-    required this.isRecurring,
-    required this.createdAt,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['amount'] = Variable<double>(amount);
-    map['type'] = Variable<String>(type);
-    map['category_id'] = Variable<int>(categoryId);
-    map['timestamp'] = Variable<DateTime>(timestamp);
-    if (!nullToAbsent || note != null) {
-      map['note'] = Variable<String>(note);
-    }
-    map['is_recurring'] = Variable<bool>(isRecurring);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    return map;
-  }
-
-  TransactionsCompanion toCompanion(bool nullToAbsent) {
-    return TransactionsCompanion(
-      id: Value(id),
-      amount: Value(amount),
-      type: Value(type),
-      categoryId: Value(categoryId),
-      timestamp: Value(timestamp),
-      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
-      isRecurring: Value(isRecurring),
-      createdAt: Value(createdAt),
-    );
-  }
-
-  factory Transaction.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return Transaction(
-      id: serializer.fromJson<int>(json['id']),
-      amount: serializer.fromJson<double>(json['amount']),
-      type: serializer.fromJson<String>(json['type']),
-      categoryId: serializer.fromJson<int>(json['categoryId']),
-      timestamp: serializer.fromJson<DateTime>(json['timestamp']),
-      note: serializer.fromJson<String?>(json['note']),
-      isRecurring: serializer.fromJson<bool>(json['isRecurring']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'amount': serializer.toJson<double>(amount),
-      'type': serializer.toJson<String>(type),
-      'categoryId': serializer.toJson<int>(categoryId),
-      'timestamp': serializer.toJson<DateTime>(timestamp),
-      'note': serializer.toJson<String?>(note),
-      'isRecurring': serializer.toJson<bool>(isRecurring),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
-    };
-  }
-
-  Transaction copyWith({
-    int? id,
-    double? amount,
-    String? type,
-    int? categoryId,
-    DateTime? timestamp,
-    Value<String?> note = const Value.absent(),
-    bool? isRecurring,
-    DateTime? createdAt,
-  }) => Transaction(
-    id: id ?? this.id,
-    amount: amount ?? this.amount,
-    type: type ?? this.type,
-    categoryId: categoryId ?? this.categoryId,
-    timestamp: timestamp ?? this.timestamp,
-    note: note.present ? note.value : this.note,
-    isRecurring: isRecurring ?? this.isRecurring,
-    createdAt: createdAt ?? this.createdAt,
-  );
-  Transaction copyWithCompanion(TransactionsCompanion data) {
-    return Transaction(
-      id: data.id.present ? data.id.value : this.id,
-      amount: data.amount.present ? data.amount.value : this.amount,
-      type: data.type.present ? data.type.value : this.type,
-      categoryId: data.categoryId.present
-          ? data.categoryId.value
-          : this.categoryId,
-      timestamp: data.timestamp.present ? data.timestamp.value : this.timestamp,
-      note: data.note.present ? data.note.value : this.note,
-      isRecurring: data.isRecurring.present
-          ? data.isRecurring.value
-          : this.isRecurring,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('Transaction(')
-          ..write('id: $id, ')
-          ..write('amount: $amount, ')
-          ..write('type: $type, ')
-          ..write('categoryId: $categoryId, ')
-          ..write('timestamp: $timestamp, ')
-          ..write('note: $note, ')
-          ..write('isRecurring: $isRecurring, ')
-          ..write('createdAt: $createdAt')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(
-    id,
-    amount,
-    type,
-    categoryId,
-    timestamp,
-    note,
-    isRecurring,
-    createdAt,
-  );
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is Transaction &&
-          other.id == this.id &&
-          other.amount == this.amount &&
-          other.type == this.type &&
-          other.categoryId == this.categoryId &&
-          other.timestamp == this.timestamp &&
-          other.note == this.note &&
-          other.isRecurring == this.isRecurring &&
-          other.createdAt == this.createdAt);
-}
-
-class TransactionsCompanion extends UpdateCompanion<Transaction> {
-  final Value<int> id;
-  final Value<double> amount;
-  final Value<String> type;
-  final Value<int> categoryId;
-  final Value<DateTime> timestamp;
-  final Value<String?> note;
-  final Value<bool> isRecurring;
-  final Value<DateTime> createdAt;
-  const TransactionsCompanion({
-    this.id = const Value.absent(),
-    this.amount = const Value.absent(),
-    this.type = const Value.absent(),
-    this.categoryId = const Value.absent(),
-    this.timestamp = const Value.absent(),
-    this.note = const Value.absent(),
-    this.isRecurring = const Value.absent(),
-    this.createdAt = const Value.absent(),
-  });
-  TransactionsCompanion.insert({
-    this.id = const Value.absent(),
-    required double amount,
-    required String type,
-    required int categoryId,
-    required DateTime timestamp,
-    this.note = const Value.absent(),
-    this.isRecurring = const Value.absent(),
-    this.createdAt = const Value.absent(),
-  }) : amount = Value(amount),
-       type = Value(type),
-       categoryId = Value(categoryId),
-       timestamp = Value(timestamp);
-  static Insertable<Transaction> custom({
-    Expression<int>? id,
-    Expression<double>? amount,
-    Expression<String>? type,
-    Expression<int>? categoryId,
-    Expression<DateTime>? timestamp,
-    Expression<String>? note,
-    Expression<bool>? isRecurring,
-    Expression<DateTime>? createdAt,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (amount != null) 'amount': amount,
-      if (type != null) 'type': type,
-      if (categoryId != null) 'category_id': categoryId,
-      if (timestamp != null) 'timestamp': timestamp,
-      if (note != null) 'note': note,
-      if (isRecurring != null) 'is_recurring': isRecurring,
-      if (createdAt != null) 'created_at': createdAt,
-    });
-  }
-
-  TransactionsCompanion copyWith({
-    Value<int>? id,
-    Value<double>? amount,
-    Value<String>? type,
-    Value<int>? categoryId,
-    Value<DateTime>? timestamp,
-    Value<String?>? note,
-    Value<bool>? isRecurring,
-    Value<DateTime>? createdAt,
-  }) {
-    return TransactionsCompanion(
-      id: id ?? this.id,
-      amount: amount ?? this.amount,
-      type: type ?? this.type,
-      categoryId: categoryId ?? this.categoryId,
-      timestamp: timestamp ?? this.timestamp,
-      note: note ?? this.note,
-      isRecurring: isRecurring ?? this.isRecurring,
-      createdAt: createdAt ?? this.createdAt,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
-    }
-    if (amount.present) {
-      map['amount'] = Variable<double>(amount.value);
-    }
-    if (type.present) {
-      map['type'] = Variable<String>(type.value);
-    }
-    if (categoryId.present) {
-      map['category_id'] = Variable<int>(categoryId.value);
-    }
-    if (timestamp.present) {
-      map['timestamp'] = Variable<DateTime>(timestamp.value);
-    }
-    if (note.present) {
-      map['note'] = Variable<String>(note.value);
-    }
-    if (isRecurring.present) {
-      map['is_recurring'] = Variable<bool>(isRecurring.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('TransactionsCompanion(')
-          ..write('id: $id, ')
-          ..write('amount: $amount, ')
-          ..write('type: $type, ')
-          ..write('categoryId: $categoryId, ')
-          ..write('timestamp: $timestamp, ')
-          ..write('note: $note, ')
-          ..write('isRecurring: $isRecurring, ')
-          ..write('createdAt: $createdAt')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $UserSettingsTable extends UserSettings
-    with TableInfo<$UserSettingsTable, UserSetting> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $UserSettingsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
-    aliasedName,
-    false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
-  );
-  static const VerificationMeta _monthlyIncomeMeta = const VerificationMeta(
-    'monthlyIncome',
-  );
-  @override
-  late final GeneratedColumn<double> monthlyIncome = GeneratedColumn<double>(
-    'monthly_income',
-    aliasedName,
-    false,
-    type: DriftSqlType.double,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(0),
-  );
-  static const VerificationMeta _currencyMeta = const VerificationMeta(
-    'currency',
-  );
-  @override
-  late final GeneratedColumn<String> currency = GeneratedColumn<String>(
-    'currency',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    defaultValue: const Constant('INR'),
-  );
-  static const VerificationMeta _isOnboardedMeta = const VerificationMeta(
-    'isOnboarded',
-  );
-  @override
-  late final GeneratedColumn<bool> isOnboarded = GeneratedColumn<bool>(
-    'is_onboarded',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("is_onboarded" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
-  );
-  static const VerificationMeta _biometricEnabledMeta = const VerificationMeta(
-    'biometricEnabled',
-  );
-  @override
-  late final GeneratedColumn<bool> biometricEnabled = GeneratedColumn<bool>(
-    'biometric_enabled',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("biometric_enabled" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
-  );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    monthlyIncome,
-    currency,
-    isOnboarded,
-    biometricEnabled,
-    createdAt,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'user_settings';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<UserSetting> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('monthly_income')) {
-      context.handle(
-        _monthlyIncomeMeta,
-        monthlyIncome.isAcceptableOrUnknown(
-          data['monthly_income']!,
-          _monthlyIncomeMeta,
-        ),
-      );
-    }
-    if (data.containsKey('currency')) {
-      context.handle(
-        _currencyMeta,
-        currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta),
-      );
-    }
-    if (data.containsKey('is_onboarded')) {
-      context.handle(
-        _isOnboardedMeta,
-        isOnboarded.isAcceptableOrUnknown(
-          data['is_onboarded']!,
-          _isOnboardedMeta,
-        ),
-      );
-    }
-    if (data.containsKey('biometric_enabled')) {
-      context.handle(
-        _biometricEnabledMeta,
-        biometricEnabled.isAcceptableOrUnknown(
-          data['biometric_enabled']!,
-          _biometricEnabledMeta,
-        ),
-      );
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  UserSetting map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return UserSetting(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      monthlyIncome: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}monthly_income'],
-      )!,
-      currency: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}currency'],
-      )!,
-      isOnboarded: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}is_onboarded'],
-      )!,
-      biometricEnabled: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}biometric_enabled'],
-      )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
-    );
-  }
-
-  @override
-  $UserSettingsTable createAlias(String alias) {
-    return $UserSettingsTable(attachedDatabase, alias);
-  }
-}
-
-class UserSetting extends DataClass implements Insertable<UserSetting> {
-  final int id;
-  final double monthlyIncome;
-  final String currency;
-  final bool isOnboarded;
-  final bool biometricEnabled;
-  final DateTime createdAt;
-  const UserSetting({
-    required this.id,
-    required this.monthlyIncome,
-    required this.currency,
-    required this.isOnboarded,
-    required this.biometricEnabled,
-    required this.createdAt,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['monthly_income'] = Variable<double>(monthlyIncome);
-    map['currency'] = Variable<String>(currency);
-    map['is_onboarded'] = Variable<bool>(isOnboarded);
-    map['biometric_enabled'] = Variable<bool>(biometricEnabled);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    return map;
-  }
-
-  UserSettingsCompanion toCompanion(bool nullToAbsent) {
-    return UserSettingsCompanion(
-      id: Value(id),
-      monthlyIncome: Value(monthlyIncome),
-      currency: Value(currency),
-      isOnboarded: Value(isOnboarded),
-      biometricEnabled: Value(biometricEnabled),
-      createdAt: Value(createdAt),
-    );
-  }
-
-  factory UserSetting.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return UserSetting(
-      id: serializer.fromJson<int>(json['id']),
-      monthlyIncome: serializer.fromJson<double>(json['monthlyIncome']),
-      currency: serializer.fromJson<String>(json['currency']),
-      isOnboarded: serializer.fromJson<bool>(json['isOnboarded']),
-      biometricEnabled: serializer.fromJson<bool>(json['biometricEnabled']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'monthlyIncome': serializer.toJson<double>(monthlyIncome),
-      'currency': serializer.toJson<String>(currency),
-      'isOnboarded': serializer.toJson<bool>(isOnboarded),
-      'biometricEnabled': serializer.toJson<bool>(biometricEnabled),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
-    };
-  }
-
-  UserSetting copyWith({
-    int? id,
-    double? monthlyIncome,
-    String? currency,
-    bool? isOnboarded,
-    bool? biometricEnabled,
-    DateTime? createdAt,
-  }) => UserSetting(
-    id: id ?? this.id,
-    monthlyIncome: monthlyIncome ?? this.monthlyIncome,
-    currency: currency ?? this.currency,
-    isOnboarded: isOnboarded ?? this.isOnboarded,
-    biometricEnabled: biometricEnabled ?? this.biometricEnabled,
-    createdAt: createdAt ?? this.createdAt,
-  );
-  UserSetting copyWithCompanion(UserSettingsCompanion data) {
-    return UserSetting(
-      id: data.id.present ? data.id.value : this.id,
-      monthlyIncome: data.monthlyIncome.present
-          ? data.monthlyIncome.value
-          : this.monthlyIncome,
-      currency: data.currency.present ? data.currency.value : this.currency,
-      isOnboarded: data.isOnboarded.present
-          ? data.isOnboarded.value
-          : this.isOnboarded,
-      biometricEnabled: data.biometricEnabled.present
-          ? data.biometricEnabled.value
-          : this.biometricEnabled,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('UserSetting(')
-          ..write('id: $id, ')
-          ..write('monthlyIncome: $monthlyIncome, ')
-          ..write('currency: $currency, ')
-          ..write('isOnboarded: $isOnboarded, ')
-          ..write('biometricEnabled: $biometricEnabled, ')
-          ..write('createdAt: $createdAt')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(
-    id,
-    monthlyIncome,
-    currency,
-    isOnboarded,
-    biometricEnabled,
-    createdAt,
-  );
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is UserSetting &&
-          other.id == this.id &&
-          other.monthlyIncome == this.monthlyIncome &&
-          other.currency == this.currency &&
-          other.isOnboarded == this.isOnboarded &&
-          other.biometricEnabled == this.biometricEnabled &&
-          other.createdAt == this.createdAt);
-}
-
-class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
-  final Value<int> id;
-  final Value<double> monthlyIncome;
-  final Value<String> currency;
-  final Value<bool> isOnboarded;
-  final Value<bool> biometricEnabled;
-  final Value<DateTime> createdAt;
-  const UserSettingsCompanion({
-    this.id = const Value.absent(),
-    this.monthlyIncome = const Value.absent(),
-    this.currency = const Value.absent(),
-    this.isOnboarded = const Value.absent(),
-    this.biometricEnabled = const Value.absent(),
-    this.createdAt = const Value.absent(),
-  });
-  UserSettingsCompanion.insert({
-    this.id = const Value.absent(),
-    this.monthlyIncome = const Value.absent(),
-    this.currency = const Value.absent(),
-    this.isOnboarded = const Value.absent(),
-    this.biometricEnabled = const Value.absent(),
-    this.createdAt = const Value.absent(),
-  });
-  static Insertable<UserSetting> custom({
-    Expression<int>? id,
-    Expression<double>? monthlyIncome,
-    Expression<String>? currency,
-    Expression<bool>? isOnboarded,
-    Expression<bool>? biometricEnabled,
-    Expression<DateTime>? createdAt,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (monthlyIncome != null) 'monthly_income': monthlyIncome,
-      if (currency != null) 'currency': currency,
-      if (isOnboarded != null) 'is_onboarded': isOnboarded,
-      if (biometricEnabled != null) 'biometric_enabled': biometricEnabled,
-      if (createdAt != null) 'created_at': createdAt,
-    });
-  }
-
-  UserSettingsCompanion copyWith({
-    Value<int>? id,
-    Value<double>? monthlyIncome,
-    Value<String>? currency,
-    Value<bool>? isOnboarded,
-    Value<bool>? biometricEnabled,
-    Value<DateTime>? createdAt,
-  }) {
-    return UserSettingsCompanion(
-      id: id ?? this.id,
-      monthlyIncome: monthlyIncome ?? this.monthlyIncome,
-      currency: currency ?? this.currency,
-      isOnboarded: isOnboarded ?? this.isOnboarded,
-      biometricEnabled: biometricEnabled ?? this.biometricEnabled,
-      createdAt: createdAt ?? this.createdAt,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
-    }
-    if (monthlyIncome.present) {
-      map['monthly_income'] = Variable<double>(monthlyIncome.value);
-    }
-    if (currency.present) {
-      map['currency'] = Variable<String>(currency.value);
-    }
-    if (isOnboarded.present) {
-      map['is_onboarded'] = Variable<bool>(isOnboarded.value);
-    }
-    if (biometricEnabled.present) {
-      map['biometric_enabled'] = Variable<bool>(biometricEnabled.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('UserSettingsCompanion(')
-          ..write('id: $id, ')
-          ..write('monthlyIncome: $monthlyIncome, ')
-          ..write('currency: $currency, ')
-          ..write('isOnboarded: $isOnboarded, ')
-          ..write('biometricEnabled: $biometricEnabled, ')
-          ..write('createdAt: $createdAt')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -1833,6 +911,978 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
           ..write('savedAmount: $savedAmount, ')
           ..write('isActive: $isActive, ')
           ..write('isCompleted: $isCompleted, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TransactionsTable extends Transactions
+    with TableInfo<$TransactionsTable, Transaction> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TransactionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<double> amount = GeneratedColumn<double>(
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
+    'categoryId',
+  );
+  @override
+  late final GeneratedColumn<int> categoryId = GeneratedColumn<int>(
+    'category_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES categories (id)',
+    ),
+  );
+  static const VerificationMeta _goalIdMeta = const VerificationMeta('goalId');
+  @override
+  late final GeneratedColumn<int> goalId = GeneratedColumn<int>(
+    'goal_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES goals (id)',
+    ),
+  );
+  static const VerificationMeta _timestampMeta = const VerificationMeta(
+    'timestamp',
+  );
+  @override
+  late final GeneratedColumn<DateTime> timestamp = GeneratedColumn<DateTime>(
+    'timestamp',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isRecurringMeta = const VerificationMeta(
+    'isRecurring',
+  );
+  @override
+  late final GeneratedColumn<bool> isRecurring = GeneratedColumn<bool>(
+    'is_recurring',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_recurring" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    amount,
+    type,
+    categoryId,
+    goalId,
+    timestamp,
+    note,
+    isRecurring,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'transactions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Transaction> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('amount')) {
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('category_id')) {
+      context.handle(
+        _categoryIdMeta,
+        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_categoryIdMeta);
+    }
+    if (data.containsKey('goal_id')) {
+      context.handle(
+        _goalIdMeta,
+        goalId.isAcceptableOrUnknown(data['goal_id']!, _goalIdMeta),
+      );
+    }
+    if (data.containsKey('timestamp')) {
+      context.handle(
+        _timestampMeta,
+        timestamp.isAcceptableOrUnknown(data['timestamp']!, _timestampMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_timestampMeta);
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('is_recurring')) {
+      context.handle(
+        _isRecurringMeta,
+        isRecurring.isAcceptableOrUnknown(
+          data['is_recurring']!,
+          _isRecurringMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Transaction map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Transaction(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}amount'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      categoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}category_id'],
+      )!,
+      goalId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}goal_id'],
+      ),
+      timestamp: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}timestamp'],
+      )!,
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+      isRecurring: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_recurring'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $TransactionsTable createAlias(String alias) {
+    return $TransactionsTable(attachedDatabase, alias);
+  }
+}
+
+class Transaction extends DataClass implements Insertable<Transaction> {
+  final int id;
+  final double amount;
+  final String type;
+  final int categoryId;
+  final int? goalId;
+  final DateTime timestamp;
+  final String? note;
+  final bool isRecurring;
+  final DateTime createdAt;
+  const Transaction({
+    required this.id,
+    required this.amount,
+    required this.type,
+    required this.categoryId,
+    this.goalId,
+    required this.timestamp,
+    this.note,
+    required this.isRecurring,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['amount'] = Variable<double>(amount);
+    map['type'] = Variable<String>(type);
+    map['category_id'] = Variable<int>(categoryId);
+    if (!nullToAbsent || goalId != null) {
+      map['goal_id'] = Variable<int>(goalId);
+    }
+    map['timestamp'] = Variable<DateTime>(timestamp);
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    map['is_recurring'] = Variable<bool>(isRecurring);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  TransactionsCompanion toCompanion(bool nullToAbsent) {
+    return TransactionsCompanion(
+      id: Value(id),
+      amount: Value(amount),
+      type: Value(type),
+      categoryId: Value(categoryId),
+      goalId: goalId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(goalId),
+      timestamp: Value(timestamp),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      isRecurring: Value(isRecurring),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory Transaction.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Transaction(
+      id: serializer.fromJson<int>(json['id']),
+      amount: serializer.fromJson<double>(json['amount']),
+      type: serializer.fromJson<String>(json['type']),
+      categoryId: serializer.fromJson<int>(json['categoryId']),
+      goalId: serializer.fromJson<int?>(json['goalId']),
+      timestamp: serializer.fromJson<DateTime>(json['timestamp']),
+      note: serializer.fromJson<String?>(json['note']),
+      isRecurring: serializer.fromJson<bool>(json['isRecurring']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'amount': serializer.toJson<double>(amount),
+      'type': serializer.toJson<String>(type),
+      'categoryId': serializer.toJson<int>(categoryId),
+      'goalId': serializer.toJson<int?>(goalId),
+      'timestamp': serializer.toJson<DateTime>(timestamp),
+      'note': serializer.toJson<String?>(note),
+      'isRecurring': serializer.toJson<bool>(isRecurring),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  Transaction copyWith({
+    int? id,
+    double? amount,
+    String? type,
+    int? categoryId,
+    Value<int?> goalId = const Value.absent(),
+    DateTime? timestamp,
+    Value<String?> note = const Value.absent(),
+    bool? isRecurring,
+    DateTime? createdAt,
+  }) => Transaction(
+    id: id ?? this.id,
+    amount: amount ?? this.amount,
+    type: type ?? this.type,
+    categoryId: categoryId ?? this.categoryId,
+    goalId: goalId.present ? goalId.value : this.goalId,
+    timestamp: timestamp ?? this.timestamp,
+    note: note.present ? note.value : this.note,
+    isRecurring: isRecurring ?? this.isRecurring,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  Transaction copyWithCompanion(TransactionsCompanion data) {
+    return Transaction(
+      id: data.id.present ? data.id.value : this.id,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      type: data.type.present ? data.type.value : this.type,
+      categoryId: data.categoryId.present
+          ? data.categoryId.value
+          : this.categoryId,
+      goalId: data.goalId.present ? data.goalId.value : this.goalId,
+      timestamp: data.timestamp.present ? data.timestamp.value : this.timestamp,
+      note: data.note.present ? data.note.value : this.note,
+      isRecurring: data.isRecurring.present
+          ? data.isRecurring.value
+          : this.isRecurring,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Transaction(')
+          ..write('id: $id, ')
+          ..write('amount: $amount, ')
+          ..write('type: $type, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('goalId: $goalId, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('note: $note, ')
+          ..write('isRecurring: $isRecurring, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    amount,
+    type,
+    categoryId,
+    goalId,
+    timestamp,
+    note,
+    isRecurring,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Transaction &&
+          other.id == this.id &&
+          other.amount == this.amount &&
+          other.type == this.type &&
+          other.categoryId == this.categoryId &&
+          other.goalId == this.goalId &&
+          other.timestamp == this.timestamp &&
+          other.note == this.note &&
+          other.isRecurring == this.isRecurring &&
+          other.createdAt == this.createdAt);
+}
+
+class TransactionsCompanion extends UpdateCompanion<Transaction> {
+  final Value<int> id;
+  final Value<double> amount;
+  final Value<String> type;
+  final Value<int> categoryId;
+  final Value<int?> goalId;
+  final Value<DateTime> timestamp;
+  final Value<String?> note;
+  final Value<bool> isRecurring;
+  final Value<DateTime> createdAt;
+  const TransactionsCompanion({
+    this.id = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.type = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.goalId = const Value.absent(),
+    this.timestamp = const Value.absent(),
+    this.note = const Value.absent(),
+    this.isRecurring = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  TransactionsCompanion.insert({
+    this.id = const Value.absent(),
+    required double amount,
+    required String type,
+    required int categoryId,
+    this.goalId = const Value.absent(),
+    required DateTime timestamp,
+    this.note = const Value.absent(),
+    this.isRecurring = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  }) : amount = Value(amount),
+       type = Value(type),
+       categoryId = Value(categoryId),
+       timestamp = Value(timestamp);
+  static Insertable<Transaction> custom({
+    Expression<int>? id,
+    Expression<double>? amount,
+    Expression<String>? type,
+    Expression<int>? categoryId,
+    Expression<int>? goalId,
+    Expression<DateTime>? timestamp,
+    Expression<String>? note,
+    Expression<bool>? isRecurring,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (amount != null) 'amount': amount,
+      if (type != null) 'type': type,
+      if (categoryId != null) 'category_id': categoryId,
+      if (goalId != null) 'goal_id': goalId,
+      if (timestamp != null) 'timestamp': timestamp,
+      if (note != null) 'note': note,
+      if (isRecurring != null) 'is_recurring': isRecurring,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  TransactionsCompanion copyWith({
+    Value<int>? id,
+    Value<double>? amount,
+    Value<String>? type,
+    Value<int>? categoryId,
+    Value<int?>? goalId,
+    Value<DateTime>? timestamp,
+    Value<String?>? note,
+    Value<bool>? isRecurring,
+    Value<DateTime>? createdAt,
+  }) {
+    return TransactionsCompanion(
+      id: id ?? this.id,
+      amount: amount ?? this.amount,
+      type: type ?? this.type,
+      categoryId: categoryId ?? this.categoryId,
+      goalId: goalId ?? this.goalId,
+      timestamp: timestamp ?? this.timestamp,
+      note: note ?? this.note,
+      isRecurring: isRecurring ?? this.isRecurring,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<double>(amount.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (categoryId.present) {
+      map['category_id'] = Variable<int>(categoryId.value);
+    }
+    if (goalId.present) {
+      map['goal_id'] = Variable<int>(goalId.value);
+    }
+    if (timestamp.present) {
+      map['timestamp'] = Variable<DateTime>(timestamp.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (isRecurring.present) {
+      map['is_recurring'] = Variable<bool>(isRecurring.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TransactionsCompanion(')
+          ..write('id: $id, ')
+          ..write('amount: $amount, ')
+          ..write('type: $type, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('goalId: $goalId, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('note: $note, ')
+          ..write('isRecurring: $isRecurring, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $UserSettingsTable extends UserSettings
+    with TableInfo<$UserSettingsTable, UserSetting> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserSettingsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _monthlyIncomeMeta = const VerificationMeta(
+    'monthlyIncome',
+  );
+  @override
+  late final GeneratedColumn<double> monthlyIncome = GeneratedColumn<double>(
+    'monthly_income',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _currencyMeta = const VerificationMeta(
+    'currency',
+  );
+  @override
+  late final GeneratedColumn<String> currency = GeneratedColumn<String>(
+    'currency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('INR'),
+  );
+  static const VerificationMeta _isOnboardedMeta = const VerificationMeta(
+    'isOnboarded',
+  );
+  @override
+  late final GeneratedColumn<bool> isOnboarded = GeneratedColumn<bool>(
+    'is_onboarded',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_onboarded" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _biometricEnabledMeta = const VerificationMeta(
+    'biometricEnabled',
+  );
+  @override
+  late final GeneratedColumn<bool> biometricEnabled = GeneratedColumn<bool>(
+    'biometric_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("biometric_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    monthlyIncome,
+    currency,
+    isOnboarded,
+    biometricEnabled,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_settings';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<UserSetting> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('monthly_income')) {
+      context.handle(
+        _monthlyIncomeMeta,
+        monthlyIncome.isAcceptableOrUnknown(
+          data['monthly_income']!,
+          _monthlyIncomeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('currency')) {
+      context.handle(
+        _currencyMeta,
+        currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta),
+      );
+    }
+    if (data.containsKey('is_onboarded')) {
+      context.handle(
+        _isOnboardedMeta,
+        isOnboarded.isAcceptableOrUnknown(
+          data['is_onboarded']!,
+          _isOnboardedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('biometric_enabled')) {
+      context.handle(
+        _biometricEnabledMeta,
+        biometricEnabled.isAcceptableOrUnknown(
+          data['biometric_enabled']!,
+          _biometricEnabledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  UserSetting map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserSetting(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      monthlyIncome: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}monthly_income'],
+      )!,
+      currency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency'],
+      )!,
+      isOnboarded: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_onboarded'],
+      )!,
+      biometricEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}biometric_enabled'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $UserSettingsTable createAlias(String alias) {
+    return $UserSettingsTable(attachedDatabase, alias);
+  }
+}
+
+class UserSetting extends DataClass implements Insertable<UserSetting> {
+  final int id;
+  final double monthlyIncome;
+  final String currency;
+  final bool isOnboarded;
+  final bool biometricEnabled;
+  final DateTime createdAt;
+  const UserSetting({
+    required this.id,
+    required this.monthlyIncome,
+    required this.currency,
+    required this.isOnboarded,
+    required this.biometricEnabled,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['monthly_income'] = Variable<double>(monthlyIncome);
+    map['currency'] = Variable<String>(currency);
+    map['is_onboarded'] = Variable<bool>(isOnboarded);
+    map['biometric_enabled'] = Variable<bool>(biometricEnabled);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  UserSettingsCompanion toCompanion(bool nullToAbsent) {
+    return UserSettingsCompanion(
+      id: Value(id),
+      monthlyIncome: Value(monthlyIncome),
+      currency: Value(currency),
+      isOnboarded: Value(isOnboarded),
+      biometricEnabled: Value(biometricEnabled),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory UserSetting.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserSetting(
+      id: serializer.fromJson<int>(json['id']),
+      monthlyIncome: serializer.fromJson<double>(json['monthlyIncome']),
+      currency: serializer.fromJson<String>(json['currency']),
+      isOnboarded: serializer.fromJson<bool>(json['isOnboarded']),
+      biometricEnabled: serializer.fromJson<bool>(json['biometricEnabled']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'monthlyIncome': serializer.toJson<double>(monthlyIncome),
+      'currency': serializer.toJson<String>(currency),
+      'isOnboarded': serializer.toJson<bool>(isOnboarded),
+      'biometricEnabled': serializer.toJson<bool>(biometricEnabled),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  UserSetting copyWith({
+    int? id,
+    double? monthlyIncome,
+    String? currency,
+    bool? isOnboarded,
+    bool? biometricEnabled,
+    DateTime? createdAt,
+  }) => UserSetting(
+    id: id ?? this.id,
+    monthlyIncome: monthlyIncome ?? this.monthlyIncome,
+    currency: currency ?? this.currency,
+    isOnboarded: isOnboarded ?? this.isOnboarded,
+    biometricEnabled: biometricEnabled ?? this.biometricEnabled,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  UserSetting copyWithCompanion(UserSettingsCompanion data) {
+    return UserSetting(
+      id: data.id.present ? data.id.value : this.id,
+      monthlyIncome: data.monthlyIncome.present
+          ? data.monthlyIncome.value
+          : this.monthlyIncome,
+      currency: data.currency.present ? data.currency.value : this.currency,
+      isOnboarded: data.isOnboarded.present
+          ? data.isOnboarded.value
+          : this.isOnboarded,
+      biometricEnabled: data.biometricEnabled.present
+          ? data.biometricEnabled.value
+          : this.biometricEnabled,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserSetting(')
+          ..write('id: $id, ')
+          ..write('monthlyIncome: $monthlyIncome, ')
+          ..write('currency: $currency, ')
+          ..write('isOnboarded: $isOnboarded, ')
+          ..write('biometricEnabled: $biometricEnabled, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    monthlyIncome,
+    currency,
+    isOnboarded,
+    biometricEnabled,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserSetting &&
+          other.id == this.id &&
+          other.monthlyIncome == this.monthlyIncome &&
+          other.currency == this.currency &&
+          other.isOnboarded == this.isOnboarded &&
+          other.biometricEnabled == this.biometricEnabled &&
+          other.createdAt == this.createdAt);
+}
+
+class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
+  final Value<int> id;
+  final Value<double> monthlyIncome;
+  final Value<String> currency;
+  final Value<bool> isOnboarded;
+  final Value<bool> biometricEnabled;
+  final Value<DateTime> createdAt;
+  const UserSettingsCompanion({
+    this.id = const Value.absent(),
+    this.monthlyIncome = const Value.absent(),
+    this.currency = const Value.absent(),
+    this.isOnboarded = const Value.absent(),
+    this.biometricEnabled = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  UserSettingsCompanion.insert({
+    this.id = const Value.absent(),
+    this.monthlyIncome = const Value.absent(),
+    this.currency = const Value.absent(),
+    this.isOnboarded = const Value.absent(),
+    this.biometricEnabled = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  static Insertable<UserSetting> custom({
+    Expression<int>? id,
+    Expression<double>? monthlyIncome,
+    Expression<String>? currency,
+    Expression<bool>? isOnboarded,
+    Expression<bool>? biometricEnabled,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (monthlyIncome != null) 'monthly_income': monthlyIncome,
+      if (currency != null) 'currency': currency,
+      if (isOnboarded != null) 'is_onboarded': isOnboarded,
+      if (biometricEnabled != null) 'biometric_enabled': biometricEnabled,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  UserSettingsCompanion copyWith({
+    Value<int>? id,
+    Value<double>? monthlyIncome,
+    Value<String>? currency,
+    Value<bool>? isOnboarded,
+    Value<bool>? biometricEnabled,
+    Value<DateTime>? createdAt,
+  }) {
+    return UserSettingsCompanion(
+      id: id ?? this.id,
+      monthlyIncome: monthlyIncome ?? this.monthlyIncome,
+      currency: currency ?? this.currency,
+      isOnboarded: isOnboarded ?? this.isOnboarded,
+      biometricEnabled: biometricEnabled ?? this.biometricEnabled,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (monthlyIncome.present) {
+      map['monthly_income'] = Variable<double>(monthlyIncome.value);
+    }
+    if (currency.present) {
+      map['currency'] = Variable<String>(currency.value);
+    }
+    if (isOnboarded.present) {
+      map['is_onboarded'] = Variable<bool>(isOnboarded.value);
+    }
+    if (biometricEnabled.present) {
+      map['biometric_enabled'] = Variable<bool>(biometricEnabled.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserSettingsCompanion(')
+          ..write('id: $id, ')
+          ..write('monthlyIncome: $monthlyIncome, ')
+          ..write('currency: $currency, ')
+          ..write('isOnboarded: $isOnboarded, ')
+          ..write('biometricEnabled: $biometricEnabled, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -2486,9 +2536,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $CategoriesTable categories = $CategoriesTable(this);
+  late final $GoalsTable goals = $GoalsTable(this);
   late final $TransactionsTable transactions = $TransactionsTable(this);
   late final $UserSettingsTable userSettings = $UserSettingsTable(this);
-  late final $GoalsTable goals = $GoalsTable(this);
   late final $GoalContributionsTable goalContributions =
       $GoalContributionsTable(this);
   late final $CategorizationRulesTable categorizationRules =
@@ -2499,9 +2549,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     categories,
+    goals,
     transactions,
     userSettings,
-    goals,
     goalContributions,
     categorizationRules,
   ];
@@ -2937,12 +2987,476 @@ typedef $$CategoriesTableProcessedTableManager =
         bool categorizationRulesRefs,
       })
     >;
+typedef $$GoalsTableCreateCompanionBuilder =
+    GoalsCompanion Function({
+      Value<int> id,
+      required String name,
+      required double targetAmount,
+      required DateTime deadline,
+      Value<double> savedAmount,
+      Value<bool> isActive,
+      Value<bool> isCompleted,
+      Value<DateTime> createdAt,
+    });
+typedef $$GoalsTableUpdateCompanionBuilder =
+    GoalsCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<double> targetAmount,
+      Value<DateTime> deadline,
+      Value<double> savedAmount,
+      Value<bool> isActive,
+      Value<bool> isCompleted,
+      Value<DateTime> createdAt,
+    });
+
+final class $$GoalsTableReferences
+    extends BaseReferences<_$AppDatabase, $GoalsTable, Goal> {
+  $$GoalsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$TransactionsTable, List<Transaction>>
+  _transactionsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.transactions,
+    aliasName: $_aliasNameGenerator(db.goals.id, db.transactions.goalId),
+  );
+
+  $$TransactionsTableProcessedTableManager get transactionsRefs {
+    final manager = $$TransactionsTableTableManager(
+      $_db,
+      $_db.transactions,
+    ).filter((f) => f.goalId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_transactionsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$GoalContributionsTable, List<GoalContribution>>
+  _goalContributionsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.goalContributions,
+        aliasName: $_aliasNameGenerator(
+          db.goals.id,
+          db.goalContributions.goalId,
+        ),
+      );
+
+  $$GoalContributionsTableProcessedTableManager get goalContributionsRefs {
+    final manager = $$GoalContributionsTableTableManager(
+      $_db,
+      $_db.goalContributions,
+    ).filter((f) => f.goalId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _goalContributionsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$GoalsTableFilterComposer extends Composer<_$AppDatabase, $GoalsTable> {
+  $$GoalsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get targetAmount => $composableBuilder(
+    column: $table.targetAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deadline => $composableBuilder(
+    column: $table.deadline,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get savedAmount => $composableBuilder(
+    column: $table.savedAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isCompleted => $composableBuilder(
+    column: $table.isCompleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> transactionsRefs(
+    Expression<bool> Function($$TransactionsTableFilterComposer f) f,
+  ) {
+    final $$TransactionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.transactions,
+      getReferencedColumn: (t) => t.goalId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransactionsTableFilterComposer(
+            $db: $db,
+            $table: $db.transactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> goalContributionsRefs(
+    Expression<bool> Function($$GoalContributionsTableFilterComposer f) f,
+  ) {
+    final $$GoalContributionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.goalContributions,
+      getReferencedColumn: (t) => t.goalId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GoalContributionsTableFilterComposer(
+            $db: $db,
+            $table: $db.goalContributions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$GoalsTableOrderingComposer
+    extends Composer<_$AppDatabase, $GoalsTable> {
+  $$GoalsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get targetAmount => $composableBuilder(
+    column: $table.targetAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deadline => $composableBuilder(
+    column: $table.deadline,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get savedAmount => $composableBuilder(
+    column: $table.savedAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isCompleted => $composableBuilder(
+    column: $table.isCompleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$GoalsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $GoalsTable> {
+  $$GoalsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<double> get targetAmount => $composableBuilder(
+    column: $table.targetAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get deadline =>
+      $composableBuilder(column: $table.deadline, builder: (column) => column);
+
+  GeneratedColumn<double> get savedAmount => $composableBuilder(
+    column: $table.savedAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<bool> get isCompleted => $composableBuilder(
+    column: $table.isCompleted,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  Expression<T> transactionsRefs<T extends Object>(
+    Expression<T> Function($$TransactionsTableAnnotationComposer a) f,
+  ) {
+    final $$TransactionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.transactions,
+      getReferencedColumn: (t) => t.goalId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransactionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.transactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> goalContributionsRefs<T extends Object>(
+    Expression<T> Function($$GoalContributionsTableAnnotationComposer a) f,
+  ) {
+    final $$GoalContributionsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.goalContributions,
+          getReferencedColumn: (t) => t.goalId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$GoalContributionsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.goalContributions,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+}
+
+class $$GoalsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $GoalsTable,
+          Goal,
+          $$GoalsTableFilterComposer,
+          $$GoalsTableOrderingComposer,
+          $$GoalsTableAnnotationComposer,
+          $$GoalsTableCreateCompanionBuilder,
+          $$GoalsTableUpdateCompanionBuilder,
+          (Goal, $$GoalsTableReferences),
+          Goal,
+          PrefetchHooks Function({
+            bool transactionsRefs,
+            bool goalContributionsRefs,
+          })
+        > {
+  $$GoalsTableTableManager(_$AppDatabase db, $GoalsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GoalsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GoalsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GoalsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<double> targetAmount = const Value.absent(),
+                Value<DateTime> deadline = const Value.absent(),
+                Value<double> savedAmount = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<bool> isCompleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => GoalsCompanion(
+                id: id,
+                name: name,
+                targetAmount: targetAmount,
+                deadline: deadline,
+                savedAmount: savedAmount,
+                isActive: isActive,
+                isCompleted: isCompleted,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String name,
+                required double targetAmount,
+                required DateTime deadline,
+                Value<double> savedAmount = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<bool> isCompleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => GoalsCompanion.insert(
+                id: id,
+                name: name,
+                targetAmount: targetAmount,
+                deadline: deadline,
+                savedAmount: savedAmount,
+                isActive: isActive,
+                isCompleted: isCompleted,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) =>
+                    (e.readTable(table), $$GoalsTableReferences(db, table, e)),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({transactionsRefs = false, goalContributionsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (transactionsRefs) db.transactions,
+                    if (goalContributionsRefs) db.goalContributions,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (transactionsRefs)
+                        await $_getPrefetchedData<
+                          Goal,
+                          $GoalsTable,
+                          Transaction
+                        >(
+                          currentTable: table,
+                          referencedTable: $$GoalsTableReferences
+                              ._transactionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$GoalsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).transactionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.goalId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (goalContributionsRefs)
+                        await $_getPrefetchedData<
+                          Goal,
+                          $GoalsTable,
+                          GoalContribution
+                        >(
+                          currentTable: table,
+                          referencedTable: $$GoalsTableReferences
+                              ._goalContributionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$GoalsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).goalContributionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.goalId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$GoalsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $GoalsTable,
+      Goal,
+      $$GoalsTableFilterComposer,
+      $$GoalsTableOrderingComposer,
+      $$GoalsTableAnnotationComposer,
+      $$GoalsTableCreateCompanionBuilder,
+      $$GoalsTableUpdateCompanionBuilder,
+      (Goal, $$GoalsTableReferences),
+      Goal,
+      PrefetchHooks Function({
+        bool transactionsRefs,
+        bool goalContributionsRefs,
+      })
+    >;
 typedef $$TransactionsTableCreateCompanionBuilder =
     TransactionsCompanion Function({
       Value<int> id,
       required double amount,
       required String type,
       required int categoryId,
+      Value<int?> goalId,
       required DateTime timestamp,
       Value<String?> note,
       Value<bool> isRecurring,
@@ -2954,6 +3468,7 @@ typedef $$TransactionsTableUpdateCompanionBuilder =
       Value<double> amount,
       Value<String> type,
       Value<int> categoryId,
+      Value<int?> goalId,
       Value<DateTime> timestamp,
       Value<String?> note,
       Value<bool> isRecurring,
@@ -2977,6 +3492,24 @@ final class $$TransactionsTableReferences
       $_db.categories,
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_categoryIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $GoalsTable _goalIdTable(_$AppDatabase db) => db.goals.createAlias(
+    $_aliasNameGenerator(db.transactions.goalId, db.goals.id),
+  );
+
+  $$GoalsTableProcessedTableManager? get goalId {
+    final $_column = $_itemColumn<int>('goal_id');
+    if ($_column == null) return null;
+    final manager = $$GoalsTableTableManager(
+      $_db,
+      $_db.goals,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_goalIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
@@ -3042,6 +3575,29 @@ class $$TransactionsTableFilterComposer
           }) => $$CategoriesTableFilterComposer(
             $db: $db,
             $table: $db.categories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$GoalsTableFilterComposer get goalId {
+    final $$GoalsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.goalId,
+      referencedTable: $db.goals,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GoalsTableFilterComposer(
+            $db: $db,
+            $table: $db.goals,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -3118,6 +3674,29 @@ class $$TransactionsTableOrderingComposer
     );
     return composer;
   }
+
+  $$GoalsTableOrderingComposer get goalId {
+    final $$GoalsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.goalId,
+      referencedTable: $db.goals,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GoalsTableOrderingComposer(
+            $db: $db,
+            $table: $db.goals,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$TransactionsTableAnnotationComposer
@@ -3174,6 +3753,29 @@ class $$TransactionsTableAnnotationComposer
     );
     return composer;
   }
+
+  $$GoalsTableAnnotationComposer get goalId {
+    final $$GoalsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.goalId,
+      referencedTable: $db.goals,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GoalsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.goals,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$TransactionsTableTableManager
@@ -3189,7 +3791,7 @@ class $$TransactionsTableTableManager
           $$TransactionsTableUpdateCompanionBuilder,
           (Transaction, $$TransactionsTableReferences),
           Transaction,
-          PrefetchHooks Function({bool categoryId})
+          PrefetchHooks Function({bool categoryId, bool goalId})
         > {
   $$TransactionsTableTableManager(_$AppDatabase db, $TransactionsTable table)
     : super(
@@ -3208,6 +3810,7 @@ class $$TransactionsTableTableManager
                 Value<double> amount = const Value.absent(),
                 Value<String> type = const Value.absent(),
                 Value<int> categoryId = const Value.absent(),
+                Value<int?> goalId = const Value.absent(),
                 Value<DateTime> timestamp = const Value.absent(),
                 Value<String?> note = const Value.absent(),
                 Value<bool> isRecurring = const Value.absent(),
@@ -3217,6 +3820,7 @@ class $$TransactionsTableTableManager
                 amount: amount,
                 type: type,
                 categoryId: categoryId,
+                goalId: goalId,
                 timestamp: timestamp,
                 note: note,
                 isRecurring: isRecurring,
@@ -3228,6 +3832,7 @@ class $$TransactionsTableTableManager
                 required double amount,
                 required String type,
                 required int categoryId,
+                Value<int?> goalId = const Value.absent(),
                 required DateTime timestamp,
                 Value<String?> note = const Value.absent(),
                 Value<bool> isRecurring = const Value.absent(),
@@ -3237,6 +3842,7 @@ class $$TransactionsTableTableManager
                 amount: amount,
                 type: type,
                 categoryId: categoryId,
+                goalId: goalId,
                 timestamp: timestamp,
                 note: note,
                 isRecurring: isRecurring,
@@ -3250,7 +3856,7 @@ class $$TransactionsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({categoryId = false}) {
+          prefetchHooksCallback: ({categoryId = false, goalId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -3283,6 +3889,19 @@ class $$TransactionsTableTableManager
                               )
                               as T;
                     }
+                    if (goalId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.goalId,
+                                referencedTable: $$TransactionsTableReferences
+                                    ._goalIdTable(db),
+                                referencedColumn: $$TransactionsTableReferences
+                                    ._goalIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
 
                     return state;
                   },
@@ -3307,7 +3926,7 @@ typedef $$TransactionsTableProcessedTableManager =
       $$TransactionsTableUpdateCompanionBuilder,
       (Transaction, $$TransactionsTableReferences),
       Transaction,
-      PrefetchHooks Function({bool categoryId})
+      PrefetchHooks Function({bool categoryId, bool goalId})
     >;
 typedef $$UserSettingsTableCreateCompanionBuilder =
     UserSettingsCompanion Function({
@@ -3527,369 +4146,6 @@ typedef $$UserSettingsTableProcessedTableManager =
       ),
       UserSetting,
       PrefetchHooks Function()
-    >;
-typedef $$GoalsTableCreateCompanionBuilder =
-    GoalsCompanion Function({
-      Value<int> id,
-      required String name,
-      required double targetAmount,
-      required DateTime deadline,
-      Value<double> savedAmount,
-      Value<bool> isActive,
-      Value<bool> isCompleted,
-      Value<DateTime> createdAt,
-    });
-typedef $$GoalsTableUpdateCompanionBuilder =
-    GoalsCompanion Function({
-      Value<int> id,
-      Value<String> name,
-      Value<double> targetAmount,
-      Value<DateTime> deadline,
-      Value<double> savedAmount,
-      Value<bool> isActive,
-      Value<bool> isCompleted,
-      Value<DateTime> createdAt,
-    });
-
-final class $$GoalsTableReferences
-    extends BaseReferences<_$AppDatabase, $GoalsTable, Goal> {
-  $$GoalsTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static MultiTypedResultKey<$GoalContributionsTable, List<GoalContribution>>
-  _goalContributionsRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.goalContributions,
-        aliasName: $_aliasNameGenerator(
-          db.goals.id,
-          db.goalContributions.goalId,
-        ),
-      );
-
-  $$GoalContributionsTableProcessedTableManager get goalContributionsRefs {
-    final manager = $$GoalContributionsTableTableManager(
-      $_db,
-      $_db.goalContributions,
-    ).filter((f) => f.goalId.id.sqlEquals($_itemColumn<int>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(
-      _goalContributionsRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-}
-
-class $$GoalsTableFilterComposer extends Composer<_$AppDatabase, $GoalsTable> {
-  $$GoalsTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<double> get targetAmount => $composableBuilder(
-    column: $table.targetAmount,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get deadline => $composableBuilder(
-    column: $table.deadline,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<double> get savedAmount => $composableBuilder(
-    column: $table.savedAmount,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get isActive => $composableBuilder(
-    column: $table.isActive,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get isCompleted => $composableBuilder(
-    column: $table.isCompleted,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  Expression<bool> goalContributionsRefs(
-    Expression<bool> Function($$GoalContributionsTableFilterComposer f) f,
-  ) {
-    final $$GoalContributionsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.goalContributions,
-      getReferencedColumn: (t) => t.goalId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$GoalContributionsTableFilterComposer(
-            $db: $db,
-            $table: $db.goalContributions,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-}
-
-class $$GoalsTableOrderingComposer
-    extends Composer<_$AppDatabase, $GoalsTable> {
-  $$GoalsTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<double> get targetAmount => $composableBuilder(
-    column: $table.targetAmount,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<DateTime> get deadline => $composableBuilder(
-    column: $table.deadline,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<double> get savedAmount => $composableBuilder(
-    column: $table.savedAmount,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get isActive => $composableBuilder(
-    column: $table.isActive,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get isCompleted => $composableBuilder(
-    column: $table.isCompleted,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $$GoalsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $GoalsTable> {
-  $$GoalsTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
-
-  GeneratedColumn<double> get targetAmount => $composableBuilder(
-    column: $table.targetAmount,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<DateTime> get deadline =>
-      $composableBuilder(column: $table.deadline, builder: (column) => column);
-
-  GeneratedColumn<double> get savedAmount => $composableBuilder(
-    column: $table.savedAmount,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<bool> get isActive =>
-      $composableBuilder(column: $table.isActive, builder: (column) => column);
-
-  GeneratedColumn<bool> get isCompleted => $composableBuilder(
-    column: $table.isCompleted,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  Expression<T> goalContributionsRefs<T extends Object>(
-    Expression<T> Function($$GoalContributionsTableAnnotationComposer a) f,
-  ) {
-    final $$GoalContributionsTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.goalContributions,
-          getReferencedColumn: (t) => t.goalId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$GoalContributionsTableAnnotationComposer(
-                $db: $db,
-                $table: $db.goalContributions,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
-    return f(composer);
-  }
-}
-
-class $$GoalsTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $GoalsTable,
-          Goal,
-          $$GoalsTableFilterComposer,
-          $$GoalsTableOrderingComposer,
-          $$GoalsTableAnnotationComposer,
-          $$GoalsTableCreateCompanionBuilder,
-          $$GoalsTableUpdateCompanionBuilder,
-          (Goal, $$GoalsTableReferences),
-          Goal,
-          PrefetchHooks Function({bool goalContributionsRefs})
-        > {
-  $$GoalsTableTableManager(_$AppDatabase db, $GoalsTable table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$GoalsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$GoalsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$GoalsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<String> name = const Value.absent(),
-                Value<double> targetAmount = const Value.absent(),
-                Value<DateTime> deadline = const Value.absent(),
-                Value<double> savedAmount = const Value.absent(),
-                Value<bool> isActive = const Value.absent(),
-                Value<bool> isCompleted = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
-              }) => GoalsCompanion(
-                id: id,
-                name: name,
-                targetAmount: targetAmount,
-                deadline: deadline,
-                savedAmount: savedAmount,
-                isActive: isActive,
-                isCompleted: isCompleted,
-                createdAt: createdAt,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                required String name,
-                required double targetAmount,
-                required DateTime deadline,
-                Value<double> savedAmount = const Value.absent(),
-                Value<bool> isActive = const Value.absent(),
-                Value<bool> isCompleted = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
-              }) => GoalsCompanion.insert(
-                id: id,
-                name: name,
-                targetAmount: targetAmount,
-                deadline: deadline,
-                savedAmount: savedAmount,
-                isActive: isActive,
-                isCompleted: isCompleted,
-                createdAt: createdAt,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) =>
-                    (e.readTable(table), $$GoalsTableReferences(db, table, e)),
-              )
-              .toList(),
-          prefetchHooksCallback: ({goalContributionsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (goalContributionsRefs) db.goalContributions,
-              ],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (goalContributionsRefs)
-                    await $_getPrefetchedData<
-                      Goal,
-                      $GoalsTable,
-                      GoalContribution
-                    >(
-                      currentTable: table,
-                      referencedTable: $$GoalsTableReferences
-                          ._goalContributionsRefsTable(db),
-                      managerFromTypedResult: (p0) => $$GoalsTableReferences(
-                        db,
-                        table,
-                        p0,
-                      ).goalContributionsRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.goalId == item.id),
-                      typedResults: items,
-                    ),
-                ];
-              },
-            );
-          },
-        ),
-      );
-}
-
-typedef $$GoalsTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $GoalsTable,
-      Goal,
-      $$GoalsTableFilterComposer,
-      $$GoalsTableOrderingComposer,
-      $$GoalsTableAnnotationComposer,
-      $$GoalsTableCreateCompanionBuilder,
-      $$GoalsTableUpdateCompanionBuilder,
-      (Goal, $$GoalsTableReferences),
-      Goal,
-      PrefetchHooks Function({bool goalContributionsRefs})
     >;
 typedef $$GoalContributionsTableCreateCompanionBuilder =
     GoalContributionsCompanion Function({
@@ -4541,12 +4797,12 @@ class $AppDatabaseManager {
   $AppDatabaseManager(this._db);
   $$CategoriesTableTableManager get categories =>
       $$CategoriesTableTableManager(_db, _db.categories);
+  $$GoalsTableTableManager get goals =>
+      $$GoalsTableTableManager(_db, _db.goals);
   $$TransactionsTableTableManager get transactions =>
       $$TransactionsTableTableManager(_db, _db.transactions);
   $$UserSettingsTableTableManager get userSettings =>
       $$UserSettingsTableTableManager(_db, _db.userSettings);
-  $$GoalsTableTableManager get goals =>
-      $$GoalsTableTableManager(_db, _db.goals);
   $$GoalContributionsTableTableManager get goalContributions =>
       $$GoalContributionsTableTableManager(_db, _db.goalContributions);
   $$CategorizationRulesTableTableManager get categorizationRules =>

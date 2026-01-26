@@ -9,6 +9,7 @@ import '../../../core/providers/app_state_provider.dart';
 import '../../../core/utils/constants.dart';
 import '../../../core/utils/formatters.dart';
 import '../../dashboard/providers/dashboard_providers.dart';
+import '../../goals/providers/goals_provider.dart';
 import '../services/categorization_engine.dart';
 
 class AddTransactionScreen extends ConsumerStatefulWidget {
@@ -28,6 +29,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
   TransactionType _type = TransactionType.expense;
   Category? _selectedCategory;
+  Goal? _selectedGoal;
   DateTime _selectedDate = DateTime.now();
   bool _isLoading = false;
   bool _isSuggestingCategory = false;
@@ -98,6 +100,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 amount: Value(amount),
                 type: Value(_type.name),
                 categoryId: Value(_selectedCategory!.id),
+                goalId: Value(_selectedGoal?.id),
                 timestamp: Value(_selectedDate),
                 note: Value(
                   _noteController.text.isNotEmpty ? _noteController.text : null,
@@ -113,12 +116,28 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 amount: amount,
                 type: _type.name,
                 categoryId: _selectedCategory!.id,
+                goalId: Value(_selectedGoal?.id),
                 timestamp: _selectedDate,
                 note: Value(
                   _noteController.text.isNotEmpty ? _noteController.text : null,
                 ),
               ),
             );
+
+        // Add contribution to goal if selected
+        if (_selectedGoal != null) {
+          final goalService = ref.read(goalServiceProvider);
+          await goalService.addContribution(
+            goalId: _selectedGoal!.id,
+            amount: amount,
+            note: _noteController.text.isNotEmpty
+                ? 'Expense: ${_noteController.text}'
+                : 'Expense contribution',
+          );
+          // Refresh goal data
+          ref.invalidate(activeGoalsProvider);
+          ref.invalidate(activeGoalProvider);
+        }
       }
 
       // Learn from this transaction if note is provided
@@ -331,6 +350,121 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               ),
               const SizedBox(height: 24),
 
+              // Goal Selection (only for expenses)
+              if (_type.isExpense) ...[
+                Row(
+                  children: [
+                    Text(
+                      'Link to Goal (optional)',
+                      style: theme.textTheme.labelLarge,
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.savings_outlined,
+                      size: 18,
+                      color: colorScheme.primary,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ref
+                    .watch(activeGoalsProvider)
+                    .when(
+                      loading: () => const SizedBox(
+                        height: 40,
+                        child: Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                      error: (e, _) => Text('Error loading goals: $e'),
+                      data: (goals) {
+                        if (goals.isEmpty) {
+                          return Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: colorScheme.surfaceContainerHighest
+                                  .withAlpha(100),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.info_outline,
+                                  size: 18,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'No active goals. Create one to link expenses.',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        return Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: goals.map((goal) {
+                            final isSelected = _selectedGoal?.id == goal.id;
+                            final progress =
+                                (goal.savedAmount / goal.targetAmount).clamp(
+                                  0.0,
+                                  1.0,
+                                );
+                            return FilterChip(
+                              selected: isSelected,
+                              label: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(goal.name),
+                                  Text(
+                                    '${Formatters.compactCurrency(goal.savedAmount)} / ${Formatters.compactCurrency(goal.targetAmount)}',
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: isSelected
+                                          ? colorScheme.onSecondaryContainer
+                                          : colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              avatar: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  CircularProgressIndicator(
+                                    value: progress,
+                                    strokeWidth: 2,
+                                    backgroundColor:
+                                        colorScheme.surfaceContainerHighest,
+                                    color: colorScheme.primary,
+                                  ),
+                                  Icon(
+                                    Icons.flag,
+                                    size: 12,
+                                    color: colorScheme.primary,
+                                  ),
+                                ],
+                              ),
+                              onSelected: (_) {
+                                setState(() {
+                                  if (isSelected) {
+                                    _selectedGoal = null;
+                                  } else {
+                                    _selectedGoal = goal;
+                                  }
+                                });
+                              },
+                            );
+                          }).toList(),
+                        );
+                      },
+                    ),
+                const SizedBox(height: 24),
+              ],
+
               // Date Selection
               Text('Date', style: theme.textTheme.labelLarge),
               const SizedBox(height: 8),
@@ -392,6 +526,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       onTap: () => setState(() {
         _type = type;
         _selectedCategory = null; // Reset category on type change
+        _selectedGoal = null; // Reset goal on type change
       }),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
