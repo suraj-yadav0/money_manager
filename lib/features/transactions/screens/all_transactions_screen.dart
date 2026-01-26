@@ -225,7 +225,7 @@ class AllTransactionsScreen extends ConsumerWidget {
       )..where((t) => t.id.equals(item.transaction.id))).go();
 
       // Refresh dashboard (and this list via stream)
-      ref.invalidate(monthlyStatsProvider);
+      ref.invalidate(dashboardStatsProvider);
       // allTransactionsProvider is auto-refreshed as it's a stream
 
       if (context.mounted) {

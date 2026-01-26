@@ -232,7 +232,7 @@ class RecentTransactions extends ConsumerWidget {
     )..where((t) => t.id.equals(item.transaction.id))).go();
 
     // Refresh dashboard
-    ref.invalidate(monthlyStatsProvider);
+    ref.invalidate(dashboardStatsProvider);
     ref.invalidate(recentTransactionsProvider);
 
     if (context.mounted) {

@@ -173,7 +173,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       }
 
       // Refresh dashboard
-      ref.invalidate(monthlyStatsProvider);
+      ref.invalidate(dashboardStatsProvider);
       ref.invalidate(recentTransactionsProvider);
 
       if (mounted) {

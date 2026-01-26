@@ -11,7 +11,7 @@ class BalanceCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final statsAsync = ref.watch(monthlyStatsProvider);
+    final statsAsync = ref.watch(dashboardStatsProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 

@@ -8,6 +8,7 @@ import '../widgets/balance_card.dart';
 import '../widgets/forecast_card.dart';
 import '../widgets/category_pie_chart.dart';
 import '../widgets/recent_transactions.dart';
+import '../widgets/date_filter_bar.dart';
 import '../../transactions/screens/all_transactions_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -20,7 +21,7 @@ class DashboardScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          Formatters.month(DateTime.now()),
+          _getTitle(ref),
           style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
         ),
         actions: [
@@ -34,7 +35,7 @@ class DashboardScreen extends ConsumerWidget {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(monthlyStatsProvider);
+          ref.invalidate(dashboardStatsProvider);
           ref.invalidate(recentTransactionsProvider);
         },
         child: SingleChildScrollView(
@@ -43,6 +44,10 @@ class DashboardScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Date Filters
+              const DateFilterBar(),
+              const SizedBox(height: 16),
+
               // Balance Card
               const BalanceCard(),
               const SizedBox(height: 16),
@@ -85,5 +90,23 @@ class DashboardScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  String _getTitle(WidgetRef ref) {
+    final filter = ref.watch(dashboardDateFilterProvider);
+    final range = ref.watch(dateRangeProvider);
+
+    switch (filter) {
+      case DashboardDateFilter.thisWeek:
+      case DashboardDateFilter.lastWeek:
+        return '${Formatters.shortDate(range.start)} - ${Formatters.shortDate(range.end)}';
+      case DashboardDateFilter.thisMonth:
+      case DashboardDateFilter.lastMonth:
+        return Formatters.month(range.start);
+      case DashboardDateFilter.thisYear:
+        return range.start.year.toString();
+      case DashboardDateFilter.allTime:
+        return 'All Time';
+    }
   }
 }

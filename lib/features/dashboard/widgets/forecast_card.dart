@@ -13,7 +13,7 @@ class ForecastCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final statsAsync = ref.watch(monthlyStatsProvider);
+    final statsAsync = ref.watch(dashboardStatsProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -152,7 +152,7 @@ class ForecastCard extends ConsumerWidget {
     }
   }
 
-  double _getProgress(MonthlyStats stats) {
+  double _getProgress(DashboardStats stats) {
     if (stats.totalIncome <= 0) return 0;
     final spent = stats.totalExpenses / stats.totalIncome;
     return spent.clamp(0.0, 1.0);
