@@ -406,35 +406,124 @@ class _GoalDetailsSheet extends ConsumerWidget {
 
                       return Column(
                         children: contributions.map((c) {
-                          return ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: Container(
-                              padding: const EdgeInsets.all(8),
+                          return Dismissible(
+                            key: Key('contribution_${c.id}'),
+                            background: Container(
+                              alignment: Alignment.centerLeft,
+                              padding: const EdgeInsets.only(left: 20),
                               decoration: BoxDecoration(
-                                color: AppTheme.success.withAlpha(30),
+                                color: colorScheme.primaryContainer,
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Icon(
-                                Icons.add,
-                                color: AppTheme.success,
-                                size: 20,
+                              child: Icon(
+                                Icons.edit,
+                                color: colorScheme.primary,
                               ),
                             ),
-                            title: Text(
-                              '+${Formatters.currency(c.amount)}',
-                              style: GoogleFonts.outfit(
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.success,
+                            secondaryBackground: Container(
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.only(right: 20),
+                              decoration: BoxDecoration(
+                                color: colorScheme.errorContainer,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                Icons.delete,
+                                color: colorScheme.error,
                               ),
                             ),
-                            subtitle: Text(
-                              c.note ?? Formatters.dateTime(c.createdAt),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            trailing: Text(
-                              Formatters.relativeDate(c.createdAt),
-                              style: theme.textTheme.bodySmall,
+                            confirmDismiss: (direction) async {
+                              if (direction == DismissDirection.endToStart) {
+                                // Delete - show confirmation
+                                return await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: const Text(
+                                          'Delete Contribution?',
+                                        ),
+                                        content: Text(
+                                          'Delete ${Formatters.currency(c.amount)} contribution?',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(ctx, false),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          FilledButton(
+                                            onPressed: () =>
+                                                Navigator.pop(ctx, true),
+                                            style: FilledButton.styleFrom(
+                                              backgroundColor:
+                                                  colorScheme.error,
+                                            ),
+                                            child: const Text('Delete'),
+                                          ),
+                                        ],
+                                      ),
+                                    ) ??
+                                    false;
+                              } else {
+                                // Edit - show edit dialog
+                                await _showEditContributionDialog(
+                                  context,
+                                  ref,
+                                  c,
+                                  goal,
+                                );
+                                return false; // Don't dismiss
+                              }
+                            },
+                            onDismissed: (direction) async {
+                              if (direction == DismissDirection.endToStart) {
+                                final goalService = ref.read(
+                                  goalServiceProvider,
+                                );
+                                await goalService.deleteContribution(c);
+                                ref.invalidate(
+                                  goalContributionsProvider(goal.id),
+                                );
+                                ref.invalidate(activeGoalsProvider);
+                                ref.invalidate(activeGoalProvider);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Contribution deleted'),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            child: ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.success.withAlpha(30),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.add,
+                                  color: AppTheme.success,
+                                  size: 20,
+                                ),
+                              ),
+                              title: Text(
+                                '+${Formatters.currency(c.amount)}',
+                                style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.success,
+                                ),
+                              ),
+                              subtitle: Text(
+                                c.note ?? Formatters.dateTime(c.createdAt),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              trailing: Text(
+                                Formatters.relativeDate(c.createdAt),
+                                style: theme.textTheme.bodySmall,
+                              ),
                             ),
                           );
                         }).toList(),
@@ -447,6 +536,151 @@ class _GoalDetailsSheet extends ConsumerWidget {
           ],
         );
       },
+    );
+  }
+
+  Future<void> _showEditContributionDialog(
+    BuildContext context,
+    WidgetRef ref,
+    GoalContribution contribution,
+    Goal goal,
+  ) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => _EditContributionDialog(
+        contribution: contribution,
+        onSave: (amount, note) async {
+          final goalService = ref.read(goalServiceProvider);
+          await goalService.updateContribution(
+            contribution: contribution,
+            newAmount: amount,
+            newNote: note,
+          );
+          return true;
+        },
+      ),
+    );
+
+    if (result == true) {
+      // Invalidate after dialog closes to avoid issues
+      ref.invalidate(goalContributionsProvider(goal.id));
+      ref.invalidate(activeGoalsProvider);
+      ref.invalidate(activeGoalProvider);
+    }
+  }
+}
+
+class _EditContributionDialog extends StatefulWidget {
+  final GoalContribution contribution;
+  final Future<bool> Function(double amount, String? note) onSave;
+
+  const _EditContributionDialog({
+    required this.contribution,
+    required this.onSave,
+  });
+
+  @override
+  State<_EditContributionDialog> createState() =>
+      _EditContributionDialogState();
+}
+
+class _EditContributionDialogState extends State<_EditContributionDialog> {
+  late TextEditingController _amountController;
+  late TextEditingController _noteController;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _amountController = TextEditingController(
+      text: widget.contribution.amount.toStringAsFixed(0),
+    );
+    _noteController = TextEditingController(
+      text: widget.contribution.note ?? '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final amount = double.tryParse(_amountController.text.replaceAll(',', ''));
+    if (amount == null || amount <= 0) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final success = await widget.onSave(
+        amount,
+        _noteController.text.isNotEmpty ? _noteController.text : null,
+      );
+      if (success && mounted) {
+        Navigator.of(context).pop(true);
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return AlertDialog(
+      title: const Text('Edit Contribution'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _amountController,
+            decoration: InputDecoration(
+              labelText: 'Amount',
+              prefixText: '₹ ',
+              filled: true,
+              fillColor: colorScheme.surfaceContainerHighest.withAlpha(100),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            keyboardType: TextInputType.number,
+            autofocus: true,
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _noteController,
+            decoration: InputDecoration(
+              labelText: 'Note (optional)',
+              filled: true,
+              fillColor: colorScheme.surfaceContainerHighest.withAlpha(100),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            textCapitalization: TextCapitalization.sentences,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _isLoading ? null : _save,
+          child: _isLoading
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Save'),
+        ),
+      ],
     );
   }
 }
