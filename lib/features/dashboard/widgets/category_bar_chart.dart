@@ -96,12 +96,22 @@ class CategoryBarChart extends ConsumerWidget {
                         leftTitles: AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
-                            reservedSize: 40,
+                            reservedSize: 60,
+                            // Calculate interval to show ~5 labels max prevents overlap
+                            interval: maxValue > 0 ? maxValue / 4 : 1.0,
                             getTitlesWidget: (value, meta) {
-                              return Text(
-                                Formatters.compactCurrency(value),
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  fontSize: 10,
+                              if (value == 0) return const SizedBox();
+                              return Container(
+                                alignment: Alignment.centerRight,
+                                padding: const EdgeInsets.only(right: 8),
+                                child: Text(
+                                  Formatters.compactCurrency(value),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontSize: 10,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                  overflow: TextOverflow.visible,
+                                  softWrap: false,
                                 ),
                               );
                             },
@@ -137,9 +147,10 @@ class CategoryBarChart extends ConsumerWidget {
                       borderData: FlBorderData(show: false),
                       gridData: FlGridData(
                         show: true,
-                        drawVerticalLine: true,
-                        drawHorizontalLine: false,
-                        getDrawingVerticalLine: (value) => FlLine(
+                        drawVerticalLine: false,
+                        drawHorizontalLine: true,
+                        horizontalInterval: maxValue > 0 ? maxValue / 4 : 1.0,
+                        getDrawingHorizontalLine: (value) => FlLine(
                           color: colorScheme.outlineVariant.withAlpha(50),
                           strokeWidth: 1,
                         ),
