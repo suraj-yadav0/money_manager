@@ -101,59 +101,114 @@ class AllTransactionsScreen extends ConsumerWidget {
 
                           return Column(
                             children: [
-                              InkWell(
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => AddTransactionScreen(
-                                        transactionToEdit: item,
+                              Dismissible(
+                                key: Key(item.transaction.id.toString()),
+                                direction: DismissDirection.horizontal,
+                                background: Container(
+                                  color: colorScheme.error,
+                                  alignment: Alignment.centerLeft,
+                                  padding: const EdgeInsets.only(left: 24),
+                                  child: const Icon(
+                                    Icons.delete,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                secondaryBackground: Container(
+                                  color: AppTheme.success,
+                                  alignment: Alignment.centerRight,
+                                  padding: const EdgeInsets.only(right: 24),
+                                  child: const Icon(
+                                    Icons.edit,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                confirmDismiss: (direction) async {
+                                  if (direction == DismissDirection.startToEnd) {
+                                    // Swipe left-to-right: Delete
+                                    return await _confirmDelete(
+                                      context,
+                                      ref,
+                                      item,
+                                    );
+                                  } else {
+                                    // Swipe right-to-left: Edit
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => AddTransactionScreen(
+                                          transactionToEdit: item,
+                                        ),
+                                      ),
+                                    );
+                                    return false;
+                                  }
+                                },
+                                onDismissed: (direction) {
+                                  if (direction == DismissDirection.startToEnd) {
+                                    _deleteTransaction(context, ref, item);
+                                  }
+                                },
+                                child: InkWell(
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => AddTransactionScreen(
+                                          transactionToEdit: item,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  onLongPress: () async {
+                                    final confirmed = await _confirmDelete(
+                                      context,
+                                      ref,
+                                      item,
+                                    );
+                                    if (confirmed == true && context.mounted) {
+                                      _deleteTransaction(context, ref, item);
+                                    }
+                                  },
+                                  child: ListTile(
+                                    leading: Container(
+                                      width: 44,
+                                      height: 44,
+                                      decoration: BoxDecoration(
+                                        color: isExpense
+                                            ? colorScheme.errorContainer
+                                                  .withAlpha(100)
+                                            : AppTheme.success.withAlpha(30),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        IconHelper.getIcon(item.category?.icon),
+                                        color: isExpense
+                                            ? colorScheme.error
+                                            : AppTheme.success,
+                                        size: 22,
                                       ),
                                     ),
-                                  );
-                                },
-                                onLongPress: () =>
-                                    _confirmDelete(context, ref, item),
-                                child: ListTile(
-                                  leading: Container(
-                                    width: 44,
-                                    height: 44,
-                                    decoration: BoxDecoration(
-                                      color: isExpense
-                                          ? colorScheme.errorContainer
-                                                .withAlpha(100)
-                                          : AppTheme.success.withAlpha(30),
-                                      borderRadius: BorderRadius.circular(12),
+                                    title: Text(
+                                      item.category?.name ?? 'Unknown',
+                                      style: theme.textTheme.titleSmall,
                                     ),
-                                    child: Icon(
-                                      IconHelper.getIcon(item.category?.icon),
-                                      color: isExpense
-                                          ? colorScheme.error
-                                          : AppTheme.success,
-                                      size: 22,
+                                    subtitle: Text(
+                                      item.transaction.note?.isNotEmpty == true
+                                          ? item.transaction.note!
+                                          : Formatters.relativeDate(
+                                              item.transaction.timestamp,
+                                            ),
+                                      style: theme.textTheme.bodySmall,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                  ),
-                                  title: Text(
-                                    item.category?.name ?? 'Unknown',
-                                    style: theme.textTheme.titleSmall,
-                                  ),
-                                  subtitle: Text(
-                                    item.transaction.note?.isNotEmpty == true
-                                        ? item.transaction.note!
-                                        : Formatters.relativeDate(
-                                            item.transaction.timestamp,
-                                          ),
-                                    style: theme.textTheme.bodySmall,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  trailing: Text(
-                                    '${isExpense ? '-' : '+'}${Formatters.currency(item.transaction.amount)}',
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: isExpense
-                                          ? colorScheme.error
-                                          : AppTheme.success,
+                                    trailing: Text(
+                                      '${isExpense ? '-' : '+'}${Formatters.currency(item.transaction.amount)}',
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: isExpense
+                                            ? colorScheme.error
+                                            : AppTheme.success,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -192,12 +247,12 @@ class AllTransactionsScreen extends ConsumerWidget {
     return dateStr;
   }
 
-  Future<void> _confirmDelete(
+  Future<bool?> _confirmDelete(
     BuildContext context,
     WidgetRef ref,
     TransactionWithCategory item,
   ) async {
-    final confirmed = await showDialog<bool>(
+    return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Transaction'),
@@ -217,22 +272,26 @@ class AllTransactionsScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
 
-    if (confirmed == true) {
-      final db = ref.read(databaseProvider);
-      await (db.delete(
-        db.transactions,
-      )..where((t) => t.id.equals(item.transaction.id))).go();
+  Future<void> _deleteTransaction(
+    BuildContext context,
+    WidgetRef ref,
+    TransactionWithCategory item,
+  ) async {
+    final db = ref.read(databaseProvider);
+    await (db.delete(
+      db.transactions,
+    )..where((t) => t.id.equals(item.transaction.id))).go();
 
-      // Refresh dashboard (and this list via stream)
-      ref.invalidate(dashboardStatsProvider);
-      // allTransactionsProvider is auto-refreshed as it's a stream
+    // Refresh dashboard (and this list via stream)
+    ref.invalidate(dashboardStatsProvider);
+    // allTransactionsProvider is auto-refreshed as it's a stream
 
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Transaction deleted')));
-      }
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Transaction deleted')));
     }
   }
 }
