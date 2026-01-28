@@ -161,11 +161,13 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
       totalRangeIncome += tx.amount;
     } else {
       totalExpenses += tx.amount;
-      categoryTotals[tx.categoryId] =
-          (categoryTotals[tx.categoryId] ?? 0) + tx.amount;
-      // Track goal allocations separately
+      // Track goal allocations separately - don't add to category breakdown
       if (tx.goalId != null) {
         goalAllocatedAmount += tx.amount;
+      } else {
+        // Only add non-goal expenses to category breakdown
+        categoryTotals[tx.categoryId] =
+            (categoryTotals[tx.categoryId] ?? 0) + tx.amount;
       }
     }
   }

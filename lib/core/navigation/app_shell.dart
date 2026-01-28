@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/budget/screens/budget_screen.dart';
 import '../../features/dashboard/screens/dashboard_screen.dart';
 import '../../features/insights/screens/insights_screen.dart';
 import '../../features/goals/screens/goals_screen.dart';
@@ -18,7 +19,12 @@ class AppShell extends ConsumerStatefulWidget {
 final navIndexProvider = StateProvider<int>((ref) => 0);
 
 class _AppShellState extends ConsumerState<AppShell> {
-  final _screens = const [DashboardScreen(), InsightsScreen(), GoalsScreen()];
+  final _screens = const [
+    DashboardScreen(),
+    BudgetScreen(),
+    InsightsScreen(),
+    GoalsScreen(),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +42,11 @@ class _AppShellState extends ConsumerState<AppShell> {
             icon: Icon(Icons.dashboard_outlined),
             selectedIcon: Icon(Icons.dashboard),
             label: 'Dashboard',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.account_balance_wallet_outlined),
+            selectedIcon: Icon(Icons.account_balance_wallet),
+            label: 'Budget',
           ),
           NavigationDestination(
             icon: Icon(Icons.lightbulb_outline),
