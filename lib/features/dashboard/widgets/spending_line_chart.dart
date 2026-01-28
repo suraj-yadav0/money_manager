@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:drift/drift.dart' hide Column;
 
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/utils/formatters.dart';
@@ -123,9 +124,26 @@ class SpendingLineChart extends ConsumerWidget {
                         touchTooltipData: LineTouchTooltipData(
                           getTooltipItems: (spots) {
                             return spots.map((spot) {
-                              final date = data[spot.x.toInt()].date;
+                              final dailySpend = data[spot.x.toInt()];
+                              final date = dailySpend.date;
+
+                              // Build tooltip text
+                              final sb = StringBuffer();
+                              sb.writeln(Formatters.shortDate(date));
+                              sb.writeln(Formatters.currency(spot.y));
+
+                              if (dailySpend.topTransactions.isNotEmpty) {
+                                sb.writeln(''); // Spacer
+                                for (final name in dailySpend.topTransactions) {
+                                  sb.writeln('• $name');
+                                }
+                                if (dailySpend.hasMore) {
+                                  sb.write('+ more');
+                                }
+                              }
+
                               return LineTooltipItem(
-                                '${Formatters.shortDate(date)}\n${Formatters.currency(spot.y)}',
+                                sb.toString().trim(),
                                 GoogleFonts.inter(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
@@ -197,27 +215,48 @@ class SpendingLineChart extends ConsumerWidget {
   ) async {
     final db = ref.read(databaseProvider);
 
-    // Get all expenses in range
-    final allTransactions = await db.select(db.transactions).get();
+    // Get all expenses in range with category info
+    final allTransactions =
+        await (db.select(
+          db.transactions,
+        )..where((t) => t.type.equals('expense'))).join([
+          leftOuterJoin(
+            db.categories,
+            db.categories.id.equalsExp(db.transactions.categoryId),
+          ),
+        ]).get();
 
-    final transactions = allTransactions
-        .where(
-          (t) =>
-              t.timestamp.isAfter(start.subtract(const Duration(seconds: 1))) &&
-              t.timestamp.isBefore(end.add(const Duration(seconds: 1))) &&
-              t.type == 'expense',
-        )
-        .toList();
+    final filtered = allTransactions.where((row) {
+      final t = row.readTable(db.transactions);
+      return t.timestamp.isAfter(start.subtract(const Duration(seconds: 1))) &&
+          t.timestamp.isBefore(end.add(const Duration(seconds: 1)));
+    }).toList();
 
     // Group by date
     final Map<DateTime, double> dailyTotals = {};
-    for (final tx in transactions) {
+    final Map<DateTime, List<String>> dailyNotes = {};
+
+    for (final row in filtered) {
+      final t = row.readTable(db.transactions);
+      final c = row.readTableOrNull(db.categories);
+
       final date = DateTime(
-        tx.timestamp.year,
-        tx.timestamp.month,
-        tx.timestamp.day,
+        t.timestamp.year,
+        t.timestamp.month,
+        t.timestamp.day,
       );
-      dailyTotals[date] = (dailyTotals[date] ?? 0) + tx.amount;
+
+      dailyTotals[date] = (dailyTotals[date] ?? 0) + t.amount;
+
+      // Store transaction name (Note or Category or 'Expense')
+      if (dailyNotes[date] == null) dailyNotes[date] = [];
+      String label = t.note ?? c?.name ?? 'Expense';
+      if (label.isEmpty) label = c?.name ?? 'Expense';
+
+      // Limit to top 3 per day to avoid huge tooltips
+      if (dailyNotes[date]!.length < 3) {
+        dailyNotes[date]!.add(label);
+      }
     }
 
     // Fill in missing dates with 0
@@ -226,7 +265,19 @@ class SpendingLineChart extends ConsumerWidget {
     final endDate = DateTime(end.year, end.month, end.day);
 
     while (!current.isAfter(endDate)) {
-      result.add(_DailySpend(date: current, amount: dailyTotals[current] ?? 0));
+      final amount = dailyTotals[current] ?? 0;
+      final notes = dailyNotes[current] ?? [];
+      // calculate if we have more transactions than shown (simplified logic)
+      final hasMore = notes.length >= 3;
+
+      result.add(
+        _DailySpend(
+          date: current,
+          amount: amount,
+          topTransactions: notes,
+          hasMore: hasMore,
+        ),
+      );
       current = current.add(const Duration(days: 1));
     }
 
@@ -248,6 +299,13 @@ class SpendingLineChart extends ConsumerWidget {
 class _DailySpend {
   final DateTime date;
   final double amount;
+  final List<String> topTransactions;
+  final bool hasMore;
 
-  _DailySpend({required this.date, required this.amount});
+  _DailySpend({
+    required this.date,
+    required this.amount,
+    this.topTransactions = const [],
+    this.hasMore = false,
+  });
 }
