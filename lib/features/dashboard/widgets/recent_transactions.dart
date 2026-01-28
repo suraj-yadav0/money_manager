@@ -136,11 +136,15 @@ class RecentTransactions extends ConsumerWidget {
                           style: theme.textTheme.titleSmall,
                         ),
                         subtitle: Text(
-                          item.transaction.note?.isNotEmpty == true
-                              ? item.transaction.note!
-                              : Formatters.relativeDate(
-                                  item.transaction.timestamp,
-                                ),
+                          [
+                            item.transaction.note?.isNotEmpty == true
+                                ? item.transaction.note!
+                                : Formatters.relativeDate(
+                                    item.transaction.timestamp,
+                                  ),
+                            if (item.transaction.paymentMode != null)
+                              item.transaction.paymentMode!,
+                          ].join(' • '),
                           style: theme.textTheme.bodySmall,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

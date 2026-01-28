@@ -17,6 +17,7 @@ class Transactions extends Table {
       integer().nullable().references(Goals, #id)(); // Optional goal link
   DateTimeColumn get timestamp => dateTime()();
   TextColumn get note => text().nullable()();
+  TextColumn get paymentMode => text().nullable()(); // 'Cash', 'UPI', etc.
   BoolColumn get isRecurring => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
@@ -88,7 +89,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration {
@@ -114,6 +115,12 @@ class AppDatabase extends _$AppDatabase {
           // Add optional goal_id column to transactions table
           await customStatement(
             'ALTER TABLE transactions ADD COLUMN goal_id INTEGER REFERENCES goals(id)',
+          );
+        }
+        if (from < 5) {
+          // Add payment_mode column to transactions table
+          await customStatement(
+            'ALTER TABLE transactions ADD COLUMN payment_mode TEXT',
           );
         }
       },
