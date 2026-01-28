@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../dashboard/screens/dashboard_screen.dart';
+import '../../transactions/screens/all_transactions_screen.dart';
+import '../../../core/navigation/app_shell.dart';
 import '../services/insights_engine.dart';
 
 class InsightsScreen extends ConsumerWidget {
@@ -72,13 +75,13 @@ class InsightsScreen extends ConsumerWidget {
   }
 }
 
-class _InsightCard extends StatelessWidget {
+class _InsightCard extends ConsumerWidget {
   final Insight insight;
 
   const _InsightCard({required this.insight});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final color = _getSeverityColor(insight.severity);
@@ -133,11 +136,57 @@ class _InsightCard extends StatelessWidget {
                 color: colorScheme.onSurfaceVariant,
               ),
             ),
+            if (insight.tip != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest.withAlpha(50),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: colorScheme.outlineVariant.withAlpha(50),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.lightbulb_outline,
+                      size: 16,
+                      color: colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        insight.tip!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontStyle: FontStyle.italic,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             if (insight.actionText != null) ...[
               const SizedBox(height: 12),
               TextButton(
                 onPressed: () {
-                  // TODO: Handle action
+                  if (insight.type == InsightType.spendingSpike ||
+                      insight.type == InsightType.categoryDominance ||
+                      insight.type == InsightType.weekendSpending ||
+                      insight.type == InsightType.monthOverMonth) {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const AllTransactionsScreen(),
+                      ),
+                    );
+                  } else if (insight.type == InsightType.budgetOverrun ||
+                      insight.type == InsightType.forecastWarning) {
+                    // Navigate to dashboard (index 0)
+                    ref.read(navIndexProvider.notifier).state = 0;
+                  }
                 },
                 style: TextButton.styleFrom(
                   padding: EdgeInsets.zero,

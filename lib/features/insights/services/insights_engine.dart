@@ -26,6 +26,7 @@ class Insight {
   final String title;
   final String description;
   final String? actionText;
+  final String? tip;
   final DateTime generatedAt;
 
   Insight({
@@ -34,6 +35,7 @@ class Insight {
     required this.title,
     required this.description,
     this.actionText,
+    this.tip,
     DateTime? generatedAt,
   }) : generatedAt = generatedAt ?? DateTime.now();
 }
@@ -158,9 +160,9 @@ class InsightsEngine {
         severity: InsightSeverity.warning,
         title: 'Spending Spike Detected',
         description:
-            "You've spent ${Formatters.currency(todayTotal)} today, "
             "which is ${(todayTotal / dailyAverage).toStringAsFixed(1)}x your daily average.",
         actionText: 'View details',
+        tip: 'Try a "no-spend day" tomorrow to balance this out.',
       );
     }
 
@@ -194,6 +196,9 @@ class InsightsEngine {
           description:
               '${(ratio * 100).toStringAsFixed(0)}% of your expenses '
               '(${Formatters.currency(entry.value)}) went to ${category?.name ?? "this category"}.',
+          actionText: 'View details',
+          tip:
+              'Check if there are cheaper alternatives for your major expenses in ${category?.name ?? "this category"}.',
         );
       }
     }
@@ -219,6 +224,7 @@ class InsightsEngine {
             "You've spent ${Formatters.percentage(ratio)} of your income "
             "with ${Formatters.percentage(1 - expectedRatio)} of the month remaining.",
         actionText: 'Review expenses',
+        tip: 'Consider pausing non-essential subscriptions until next month.',
       );
     }
 
@@ -269,6 +275,9 @@ class InsightsEngine {
         description:
             'You spend ${(weekendAvg / weekdayAvg).toStringAsFixed(1)}x more '
             'on weekends (${Formatters.currency(weekendAvg)}/day) than weekdays.',
+        actionText: 'View details',
+        tip:
+            'Planning weekend activities in advance can help avoid impulse spending.',
       );
     }
 
@@ -299,6 +308,8 @@ class InsightsEngine {
         description:
             'At this rate, you\'ll overspend by ${Formatters.currency(-projectedBalance)} this month.',
         actionText: 'Reduce spending',
+        tip:
+            'Look for one variable expense you can cut this week (e.g., dining out).',
       );
     } else if (projectedBalance < monthlyIncome * 0.1) {
       return Insight(
@@ -308,6 +319,8 @@ class InsightsEngine {
         description:
             'You\'ll have only ${Formatters.currency(projectedBalance)} left at month-end.',
         actionText: 'View forecast',
+        tip:
+            'Try to limit daily spending to ${Formatters.currency(projectedBalance / daysRemaining)} for the rest of the month.',
       );
     }
 

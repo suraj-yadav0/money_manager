@@ -30,6 +30,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   TransactionType _type = TransactionType.expense;
   Category? _selectedCategory;
   Goal? _selectedGoal;
+  String? _selectedPaymentMode = 'Cash'; // Default to Cash
   DateTime _selectedDate = DateTime.now();
   bool _isLoading = false;
   bool _isSuggestingCategory = false;
@@ -47,7 +48,23 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       _noteController.text = tx.note ?? '';
       _type = TransactionType.values.firstWhere((e) => e.name == tx.type);
       _selectedCategory = cat;
+      _selectedGoal = widget.transactionToEdit!.transaction.goalId != null
+          ? Goal(
+              id: widget.transactionToEdit!.transaction.goalId!,
+              name: '', // Placeholder, will be fetched or handled
+              targetAmount: 0,
+              deadline: DateTime.now(),
+              savedAmount: 0,
+              isActive: true,
+              isCompleted: false,
+              createdAt: DateTime.now(),
+            )
+          : null; // Ideally fetch the goal or trust the ID
+      _selectedPaymentMode =
+          widget.transactionToEdit!.transaction.paymentMode ?? 'Cash';
       _selectedDate = tx.timestamp;
+    } else {
+      _selectedPaymentMode = 'Cash';
     }
   }
 
@@ -128,6 +145,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 note: Value(
                   _noteController.text.isNotEmpty ? _noteController.text : null,
                 ),
+                paymentMode: Value(_selectedPaymentMode),
               ),
             );
       } else {
@@ -144,6 +162,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 note: Value(
                   _noteController.text.isNotEmpty ? _noteController.text : null,
                 ),
+                paymentMode: Value(_selectedPaymentMode),
               ),
             );
 
@@ -485,6 +504,43 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                         );
                       },
                     ),
+                const SizedBox(height: 24),
+              ],
+
+              // Payment Mode Selection
+              if (_type.isExpense) ...[
+                Text('Payment Mode', style: theme.textTheme.labelLarge),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children:
+                      [
+                        'Cash',
+                        'UPI',
+                        'Debit Card',
+                        'Credit Card',
+                        'Net Banking',
+                      ].map((mode) {
+                        final isSelected = _selectedPaymentMode == mode;
+                        return ChoiceChip(
+                          label: Text(mode),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            setState(() {
+                              _selectedPaymentMode = selected ? mode : null;
+                            });
+                          },
+                          avatar: isSelected
+                              ? Icon(
+                                  Icons.check,
+                                  size: 18,
+                                  color: colorScheme.onSecondaryContainer,
+                                )
+                              : null,
+                        );
+                      }).toList(),
+                ),
                 const SizedBox(height: 24),
               ],
 

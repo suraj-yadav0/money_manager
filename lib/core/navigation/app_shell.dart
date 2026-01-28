@@ -14,19 +14,22 @@ class AppShell extends ConsumerStatefulWidget {
   ConsumerState<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends ConsumerState<AppShell> {
-  int _currentIndex = 0;
+/// Provider for the current bottom navigation index
+final navIndexProvider = StateProvider<int>((ref) => 0);
 
+class _AppShellState extends ConsumerState<AppShell> {
   final _screens = const [DashboardScreen(), InsightsScreen(), GoalsScreen()];
 
   @override
   Widget build(BuildContext context) {
+    final currentIndex = ref.watch(navIndexProvider);
+
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _screens),
+      body: IndexedStack(index: currentIndex, children: _screens),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
+        selectedIndex: currentIndex,
         onDestinationSelected: (index) {
-          setState(() => _currentIndex = index);
+          ref.read(navIndexProvider.notifier).state = index;
         },
         destinations: const [
           NavigationDestination(
