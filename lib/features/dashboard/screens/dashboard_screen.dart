@@ -4,9 +4,12 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/utils/formatters.dart';
 import '../providers/dashboard_providers.dart';
+import '../providers/chart_type_provider.dart';
 import '../widgets/balance_card.dart';
 import '../widgets/forecast_card.dart';
 import '../widgets/category_pie_chart.dart';
+import '../widgets/category_bar_chart.dart';
+import '../widgets/spending_line_chart.dart';
 import '../widgets/recent_transactions.dart';
 import '../widgets/date_filter_bar.dart';
 import '../../transactions/screens/all_transactions_screen.dart';
@@ -17,6 +20,7 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final chartType = ref.watch(dashboardChartTypeProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -56,10 +60,40 @@ class DashboardScreen extends ConsumerWidget {
               const ForecastCard(),
               const SizedBox(height: 24),
 
-              // Category Breakdown
-              Text('Spending by Category', style: theme.textTheme.titleMedium),
+              // Category Breakdown with chart type selector
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Spending', style: theme.textTheme.titleMedium),
+                  // Chart type selector
+                  SegmentedButton<DashboardChartType>(
+                    segments: DashboardChartType.values
+                        .map(
+                          (type) => ButtonSegment(
+                            value: type,
+                            label: Text(type.label),
+                            tooltip: type.tooltip,
+                          ),
+                        )
+                        .toList(),
+                    selected: {chartType},
+                    onSelectionChanged: (selected) {
+                      ref.read(dashboardChartTypeProvider.notifier).state =
+                          selected.first;
+                    },
+                    showSelectedIcon: false,
+                    style: ButtonStyle(
+                      visualDensity: VisualDensity.compact,
+                      padding: WidgetStateProperty.all(
+                        const EdgeInsets.symmetric(horizontal: 12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 12),
-              const CategoryPieChart(),
+              // Dynamic chart based on selection
+              _buildChart(chartType),
               const SizedBox(height: 24),
 
               // Recent Transactions
@@ -90,6 +124,17 @@ class DashboardScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildChart(DashboardChartType type) {
+    switch (type) {
+      case DashboardChartType.pie:
+        return const CategoryPieChart();
+      case DashboardChartType.bar:
+        return const CategoryBarChart();
+      case DashboardChartType.line:
+        return const SpendingLineChart();
+    }
   }
 
   String _getTitle(WidgetRef ref) {
