@@ -60,14 +60,17 @@ class _AppShellState extends ConsumerState<AppShell> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
-          );
-        },
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: currentIndex == 3
+          ? null
+          : FloatingActionButton(
+              heroTag: 'shell_fab',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+                );
+              },
+              child: const Icon(Icons.add),
+            ),
     );
   }
 }

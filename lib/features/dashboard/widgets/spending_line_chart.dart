@@ -17,31 +17,31 @@ class SpendingLineChart extends ConsumerStatefulWidget {
 }
 
 class _SpendingLineChartState extends ConsumerState<SpendingLineChart> {
-  late DateTimeRange _range;
-  late Future<List<_DailySpend>> _dailySpendingFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _range = ref.read(dateRangeProvider);
-    _dailySpendingFuture = _getDailySpending(ref, _range.start, _range.end);
-
-    // Recompute the future only when the date range actually changes.
-    ref.listen<DateTimeRange>(dateRangeProvider, (previous, next) {
-      if (previous == next) {
-        return;
-      }
-      setState(() {
-        _range = next;
-        _dailySpendingFuture = _getDailySpending(ref, _range.start, _range.end);
-      });
-    });
-  }
+  ({DateTime start, DateTime end})? _range;
+  Future<List<_DailySpend>>? _dailySpendingFuture;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
+    // Listen to date range changes and recompute the future when it changes.
+    ref.listen<({DateTime start, DateTime end})>(dateRangeProvider, (previous, next) {
+      if (previous == next) {
+        return;
+      }
+      setState(() {
+        _range = next;
+        _dailySpendingFuture = _getDailySpending(ref, next.start, next.end);
+      });
+    });
+
+    // Initialize on first build
+    final currentRange = ref.read(dateRangeProvider);
+    if (_range == null || _dailySpendingFuture == null) {
+      _range = currentRange;
+      _dailySpendingFuture = _getDailySpending(ref, currentRange.start, currentRange.end);
+    }
 
     return FutureBuilder<List<_DailySpend>>(
       future: _dailySpendingFuture,

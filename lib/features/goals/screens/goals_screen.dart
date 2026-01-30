@@ -40,6 +40,7 @@ class GoalsScreen extends ConsumerWidget {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'goals_fab',
         onPressed: () => _showCreateGoalSheet(context, ref),
         icon: const Icon(Icons.add),
         label: const Text('New Goal'),
