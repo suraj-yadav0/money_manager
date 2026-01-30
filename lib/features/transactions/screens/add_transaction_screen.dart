@@ -1,8 +1,12 @@
+import 'dart:io';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 
 import '../../../core/database/database.dart';
 import '../../../core/providers/app_state_provider.dart';
@@ -34,6 +38,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   DateTime _selectedDate = DateTime.now();
   bool _isLoading = false;
   bool _isSuggestingCategory = false;
+  String? _receiptImagePath;
+  final ImagePicker _imagePicker = ImagePicker();
 
   @override
   void initState() {
@@ -63,6 +69,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       _selectedPaymentMode =
           widget.transactionToEdit!.transaction.paymentMode ?? 'Cash';
       _selectedDate = tx.timestamp;
+      _receiptImagePath = tx.receiptImagePath;
     } else {
       _selectedPaymentMode = 'Cash';
     }
@@ -91,6 +98,137 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       if (mounted) setState(() => _isSuggestingCategory = false);
     }
   }
+
+  Future<void> _pickImageFromCamera() async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1920,
+        maxHeight: 1920,
+        imageQuality: 85,
+      );
+      
+      if (image != null) {
+        final oldPath = _receiptImagePath;
+        final savedPath = await _saveImageToAppDirectory(image);
+        setState(() => _receiptImagePath = savedPath);
+        // Delete old image if replacing
+        if (oldPath != null && oldPath != savedPath) {
+          await _deleteOldReceipt(oldPath);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error accessing camera: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickImageFromGallery() async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1920,
+        maxHeight: 1920,
+        imageQuality: 85,
+      );
+      
+      if (image != null) {
+        final oldPath = _receiptImagePath;
+        final savedPath = await _saveImageToAppDirectory(image);
+        setState(() => _receiptImagePath = savedPath);
+        // Delete old image if replacing
+        if (oldPath != null && oldPath != savedPath) {
+          await _deleteOldReceipt(oldPath);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error accessing gallery: $e')),
+        );
+      }
+    }
+  }
+
+  Future<String> _saveImageToAppDirectory(XFile image) async {
+    try {
+      final appDir = await getApplicationDocumentsDirectory();
+      final receiptsDir = Directory(p.join(appDir.path, 'receipts'));
+      
+      // Create receipts directory if it doesn't exist
+      if (!await receiptsDir.exists()) {
+        await receiptsDir.create(recursive: true);
+      }
+      
+      // Generate unique filename using timestamp
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final extension = p.extension(image.path);
+      final fileName = 'receipt_$timestamp$extension';
+      final savedPath = p.join(receiptsDir.path, fileName);
+      
+      // Copy image to app directory
+      await File(image.path).copy(savedPath);
+      
+      return savedPath;
+    } catch (e) {
+      // Clean up any partially created directories or files on failure
+      rethrow;
+    }
+  }
+
+  Future<void> _deleteOldReceipt(String? oldPath) async {
+    if (oldPath != null && oldPath.isNotEmpty) {
+      try {
+        final oldFile = File(oldPath);
+        if (await oldFile.exists()) {
+          await oldFile.delete();
+        }
+      } catch (e) {
+        // Silently fail - old file deletion is not critical
+      }
+    }
+  }
+
+  void _showImagePickerOptions() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Take Photo'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImageFromCamera();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Choose from Gallery'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImageFromGallery();
+              },
+            ),
+            if (_receiptImagePath != null)
+              ListTile(
+                leading: const Icon(Icons.delete),
+                title: const Text('Remove Photo'),
+                onTap: () {
+                  Navigator.pop(context);
+                  setState(() => _receiptImagePath = null);
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
 
   Future<void> _saveTransaction() async {
     if (!_formKey.currentState!.validate()) return;
@@ -131,6 +269,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       }
 
       if (widget.transactionToEdit != null) {
+        // Delete old receipt if it's being replaced
+        final oldReceiptPath = widget.transactionToEdit!.transaction.receiptImagePath;
+        if (oldReceiptPath != _receiptImagePath) {
+          await _deleteOldReceipt(oldReceiptPath);
+        }
+        
         // Update existing
         await (db.update(db.transactions)..where(
               (t) => t.id.equals(widget.transactionToEdit!.transaction.id),
@@ -146,6 +290,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   _noteController.text.isNotEmpty ? _noteController.text : null,
                 ),
                 paymentMode: Value(_selectedPaymentMode),
+                receiptImagePath: Value(_receiptImagePath),
               ),
             );
       } else {
@@ -163,6 +308,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   _noteController.text.isNotEmpty ? _noteController.text : null,
                 ),
                 paymentMode: Value(_selectedPaymentMode),
+                receiptImagePath: Value(_receiptImagePath),
               ),
             );
 
@@ -584,6 +730,116 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       ),
                     ],
                   ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Receipt/Photo Section
+              Text('Receipt / Photo (optional)', style: theme.textTheme.labelLarge),
+              const SizedBox(height: 12),
+              if (_receiptImagePath != null) ...[
+                Stack(
+                  alignment: Alignment.topRight,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        // Show full-screen image
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => Scaffold(
+                              appBar: AppBar(
+                                title: const Text('Receipt'),
+                                backgroundColor: Colors.black,
+                              ),
+                              body: Center(
+                                child: InteractiveViewer(
+                                  child: Image.file(
+                                    File(_receiptImagePath!),
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.broken_image,
+                                            size: 64,
+                                            color: Colors.white54,
+                                          ),
+                                          const SizedBox(height: 16),
+                                          Text(
+                                            'Image not found',
+                                            style: TextStyle(color: Colors.white54),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                              backgroundColor: Colors.black,
+                            ),
+                          ),
+                        );
+                      },
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.file(
+                          File(_receiptImagePath!),
+                          height: 200,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              height: 200,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.broken_image,
+                                    size: 48,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Image not found',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: CircleAvatar(
+                        backgroundColor: colorScheme.surface,
+                        child: IconButton(
+                          icon: Icon(Icons.close, color: colorScheme.error),
+                          onPressed: () {
+                            setState(() => _receiptImagePath = null);
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+              ],
+              OutlinedButton.icon(
+                onPressed: _showImagePickerOptions,
+                icon: Icon(_receiptImagePath != null ? Icons.edit : Icons.camera_alt),
+                label: Text(_receiptImagePath != null ? 'Change Photo' : 'Add Photo'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 48),
                 ),
               ),
             ],
