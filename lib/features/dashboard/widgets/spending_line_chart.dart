@@ -9,18 +9,79 @@ import '../../../core/utils/formatters.dart';
 import '../providers/dashboard_providers.dart';
 
 /// Line chart showing daily spending trends over the selected period
-class SpendingLineChart extends ConsumerWidget {
+class SpendingLineChart extends ConsumerStatefulWidget {
   const SpendingLineChart({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final range = ref.watch(dateRangeProvider);
+  ConsumerState<SpendingLineChart> createState() => _SpendingLineChartState();
+}
+
+class _SpendingLineChartState extends ConsumerState<SpendingLineChart> {
+  late DateTimeRange _range;
+  late Future<List<_DailySpend>> _dailySpendingFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _range = ref.read(dateRangeProvider);
+    _dailySpendingFuture = _getDailySpending(ref, _range.start, _range.end);
+
+    // Recompute the future only when the date range actually changes.
+    ref.listen<DateTimeRange>(dateRangeProvider, (previous, next) {
+      if (previous == next) {
+        return;
+      }
+      setState(() {
+        _range = next;
+        _dailySpendingFuture = _getDailySpending(ref, _range.start, _range.end);
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return FutureBuilder<List<_DailySpend>>(
-      future: _getDailySpending(ref, range.start, range.end),
+      future: _dailySpendingFuture,
       builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SizedBox(
+            height: 200,
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Card(
+            child: Container(
+              height: 200,
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: colorScheme.error.withAlpha(180),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Failed to load spending data',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return Card(
             child: Container(
@@ -215,28 +276,33 @@ class SpendingLineChart extends ConsumerWidget {
   ) async {
     final db = ref.read(databaseProvider);
 
-    // Get all expenses in range with category info
-    final allTransactions =
-        await (db.select(
-          db.transactions,
-        )..where((t) => t.type.equals('expense'))).join([
+    // Limit the date range to prevent OOM with very large ranges (e.g., allTime)
+    // If range is more than 365 days, use monthly aggregation would be better,
+    // but for now we'll just cap at 365 days from start
+    DateTime effectiveEnd = end;
+    final daysDiff = end.difference(start).inDays;
+    if (daysDiff > 365) {
+      effectiveEnd = start.add(const Duration(days: 365));
+    }
+
+    // Get expenses in range with category info, filtered in SQL
+    final allTransactions = await (db.select(db.transactions)
+          ..where((t) =>
+              t.type.equals('expense') &
+              t.timestamp.isBetweenValues(start, effectiveEnd)))
+        .join([
           leftOuterJoin(
             db.categories,
             db.categories.id.equalsExp(db.transactions.categoryId),
           ),
         ]).get();
 
-    final filtered = allTransactions.where((row) {
-      final t = row.readTable(db.transactions);
-      return t.timestamp.isAfter(start.subtract(const Duration(seconds: 1))) &&
-          t.timestamp.isBefore(end.add(const Duration(seconds: 1)));
-    }).toList();
-
     // Group by date
     final Map<DateTime, double> dailyTotals = {};
     final Map<DateTime, List<String>> dailyNotes = {};
+    final Map<DateTime, int> dailyCounts = {}; // Track total transaction count per day
 
-    for (final row in filtered) {
+    for (final row in allTransactions) {
       final t = row.readTable(db.transactions);
       final c = row.readTableOrNull(db.categories);
 
@@ -247,6 +313,7 @@ class SpendingLineChart extends ConsumerWidget {
       );
 
       dailyTotals[date] = (dailyTotals[date] ?? 0) + t.amount;
+      dailyCounts[date] = (dailyCounts[date] ?? 0) + 1;
 
       // Store transaction name (Note or Category or 'Expense')
       if (dailyNotes[date] == null) dailyNotes[date] = [];
@@ -262,13 +329,14 @@ class SpendingLineChart extends ConsumerWidget {
     // Fill in missing dates with 0
     final List<_DailySpend> result = [];
     DateTime current = DateTime(start.year, start.month, start.day);
-    final endDate = DateTime(end.year, end.month, end.day);
+    final endDate = DateTime(effectiveEnd.year, effectiveEnd.month, effectiveEnd.day);
 
     while (!current.isAfter(endDate)) {
       final amount = dailyTotals[current] ?? 0;
       final notes = dailyNotes[current] ?? [];
-      // calculate if we have more transactions than shown (simplified logic)
-      final hasMore = notes.length >= 3;
+      final totalCount = dailyCounts[current] ?? 0;
+      // Check if there are more transactions than shown (only true when count > 3)
+      final hasMore = totalCount > 3;
 
       result.add(
         _DailySpend(
@@ -292,7 +360,7 @@ class SpendingLineChart extends ConsumerWidget {
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}';
+    return Formatters.shortDate(date);
   }
 }
 

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/utils/icon_helper.dart';
 import '../providers/budget_provider.dart';
 
 /// Card showing budget progress for a single category
@@ -18,7 +19,6 @@ class CategoryBudgetCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     final statusColor = _getStatusColor();
-    final iconMap = _getIconMap();
 
     return Card(
       child: InkWell(
@@ -39,7 +39,7 @@ class CategoryBudgetCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      iconMap[stats.icon] ?? Icons.category,
+                      IconHelper.getIcon(stats.icon),
                       color: statusColor,
                       size: 22,
                     ),
@@ -105,24 +105,5 @@ class CategoryBudgetCard extends StatelessWidget {
     if (stats.isOverBudget) return AppTheme.danger;
     if (stats.isNearLimit) return AppTheme.caution;
     return AppTheme.safe;
-  }
-
-  Map<String, IconData> _getIconMap() {
-    return {
-      'restaurant': Icons.restaurant,
-      'directions_car': Icons.directions_car,
-      'shopping_bag': Icons.shopping_bag,
-      'movie': Icons.movie,
-      'receipt_long': Icons.receipt_long,
-      'local_hospital': Icons.local_hospital,
-      'school': Icons.school,
-      'spa': Icons.spa,
-      'local_grocery_store': Icons.local_grocery_store,
-      'more_horiz': Icons.more_horiz,
-      'card_giftcard': Icons.card_giftcard,
-      'savings': Icons.savings,
-      'show_chart': Icons.show_chart,
-      'family_restroom': Icons.family_restroom,
-    };
   }
 }
