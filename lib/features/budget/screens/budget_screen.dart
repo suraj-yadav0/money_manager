@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/database/database.dart';
 import '../../../core/providers/app_state_provider.dart';
+import '../../../core/utils/icon_helper.dart';
 import '../providers/budget_provider.dart';
 import '../widgets/budget_summary_card.dart';
 import '../widgets/category_budget_card.dart';
@@ -157,8 +158,50 @@ class _BudgetSettingsSheet extends ConsumerWidget {
         db.categories,
       )..where((c) => c.type.equals('expense'))).get(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Failed to load categories.',
+                    style: theme.textTheme.titleMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Please try again or close this sheet.',
+                    style: theme.textTheme.bodyMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Close'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'No expense categories found.',
+                style: theme.textTheme.bodyMedium,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
         }
 
         final categories = snapshot.data!;
@@ -248,7 +291,6 @@ class _CategoryBudgetTileState extends ConsumerState<_CategoryBudgetTile> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final iconMap = _getIconMap();
 
     return ListTile(
       leading: Container(
@@ -258,7 +300,7 @@ class _CategoryBudgetTileState extends ConsumerState<_CategoryBudgetTile> {
           color: theme.colorScheme.primaryContainer,
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(iconMap[widget.category.icon] ?? Icons.category, size: 20),
+        child: Icon(IconHelper.getIcon(widget.category.icon), size: 20),
       ),
       title: Text(widget.category.name),
       trailing: SizedBox(
@@ -276,32 +318,18 @@ class _CategoryBudgetTileState extends ConsumerState<_CategoryBudgetTile> {
             ),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
-          onChanged: (value) {
+          onEditingComplete: () {
+            final text = _controller.text;
+            final budget = double.tryParse(text) ?? 0;
+            ref.read(updateCategoryBudgetProvider)(widget.category.id, budget);
+          },
+          onSubmitted: (value) {
             final budget = double.tryParse(value) ?? 0;
             ref.read(updateCategoryBudgetProvider)(widget.category.id, budget);
           },
         ),
       ),
     );
-  }
-
-  Map<String, IconData> _getIconMap() {
-    return {
-      'restaurant': Icons.restaurant,
-      'directions_car': Icons.directions_car,
-      'shopping_bag': Icons.shopping_bag,
-      'movie': Icons.movie,
-      'receipt_long': Icons.receipt_long,
-      'local_hospital': Icons.local_hospital,
-      'school': Icons.school,
-      'spa': Icons.spa,
-      'local_grocery_store': Icons.local_grocery_store,
-      'more_horiz': Icons.more_horiz,
-      'card_giftcard': Icons.card_giftcard,
-      'savings': Icons.savings,
-      'show_chart': Icons.show_chart,
-      'family_restroom': Icons.family_restroom,
-    };
   }
 }
 
@@ -369,13 +397,45 @@ class _EditBudgetSheetState extends ConsumerState<_EditBudgetSheet> {
             width: double.infinity,
             child: FilledButton(
               onPressed: () async {
-                // We need category ID - for now close and rely on settings
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Use Settings to update budgets'),
-                  ),
-                );
+                final rawText = _controller.text.trim();
+
+                if (rawText.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please enter a budget amount'),
+                    ),
+                  );
+                  return;
+                }
+
+                final parsedBudget = double.tryParse(rawText);
+                if (parsedBudget == null || parsedBudget < 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Enter a valid non-negative number'),
+                    ),
+                  );
+                  return;
+                }
+
+                try {
+                  // Persist the updated budget for this category
+                  await ref.read(updateCategoryBudgetProvider)(
+                    widget.category.id,
+                    parsedBudget,
+                  );
+
+                  if (!mounted) return;
+                  Navigator.pop(context);
+                } catch (_) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content:
+                          Text('Failed to update budget. Please try again.'),
+                    ),
+                  );
+                }
               },
               child: const Text('Save'),
             ),

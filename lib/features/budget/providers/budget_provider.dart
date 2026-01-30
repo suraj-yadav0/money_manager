@@ -61,23 +61,20 @@ final budgetStatsProvider = FutureProvider<BudgetStats>((ref) async {
   final monthStart = DateTime(now.year, now.month, 1);
   final monthEnd = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
 
-  // Get all categories with budgets
-  final categories = await db.select(db.categories).get();
+  // Get categories with positive monthly budgets
+  final categoriesQuery = db.select(db.categories)
+    ..where((c) => c.monthlyBudget.isBiggerThanValue(0));
+  final categories = await categoriesQuery.get();
 
-  // Get all expenses for current month (exclude goal-linked)
-  final allTransactions = await db.select(db.transactions).get();
-
-  final transactions = allTransactions
-      .where(
-        (t) =>
-            t.timestamp.isAfter(
-              monthStart.subtract(const Duration(seconds: 1)),
-            ) &&
-            t.timestamp.isBefore(monthEnd.add(const Duration(seconds: 1))) &&
-            t.type == 'expense' &&
-            t.goalId == null,
-      )
-      .toList();
+  // Get all expenses for current month (exclude goal-linked) filtered in SQL
+  final transactionsQuery = db.select(db.transactions)
+    ..where(
+      (t) =>
+          t.timestamp.isBetweenValues(monthStart, monthEnd) &
+          t.type.equals('expense') &
+          t.goalId.isNull(),
+    );
+  final transactions = await transactionsQuery.get();
 
   // Calculate spending per category
   final Map<int, double> categorySpending = {};
