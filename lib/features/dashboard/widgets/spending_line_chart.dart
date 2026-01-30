@@ -26,7 +26,10 @@ class _SpendingLineChartState extends ConsumerState<SpendingLineChart> {
     final colorScheme = theme.colorScheme;
 
     // Listen to date range changes and recompute the future when it changes.
-    ref.listen<({DateTime start, DateTime end})>(dateRangeProvider, (previous, next) {
+    ref.listen<({DateTime start, DateTime end})>(dateRangeProvider, (
+      previous,
+      next,
+    ) {
       if (previous == next) {
         return;
       }
@@ -40,7 +43,11 @@ class _SpendingLineChartState extends ConsumerState<SpendingLineChart> {
     final currentRange = ref.read(dateRangeProvider);
     if (_range == null || _dailySpendingFuture == null) {
       _range = currentRange;
-      _dailySpendingFuture = _getDailySpending(ref, currentRange.start, currentRange.end);
+      _dailySpendingFuture = _getDailySpending(
+        ref,
+        currentRange.start,
+        currentRange.end,
+      );
     }
 
     return FutureBuilder<List<_DailySpend>>(
@@ -49,9 +56,7 @@ class _SpendingLineChartState extends ConsumerState<SpendingLineChart> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const SizedBox(
             height: 200,
-            child: Center(
-              child: CircularProgressIndicator(),
-            ),
+            child: Center(child: CircularProgressIndicator()),
           );
         }
 
@@ -286,21 +291,25 @@ class _SpendingLineChartState extends ConsumerState<SpendingLineChart> {
     }
 
     // Get expenses in range with category info, filtered in SQL
-    final allTransactions = await (db.select(db.transactions)
-          ..where((t) =>
-              t.type.equals('expense') &
-              t.timestamp.isBetweenValues(start, effectiveEnd)))
-        .join([
-          leftOuterJoin(
-            db.categories,
-            db.categories.id.equalsExp(db.transactions.categoryId),
-          ),
-        ]).get();
+    final allTransactions =
+        await (db.select(db.transactions)..where(
+              (t) =>
+                  t.type.equals('expense') &
+                  t.timestamp.isBetweenValues(start, effectiveEnd),
+            ))
+            .join([
+              leftOuterJoin(
+                db.categories,
+                db.categories.id.equalsExp(db.transactions.categoryId),
+              ),
+            ])
+            .get();
 
     // Group by date
     final Map<DateTime, double> dailyTotals = {};
     final Map<DateTime, List<String>> dailyNotes = {};
-    final Map<DateTime, int> dailyCounts = {}; // Track total transaction count per day
+    final Map<DateTime, int> dailyCounts =
+        {}; // Track total transaction count per day
 
     for (final row in allTransactions) {
       final t = row.readTable(db.transactions);
@@ -329,7 +338,11 @@ class _SpendingLineChartState extends ConsumerState<SpendingLineChart> {
     // Fill in missing dates with 0
     final List<_DailySpend> result = [];
     DateTime current = DateTime(start.year, start.month, start.day);
-    final endDate = DateTime(effectiveEnd.year, effectiveEnd.month, effectiveEnd.day);
+    final endDate = DateTime(
+      effectiveEnd.year,
+      effectiveEnd.month,
+      effectiveEnd.day,
+    );
 
     while (!current.isAfter(endDate)) {
       final amount = dailyTotals[current] ?? 0;

@@ -66,7 +66,9 @@ class _AppShellState extends ConsumerState<AppShell> {
               heroTag: 'shell_fab',
               onPressed: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const AddTransactionScreen(),
+                  ),
                 );
               },
               child: const Icon(Icons.add),
