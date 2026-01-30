@@ -109,8 +109,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       );
       
       if (image != null) {
+        final oldPath = _receiptImagePath;
         final savedPath = await _saveImageToAppDirectory(image);
         setState(() => _receiptImagePath = savedPath);
+        // Delete old image if replacing
+        if (oldPath != null && oldPath != savedPath) {
+          await _deleteOldReceipt(oldPath);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -131,8 +136,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       );
       
       if (image != null) {
+        final oldPath = _receiptImagePath;
         final savedPath = await _saveImageToAppDirectory(image);
         setState(() => _receiptImagePath = savedPath);
+        // Delete old image if replacing
+        if (oldPath != null && oldPath != savedPath) {
+          await _deleteOldReceipt(oldPath);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -144,24 +154,42 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   }
 
   Future<String> _saveImageToAppDirectory(XFile image) async {
-    final appDir = await getApplicationDocumentsDirectory();
-    final receiptsDir = Directory(p.join(appDir.path, 'receipts'));
-    
-    // Create receipts directory if it doesn't exist
-    if (!await receiptsDir.exists()) {
-      await receiptsDir.create(recursive: true);
+    try {
+      final appDir = await getApplicationDocumentsDirectory();
+      final receiptsDir = Directory(p.join(appDir.path, 'receipts'));
+      
+      // Create receipts directory if it doesn't exist
+      if (!await receiptsDir.exists()) {
+        await receiptsDir.create(recursive: true);
+      }
+      
+      // Generate unique filename using timestamp
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final extension = p.extension(image.path);
+      final fileName = 'receipt_$timestamp$extension';
+      final savedPath = p.join(receiptsDir.path, fileName);
+      
+      // Copy image to app directory
+      await File(image.path).copy(savedPath);
+      
+      return savedPath;
+    } catch (e) {
+      // Clean up any partially created directories or files on failure
+      rethrow;
     }
-    
-    // Generate unique filename using timestamp
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final extension = p.extension(image.path);
-    final fileName = 'receipt_$timestamp$extension';
-    final savedPath = p.join(receiptsDir.path, fileName);
-    
-    // Copy image to app directory
-    await File(image.path).copy(savedPath);
-    
-    return savedPath;
+  }
+
+  Future<void> _deleteOldReceipt(String? oldPath) async {
+    if (oldPath != null && oldPath.isNotEmpty) {
+      try {
+        final oldFile = File(oldPath);
+        if (await oldFile.exists()) {
+          await oldFile.delete();
+        }
+      } catch (e) {
+        // Silently fail - old file deletion is not critical
+      }
+    }
   }
 
   void _showImagePickerOptions() {
@@ -241,6 +269,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       }
 
       if (widget.transactionToEdit != null) {
+        // Delete old receipt if it's being replaced
+        final oldReceiptPath = widget.transactionToEdit!.transaction.receiptImagePath;
+        if (oldReceiptPath != _receiptImagePath) {
+          await _deleteOldReceipt(oldReceiptPath);
+        }
+        
         // Update existing
         await (db.update(db.transactions)..where(
               (t) => t.id.equals(widget.transactionToEdit!.transaction.id),
@@ -722,6 +756,23 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                   child: Image.file(
                                     File(_receiptImagePath!),
                                     fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.broken_image,
+                                            size: 64,
+                                            color: Colors.white54,
+                                          ),
+                                          const SizedBox(height: 16),
+                                          Text(
+                                            'Image not found',
+                                            style: TextStyle(color: Colors.white54),
+                                          ),
+                                        ],
+                                      );
+                                    },
                                   ),
                                 ),
                               ),
@@ -737,6 +788,33 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           height: 200,
                           width: double.infinity,
                           fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              height: 200,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.broken_image,
+                                    size: 48,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Image not found',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ),
