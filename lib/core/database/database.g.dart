@@ -1011,6 +1011,17 @@ class $TransactionsTable extends Transactions
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _receiptImagePathMeta = const VerificationMeta(
+    'receiptImagePath',
+  );
+  @override
+  late final GeneratedColumn<String> receiptImagePath = GeneratedColumn<String>(
+    'receipt_image_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _isRecurringMeta = const VerificationMeta(
     'isRecurring',
   );
@@ -1048,6 +1059,7 @@ class $TransactionsTable extends Transactions
     timestamp,
     note,
     paymentMode,
+    receiptImagePath,
     isRecurring,
     createdAt,
   ];
@@ -1119,6 +1131,15 @@ class $TransactionsTable extends Transactions
         ),
       );
     }
+    if (data.containsKey('receipt_image_path')) {
+      context.handle(
+        _receiptImagePathMeta,
+        receiptImagePath.isAcceptableOrUnknown(
+          data['receipt_image_path']!,
+          _receiptImagePathMeta,
+        ),
+      );
+    }
     if (data.containsKey('is_recurring')) {
       context.handle(
         _isRecurringMeta,
@@ -1175,6 +1196,10 @@ class $TransactionsTable extends Transactions
         DriftSqlType.string,
         data['${effectivePrefix}payment_mode'],
       ),
+      receiptImagePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}receipt_image_path'],
+      ),
       isRecurring: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_recurring'],
@@ -1201,6 +1226,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   final DateTime timestamp;
   final String? note;
   final String? paymentMode;
+  final String? receiptImagePath;
   final bool isRecurring;
   final DateTime createdAt;
   const Transaction({
@@ -1212,6 +1238,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     required this.timestamp,
     this.note,
     this.paymentMode,
+    this.receiptImagePath,
     required this.isRecurring,
     required this.createdAt,
   });
@@ -1232,6 +1259,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     if (!nullToAbsent || paymentMode != null) {
       map['payment_mode'] = Variable<String>(paymentMode);
     }
+    if (!nullToAbsent || receiptImagePath != null) {
+      map['receipt_image_path'] = Variable<String>(receiptImagePath);
+    }
     map['is_recurring'] = Variable<bool>(isRecurring);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -1251,6 +1281,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       paymentMode: paymentMode == null && nullToAbsent
           ? const Value.absent()
           : Value(paymentMode),
+      receiptImagePath: receiptImagePath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(receiptImagePath),
       isRecurring: Value(isRecurring),
       createdAt: Value(createdAt),
     );
@@ -1270,6 +1303,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       timestamp: serializer.fromJson<DateTime>(json['timestamp']),
       note: serializer.fromJson<String?>(json['note']),
       paymentMode: serializer.fromJson<String?>(json['paymentMode']),
+      receiptImagePath: serializer.fromJson<String?>(json['receiptImagePath']),
       isRecurring: serializer.fromJson<bool>(json['isRecurring']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -1286,6 +1320,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       'timestamp': serializer.toJson<DateTime>(timestamp),
       'note': serializer.toJson<String?>(note),
       'paymentMode': serializer.toJson<String?>(paymentMode),
+      'receiptImagePath': serializer.toJson<String?>(receiptImagePath),
       'isRecurring': serializer.toJson<bool>(isRecurring),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -1300,6 +1335,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     DateTime? timestamp,
     Value<String?> note = const Value.absent(),
     Value<String?> paymentMode = const Value.absent(),
+    Value<String?> receiptImagePath = const Value.absent(),
     bool? isRecurring,
     DateTime? createdAt,
   }) => Transaction(
@@ -1311,6 +1347,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     timestamp: timestamp ?? this.timestamp,
     note: note.present ? note.value : this.note,
     paymentMode: paymentMode.present ? paymentMode.value : this.paymentMode,
+    receiptImagePath: receiptImagePath.present
+        ? receiptImagePath.value
+        : this.receiptImagePath,
     isRecurring: isRecurring ?? this.isRecurring,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -1328,6 +1367,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       paymentMode: data.paymentMode.present
           ? data.paymentMode.value
           : this.paymentMode,
+      receiptImagePath: data.receiptImagePath.present
+          ? data.receiptImagePath.value
+          : this.receiptImagePath,
       isRecurring: data.isRecurring.present
           ? data.isRecurring.value
           : this.isRecurring,
@@ -1346,6 +1388,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           ..write('timestamp: $timestamp, ')
           ..write('note: $note, ')
           ..write('paymentMode: $paymentMode, ')
+          ..write('receiptImagePath: $receiptImagePath, ')
           ..write('isRecurring: $isRecurring, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -1362,6 +1405,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     timestamp,
     note,
     paymentMode,
+    receiptImagePath,
     isRecurring,
     createdAt,
   );
@@ -1377,6 +1421,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           other.timestamp == this.timestamp &&
           other.note == this.note &&
           other.paymentMode == this.paymentMode &&
+          other.receiptImagePath == this.receiptImagePath &&
           other.isRecurring == this.isRecurring &&
           other.createdAt == this.createdAt);
 }
@@ -1390,6 +1435,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
   final Value<DateTime> timestamp;
   final Value<String?> note;
   final Value<String?> paymentMode;
+  final Value<String?> receiptImagePath;
   final Value<bool> isRecurring;
   final Value<DateTime> createdAt;
   const TransactionsCompanion({
@@ -1401,6 +1447,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     this.timestamp = const Value.absent(),
     this.note = const Value.absent(),
     this.paymentMode = const Value.absent(),
+    this.receiptImagePath = const Value.absent(),
     this.isRecurring = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
@@ -1413,6 +1460,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     required DateTime timestamp,
     this.note = const Value.absent(),
     this.paymentMode = const Value.absent(),
+    this.receiptImagePath = const Value.absent(),
     this.isRecurring = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : amount = Value(amount),
@@ -1428,6 +1476,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     Expression<DateTime>? timestamp,
     Expression<String>? note,
     Expression<String>? paymentMode,
+    Expression<String>? receiptImagePath,
     Expression<bool>? isRecurring,
     Expression<DateTime>? createdAt,
   }) {
@@ -1440,6 +1489,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       if (timestamp != null) 'timestamp': timestamp,
       if (note != null) 'note': note,
       if (paymentMode != null) 'payment_mode': paymentMode,
+      if (receiptImagePath != null) 'receipt_image_path': receiptImagePath,
       if (isRecurring != null) 'is_recurring': isRecurring,
       if (createdAt != null) 'created_at': createdAt,
     });
@@ -1454,6 +1504,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     Value<DateTime>? timestamp,
     Value<String?>? note,
     Value<String?>? paymentMode,
+    Value<String?>? receiptImagePath,
     Value<bool>? isRecurring,
     Value<DateTime>? createdAt,
   }) {
@@ -1466,6 +1517,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       timestamp: timestamp ?? this.timestamp,
       note: note ?? this.note,
       paymentMode: paymentMode ?? this.paymentMode,
+      receiptImagePath: receiptImagePath ?? this.receiptImagePath,
       isRecurring: isRecurring ?? this.isRecurring,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -1498,6 +1550,9 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     if (paymentMode.present) {
       map['payment_mode'] = Variable<String>(paymentMode.value);
     }
+    if (receiptImagePath.present) {
+      map['receipt_image_path'] = Variable<String>(receiptImagePath.value);
+    }
     if (isRecurring.present) {
       map['is_recurring'] = Variable<bool>(isRecurring.value);
     }
@@ -1518,6 +1573,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
           ..write('timestamp: $timestamp, ')
           ..write('note: $note, ')
           ..write('paymentMode: $paymentMode, ')
+          ..write('receiptImagePath: $receiptImagePath, ')
           ..write('isRecurring: $isRecurring, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -3514,6 +3570,7 @@ typedef $$TransactionsTableCreateCompanionBuilder =
       required DateTime timestamp,
       Value<String?> note,
       Value<String?> paymentMode,
+      Value<String?> receiptImagePath,
       Value<bool> isRecurring,
       Value<DateTime> createdAt,
     });
@@ -3527,6 +3584,7 @@ typedef $$TransactionsTableUpdateCompanionBuilder =
       Value<DateTime> timestamp,
       Value<String?> note,
       Value<String?> paymentMode,
+      Value<String?> receiptImagePath,
       Value<bool> isRecurring,
       Value<DateTime> createdAt,
     });
@@ -3609,6 +3667,11 @@ class $$TransactionsTableFilterComposer
 
   ColumnFilters<String> get paymentMode => $composableBuilder(
     column: $table.paymentMode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get receiptImagePath => $composableBuilder(
+    column: $table.receiptImagePath,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3708,6 +3771,11 @@ class $$TransactionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get receiptImagePath => $composableBuilder(
+    column: $table.receiptImagePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isRecurring => $composableBuilder(
     column: $table.isRecurring,
     builder: (column) => ColumnOrderings(column),
@@ -3791,6 +3859,11 @@ class $$TransactionsTableAnnotationComposer
 
   GeneratedColumn<String> get paymentMode => $composableBuilder(
     column: $table.paymentMode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get receiptImagePath => $composableBuilder(
+    column: $table.receiptImagePath,
     builder: (column) => column,
   );
 
@@ -3885,6 +3958,7 @@ class $$TransactionsTableTableManager
                 Value<DateTime> timestamp = const Value.absent(),
                 Value<String?> note = const Value.absent(),
                 Value<String?> paymentMode = const Value.absent(),
+                Value<String?> receiptImagePath = const Value.absent(),
                 Value<bool> isRecurring = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => TransactionsCompanion(
@@ -3896,6 +3970,7 @@ class $$TransactionsTableTableManager
                 timestamp: timestamp,
                 note: note,
                 paymentMode: paymentMode,
+                receiptImagePath: receiptImagePath,
                 isRecurring: isRecurring,
                 createdAt: createdAt,
               ),
@@ -3909,6 +3984,7 @@ class $$TransactionsTableTableManager
                 required DateTime timestamp,
                 Value<String?> note = const Value.absent(),
                 Value<String?> paymentMode = const Value.absent(),
+                Value<String?> receiptImagePath = const Value.absent(),
                 Value<bool> isRecurring = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => TransactionsCompanion.insert(
@@ -3920,6 +3996,7 @@ class $$TransactionsTableTableManager
                 timestamp: timestamp,
                 note: note,
                 paymentMode: paymentMode,
+                receiptImagePath: receiptImagePath,
                 isRecurring: isRecurring,
                 createdAt: createdAt,
               ),
