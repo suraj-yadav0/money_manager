@@ -57,9 +57,18 @@ final budgetStatsProvider = FutureProvider<BudgetStats>((ref) async {
   final db = ref.watch(databaseProvider);
   final now = DateTime.now();
 
-  // Get current month range
+  // Get current month range with proper end time including milliseconds
   final monthStart = DateTime(now.year, now.month, 1);
-  final monthEnd = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+  final lastDay = DateTime(now.year, now.month + 1, 0);
+  final monthEnd = DateTime(
+    lastDay.year,
+    lastDay.month,
+    lastDay.day,
+    23,
+    59,
+    59,
+    999,
+  );
 
   // Get categories with positive monthly budgets
   final categoriesQuery = db.select(db.categories)

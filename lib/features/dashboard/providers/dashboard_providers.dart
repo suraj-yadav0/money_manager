@@ -44,54 +44,91 @@ final dashboardDateFilterProvider = StateProvider<DashboardDateFilter>((ref) {
 final dateRangeProvider = Provider<({DateTime start, DateTime end})>((ref) {
   final filter = ref.watch(dashboardDateFilterProvider);
   final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
 
   switch (filter) {
     case DashboardDateFilter.thisWeek:
-      // Find the most recent Sunday (or today if today is Sunday, depending on preference.
-      // Usually "This Week" starts on Monday or Sunday. Let's assume Monday as start of week for business logic often,
-      // but Formatters usually handle locales. Let's do standard Monday start.)
-      // Actually standard ISO 8601 is Monday.
-      final difference = now.weekday - 1; // Mon=1, Sun=7 -> Mon=0, Sun=6
-      final start = DateTime(now.year, now.month, now.day - difference);
+      // ISO 8601: Week starts on Monday (weekday = 1)
+      // Calculate days since Monday: Mon=0, Tue=1, ..., Sun=6
+      final daysSinceMonday = now.weekday - 1;
+      final start = DateTime(
+        today.year,
+        today.month,
+        today.day - daysSinceMonday,
+      );
+      // End of week is Sunday at 23:59:59.999
+      final endDate = start.add(const Duration(days: 6));
       final end = DateTime(
-        now.year,
-        now.month,
-        now.day + (7 - 1 - difference),
+        endDate.year,
+        endDate.month,
+        endDate.day,
         23,
         59,
         59,
+        999,
       );
       return (start: start, end: end);
 
     case DashboardDateFilter.lastWeek:
-      final difference = now.weekday - 1;
-      final startCurrent = DateTime(now.year, now.month, now.day - difference);
-      final start = startCurrent.subtract(const Duration(days: 7));
-      final end = start.add(
-        const Duration(days: 6, hours: 23, minutes: 59, seconds: 59),
+      final daysSinceMonday = now.weekday - 1;
+      final thisWeekStart = DateTime(
+        today.year,
+        today.month,
+        today.day - daysSinceMonday,
+      );
+      final start = thisWeekStart.subtract(const Duration(days: 7));
+      final endDate = start.add(const Duration(days: 6));
+      final end = DateTime(
+        endDate.year,
+        endDate.month,
+        endDate.day,
+        23,
+        59,
+        59,
+        999,
       );
       return (start: start, end: end);
 
     case DashboardDateFilter.thisMonth:
       final start = DateTime(now.year, now.month, 1);
-      final end = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+      // Day 0 of next month = last day of current month
+      final lastDay = DateTime(now.year, now.month + 1, 0);
+      final end = DateTime(
+        lastDay.year,
+        lastDay.month,
+        lastDay.day,
+        23,
+        59,
+        59,
+        999,
+      );
       return (start: start, end: end);
 
     case DashboardDateFilter.lastMonth:
       final start = DateTime(now.year, now.month - 1, 1);
-      final end = DateTime(now.year, now.month, 0, 23, 59, 59);
+      // Day 0 of current month = last day of previous month
+      final lastDay = DateTime(now.year, now.month, 0);
+      final end = DateTime(
+        lastDay.year,
+        lastDay.month,
+        lastDay.day,
+        23,
+        59,
+        59,
+        999,
+      );
       return (start: start, end: end);
 
     case DashboardDateFilter.thisYear:
       final start = DateTime(now.year, 1, 1);
-      final end = DateTime(now.year, 12, 31, 23, 59, 59);
+      final end = DateTime(now.year, 12, 31, 23, 59, 59, 999);
       return (start: start, end: end);
 
     case DashboardDateFilter.allTime:
       return (
         start: DateTime(2000),
-        end: DateTime(2100),
-      ); // Arbitrary wide range
+        end: DateTime(2100, 12, 31, 23, 59, 59, 999),
+      );
   }
 });
 
