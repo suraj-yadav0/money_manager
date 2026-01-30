@@ -6,6 +6,7 @@ import '../../features/dashboard/screens/dashboard_screen.dart';
 import '../../features/insights/screens/insights_screen.dart';
 import '../../features/goals/screens/goals_screen.dart';
 import '../../features/transactions/screens/add_transaction_screen.dart';
+import '../../features/transactions/services/recurring_service.dart';
 
 /// Main app shell with bottom navigation
 class AppShell extends ConsumerStatefulWidget {
@@ -25,6 +26,25 @@ class _AppShellState extends ConsumerState<AppShell> {
     InsightsScreen(),
     GoalsScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Process recurring transactions on app startup
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _processRecurringTransactions();
+    });
+  }
+
+  Future<void> _processRecurringTransactions() async {
+    try {
+      final service = ref.read(recurringTransactionServiceProvider);
+      await service.processRecurringTransactions();
+    } catch (e) {
+      // Silently handle errors - don't block app startup
+      debugPrint('Error processing recurring transactions: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

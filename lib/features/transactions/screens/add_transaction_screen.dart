@@ -16,6 +16,9 @@ import '../../dashboard/providers/dashboard_providers.dart';
 import '../../goals/providers/goals_provider.dart';
 import '../services/categorization_engine.dart';
 
+// Re-export GoalsCompanion for goal updates
+export '../../../core/database/database.dart' show GoalsCompanion;
+
 class AddTransactionScreen extends ConsumerStatefulWidget {
   final TransactionWithCategory? transactionToEdit;
 
@@ -107,7 +110,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         maxHeight: 1920,
         imageQuality: 85,
       );
-      
+
       if (image != null) {
         final oldPath = _receiptImagePath;
         final savedPath = await _saveImageToAppDirectory(image);
@@ -119,9 +122,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error accessing camera: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error accessing camera: $e')));
       }
     }
   }
@@ -134,7 +137,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         maxHeight: 1920,
         imageQuality: 85,
       );
-      
+
       if (image != null) {
         final oldPath = _receiptImagePath;
         final savedPath = await _saveImageToAppDirectory(image);
@@ -146,9 +149,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error accessing gallery: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error accessing gallery: $e')));
       }
     }
   }
@@ -157,21 +160,21 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     try {
       final appDir = await getApplicationDocumentsDirectory();
       final receiptsDir = Directory(p.join(appDir.path, 'receipts'));
-      
+
       // Create receipts directory if it doesn't exist
       if (!await receiptsDir.exists()) {
         await receiptsDir.create(recursive: true);
       }
-      
+
       // Generate unique filename using timestamp
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final extension = p.extension(image.path);
       final fileName = 'receipt_$timestamp$extension';
       final savedPath = p.join(receiptsDir.path, fileName);
-      
+
       // Copy image to app directory
       await File(image.path).copy(savedPath);
-      
+
       return savedPath;
     } catch (e) {
       // Clean up any partially created directories or files on failure
@@ -229,7 +232,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     );
   }
 
-
   Future<void> _saveTransaction() async {
     if (!_formKey.currentState!.validate()) return;
     // Category is optional if a goal is selected (goal acts as the category)
@@ -270,11 +272,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
       if (widget.transactionToEdit != null) {
         // Delete old receipt if it's being replaced
-        final oldReceiptPath = widget.transactionToEdit!.transaction.receiptImagePath;
+        final oldReceiptPath =
+            widget.transactionToEdit!.transaction.receiptImagePath;
         if (oldReceiptPath != _receiptImagePath) {
           await _deleteOldReceipt(oldReceiptPath);
         }
-        
+
         // Update existing
         await (db.update(db.transactions)..where(
               (t) => t.id.equals(widget.transactionToEdit!.transaction.id),
@@ -312,16 +315,27 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               ),
             );
 
-        // Add contribution to goal if selected
+        // Update goal's savedAmount if linked to a goal
+        // Note: We directly update the goal instead of creating a separate contribution
+        // to avoid data duplication. The transaction itself (with goalId) is the record.
         if (_selectedGoal != null) {
-          final goalService = ref.read(goalServiceProvider);
-          await goalService.addContribution(
-            goalId: _selectedGoal!.id,
-            amount: amount,
-            note: _noteController.text.isNotEmpty
-                ? 'Expense: ${_noteController.text}'
-                : 'Expense contribution',
-          );
+          final goal = await (db.select(
+            db.goals,
+          )..where((g) => g.id.equals(_selectedGoal!.id))).getSingleOrNull();
+
+          if (goal != null) {
+            final newSavedAmount = goal.savedAmount + amount;
+            final isCompleted = newSavedAmount >= goal.targetAmount;
+
+            await (db.update(
+              db.goals,
+            )..where((g) => g.id.equals(_selectedGoal!.id))).write(
+              GoalsCompanion(
+                savedAmount: Value(newSavedAmount),
+                isCompleted: Value(isCompleted),
+              ),
+            );
+          }
           // Refresh goal data
           ref.invalidate(activeGoalsProvider);
           ref.invalidate(activeGoalProvider);
@@ -735,7 +749,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               const SizedBox(height: 24),
 
               // Receipt/Photo Section
-              Text('Receipt / Photo (optional)', style: theme.textTheme.labelLarge),
+              Text(
+                'Receipt / Photo (optional)',
+                style: theme.textTheme.labelLarge,
+              ),
               const SizedBox(height: 12),
               if (_receiptImagePath != null) ...[
                 Stack(
@@ -758,7 +775,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                     fit: BoxFit.contain,
                                     errorBuilder: (context, error, stackTrace) {
                                       return Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
                                           Icon(
                                             Icons.broken_image,
@@ -768,7 +786,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                           const SizedBox(height: 16),
                                           Text(
                                             'Image not found',
-                                            style: TextStyle(color: Colors.white54),
+                                            style: TextStyle(
+                                              color: Colors.white54,
+                                            ),
                                           ),
                                         ],
                                       );
@@ -836,8 +856,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               ],
               OutlinedButton.icon(
                 onPressed: _showImagePickerOptions,
-                icon: Icon(_receiptImagePath != null ? Icons.edit : Icons.camera_alt),
-                label: Text(_receiptImagePath != null ? 'Change Photo' : 'Add Photo'),
+                icon: Icon(
+                  _receiptImagePath != null ? Icons.edit : Icons.camera_alt,
+                ),
+                label: Text(
+                  _receiptImagePath != null ? 'Change Photo' : 'Add Photo',
+                ),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 48),
                 ),

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/database/database.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/utils/formatters.dart';
+import '../../dashboard/providers/dashboard_providers.dart';
 
 /// Budget statistics for a category
 class CategoryBudgetStats {
@@ -36,12 +37,14 @@ class BudgetStats {
   final double dailyAllowance;
   final int daysRemaining;
   final List<CategoryBudgetStats> categoryStats;
+  final String periodLabel; // Added to show which period is being displayed
 
   BudgetStats({
     required this.totalBudget,
     required this.totalSpent,
     required this.daysRemaining,
     required this.categoryStats,
+    this.periodLabel = 'This Month',
   }) : totalRemaining = totalBudget - totalSpent,
        dailyAllowance = daysRemaining > 0
            ? (totalBudget - totalSpent) / daysRemaining
@@ -52,23 +55,68 @@ class BudgetStats {
   bool get isOverBudget => totalSpent > totalBudget;
 }
 
-/// Provider for budget statistics
+/// Provider for budget statistics - respects dashboard date filter for month views
 final budgetStatsProvider = FutureProvider<BudgetStats>((ref) async {
   final db = ref.watch(databaseProvider);
+  final filter = ref.watch(dashboardDateFilterProvider);
   final now = DateTime.now();
 
-  // Get current month range with proper end time including milliseconds
-  final monthStart = DateTime(now.year, now.month, 1);
-  final lastDay = DateTime(now.year, now.month + 1, 0);
-  final monthEnd = DateTime(
-    lastDay.year,
-    lastDay.month,
-    lastDay.day,
-    23,
-    59,
-    59,
-    999,
-  );
+  // Determine date range based on filter
+  // Budget tracking uses monthly budgets, so we apply the filter for month views
+  DateTime monthStart;
+  DateTime monthEnd;
+  int daysRemaining;
+  String periodLabel;
+
+  switch (filter) {
+    case DashboardDateFilter.thisMonth:
+      monthStart = DateTime(now.year, now.month, 1);
+      final lastDay = DateTime(now.year, now.month + 1, 0);
+      monthEnd = DateTime(
+        lastDay.year,
+        lastDay.month,
+        lastDay.day,
+        23,
+        59,
+        59,
+        999,
+      );
+      daysRemaining = Formatters.daysRemainingInMonth();
+      periodLabel = 'This Month';
+      break;
+
+    case DashboardDateFilter.lastMonth:
+      monthStart = DateTime(now.year, now.month - 1, 1);
+      final lastDay = DateTime(now.year, now.month, 0);
+      monthEnd = DateTime(
+        lastDay.year,
+        lastDay.month,
+        lastDay.day,
+        23,
+        59,
+        59,
+        999,
+      );
+      daysRemaining = 0; // Past month, no days remaining
+      periodLabel = 'Last Month';
+      break;
+
+    default:
+      // For week/year/all-time views, default to current month for budget context
+      monthStart = DateTime(now.year, now.month, 1);
+      final lastDay = DateTime(now.year, now.month + 1, 0);
+      monthEnd = DateTime(
+        lastDay.year,
+        lastDay.month,
+        lastDay.day,
+        23,
+        59,
+        59,
+        999,
+      );
+      daysRemaining = Formatters.daysRemainingInMonth();
+      periodLabel = 'This Month';
+  }
 
   // Get categories with positive monthly budgets
   final categoriesQuery = db.select(db.categories)
@@ -120,8 +168,9 @@ final budgetStatsProvider = FutureProvider<BudgetStats>((ref) async {
   return BudgetStats(
     totalBudget: totalBudget,
     totalSpent: totalSpent,
-    daysRemaining: Formatters.daysRemainingInMonth(),
+    daysRemaining: daysRemaining,
     categoryStats: categoryStats,
+    periodLabel: periodLabel,
   );
 });
 

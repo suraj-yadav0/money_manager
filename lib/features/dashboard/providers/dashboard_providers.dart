@@ -173,13 +173,10 @@ class DashboardStats {
 final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
   final db = ref.watch(databaseProvider);
   final range = ref.watch(dateRangeProvider);
+  final filter = ref.read(dashboardDateFilterProvider);
 
-  // Note: For "This Month" we still want to compare against monthly income setting.
-  // For other views, "Projected Balance" might need interpretation or be hidden.
-  // For now, we will calculate based on actuals in range.
-
+  // Get settings for forecast calculations (monthlyIncome used for projections reference)
   final settings = await db.select(db.userSettings).getSingleOrNull();
-  // Monthly income is only relevant for month views roughly, but we can treat it as base for projections.
   final monthlyIncome = settings?.monthlyIncome ?? 0;
 
   // Query transactions for range
@@ -187,15 +184,15 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
     db.transactions,
   )..where((t) => t.timestamp.isBetweenValues(range.start, range.end))).get();
 
-  // Calculate totals
-  double totalRangeIncome = 0; // Income found in transactions
+  // Calculate totals from actual transactions only
+  double totalIncome = 0;
   double totalExpenses = 0;
   double goalAllocatedAmount = 0;
   Map<int, double> categoryTotals = {};
 
   for (final tx in transactions) {
     if (tx.type == 'income') {
-      totalRangeIncome += tx.amount;
+      totalIncome += tx.amount;
     } else {
       totalExpenses += tx.amount;
       // Track goal allocations separately - don't add to category breakdown
@@ -207,19 +204,6 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
             (categoryTotals[tx.categoryId] ?? 0) + tx.amount;
       }
     }
-  }
-
-  // Logic adjustment: If filter is "This Month", use settings income as base if no income transactions?
-  // Original code: totalIncome = monthlyIncome + (income transactions?).
-  // Wait, original code: totalIncome = monthlyIncome; for (tx) if income totalIncome += tx.amount;
-  // This implies monthlyIncome is a static base + any extra income.
-  // For other periods (Week, Year), adding "Monthly Income" doesn't make sense directly.
-  // We should likely rely on ACTUAL income for non-month views, or prorate.
-  // For simplicity and correctness in "This Month" view to match original behavior:
-  double totalIncome = totalRangeIncome;
-  final filter = ref.read(dashboardDateFilterProvider);
-  if (filter == DashboardDateFilter.thisMonth) {
-    totalIncome += monthlyIncome;
   }
 
   // Get category names

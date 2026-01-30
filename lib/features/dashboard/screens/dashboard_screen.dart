@@ -13,6 +13,7 @@ import '../widgets/spending_line_chart.dart';
 import '../widgets/recent_transactions.dart';
 import '../widgets/date_filter_bar.dart';
 import '../../transactions/screens/all_transactions_screen.dart';
+import '../../settings/screens/settings_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -33,6 +34,14 @@ class DashboardScreen extends ConsumerWidget {
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () {
               // TODO: Show insights
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
             },
           ),
         ],
