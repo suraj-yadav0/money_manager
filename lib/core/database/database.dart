@@ -18,6 +18,7 @@ class Transactions extends Table {
   DateTimeColumn get timestamp => dateTime()();
   TextColumn get note => text().nullable()();
   TextColumn get paymentMode => text().nullable()(); // 'Cash', 'UPI', etc.
+  TextColumn get receiptImagePath => text().nullable()(); // Path to receipt/photo
   BoolColumn get isRecurring => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
@@ -89,7 +90,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration {
@@ -121,6 +122,12 @@ class AppDatabase extends _$AppDatabase {
           // Add payment_mode column to transactions table
           await customStatement(
             'ALTER TABLE transactions ADD COLUMN payment_mode TEXT',
+          );
+        }
+        if (from < 6) {
+          // Add receipt_image_path column to transactions table
+          await customStatement(
+            'ALTER TABLE transactions ADD COLUMN receipt_image_path TEXT',
           );
         }
       },

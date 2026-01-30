@@ -190,15 +190,29 @@ class AllTransactionsScreen extends ConsumerWidget {
                                       item.category?.name ?? 'Unknown',
                                       style: theme.textTheme.titleSmall,
                                     ),
-                                    subtitle: Text(
-                                      item.transaction.note?.isNotEmpty == true
-                                          ? item.transaction.note!
-                                          : Formatters.relativeDate(
-                                              item.transaction.timestamp,
-                                            ),
-                                      style: theme.textTheme.bodySmall,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                    subtitle: Row(
+                                      children: [
+                                        if (item.transaction.receiptImagePath != null) ...[
+                                          Icon(
+                                            Icons.receipt,
+                                            size: 14,
+                                            color: colorScheme.primary,
+                                          ),
+                                          const SizedBox(width: 4),
+                                        ],
+                                        Expanded(
+                                          child: Text(
+                                            item.transaction.note?.isNotEmpty == true
+                                                ? item.transaction.note!
+                                                : Formatters.relativeDate(
+                                                    item.transaction.timestamp,
+                                                  ),
+                                            style: theme.textTheme.bodySmall,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                     trailing: Text(
                                       '${isExpense ? '-' : '+'}${Formatters.currency(item.transaction.amount)}',
