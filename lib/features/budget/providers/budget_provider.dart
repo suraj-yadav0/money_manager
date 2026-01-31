@@ -185,3 +185,55 @@ final updateCategoryBudgetProvider =
         ref.invalidate(budgetStatsProvider);
       };
     });
+
+/// Provider to get average monthly spending per category (last 3 months)
+/// Used to suggest budget amounts based on actual spending patterns
+final categoryAvgSpendingProvider = FutureProvider<Map<int, double>>((
+  ref,
+) async {
+  final db = ref.watch(databaseProvider);
+  final now = DateTime.now();
+
+  // Calculate date range for last 3 complete months
+  final threeMonthsAgo = DateTime(now.year, now.month - 3, 1);
+  final currentMonthStart = DateTime(now.year, now.month, 1);
+
+  // Get all expenses from the last 3 complete months (excluding current month)
+  final transactionsQuery = db.select(db.transactions)
+    ..where(
+      (t) =>
+          t.timestamp.isBiggerOrEqualValue(threeMonthsAgo) &
+          t.timestamp.isSmallerThanValue(currentMonthStart) &
+          t.type.equals('expense') &
+          t.goalId.isNull(),
+    );
+  final transactions = await transactionsQuery.get();
+
+  // Calculate total spending per category
+  final Map<int, double> totalSpending = {};
+  for (final tx in transactions) {
+    totalSpending[tx.categoryId] =
+        (totalSpending[tx.categoryId] ?? 0) + tx.amount;
+  }
+
+  // Calculate number of complete months in range
+  int monthsCount = 0;
+  DateTime checkDate = threeMonthsAgo;
+  while (checkDate.isBefore(currentMonthStart)) {
+    monthsCount++;
+    checkDate = DateTime(checkDate.year, checkDate.month + 1, 1);
+  }
+
+  // Avoid division by zero
+  if (monthsCount == 0) monthsCount = 1;
+
+  // Calculate average per category and round to nearest 100
+  final Map<int, double> avgSpending = {};
+  for (final entry in totalSpending.entries) {
+    final avg = entry.value / monthsCount;
+    // Round to nearest 100 for cleaner suggestions
+    avgSpending[entry.key] = (avg / 100).round() * 100;
+  }
+
+  return avgSpending;
+});
