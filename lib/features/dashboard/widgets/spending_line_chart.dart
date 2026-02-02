@@ -123,7 +123,7 @@ class _SpendingLineChartState extends ConsumerState<SpendingLineChart> {
             child: Column(
               children: [
                 SizedBox(
-                  height: 180,
+                  height: 350,
                   child: LineChart(
                     LineChartData(
                       gridData: FlGridData(

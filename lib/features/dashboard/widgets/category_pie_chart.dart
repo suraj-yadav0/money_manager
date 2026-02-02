@@ -17,13 +17,13 @@ class CategoryPieChart extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
 
     return statsAsync.when(
-      loading: () => const SizedBox(height: 200),
+      loading: () => const SizedBox(height: 350),
       error: (error, stack) => const SizedBox(),
       data: (stats) {
         if (stats.categoryBreakdown.isEmpty) {
           return Card(
             child: Container(
-              height: 200,
+              height: 350,
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -63,7 +63,7 @@ class CategoryPieChart extends ConsumerWidget {
             child: Column(
               children: [
                 SizedBox(
-                  height: 180,
+                  height: 350,
                   child: Row(
                     children: [
                       // Pie Chart
