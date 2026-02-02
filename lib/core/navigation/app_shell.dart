@@ -51,48 +51,129 @@ class _AppShellState extends ConsumerState<AppShell> {
     final currentIndex = ref.watch(navIndexProvider);
 
     return Scaffold(
+      extendBody: true, // Content flows behind the floating nav
       body: IndexedStack(index: currentIndex, children: _screens),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: currentIndex,
-        onDestinationSelected: (index) {
-          ref.read(navIndexProvider.notifier).state = index;
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: 'Dashboard',
+
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: Container(
+        margin: const EdgeInsets.only(top: 32),
+        height: 64,
+        width: 64,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [
+              Color(0xFFFF5722), // Deep Orange
+              Color(0xFFFF8A65), // Lighter Orange
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          NavigationDestination(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            selectedIcon: Icon(Icons.account_balance_wallet),
-            label: 'Budget',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.lightbulb_outline),
-            selectedIcon: Icon(Icons.lightbulb),
-            label: 'Insights',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.savings_outlined),
-            selectedIcon: Icon(Icons.savings),
-            label: 'Goals',
-          ),
-        ],
-      ),
-      floatingActionButton: currentIndex == 3
-          ? null
-          : FloatingActionButton(
-              heroTag: 'shell_fab',
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const AddTransactionScreen(),
-                  ),
-                );
-              },
-              child: const Icon(Icons.add),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFF5722).withAlpha(100),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
             ),
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+            );
+          },
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          shape: const CircleBorder(),
+          child: const Icon(Icons.add, color: Colors.white, size: 32),
+        ),
+      ),
+
+      bottomNavigationBar: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(20),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BottomAppBar(
+            elevation: 0,
+            color: Colors.transparent,
+            height: 70,
+            padding: EdgeInsets.zero,
+            shape: const CircularNotchedRectangle(),
+            notchMargin: 8,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildNavItem(
+                  context,
+                  0,
+                  Icons.home_filled,
+                  Icons.home_outlined,
+                ),
+                _buildNavItem(
+                  context,
+                  1,
+                  Icons.credit_card,
+                  Icons.credit_card_outlined,
+                ),
+                const SizedBox(width: 48), // Space for FAB
+                _buildNavItem(
+                  context,
+                  2,
+                  Icons.calendar_today,
+                  Icons.calendar_today_outlined,
+                ),
+                _buildNavItem(
+                  context,
+                  3,
+                  Icons.settings,
+                  Icons.settings_outlined,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(
+    BuildContext context,
+    int index,
+    IconData selectedIcon,
+    IconData unselectedIcon,
+  ) {
+    final currentIndex = ref.watch(navIndexProvider);
+    final isSelected = currentIndex == index;
+    final color = isSelected
+        ? const Color(0xFFFF5722)
+        : Theme.of(context).colorScheme.onSurface.withAlpha(100);
+
+    return Expanded(
+      child: InkWell(
+        onTap: () => ref.read(navIndexProvider.notifier).state = index,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              isSelected ? selectedIcon : unselectedIcon,
+              color: color,
+              size: 26,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

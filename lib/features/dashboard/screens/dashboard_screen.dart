@@ -81,11 +81,11 @@ class DashboardScreen extends ConsumerWidget {
               const DateFilterBar(),
               const SizedBox(height: 16),
 
-              // Balance Card
+              // Balance Card (New Design)
               const BalanceCard(),
               const SizedBox(height: 16),
 
-              // Forecast Card
+              // Forecast Card (Restored)
               const ForecastCard(),
               const SizedBox(height: 24),
 
