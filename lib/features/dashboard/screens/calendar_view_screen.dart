@@ -213,12 +213,12 @@ class CalendarViewScreen extends ConsumerWidget {
       selectedDayPredicate: (day) => isSameDay(day, selectedDay),
       calendarFormat: tableCalendarFormat,
       startingDayOfWeek: StartingDayOfWeek.monday,
-      rowHeight: 64, // Larger row height for full page view
-      daysOfWeekHeight: 24,
+      shouldFillViewport: true,
+      daysOfWeekHeight: 32,
       headerStyle: HeaderStyle(
         formatButtonVisible: false,
         titleCentered: true,
-        headerPadding: const EdgeInsets.symmetric(vertical: 16),
+        headerPadding: const EdgeInsets.symmetric(vertical: 8),
         titleTextStyle: GoogleFonts.outfit(
           fontSize: 20,
           fontWeight: FontWeight.w600,
@@ -238,28 +238,15 @@ class CalendarViewScreen extends ConsumerWidget {
       ),
       calendarStyle: CalendarStyle(
         outsideDaysVisible: false,
-        cellMargin: const EdgeInsets.all(2),
-        rowDecoration: const BoxDecoration(),
-        todayDecoration: BoxDecoration(
-          color: colorScheme.primary.withAlpha(30),
-          shape: BoxShape.circle,
+        cellMargin: EdgeInsets.zero,
+        tableBorder: TableBorder.all(
+          color: colorScheme.outlineVariant.withAlpha(50),
+          width: 0.5,
         ),
-        todayTextStyle: TextStyle(
-          color: colorScheme.primary,
-          fontWeight: FontWeight.w600,
-        ),
-        selectedDecoration: BoxDecoration(
-          color: colorScheme.primary,
-          shape: BoxShape.circle,
-        ),
-        selectedTextStyle: TextStyle(
-          color: colorScheme.onPrimary,
-          fontWeight: FontWeight.w600,
-        ),
-        defaultTextStyle: TextStyle(color: colorScheme.onSurface),
-        weekendTextStyle: TextStyle(
-          color: colorScheme.onSurface.withAlpha(180),
-        ),
+        defaultDecoration: const BoxDecoration(),
+        weekendDecoration: const BoxDecoration(),
+        todayDecoration: const BoxDecoration(),
+        selectedDecoration: const BoxDecoration(),
       ),
       onDaySelected: (selected, focused) {
         ref.read(calendarSelectedDayProvider.notifier).state = selected;
@@ -275,76 +262,32 @@ class CalendarViewScreen extends ConsumerWidget {
         ref.read(calendarFocusedDayProvider.notifier).state = focused;
       },
       calendarBuilders: CalendarBuilders(
-        markerBuilder: (context, date, events) {
+        defaultBuilder: (context, date, _) {
           final dateKey = DateTime(date.year, date.month, date.day);
-          final summary = summaries[dateKey];
-
-          if (summary == null || !summary.hasTransactions) {
-            return null;
-          }
-
-          return Positioned(
-            bottom: 4,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (summary.totalExpenses > 0)
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: colorScheme.error,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                if (summary.totalExpenses > 0 && summary.totalIncome > 0)
-                  const SizedBox(width: 2),
-                if (summary.totalIncome > 0)
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      color: AppTheme.success,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-              ],
-            ),
-          );
-        },
-        // Optional: Show amount below the date
-        defaultBuilder: (context, date, focusedDay) {
-          final dateKey = DateTime(date.year, date.month, date.day);
-          final summary = summaries[dateKey];
-
           return _buildDayCell(
             context,
             date,
-            summary,
+            summaries[dateKey],
             isSelected: false,
             isToday: false,
           );
         },
-        todayBuilder: (context, date, focusedDay) {
+        todayBuilder: (context, date, _) {
           final dateKey = DateTime(date.year, date.month, date.day);
-          final summary = summaries[dateKey];
-
           return _buildDayCell(
             context,
             date,
-            summary,
+            summaries[dateKey],
             isSelected: false,
             isToday: true,
           );
         },
-        selectedBuilder: (context, date, focusedDay) {
+        selectedBuilder: (context, date, _) {
           final dateKey = DateTime(date.year, date.month, date.day);
-          final summary = summaries[dateKey];
-
           return _buildDayCell(
             context,
             date,
-            summary,
+            summaries[dateKey],
             isSelected: true,
             isToday: isSameDay(date, DateTime.now()),
           );
@@ -362,65 +305,94 @@ class CalendarViewScreen extends ConsumerWidget {
   }) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    Color backgroundColor;
-    Color textColor;
+    final hasExpenses = summary != null && summary.totalExpenses > 0;
+    final hasIncome = summary != null && summary.totalIncome > 0;
 
+    // Background color logic
+    Color backgroundColor = Colors.transparent;
     if (isSelected) {
-      backgroundColor = colorScheme.primary;
-      textColor = colorScheme.onPrimary;
+      backgroundColor = colorScheme.primary.withAlpha(10);
     } else if (isToday) {
-      backgroundColor = colorScheme.primary.withAlpha(30);
-      textColor = colorScheme.primary;
-    } else {
-      backgroundColor = Colors.transparent;
-      textColor = colorScheme.onSurface;
+      backgroundColor = colorScheme.primary.withAlpha(5);
     }
 
-    final hasExpenses = summary != null && summary.totalExpenses > 0;
+    // Text color logic
+    Color dayTextColor = colorScheme.onSurface;
+    if (isSelected) {
+      dayTextColor = colorScheme.primary;
+    } else if (isToday) {
+      dayTextColor = colorScheme.primary;
+    }
 
     return Container(
-      margin: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        border: isSelected
+            ? Border.all(color: colorScheme.primary, width: 1.5)
+            : null,
+      ),
+      padding: const EdgeInsets.all(4),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: backgroundColor,
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
+          // Top row: Day number
+          Align(
+            alignment: Alignment.topRight,
             child: Text(
               '${date.day}',
-              style: TextStyle(
+              style: GoogleFonts.outfit(
                 fontSize: 14,
-                color: textColor,
-                fontWeight: isSelected || isToday
+                fontWeight: (isSelected || isToday)
                     ? FontWeight.w600
                     : FontWeight.normal,
+                color: dayTextColor,
               ),
             ),
           ),
-          if (hasExpenses)
-            Flexible(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 2),
+
+          if (hasIncome || hasExpenses) ...[
+            const Spacer(),
+            // Dots
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (hasIncome)
+                  Container(
+                    margin: const EdgeInsets.only(right: 2),
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      color: AppTheme.success,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                if (hasExpenses)
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: colorScheme.error,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            // Amount
+            if (hasExpenses)
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
                 child: Text(
                   Formatters.compactNumber(summary.totalExpenses),
-                  style: TextStyle(
-                    fontSize: 9,
-                    color: isSelected
-                        ? colorScheme.onPrimary.withAlpha(200)
-                        : colorScheme.error,
+                  style: GoogleFonts.outfit(
+                    fontSize: 10,
                     fontWeight: FontWeight.w500,
+                    color: colorScheme.error,
                   ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
                 ),
               ),
-            ),
+          ],
         ],
       ),
     );
