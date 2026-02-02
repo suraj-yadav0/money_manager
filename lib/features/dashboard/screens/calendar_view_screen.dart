@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:table_calendar/table_calendar.dart';
 
-import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../providers/calendar_providers.dart';
 import 'day_transactions_screen.dart';
@@ -95,60 +94,85 @@ class CalendarViewScreen extends ConsumerWidget {
             error: (_, __) => const SizedBox.shrink(),
             data: (totals) => Container(
               margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
               decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerLowest,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: colorScheme.outlineVariant.withAlpha(50),
-                ),
+                color: colorScheme.surface,
+                // No border or shadow as per reference clean look, or subtle
               ),
               child: Row(
                 children: [
+                  // Income
                   Expanded(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           'Income',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          Formatters.currency(totals.income),
-                          style: GoogleFonts.outfit(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.success,
+                        FittedBox(
+                          child: Text(
+                            Formatters.currency(totals.income),
+                            style: GoogleFonts.outfit(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue, // Reference: Blue
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  Container(
-                    width: 1,
-                    height: 40,
-                    color: colorScheme.outlineVariant.withAlpha(100),
-                  ),
+                  // Expenses
                   Expanded(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
                           'Expenses',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         const SizedBox(height: 4),
+                        FittedBox(
+                          child: Text(
+                            Formatters.currency(totals.expenses),
+                            style: GoogleFonts.outfit(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red, // Reference: Red
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Total
+                  Expanded(
+                    child: Column(
+                      children: [
                         Text(
-                          Formatters.currency(totals.expenses),
-                          style: GoogleFonts.outfit(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: colorScheme.error,
+                          'Total',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        FittedBox(
+                          child: Text(
+                            Formatters.currency(
+                              totals.income - totals.expenses,
+                            ),
+                            style: GoogleFonts.outfit(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black, // Reference: Black
+                            ),
                           ),
                         ),
                       ],
@@ -212,7 +236,7 @@ class CalendarViewScreen extends ConsumerWidget {
       focusedDay: focusedDay,
       selectedDayPredicate: (day) => isSameDay(day, selectedDay),
       calendarFormat: tableCalendarFormat,
-      startingDayOfWeek: StartingDayOfWeek.monday,
+      startingDayOfWeek: StartingDayOfWeek.sunday, // Reference: Starts Sunday
       shouldFillViewport: true,
       daysOfWeekHeight: 32,
       headerStyle: HeaderStyle(
@@ -227,14 +251,13 @@ class CalendarViewScreen extends ConsumerWidget {
         rightChevronIcon: Icon(Icons.chevron_right, color: colorScheme.primary),
       ),
       daysOfWeekStyle: DaysOfWeekStyle(
-        weekdayStyle: theme.textTheme.bodySmall!.copyWith(
-          fontWeight: FontWeight.w600,
-          color: colorScheme.onSurfaceVariant,
-        ),
-        weekendStyle: theme.textTheme.bodySmall!.copyWith(
-          fontWeight: FontWeight.w600,
-          color: colorScheme.onSurfaceVariant.withAlpha(150),
-        ),
+        dowTextFormatter: (date, locale) =>
+            Formatters.dayOfWeek(date), // Custom styling needed?
+        // We will customize via builder if needed, but styling properties are limited.
+        // Let's rely on standard text styles and override colors in builder if TableCalendar supported dowBuilder.
+        // TableCalendar 3.0 has dowBuilder in CalendarBuilders!
+        weekdayStyle: const TextStyle(), // We will use builder
+        weekendStyle: const TextStyle(), // We will use builder
       ),
       calendarStyle: CalendarStyle(
         outsideDaysVisible: false,
@@ -262,6 +285,22 @@ class CalendarViewScreen extends ConsumerWidget {
         ref.read(calendarFocusedDayProvider.notifier).state = focused;
       },
       calendarBuilders: CalendarBuilders(
+        dowBuilder: (context, day) {
+          final text = Formatters.dayOfWeek(day);
+          Color color = Colors.black;
+          if (day.weekday == DateTime.sunday) color = Colors.red;
+          if (day.weekday == DateTime.saturday) color = Colors.blue;
+
+          return Center(
+            child: Text(
+              text,
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.w500,
+                color: color,
+              ),
+            ),
+          );
+        },
         defaultBuilder: (context, date, _) {
           final dateKey = DateTime(date.year, date.month, date.day);
           return _buildDayCell(
@@ -303,96 +342,100 @@ class CalendarViewScreen extends ConsumerWidget {
     required bool isSelected,
     required bool isToday,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     final hasExpenses = summary != null && summary.totalExpenses > 0;
     final hasIncome = summary != null && summary.totalIncome > 0;
 
-    // Background color logic
+    // Background color logic: Today gets a dark fill
     Color backgroundColor = Colors.transparent;
-    if (isSelected) {
-      backgroundColor = colorScheme.primary.withAlpha(10);
-    } else if (isToday) {
-      backgroundColor = colorScheme.primary.withAlpha(5);
+    if (isToday) {
+      backgroundColor = const Color(
+        0xFF2C3E50,
+      ); // Dark Blue/Black like reference
+    } else if (isSelected) {
+      backgroundColor = Colors.transparent; // Selection is border only
     }
 
     // Text color logic
-    Color dayTextColor = colorScheme.onSurface;
-    if (isSelected) {
-      dayTextColor = colorScheme.primary;
-    } else if (isToday) {
-      dayTextColor = colorScheme.primary;
+    Color dayTextColor = Colors.black;
+    if (isToday) {
+      dayTextColor = Colors.white;
+    } else if (date.weekday == DateTime.sunday) {
+      dayTextColor = Colors.red;
+    } else if (date.weekday == DateTime.saturday) {
+      dayTextColor = Colors.blue;
     }
 
     return Container(
       decoration: BoxDecoration(
         color: backgroundColor,
         border: isSelected
-            ? Border.all(color: colorScheme.primary, width: 1.5)
-            : null,
+            ? Border(bottom: BorderSide(color: Colors.red, width: 2))
+            : null, // Bottom accent like reference tab highlight
+        // OR Box Border as per previous "Box Shape" request? User now says "Similar to this". Reference has white cells with no border, but user ASKED for "Box Shape" in previous turn.
+        // The reference image is a grid. The grid lines come from TableBorder we set on TableCalendar.
+        // So we don't need borders here except selection.
+        // Reference selection seems to be just the text color or a highlight?
+        // I will stick to "Box Shape" grid lines (already in _buildCalendar) and use a distinct selection style (e.g. slight background or border).
+        // Let's use a subtle box border for selection.
       ),
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(2),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Top row: Day number
+          // Top Left: Day number
           Align(
-            alignment: Alignment.topRight,
-            child: Text(
-              '${date.day}',
-              style: GoogleFonts.outfit(
-                fontSize: 14,
-                fontWeight: (isSelected || isToday)
-                    ? FontWeight.w600
-                    : FontWeight.normal,
-                color: dayTextColor,
+            alignment: Alignment.topLeft,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 4, top: 4),
+              child: Text(
+                '${date.day}',
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                  color: dayTextColor,
+                ),
               ),
             ),
           ),
 
-          if (hasIncome || hasExpenses) ...[
-            const Spacer(),
-            // Dots
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                if (hasIncome)
-                  Container(
-                    margin: const EdgeInsets.only(right: 2),
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      color: AppTheme.success,
-                      shape: BoxShape.circle,
-                    ),
+          const Spacer(),
+
+          // Income (Blue)
+          if (hasIncome)
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                child: Text(
+                  Formatters.compactNumber(summary.totalIncome),
+                  style: GoogleFonts.outfit(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.blue,
                   ),
-                if (hasExpenses)
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: colorScheme.error,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-              ],
+                ),
+              ),
             ),
-            const SizedBox(height: 2),
-            // Amount
-            if (hasExpenses)
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerRight,
+
+          // Expenses (Red)
+          if (hasExpenses)
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2),
                 child: Text(
                   Formatters.compactNumber(summary.totalExpenses),
                   style: GoogleFonts.outfit(
                     fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                    color: colorScheme.error,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.red,
                   ),
                 ),
               ),
-          ],
+            ),
+          const SizedBox(height: 2),
         ],
       ),
     );

@@ -89,6 +89,11 @@ class Formatters {
     return _dayFormat.format(date);
   }
 
+  /// Format short day name: Sun
+  static String dayOfWeek(DateTime date) {
+    return DateFormat('E').format(date);
+  }
+
   /// Get relative date text: Today, Yesterday, or date
   static String relativeDate(DateTime date) {
     final now = DateTime.now();
