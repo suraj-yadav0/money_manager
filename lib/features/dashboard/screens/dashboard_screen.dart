@@ -14,6 +14,7 @@ import '../widgets/recent_transactions.dart';
 import '../widgets/date_filter_bar.dart';
 import '../../transactions/screens/all_transactions_screen.dart';
 import '../../settings/screens/settings_screen.dart';
+import 'calendar_view_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -25,10 +26,29 @@ class DashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          _getTitle(ref),
-          style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+        title: InkWell(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const CalendarViewScreen()),
+            );
+          },
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _getTitle(ref),
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(width: 4),
+                const Icon(Icons.keyboard_arrow_down, size: 20),
+              ],
+            ),
+          ),
         ),
+        centerTitle: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined),

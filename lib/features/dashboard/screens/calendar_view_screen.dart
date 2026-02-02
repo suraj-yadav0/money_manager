@@ -6,7 +6,7 @@ import 'package:table_calendar/table_calendar.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../providers/calendar_providers.dart';
-import '../widgets/day_transactions_list.dart';
+import 'day_transactions_screen.dart';
 
 /// Calendar view screen showing expenses in a calendar format
 class CalendarViewScreen extends ConsumerWidget {
@@ -99,7 +99,9 @@ class CalendarViewScreen extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: colorScheme.surfaceContainerLowest,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: colorScheme.outlineVariant.withAlpha(50)),
+                border: Border.all(
+                  color: colorScheme.outlineVariant.withAlpha(50),
+                ),
               ),
               child: Row(
                 children: [
@@ -157,69 +159,20 @@ class CalendarViewScreen extends ConsumerWidget {
             ),
           ),
 
-          // Calendar
+          // Calendar - Full page height
           summariesAsync.when(
             loading: () => const Expanded(
               child: Center(child: CircularProgressIndicator()),
             ),
             error: (e, _) => Expanded(child: Center(child: Text('Error: $e'))),
-            data: (summaries) => _buildCalendar(
-              context,
-              ref,
-              focusedDay,
-              selectedDay,
-              calendarFormat,
-              summaries,
-            ),
-          ),
-
-          // Selected day transactions
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: colorScheme.surface,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(10),
-                    blurRadius: 10,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Handle bar
-                  Center(
-                    child: Container(
-                      margin: const EdgeInsets.only(top: 12, bottom: 8),
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: colorScheme.outlineVariant,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  // Selected date header
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-                    child: Text(
-                      selectedDay != null
-                          ? Formatters.date(selectedDay)
-                          : 'Select a date',
-                      style: GoogleFonts.outfit(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  // Transactions list
-                  const Expanded(
-                    child: DayTransactionsList(),
-                  ),
-                ],
+            data: (summaries) => Expanded(
+              child: _buildCalendar(
+                context,
+                ref,
+                focusedDay,
+                selectedDay,
+                calendarFormat,
+                summaries,
               ),
             ),
           ),
@@ -260,13 +213,14 @@ class CalendarViewScreen extends ConsumerWidget {
       selectedDayPredicate: (day) => isSameDay(day, selectedDay),
       calendarFormat: tableCalendarFormat,
       startingDayOfWeek: StartingDayOfWeek.monday,
-      rowHeight: 48, // Increased row height to fit expense amounts
-      daysOfWeekHeight: 20,
+      rowHeight: 64, // Larger row height for full page view
+      daysOfWeekHeight: 24,
       headerStyle: HeaderStyle(
         formatButtonVisible: false,
         titleCentered: true,
+        headerPadding: const EdgeInsets.symmetric(vertical: 16),
         titleTextStyle: GoogleFonts.outfit(
-          fontSize: 18,
+          fontSize: 20,
           fontWeight: FontWeight.w600,
         ),
         leftChevronIcon: Icon(Icons.chevron_left, color: colorScheme.primary),
@@ -303,11 +257,19 @@ class CalendarViewScreen extends ConsumerWidget {
           fontWeight: FontWeight.w600,
         ),
         defaultTextStyle: TextStyle(color: colorScheme.onSurface),
-        weekendTextStyle: TextStyle(color: colorScheme.onSurface.withAlpha(180)),
+        weekendTextStyle: TextStyle(
+          color: colorScheme.onSurface.withAlpha(180),
+        ),
       ),
       onDaySelected: (selected, focused) {
         ref.read(calendarSelectedDayProvider.notifier).state = selected;
         ref.read(calendarFocusedDayProvider.notifier).state = focused;
+        // Navigate to day transactions screen
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => DayTransactionsScreen(date: selected),
+          ),
+        );
       },
       onPageChanged: (focused) {
         ref.read(calendarFocusedDayProvider.notifier).state = focused;
@@ -423,8 +385,8 @@ class CalendarViewScreen extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 28,
-            height: 28,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: backgroundColor,
               shape: BoxShape.circle,
@@ -433,21 +395,25 @@ class CalendarViewScreen extends ConsumerWidget {
             child: Text(
               '${date.day}',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 14,
                 color: textColor,
-                fontWeight: isSelected || isToday ? FontWeight.w600 : FontWeight.normal,
+                fontWeight: isSelected || isToday
+                    ? FontWeight.w600
+                    : FontWeight.normal,
               ),
             ),
           ),
           if (hasExpenses)
             Flexible(
               child: Padding(
-                padding: const EdgeInsets.only(top: 1),
+                padding: const EdgeInsets.only(top: 2),
                 child: Text(
-                  Formatters.compactNumber(summary!.totalExpenses),
+                  Formatters.compactNumber(summary.totalExpenses),
                   style: TextStyle(
-                    fontSize: 7,
-                    color: isSelected ? colorScheme.onPrimary.withAlpha(200) : colorScheme.error,
+                    fontSize: 9,
+                    color: isSelected
+                        ? colorScheme.onPrimary.withAlpha(200)
+                        : colorScheme.error,
                     fontWeight: FontWeight.w500,
                   ),
                   overflow: TextOverflow.ellipsis,

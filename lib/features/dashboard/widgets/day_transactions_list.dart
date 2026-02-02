@@ -103,8 +103,12 @@ class DayTransactionsList extends ConsumerWidget {
                     context,
                     'Net',
                     dayIncome - dayExpenses,
-                    dayIncome >= dayExpenses ? AppTheme.success : colorScheme.error,
-                    dayIncome >= dayExpenses ? Icons.trending_up : Icons.trending_down,
+                    dayIncome >= dayExpenses
+                        ? AppTheme.success
+                        : colorScheme.error,
+                    dayIncome >= dayExpenses
+                        ? Icons.trending_up
+                        : Icons.trending_down,
                   ),
                 ],
               ),
@@ -150,7 +154,8 @@ class DayTransactionsList extends ConsumerWidget {
                         // Edit action
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (_) => AddTransactionScreen(transactionToEdit: item),
+                            builder: (_) =>
+                                AddTransactionScreen(transactionToEdit: item),
                           ),
                         );
                         return false;
@@ -167,7 +172,8 @@ class DayTransactionsList extends ConsumerWidget {
                         onTap: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (_) => AddTransactionScreen(transactionToEdit: item),
+                              builder: (_) =>
+                                  AddTransactionScreen(transactionToEdit: item),
                             ),
                           );
                         },
@@ -182,13 +188,17 @@ class DayTransactionsList extends ConsumerWidget {
                                 height: 44,
                                 decoration: BoxDecoration(
                                   color: isExpense
-                                      ? colorScheme.errorContainer.withAlpha(100)
+                                      ? colorScheme.errorContainer.withAlpha(
+                                          100,
+                                        )
                                       : AppTheme.success.withAlpha(30),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(
                                   _getCategoryIcon(item.category?.icon),
-                                  color: isExpense ? colorScheme.error : AppTheme.success,
+                                  color: isExpense
+                                      ? colorScheme.error
+                                      : AppTheme.success,
                                   size: 22,
                                 ),
                               ),
@@ -206,15 +216,20 @@ class DayTransactionsList extends ConsumerWidget {
                                     const SizedBox(height: 2),
                                     Text(
                                       [
-                                        Formatters.time(item.transaction.timestamp),
-                                        if (item.transaction.note?.isNotEmpty == true)
+                                        Formatters.time(
+                                          item.transaction.timestamp,
+                                        ),
+                                        if (item.transaction.note?.isNotEmpty ==
+                                            true)
                                           item.transaction.note!,
-                                        if (item.transaction.paymentMode != null)
+                                        if (item.transaction.paymentMode !=
+                                            null)
                                           item.transaction.paymentMode!,
                                       ].join(' • '),
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color: colorScheme.onSurfaceVariant,
-                                      ),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: colorScheme.onSurfaceVariant,
+                                          ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -228,7 +243,9 @@ class DayTransactionsList extends ConsumerWidget {
                                 style: GoogleFonts.outfit(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
-                                  color: isExpense ? colorScheme.error : AppTheme.success,
+                                  color: isExpense
+                                      ? colorScheme.error
+                                      : AppTheme.success,
                                 ),
                               ),
                             ],
@@ -312,7 +329,9 @@ class DayTransactionsList extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Transaction'),
-        content: const Text('Are you sure you want to delete this transaction?'),
+        content: const Text(
+          'Are you sure you want to delete this transaction?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -334,9 +353,9 @@ class DayTransactionsList extends ConsumerWidget {
     TransactionWithCategory item,
   ) async {
     final db = ref.read(databaseProvider);
-    await (db.delete(db.transactions)
-          ..where((t) => t.id.equals(item.transaction.id)))
-        .go();
+    await (db.delete(
+      db.transactions,
+    )..where((t) => t.id.equals(item.transaction.id))).go();
 
     // Refresh calendar data
     ref.invalidate(selectedDayTransactionsProvider);
@@ -345,9 +364,9 @@ class DayTransactionsList extends ConsumerWidget {
     ref.invalidate(dashboardStatsProvider);
 
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Transaction deleted')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Transaction deleted')));
     }
   }
 }
