@@ -156,22 +156,30 @@ class _AppShellState extends ConsumerState<AppShell> {
   ) {
     final currentIndex = ref.watch(navIndexProvider);
     final isSelected = currentIndex == index;
-    final color = isSelected
-        ? const Color(0xFFFF5722)
-        : Theme.of(context).colorScheme.onSurface.withAlpha(100);
+    final theme = Theme.of(context);
 
-    return Expanded(
-      child: InkWell(
-        onTap: () => ref.read(navIndexProvider.notifier).state = index,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              isSelected ? selectedIcon : unselectedIcon,
-              color: color,
-              size: 26,
-            ),
-          ],
+    return InkWell(
+      onTap: () => ref.read(navIndexProvider.notifier).state = index,
+      borderRadius: BorderRadius.circular(16),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+        padding: EdgeInsets.symmetric(
+          horizontal: isSelected ? 20 : 12,
+          vertical: 10,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? const Color(0xFFFF5722).withAlpha(30)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Icon(
+          isSelected ? selectedIcon : unselectedIcon,
+          color: isSelected
+              ? const Color(0xFFFF5722)
+              : theme.colorScheme.onSurface.withAlpha(100),
+          size: 26,
         ),
       ),
     );

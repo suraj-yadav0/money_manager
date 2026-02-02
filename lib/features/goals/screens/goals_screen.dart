@@ -39,13 +39,21 @@ class GoalsScreen extends ConsumerWidget {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'goals_fab',
-        onPressed: () => _showCreateGoalSheet(context, ref),
-        icon: const Icon(Icons.add),
-        label: const Text('New Goal'),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(
+          bottom: 90,
+        ), // Spacing to clear the floating nav bar
+        child: FloatingActionButton.extended(
+          heroTag: 'goals_fab',
+          onPressed: () => _showCreateGoalSheet(context, ref),
+          icon: const Icon(Icons.add),
+          label: const Text('New Goal'),
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+          elevation: 4,
+        ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
