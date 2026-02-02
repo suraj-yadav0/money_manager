@@ -120,153 +120,161 @@ class _SpendingLineChartState extends ConsumerState<SpendingLineChart> {
         return Card(
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 350,
-                  child: LineChart(
-                    LineChartData(
-                      gridData: FlGridData(
-                        show: true,
-                        drawVerticalLine: false,
-                        horizontalInterval: maxY > 0 ? maxY / 4 : 1,
-                        getDrawingHorizontalLine: (value) => FlLine(
-                          color: colorScheme.outlineVariant.withAlpha(50),
-                          strokeWidth: 1,
-                        ),
-                      ),
-                      titlesData: FlTitlesData(
-                        show: true,
-                        rightTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        topTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 50,
-                            getTitlesWidget: (value, meta) {
-                              if (value == 0 || value == maxY) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(right: 4),
-                                  child: Text(
-                                    Formatters.compactCurrency(value),
-                                    style: theme.textTheme.bodySmall,
-                                  ),
-                                );
-                              }
-                              return const SizedBox();
-                            },
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: 350,
+                    width: (data.length * 50.0).clamp(
+                      500.0,
+                      5000.0,
+                    ), // Dynamic width
+                    child: LineChart(
+                      LineChartData(
+                        gridData: FlGridData(
+                          show: true,
+                          drawVerticalLine: false,
+                          horizontalInterval: maxY > 0 ? maxY / 4 : 1,
+                          getDrawingHorizontalLine: (value) => FlLine(
+                            color: colorScheme.outlineVariant.withAlpha(50),
+                            strokeWidth: 1,
                           ),
                         ),
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 24,
-                            interval: _getInterval(data.length),
-                            getTitlesWidget: (value, meta) {
-                              final index = value.toInt();
-                              if (index >= 0 && index < data.length) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(top: 4),
-                                  child: Text(
-                                    _formatDate(data[index].date),
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      fontSize: 10,
+                        titlesData: FlTitlesData(
+                          show: true,
+                          rightTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          topTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 50,
+                              getTitlesWidget: (value, meta) {
+                                if (value == 0 || value == maxY) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(right: 4),
+                                    child: Text(
+                                      Formatters.compactCurrency(value),
+                                      style: theme.textTheme.bodySmall,
                                     ),
-                                  ),
-                                );
-                              }
-                              return const SizedBox();
-                            },
-                          ),
-                        ),
-                      ),
-                      borderData: FlBorderData(show: false),
-                      lineTouchData: LineTouchData(
-                        enabled: true,
-                        touchTooltipData: LineTouchTooltipData(
-                          getTooltipItems: (spots) {
-                            return spots.map((spot) {
-                              final dailySpend = data[spot.x.toInt()];
-                              final date = dailySpend.date;
-
-                              // Build tooltip text
-                              final sb = StringBuffer();
-                              sb.writeln(Formatters.shortDate(date));
-                              sb.writeln(Formatters.currency(spot.y));
-
-                              if (dailySpend.topTransactions.isNotEmpty) {
-                                sb.writeln(''); // Spacer
-                                for (final name in dailySpend.topTransactions) {
-                                  sb.writeln('• $name');
+                                  );
                                 }
-                                if (dailySpend.hasMore) {
-                                  sb.write('+ more');
-                                }
-                              }
-
-                              return LineTooltipItem(
-                                sb.toString().trim(),
-                                GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white,
-                                ),
-                              );
-                            }).toList();
-                          },
-                        ),
-                      ),
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: data
-                              .asMap()
-                              .entries
-                              .map(
-                                (e) => FlSpot(e.key.toDouble(), e.value.amount),
-                              )
-                              .toList(),
-                          isCurved: true,
-                          curveSmoothness: 0.3,
-                          color: colorScheme.primary,
-                          barWidth: 3,
-                          isStrokeCapRound: true,
-                          dotData: FlDotData(
-                            show: data.length <= 14,
-                            getDotPainter: (spot, percent, bar, index) {
-                              return FlDotCirclePainter(
-                                radius: 4,
-                                color: colorScheme.primary,
-                                strokeWidth: 2,
-                                strokeColor: colorScheme.surface,
-                              );
-                            },
+                                return const SizedBox();
+                              },
+                            ),
                           ),
-                          belowBarData: BarAreaData(
-                            show: true,
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                colorScheme.primary.withAlpha(80),
-                                colorScheme.primary.withAlpha(10),
-                              ],
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 24,
+                              interval: _getInterval(data.length),
+                              getTitlesWidget: (value, meta) {
+                                final index = value.toInt();
+                                if (index >= 0 && index < data.length) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(top: 4),
+                                    child: Text(
+                                      _formatDate(data[index].date),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(fontSize: 10),
+                                    ),
+                                  );
+                                }
+                                return const SizedBox();
+                              },
                             ),
                           ),
                         ),
-                      ],
-                      minX: 0,
-                      maxX: (data.length - 1).toDouble(),
-                      minY: 0,
-                      maxY: maxY * 1.1,
+                        borderData: FlBorderData(show: false),
+                        lineTouchData: LineTouchData(
+                          enabled: true,
+                          touchTooltipData: LineTouchTooltipData(
+                            getTooltipItems: (spots) {
+                              return spots.map((spot) {
+                                final dailySpend = data[spot.x.toInt()];
+                                final date = dailySpend.date;
+
+                                // Build tooltip text
+                                final sb = StringBuffer();
+                                sb.writeln(Formatters.shortDate(date));
+                                sb.writeln(Formatters.currency(spot.y));
+
+                                if (dailySpend.topTransactions.isNotEmpty) {
+                                  sb.writeln(''); // Spacer
+                                  for (final name
+                                      in dailySpend.topTransactions) {
+                                    sb.writeln('• $name');
+                                  }
+                                  if (dailySpend.hasMore) {
+                                    sb.write('+ more');
+                                  }
+                                }
+
+                                return LineTooltipItem(
+                                  sb.toString().trim(),
+                                  GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white,
+                                  ),
+                                );
+                              }).toList();
+                            },
+                          ),
+                        ),
+                        lineBarsData: [
+                          LineChartBarData(
+                            spots: data
+                                .asMap()
+                                .entries
+                                .map(
+                                  (e) =>
+                                      FlSpot(e.key.toDouble(), e.value.amount),
+                                )
+                                .toList(),
+                            isCurved: true,
+                            curveSmoothness: 0.3,
+                            color: colorScheme.primary,
+                            barWidth: 3,
+                            isStrokeCapRound: true,
+                            dotData: FlDotData(
+                              show: data.length <= 14,
+                              getDotPainter: (spot, percent, bar, index) {
+                                return FlDotCirclePainter(
+                                  radius: 4,
+                                  color: colorScheme.primary,
+                                  strokeWidth: 2,
+                                  strokeColor: colorScheme.surface,
+                                );
+                              },
+                            ),
+                            belowBarData: BarAreaData(
+                              show: true,
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  colorScheme.primary.withAlpha(80),
+                                  colorScheme.primary.withAlpha(10),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                        minX: 0,
+                        maxX: (data.length - 1).toDouble(),
+                        minY: 0,
+                        maxY: maxY * 1.1,
+                      ),
+                      duration: const Duration(milliseconds: 300),
                     ),
-                    duration: const Duration(milliseconds: 300),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
