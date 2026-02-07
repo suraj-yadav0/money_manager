@@ -52,6 +52,7 @@ class _AppShellState extends ConsumerState<AppShell> {
   @override
   Widget build(BuildContext context) {
     final currentIndex = ref.watch(navIndexProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GlassScaffold(
       extendBody: true,
@@ -60,11 +61,15 @@ class _AppShellState extends ConsumerState<AppShell> {
         margin: const EdgeInsets.fromLTRB(20, 0, 20, 30),
         height: 80,
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.2),
+          color: isDark
+              ? Colors.black.withOpacity(0.2)
+              : Colors.white.withOpacity(0.2),
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: isDark
+                  ? Colors.black.withOpacity(0.3)
+                  : Colors.grey.withOpacity(0.2),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -77,17 +82,24 @@ class _AppShellState extends ConsumerState<AppShell> {
             child: Container(
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.1),
+                  color: isDark
+                      ? Colors.white.withOpacity(0.1)
+                      : Colors.black.withOpacity(0.05),
                   width: 1,
                 ),
                 borderRadius: BorderRadius.circular(30),
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.white.withOpacity(0.1),
-                    Colors.white.withOpacity(0.05),
-                  ],
+                  colors: isDark
+                      ? [
+                          Colors.white.withOpacity(0.1),
+                          Colors.white.withOpacity(0.05),
+                        ]
+                      : [
+                          Colors.white.withOpacity(0.6),
+                          Colors.white.withOpacity(0.4),
+                        ],
                 ),
               ),
               child: Row(
@@ -163,6 +175,7 @@ class _AppShellState extends ConsumerState<AppShell> {
   Widget _buildNavItem(int index, IconData icon, String label) {
     final currentIndex = ref.watch(navIndexProvider);
     final isSelected = currentIndex == index;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
       onTap: () => ref.read(navIndexProvider.notifier).state = index,
@@ -174,7 +187,9 @@ class _AppShellState extends ConsumerState<AppShell> {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: isSelected
-                  ? Colors.white.withOpacity(0.1)
+                  ? (isDark
+                        ? Colors.white.withOpacity(0.1)
+                        : Colors.black.withOpacity(0.05))
                   : Colors.transparent,
               shape: BoxShape.circle,
               boxShadow: isSelected
@@ -190,7 +205,9 @@ class _AppShellState extends ConsumerState<AppShell> {
               icon,
               color: isSelected
                   ? AppTheme.narutoOrange
-                  : Colors.white.withOpacity(0.6),
+                  : (isDark
+                        ? Colors.white.withOpacity(0.6)
+                        : Colors.black.withOpacity(0.5)),
               size: 24,
             ),
           ),

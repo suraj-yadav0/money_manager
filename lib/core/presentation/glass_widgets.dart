@@ -35,6 +35,15 @@ class GlassContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final defaultGradientColors = isDark
+        ? [Colors.white.withOpacity(0.15), Colors.white.withOpacity(0.05)]
+        : [Colors.black.withOpacity(0.05), Colors.black.withOpacity(0.02)];
+
+    final defaultBorderColor = isDark
+        ? Colors.white.withOpacity(0.2)
+        : Colors.black.withOpacity(0.1);
+
     return Container(
       margin: margin,
       decoration: BoxDecoration(
@@ -58,21 +67,15 @@ class GlassContainer extends StatelessWidget {
             decoration: BoxDecoration(
               color:
                   color?.withOpacity(opacity) ??
-                  Colors.white.withOpacity(opacity),
+                  (isDark ? Colors.white : Colors.black).withOpacity(opacity),
               borderRadius: BorderRadius.circular(borderRadius),
               border:
-                  border ??
-                  Border.all(color: Colors.white.withOpacity(0.2), width: 1.5),
+                  border ?? Border.all(color: defaultBorderColor, width: 1.5),
               gradient: color == null
                   ? LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors:
-                          gradientColors ??
-                          [
-                            Colors.white.withOpacity(0.15),
-                            Colors.white.withOpacity(0.05),
-                          ],
+                      colors: gradientColors ?? defaultGradientColors,
                     )
                   : null,
             ),
@@ -107,13 +110,28 @@ class GlassButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final defaultGradientColors = isDark
+        ? [Colors.white.withOpacity(0.2), Colors.white.withOpacity(0.1)]
+        : [
+            AppTheme.narutoOrange.withOpacity(0.9),
+            AppTheme.narutoOrange.withOpacity(0.7),
+          ];
+
+    final borderColor = isDark
+        ? Colors.white.withOpacity(0.2)
+        : Colors.white.withOpacity(0.4);
+
     return Container(
       width: width,
       height: height,
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: (gradientColors?.first ?? Colors.white).withOpacity(0.3),
+            color:
+                (gradientColors?.first ??
+                        (isDark ? Colors.white : AppTheme.narutoOrange))
+                    .withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -126,19 +144,11 @@ class GlassButton extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(borderRadius),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.2),
-                width: 1.5,
-              ),
+              border: Border.all(color: borderColor, width: 1.5),
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors:
-                    gradientColors ??
-                    [
-                      Colors.white.withOpacity(0.2),
-                      Colors.white.withOpacity(0.1),
-                    ],
+                colors: gradientColors ?? defaultGradientColors,
               ),
             ),
             child: Material(
@@ -191,6 +201,8 @@ class GlassScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       extendBody: extendBody,
       appBar: appBar,
@@ -202,7 +214,11 @@ class GlassScaffold extends StatelessWidget {
         children: [
           // Plain Background
           Container(
-            decoration: const BoxDecoration(gradient: AppTheme.glassGradient),
+            decoration: BoxDecoration(
+              gradient: isDark
+                  ? AppTheme.glassGradient
+                  : AppTheme.glassGradientLight,
+            ),
           ),
 
           // Main Body Content
@@ -239,25 +255,31 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final backgroundColor = isDark
+        ? AppTheme.glassBackgroundDark.withOpacity(0.7)
+        : AppTheme.glassBackgroundWhite.withOpacity(0.7);
+
+    final borderColor = isDark
+        ? Colors.white.withOpacity(0.1)
+        : Colors.black.withOpacity(0.05);
+
     return ClipRRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           decoration: BoxDecoration(
-            color: AppTheme.glassBackgroundDark.withOpacity(
-              0.7,
-            ), // Semi-transparent dark background
-            border: Border(
-              bottom: BorderSide(
-                color: Colors.white.withOpacity(0.1),
-                width: 1,
-              ),
-            ),
+            color: backgroundColor, // Semi-transparent background
+            border: Border(bottom: BorderSide(color: borderColor, width: 1)),
           ),
           child: AppBar(
             title: Text(
               title,
-              style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
+              ),
             ),
             centerTitle: centerTitle,
             backgroundColor:
@@ -265,8 +287,8 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
             elevation: 0,
             leading: leading,
             actions: actions,
-            iconTheme: const IconThemeData(color: Colors.white),
-            actionsIconTheme: const IconThemeData(color: Colors.white),
+            iconTheme: IconThemeData(color: theme.colorScheme.onSurface),
+            actionsIconTheme: IconThemeData(color: theme.colorScheme.onSurface),
           ),
         ),
       ),

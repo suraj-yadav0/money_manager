@@ -51,6 +51,23 @@ class AppTheme {
   static const Color neonPink = kuramaRed; // Mapping pink to red
 
   // Gradients
+  // Light Backgrounds
+  static const Color glassBackgroundWhite = Color(0xFFFFFFFF);
+  static const Color glassBackgroundLightOrange = Color(
+    0xFFFFF7ED,
+  ); // Very light orange
+  static const Color glassBackgroundCream = Color(0xFFFFF0E0); // Creamy orange
+
+  static const LinearGradient glassGradientLight = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      glassBackgroundWhite,
+      glassBackgroundLightOrange,
+      glassBackgroundCream,
+    ],
+  );
+
   static const LinearGradient glassGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
@@ -65,7 +82,90 @@ class AppTheme {
 
   /// Light Theme (Modified for Glass)
   static ThemeData get lightTheme {
-    return darkTheme;
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: narutoOrange,
+      brightness: Brightness.light,
+      primary: narutoOrange,
+      secondary: chakraBlue,
+      tertiary: kuramaRed,
+      surface: Colors.transparent, // Important for glass
+      onSurface: Colors.black, // Dark text for light mode
+      error: error,
+    );
+
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: colorScheme,
+      textTheme: _textTheme(colorScheme),
+      scaffoldBackgroundColor: Colors.transparent, // Handled by GlassScaffold
+      appBarTheme: AppBarTheme(
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        foregroundColor: colorScheme.onSurface,
+        titleTextStyle: GoogleFonts.outfit(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: colorScheme.onSurface,
+        ),
+      ),
+      cardTheme: CardThemeData(
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        color: Colors.black.withOpacity(
+          0.05,
+        ), // Light mode glass card (subtle dark tint)
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          backgroundColor:
+              narutoOrange, // Solid orange for buttons in light mode
+          foregroundColor: Colors.white,
+          textStyle: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        elevation: 8,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: narutoOrange,
+        foregroundColor: Colors.white,
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.black.withOpacity(0.05), // Dark tint for inputs
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.black.withOpacity(0.1)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: narutoOrange, width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 18,
+        ),
+        hintStyle: TextStyle(color: Colors.black.withOpacity(0.4)),
+      ),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        selectedItemColor: narutoOrange,
+        unselectedItemColor: Colors.black.withOpacity(0.5),
+      ),
+    );
   }
 
   /// Dark Theme
@@ -154,81 +254,84 @@ class AppTheme {
   }
 
   static TextTheme _textTheme(ColorScheme colorScheme) {
+    final isLight = colorScheme.brightness == Brightness.light;
+    final baseColor = isLight ? Colors.black : Colors.white;
+
     return TextTheme(
       displayLarge: GoogleFonts.outfit(
         fontSize: 57,
         fontWeight: FontWeight.bold,
-        color: Colors.white,
+        color: baseColor,
       ),
       displayMedium: GoogleFonts.outfit(
         fontSize: 45,
         fontWeight: FontWeight.bold,
-        color: Colors.white,
+        color: baseColor,
       ),
       displaySmall: GoogleFonts.outfit(
         fontSize: 36,
         fontWeight: FontWeight.bold,
-        color: Colors.white,
+        color: baseColor,
       ),
       headlineLarge: GoogleFonts.outfit(
         fontSize: 32,
         fontWeight: FontWeight.w600,
-        color: Colors.white,
+        color: baseColor,
       ),
       headlineMedium: GoogleFonts.outfit(
         fontSize: 28,
         fontWeight: FontWeight.w600,
-        color: Colors.white,
+        color: baseColor,
       ),
       headlineSmall: GoogleFonts.outfit(
         fontSize: 24,
         fontWeight: FontWeight.w600,
-        color: Colors.white,
+        color: baseColor,
       ),
       titleLarge: GoogleFonts.outfit(
         fontSize: 22,
         fontWeight: FontWeight.w600,
-        color: Colors.white,
+        color: baseColor,
       ),
       titleMedium: GoogleFonts.inter(
         fontSize: 16,
         fontWeight: FontWeight.w600,
-        color: Colors.white,
+        color: baseColor,
       ),
       titleSmall: GoogleFonts.inter(
         fontSize: 14,
         fontWeight: FontWeight.w600,
-        color: Colors.white,
+        color: baseColor,
       ),
       bodyLarge: GoogleFonts.inter(
         fontSize: 16,
         fontWeight: FontWeight.normal,
-        color: Colors.white.withOpacity(0.9),
+        color: baseColor.withOpacity(0.9),
       ),
       bodyMedium: GoogleFonts.inter(
         fontSize: 14,
         fontWeight: FontWeight.normal,
-        color: Colors.white.withOpacity(0.8),
+        color: baseColor.withOpacity(0.8),
       ),
       bodySmall: GoogleFonts.inter(
         fontSize: 12,
         fontWeight: FontWeight.normal,
-        color: Colors.white.withOpacity(0.6),
+        color: baseColor.withOpacity(0.6),
       ),
       labelLarge: GoogleFonts.inter(
         fontSize: 14,
         fontWeight: FontWeight.w600,
-        color: Colors.white,
+        color: baseColor,
       ),
       labelMedium: GoogleFonts.inter(
         fontSize: 12,
         fontWeight: FontWeight.w600,
-        color: Colors.white,
+        color: baseColor,
       ),
       labelSmall: GoogleFonts.inter(
         fontSize: 11,
         fontWeight: FontWeight.w600,
-        color: Colors.white.withOpacity(0.7),
+        color: baseColor.withOpacity(0.7),
       ),
     );
   }

@@ -17,6 +17,9 @@ class CalendarViewScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subTextColor = isDark ? Colors.white70 : Colors.black54;
 
     final focusedDay = ref.watch(calendarFocusedDayProvider);
     final selectedDay = ref.watch(calendarSelectedDayProvider);
@@ -30,7 +33,7 @@ class CalendarViewScreen extends ConsumerWidget {
         actions: [
           // Format toggle button
           PopupMenuButton<CalendarViewFormat>(
-            icon: const Icon(Icons.calendar_view_month),
+            icon: Icon(Icons.calendar_view_month, color: textColor),
             tooltip: 'Change view',
             onSelected: (format) {
               ref.read(calendarFormatProvider.notifier).state = format;
@@ -104,7 +107,7 @@ class CalendarViewScreen extends ConsumerWidget {
                         Text(
                           'Income',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.white70,
+                            color: subTextColor,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -129,7 +132,7 @@ class CalendarViewScreen extends ConsumerWidget {
                         Text(
                           'Expenses',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.white70,
+                            color: subTextColor,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -154,7 +157,7 @@ class CalendarViewScreen extends ConsumerWidget {
                         Text(
                           'Total',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.white70,
+                            color: subTextColor,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -167,7 +170,7 @@ class CalendarViewScreen extends ConsumerWidget {
                             style: GoogleFonts.outfit(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: textColor,
                             ),
                           ),
                         ),
@@ -209,6 +212,14 @@ class CalendarViewScreen extends ConsumerWidget {
     CalendarViewFormat format,
     Map<DateTime, DailySummary> summaries,
   ) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subTextColor = isDark ? Colors.white70 : Colors.black54;
+    final borderColor = isDark
+        ? Colors.white.withOpacity(0.1)
+        : Colors.black.withOpacity(0.1);
+
     // Convert our format enum to table_calendar's CalendarFormat
     CalendarFormat tableCalendarFormat;
     switch (format) {
@@ -239,7 +250,7 @@ class CalendarViewScreen extends ConsumerWidget {
         titleTextStyle: GoogleFonts.outfit(
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: Colors.white,
+          color: textColor,
         ),
         leftChevronIcon: Icon(Icons.chevron_left, color: AppTheme.narutoOrange),
         rightChevronIcon: Icon(
@@ -249,16 +260,13 @@ class CalendarViewScreen extends ConsumerWidget {
       ),
       daysOfWeekStyle: DaysOfWeekStyle(
         dowTextFormatter: (date, locale) => Formatters.dayOfWeek(date),
-        weekdayStyle: const TextStyle(color: Colors.white70),
-        weekendStyle: const TextStyle(color: Colors.white70),
+        weekdayStyle: TextStyle(color: subTextColor),
+        weekendStyle: TextStyle(color: subTextColor),
       ),
       calendarStyle: CalendarStyle(
         outsideDaysVisible: false,
         cellMargin: EdgeInsets.zero,
-        tableBorder: TableBorder.all(
-          color: Colors.white.withOpacity(0.1),
-          width: 0.5,
-        ),
+        tableBorder: TableBorder.all(color: borderColor, width: 0.5),
         defaultDecoration: const BoxDecoration(),
         weekendDecoration: const BoxDecoration(),
         todayDecoration: const BoxDecoration(),
@@ -280,7 +288,7 @@ class CalendarViewScreen extends ConsumerWidget {
       calendarBuilders: CalendarBuilders(
         dowBuilder: (context, day) {
           final text = Formatters.dayOfWeek(day);
-          Color color = Colors.white;
+          Color color = textColor;
           if (day.weekday == DateTime.sunday) color = AppTheme.kuramaRed;
           if (day.weekday == DateTime.saturday) color = AppTheme.leafGreen;
 
@@ -337,17 +345,20 @@ class CalendarViewScreen extends ConsumerWidget {
   }) {
     final hasExpenses = summary != null && summary.totalExpenses > 0;
     final hasIncome = summary != null && summary.totalIncome > 0;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Background color logic: Today gets a dark fill
     Color backgroundColor = Colors.transparent;
     if (isToday) {
       backgroundColor = AppTheme.narutoOrange.withOpacity(0.2);
     } else if (isSelected) {
-      backgroundColor = Colors.white.withOpacity(0.05);
+      backgroundColor = isDark
+          ? Colors.white.withOpacity(0.05)
+          : Colors.black.withOpacity(0.05);
     }
 
     // Text color logic
-    Color dayTextColor = Colors.white;
+    Color dayTextColor = isDark ? Colors.white : Colors.black;
     if (isToday) {
       dayTextColor = AppTheme.narutoOrange;
     } else if (date.weekday == DateTime.sunday) {

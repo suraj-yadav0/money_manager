@@ -42,7 +42,7 @@ class GoalsScreen extends ConsumerWidget {
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(
-          bottom: 90,
+          bottom: 120,
         ), // Spacing to clear the floating nav bar
         child: FloatingActionButton.extended(
           heroTag: 'goals_fab',
