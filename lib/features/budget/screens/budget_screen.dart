@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/presentation/glass_widgets.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/database/database.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/utils/formatters.dart';
@@ -99,10 +100,17 @@ class BudgetScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.account_balance_wallet_outlined,
-              size: 80,
-              color: colorScheme.onSurfaceVariant.withAlpha(100),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppTheme.narutoOrange.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.account_balance_wallet_outlined,
+                size: 64,
+                color: AppTheme.narutoOrange,
+              ),
             ),
             const SizedBox(height: 24),
             Text('No Budgets Set', style: theme.textTheme.headlineSmall),

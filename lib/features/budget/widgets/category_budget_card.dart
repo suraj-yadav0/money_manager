@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/presentation/glass_widgets.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/icon_helper.dart';
 import '../providers/budget_provider.dart';
@@ -16,14 +17,13 @@ class CategoryBudgetCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     final statusColor = _getStatusColor();
 
-    return Card(
+    return GlassContainer(
       child: InkWell(
         onTap: onEdit,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -35,8 +35,12 @@ class CategoryBudgetCard extends StatelessWidget {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: statusColor.withAlpha(30),
+                      color: statusColor.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: statusColor.withOpacity(0.3),
+                        width: 1,
+                      ),
                     ),
                     child: Icon(
                       IconHelper.getIcon(stats.icon),
@@ -50,7 +54,12 @@ class CategoryBudgetCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(stats.name, style: theme.textTheme.titleSmall),
+                        Text(
+                          stats.name,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         const SizedBox(height: 2),
                         Text(
                           '${Formatters.currency(stats.spent)} of ${Formatters.currency(stats.budget)}',
@@ -67,7 +76,7 @@ class CategoryBudgetCard extends StatelessWidget {
                         stats.isOverBudget
                             ? '-${Formatters.currency(stats.spent - stats.budget)}'
                             : Formatters.currency(stats.remaining),
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.outfit(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: statusColor,
@@ -89,7 +98,9 @@ class CategoryBudgetCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: (stats.percentUsed / 100).clamp(0.0, 1.0),
-                  backgroundColor: colorScheme.surfaceContainerHighest,
+                  backgroundColor: theme.brightness == Brightness.dark
+                      ? Colors.white.withOpacity(0.1)
+                      : Colors.black.withOpacity(0.05),
                   valueColor: AlwaysStoppedAnimation(statusColor),
                   minHeight: 6,
                 ),
