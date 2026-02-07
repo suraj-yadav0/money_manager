@@ -27,15 +27,28 @@ class AppTheme {
     Color(0xFF14B8A6), // Teal
   ];
 
-  // Glassmorphism Colors
-  static const Color glassBackgroundDark = Color(0xFF0F2027);
-  static const Color glassBackgroundMedium = Color(0xFF203A43);
-  static const Color glassBackgroundLight = Color(0xFF2C5364);
+  // Naruto Theme Colors
+  static const Color narutoOrange = Color(
+    0xFFFF5F1F,
+  ); // Primary - Naruto's Jacket
+  static const Color chakraBlue = Color(0xFF00C6FF); // Secondary - Rasengan
+  static const Color kuramaRed = Color(0xFFFF0033); // Accent - Nine Tails
+  static const Color leafGreen = Color(0xFF10B981); // Success - Konoha
 
-  static const Color neonBlue = Color(0xFF00C6FF);
-  static const Color neonPurple = Color(0xFF9D50BB);
-  static const Color neonPink = Color(0xFFFF00CC);
-  static const Color neonGreen = Color(0xFF33FF00);
+  // Dark Backgrounds
+  static const Color glassBackgroundDark = Color(0xFF000000); // Pure Black
+  static const Color glassBackgroundMedium = Color(
+    0xFF1A0B05,
+  ); // Dark Brownish/Orange tint
+  static const Color glassBackgroundLight = Color(
+    0xFF2D1606,
+  ); // Lighter Orange/Brown tint
+
+  static const Color neonBlue =
+      chakraBlue; // Alias for backward compatibility if needed, but aim to replace
+  static const Color neonPurple =
+      narutoOrange; // Mapping purple to orange for now to switch primary feel
+  static const Color neonPink = kuramaRed; // Mapping pink to red
 
   // Gradients
   static const LinearGradient glassGradient = LinearGradient(
@@ -47,24 +60,22 @@ class AppTheme {
   static const LinearGradient neonGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [neonBlue, neonPurple],
+    colors: [narutoOrange, Color(0xFFFF8C42)], // Orange gradient
   );
 
   /// Light Theme (Modified for Glass)
   static ThemeData get lightTheme {
-    // For glassmorphism, we might want to stick to a dark-ish theme even in "light" mode
-    // to make the glass effect visible, or carefuly tune white glass.
-    // For now, let's keep it consistent with the glass aesthetic (usually dark mode).
     return darkTheme;
   }
 
   /// Dark Theme
   static ThemeData get darkTheme {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: neonBlue,
+      seedColor: narutoOrange,
       brightness: Brightness.dark,
-      primary: neonBlue,
-      secondary: neonPurple,
+      primary: narutoOrange,
+      secondary: chakraBlue,
+      tertiary: kuramaRed,
       surface: Colors.transparent, // Important for glass
       onSurface: Colors.white,
       error: error,

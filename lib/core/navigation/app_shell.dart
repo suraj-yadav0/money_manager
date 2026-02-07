@@ -134,7 +134,7 @@ class _AppShellState extends ConsumerState<AppShell> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: AppTheme.neonBlue.withOpacity(0.5),
+                            color: AppTheme.narutoOrange.withOpacity(0.5),
                             blurRadius: 15,
                             spreadRadius: 2,
                             offset: const Offset(0, 4),
@@ -180,7 +180,7 @@ class _AppShellState extends ConsumerState<AppShell> {
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: AppTheme.neonBlue.withOpacity(0.3),
+                        color: AppTheme.narutoOrange.withOpacity(0.3),
                         blurRadius: 12,
                       ),
                     ]
@@ -189,7 +189,7 @@ class _AppShellState extends ConsumerState<AppShell> {
             child: Icon(
               icon,
               color: isSelected
-                  ? AppTheme.neonBlue
+                  ? AppTheme.narutoOrange
                   : Colors.white.withOpacity(0.6),
               size: 24,
             ),

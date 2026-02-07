@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/utils/formatters.dart';
 import '../../../core/presentation/glass_widgets.dart';
+import '../../../core/theme/app_theme.dart';
 import '../providers/dashboard_providers.dart';
 
 /// Main balance card showing income, expenses, and remaining balance
@@ -25,11 +26,11 @@ class BalanceCard extends ConsumerWidget {
         borderRadius: 32,
         padding: const EdgeInsets.all(28),
         gradientColors: [
-          const Color(0xFF6366F1).withOpacity(0.4), // Indigo
-          const Color(0xFF8B5CF6).withOpacity(0.1), // Violet
+          AppTheme.narutoOrange.withOpacity(0.4),
+          AppTheme.kuramaRed.withOpacity(0.2),
         ],
         border: Border.all(
-          color: const Color(0xFF6366F1).withOpacity(0.3),
+          color: AppTheme.narutoOrange.withOpacity(0.5),
           width: 1.5,
         ),
         child: Stack(

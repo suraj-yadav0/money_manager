@@ -115,7 +115,7 @@ class CalendarViewScreen extends ConsumerWidget {
                             style: GoogleFonts.outfit(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: AppTheme.neonBlue,
+                              color: AppTheme.chakraBlue,
                             ),
                           ),
                         ),
@@ -140,7 +140,7 @@ class CalendarViewScreen extends ConsumerWidget {
                             style: GoogleFonts.outfit(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: AppTheme.neonPink,
+                              color: AppTheme.kuramaRed,
                             ),
                           ),
                         ),
@@ -241,8 +241,11 @@ class CalendarViewScreen extends ConsumerWidget {
           fontWeight: FontWeight.w600,
           color: Colors.white,
         ),
-        leftChevronIcon: Icon(Icons.chevron_left, color: AppTheme.neonBlue),
-        rightChevronIcon: Icon(Icons.chevron_right, color: AppTheme.neonBlue),
+        leftChevronIcon: Icon(Icons.chevron_left, color: AppTheme.narutoOrange),
+        rightChevronIcon: Icon(
+          Icons.chevron_right,
+          color: AppTheme.narutoOrange,
+        ),
       ),
       daysOfWeekStyle: DaysOfWeekStyle(
         dowTextFormatter: (date, locale) => Formatters.dayOfWeek(date),
@@ -278,8 +281,8 @@ class CalendarViewScreen extends ConsumerWidget {
         dowBuilder: (context, day) {
           final text = Formatters.dayOfWeek(day);
           Color color = Colors.white;
-          if (day.weekday == DateTime.sunday) color = AppTheme.neonPink;
-          if (day.weekday == DateTime.saturday) color = AppTheme.neonBlue;
+          if (day.weekday == DateTime.sunday) color = AppTheme.kuramaRed;
+          if (day.weekday == DateTime.saturday) color = AppTheme.chakraBlue;
 
           return Center(
             child: Text(
@@ -338,7 +341,7 @@ class CalendarViewScreen extends ConsumerWidget {
     // Background color logic: Today gets a dark fill
     Color backgroundColor = Colors.transparent;
     if (isToday) {
-      backgroundColor = AppTheme.neonBlue.withOpacity(0.2);
+      backgroundColor = AppTheme.narutoOrange.withOpacity(0.2);
     } else if (isSelected) {
       backgroundColor = Colors.white.withOpacity(0.05);
     }
@@ -346,18 +349,18 @@ class CalendarViewScreen extends ConsumerWidget {
     // Text color logic
     Color dayTextColor = Colors.white;
     if (isToday) {
-      dayTextColor = AppTheme.neonBlue;
+      dayTextColor = AppTheme.narutoOrange;
     } else if (date.weekday == DateTime.sunday) {
-      dayTextColor = AppTheme.neonPink;
+      dayTextColor = AppTheme.kuramaRed;
     } else if (date.weekday == DateTime.saturday) {
-      dayTextColor = AppTheme.neonBlue;
+      dayTextColor = AppTheme.chakraBlue;
     }
 
     return Container(
       decoration: BoxDecoration(
         color: backgroundColor,
         border: isSelected
-            ? Border(bottom: BorderSide(color: AppTheme.neonPurple, width: 2))
+            ? Border(bottom: BorderSide(color: AppTheme.narutoOrange, width: 2))
             : null,
       ),
       padding: const EdgeInsets.all(2),
@@ -394,7 +397,7 @@ class CalendarViewScreen extends ConsumerWidget {
                   style: GoogleFonts.outfit(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.neonBlue,
+                    color: AppTheme.chakraBlue,
                   ),
                 ),
               ),
@@ -412,7 +415,7 @@ class CalendarViewScreen extends ConsumerWidget {
                   style: GoogleFonts.outfit(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.neonPink,
+                    color: AppTheme.kuramaRed,
                   ),
                 ),
               ),

@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../theme/app_theme.dart';
+
 /// A container with glassmorphism effect (blur, semi-transparent background, gradient border).
 class GlassContainer extends StatelessWidget {
   final Widget child;
@@ -200,7 +202,7 @@ class GlassScaffold extends StatelessWidget {
         children: [
           // Plain Background
           Container(
-            color: const Color(0xFF0F2027), // Dark Blue/Black base color
+            decoration: const BoxDecoration(gradient: AppTheme.glassGradient),
           ),
 
           // Main Body Content
@@ -242,9 +244,9 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(
-              0xFF0F2027,
-            ).withOpacity(0.7), // Semi-transparent dark background
+            color: AppTheme.glassBackgroundDark.withOpacity(
+              0.7,
+            ), // Semi-transparent dark background
             border: Border(
               bottom: BorderSide(
                 color: Colors.white.withOpacity(0.1),
