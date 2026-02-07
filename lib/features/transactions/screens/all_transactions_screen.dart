@@ -21,12 +21,7 @@ class AllTransactionsScreen extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
 
     return GlassScaffold(
-      appBar: AppBar(
-        title: Text(
-          'All Transactions',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
-        ),
-      ),
+      appBar: const GlassAppBar(title: 'All Transactions'),
       body: transactionsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
