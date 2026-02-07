@@ -9,22 +9,22 @@ class AppTheme {
   static const Color success = Color(0xFF10B981);
   static const Color warning = Color(0xFFF59E0B);
   static const Color error = Color(0xFFEF4444);
-  static const Color safe = Color(0xFF10B981); // Green - safe forecast
-  static const Color caution = Color(0xFFF59E0B); // Yellow - borderline
-  static const Color danger = Color(0xFFEF4444); // Red - deficit
+  static const Color safe = leafGreen; // Green - safe forecast
+  static const Color caution = Color(0xFFFFD700); // Minato Gold - borderline
+  static const Color danger = kuramaRed; // Red - deficit
 
   // Category Colors for pie chart
   static const List<Color> categoryColors = [
-    Color(0xFF6366F1), // Indigo
-    Color(0xFF10B981), // Emerald
-    Color(0xFFF59E0B), // Amber
-    Color(0xFFEF4444), // Red
-    Color(0xFF8B5CF6), // Violet
-    Color(0xFF06B6D4), // Cyan
-    Color(0xFFEC4899), // Pink
-    Color(0xFF84CC16), // Lime
-    Color(0xFFF97316), // Orange
-    Color(0xFF14B8A6), // Teal
+    narutoOrange, // Naruto
+    chakraBlue, // Rasengan
+    kuramaRed, // Kurama
+    leafGreen, // Konoha
+    Color(0xFFFFD700), // Minato Gold
+    Color(0xFF9D50BB), // Rinnegan Purple
+    Color(0xFFFF69B4), // Sakura Pink
+    Color(0xFF8B0000), // Akatsuki Red
+    Color(0xFF4B0082), // Sasuke Indigo
+    Color(0xFF00FA9A), // Guy Green
   ];
 
   // Naruto Theme Colors
