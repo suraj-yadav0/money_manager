@@ -398,7 +398,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     'Save',
                     style: GoogleFonts.outfit(
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.chakraBlue,
+                      color: AppTheme.narutoOrange,
                     ),
                   ),
           ),
