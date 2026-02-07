@@ -216,3 +216,58 @@ class GlassScaffold extends StatelessWidget {
     );
   }
 }
+
+/// A glass-styled AppBar that implements PreferredSizeWidget
+class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final String title;
+  final List<Widget>? actions;
+  final Widget? leading;
+  final bool centerTitle;
+
+  const GlassAppBar({
+    super.key,
+    required this.title,
+    this.actions,
+    this.leading,
+    this.centerTitle = true,
+  });
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(
+              0xFF0F2027,
+            ).withOpacity(0.7), // Semi-transparent dark background
+            border: Border(
+              bottom: BorderSide(
+                color: Colors.white.withOpacity(0.1),
+                width: 1,
+              ),
+            ),
+          ),
+          child: AppBar(
+            title: Text(
+              title,
+              style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+            ),
+            centerTitle: centerTitle,
+            backgroundColor:
+                Colors.transparent, // Transparent to show container decoration
+            elevation: 0,
+            leading: leading,
+            actions: actions,
+            iconTheme: const IconThemeData(color: Colors.white),
+            actionsIconTheme: const IconThemeData(color: Colors.white),
+          ),
+        ),
+      ),
+    );
+  }
+}

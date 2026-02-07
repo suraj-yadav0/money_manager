@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:table_calendar/table_calendar.dart';
 
+import '../../../core/presentation/glass_widgets.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../providers/calendar_providers.dart';
 import 'day_transactions_screen.dart';
@@ -22,12 +24,9 @@ class CalendarViewScreen extends ConsumerWidget {
     final summariesAsync = ref.watch(calendarDailySummariesProvider);
     final monthTotalsAsync = ref.watch(calendarMonthTotalsProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Calendar View',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
-        ),
+    return GlassScaffold(
+      appBar: GlassAppBar(
+        title: 'Calendar View',
         actions: [
           // Format toggle button
           PopupMenuButton<CalendarViewFormat>(
@@ -92,13 +91,10 @@ class CalendarViewScreen extends ConsumerWidget {
           monthTotalsAsync.when(
             loading: () => const SizedBox.shrink(),
             error: (_, __) => const SizedBox.shrink(),
-            data: (totals) => Container(
+            data: (totals) => GlassContainer(
               margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-              decoration: BoxDecoration(
-                color: colorScheme.surface,
-                // No border or shadow as per reference clean look, or subtle
-              ),
+              borderRadius: 12,
               child: Row(
                 children: [
                   // Income
@@ -108,7 +104,7 @@ class CalendarViewScreen extends ConsumerWidget {
                         Text(
                           'Income',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
+                            color: Colors.white70,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -119,7 +115,7 @@ class CalendarViewScreen extends ConsumerWidget {
                             style: GoogleFonts.outfit(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Colors.blue, // Reference: Blue
+                              color: AppTheme.neonBlue,
                             ),
                           ),
                         ),
@@ -133,7 +129,7 @@ class CalendarViewScreen extends ConsumerWidget {
                         Text(
                           'Expenses',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
+                            color: Colors.white70,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -144,7 +140,7 @@ class CalendarViewScreen extends ConsumerWidget {
                             style: GoogleFonts.outfit(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Colors.red, // Reference: Red
+                              color: AppTheme.neonPink,
                             ),
                           ),
                         ),
@@ -158,7 +154,7 @@ class CalendarViewScreen extends ConsumerWidget {
                         Text(
                           'Total',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
+                            color: Colors.white70,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -171,7 +167,7 @@ class CalendarViewScreen extends ConsumerWidget {
                             style: GoogleFonts.outfit(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black, // Reference: Black
+                              color: Colors.white,
                             ),
                           ),
                         ),
@@ -213,9 +209,6 @@ class CalendarViewScreen extends ConsumerWidget {
     CalendarViewFormat format,
     Map<DateTime, DailySummary> summaries,
   ) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     // Convert our format enum to table_calendar's CalendarFormat
     CalendarFormat tableCalendarFormat;
     switch (format) {
@@ -246,24 +239,21 @@ class CalendarViewScreen extends ConsumerWidget {
         titleTextStyle: GoogleFonts.outfit(
           fontSize: 20,
           fontWeight: FontWeight.w600,
+          color: Colors.white,
         ),
-        leftChevronIcon: Icon(Icons.chevron_left, color: colorScheme.primary),
-        rightChevronIcon: Icon(Icons.chevron_right, color: colorScheme.primary),
+        leftChevronIcon: Icon(Icons.chevron_left, color: AppTheme.neonBlue),
+        rightChevronIcon: Icon(Icons.chevron_right, color: AppTheme.neonBlue),
       ),
       daysOfWeekStyle: DaysOfWeekStyle(
-        dowTextFormatter: (date, locale) =>
-            Formatters.dayOfWeek(date), // Custom styling needed?
-        // We will customize via builder if needed, but styling properties are limited.
-        // Let's rely on standard text styles and override colors in builder if TableCalendar supported dowBuilder.
-        // TableCalendar 3.0 has dowBuilder in CalendarBuilders!
-        weekdayStyle: const TextStyle(), // We will use builder
-        weekendStyle: const TextStyle(), // We will use builder
+        dowTextFormatter: (date, locale) => Formatters.dayOfWeek(date),
+        weekdayStyle: const TextStyle(color: Colors.white70),
+        weekendStyle: const TextStyle(color: Colors.white70),
       ),
       calendarStyle: CalendarStyle(
         outsideDaysVisible: false,
         cellMargin: EdgeInsets.zero,
         tableBorder: TableBorder.all(
-          color: colorScheme.outlineVariant.withAlpha(50),
+          color: Colors.white.withOpacity(0.1),
           width: 0.5,
         ),
         defaultDecoration: const BoxDecoration(),
@@ -287,9 +277,9 @@ class CalendarViewScreen extends ConsumerWidget {
       calendarBuilders: CalendarBuilders(
         dowBuilder: (context, day) {
           final text = Formatters.dayOfWeek(day);
-          Color color = Colors.black;
-          if (day.weekday == DateTime.sunday) color = Colors.red;
-          if (day.weekday == DateTime.saturday) color = Colors.blue;
+          Color color = Colors.white;
+          if (day.weekday == DateTime.sunday) color = AppTheme.neonPink;
+          if (day.weekday == DateTime.saturday) color = AppTheme.neonBlue;
 
           return Center(
             child: Text(
@@ -348,35 +338,27 @@ class CalendarViewScreen extends ConsumerWidget {
     // Background color logic: Today gets a dark fill
     Color backgroundColor = Colors.transparent;
     if (isToday) {
-      backgroundColor = const Color(
-        0xFF2C3E50,
-      ); // Dark Blue/Black like reference
+      backgroundColor = AppTheme.neonBlue.withOpacity(0.2);
     } else if (isSelected) {
-      backgroundColor = Colors.transparent; // Selection is border only
+      backgroundColor = Colors.white.withOpacity(0.05);
     }
 
     // Text color logic
-    Color dayTextColor = Colors.black;
+    Color dayTextColor = Colors.white;
     if (isToday) {
-      dayTextColor = Colors.white;
+      dayTextColor = AppTheme.neonBlue;
     } else if (date.weekday == DateTime.sunday) {
-      dayTextColor = Colors.red;
+      dayTextColor = AppTheme.neonPink;
     } else if (date.weekday == DateTime.saturday) {
-      dayTextColor = Colors.blue;
+      dayTextColor = AppTheme.neonBlue;
     }
 
     return Container(
       decoration: BoxDecoration(
         color: backgroundColor,
         border: isSelected
-            ? Border(bottom: BorderSide(color: Colors.red, width: 2))
-            : null, // Bottom accent like reference tab highlight
-        // OR Box Border as per previous "Box Shape" request? User now says "Similar to this". Reference has white cells with no border, but user ASKED for "Box Shape" in previous turn.
-        // The reference image is a grid. The grid lines come from TableBorder we set on TableCalendar.
-        // So we don't need borders here except selection.
-        // Reference selection seems to be just the text color or a highlight?
-        // I will stick to "Box Shape" grid lines (already in _buildCalendar) and use a distinct selection style (e.g. slight background or border).
-        // Let's use a subtle box border for selection.
+            ? Border(bottom: BorderSide(color: AppTheme.neonPurple, width: 2))
+            : null,
       ),
       padding: const EdgeInsets.all(2),
       child: Column(
@@ -412,7 +394,7 @@ class CalendarViewScreen extends ConsumerWidget {
                   style: GoogleFonts.outfit(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: Colors.blue,
+                    color: AppTheme.neonBlue,
                   ),
                 ),
               ),
@@ -430,7 +412,7 @@ class CalendarViewScreen extends ConsumerWidget {
                   style: GoogleFonts.outfit(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: Colors.red,
+                    color: AppTheme.neonPink,
                   ),
                 ),
               ),
