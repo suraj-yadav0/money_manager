@@ -20,7 +20,7 @@ class MoneyManagerApp extends ConsumerWidget {
     final isOnboarded = ref.watch(isOnboardedProvider);
 
     return MaterialApp(
-      title: 'Money Manager',
+      title: 'Quantro',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
@@ -53,9 +53,9 @@ class _SplashScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Money Manager',
+              'Quantro',
               style: GoogleFonts.outfit(
-                fontSize: 28,
+                fontSize: 32,
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).colorScheme.onPrimary,
               ),
