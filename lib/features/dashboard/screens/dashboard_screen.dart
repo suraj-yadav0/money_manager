@@ -25,6 +25,7 @@ class DashboardScreen extends ConsumerWidget {
     final chartType = ref.watch(dashboardChartTypeProvider);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: InkWell(
           onTap: () {

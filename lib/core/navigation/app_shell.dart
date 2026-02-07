@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,6 +8,8 @@ import '../../features/insights/screens/insights_screen.dart';
 import '../../features/goals/screens/goals_screen.dart';
 import '../../features/transactions/screens/add_transaction_screen.dart';
 import '../../features/transactions/services/recurring_service.dart';
+import '../presentation/glass_widgets.dart';
+import '../theme/app_theme.dart';
 
 /// Main app shell with bottom navigation
 class AppShell extends ConsumerStatefulWidget {
@@ -50,97 +53,106 @@ class _AppShellState extends ConsumerState<AppShell> {
   Widget build(BuildContext context) {
     final currentIndex = ref.watch(navIndexProvider);
 
-    return Scaffold(
-      extendBody: true, // Content flows behind the floating nav
+    return GlassScaffold(
+      extendBody: true,
       body: IndexedStack(index: currentIndex, children: _screens),
-
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: Container(
-        margin: const EdgeInsets.only(top: 32),
-        height: 64,
-        width: 64,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [
-              Color(0xFFFF5722), // Deep Orange
-              Color(0xFFFF8A65), // Lighter Orange
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFFF5722).withAlpha(100),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: FloatingActionButton(
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
-            );
-          },
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          shape: const CircleBorder(),
-          child: const Icon(Icons.add, color: Colors.white, size: 32),
-        ),
-      ),
-
       bottomNavigationBar: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        margin: const EdgeInsets.fromLTRB(20, 0, 20, 30),
+        height: 80,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(24),
+          color: Colors.black.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withAlpha(20),
+              color: Colors.black.withOpacity(0.3),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: BottomAppBar(
-            elevation: 0,
-            color: Colors.transparent,
-            height: 70,
-            padding: EdgeInsets.zero,
-            shape: const CircularNotchedRectangle(),
-            notchMargin: 8,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(
-                  context,
-                  0,
-                  Icons.dashboard_rounded,
-                  Icons.dashboard_outlined,
+          borderRadius: BorderRadius.circular(30),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.1),
+                  width: 1,
                 ),
-                _buildNavItem(
-                  context,
-                  1,
-                  Icons.account_balance_wallet_rounded,
-                  Icons.account_balance_wallet_outlined,
+                borderRadius: BorderRadius.circular(30),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.white.withOpacity(0.1),
+                    Colors.white.withOpacity(0.05),
+                  ],
                 ),
-                const SizedBox(width: 48), // Space for FAB
-                _buildNavItem(
-                  context,
-                  2,
-                  Icons.insights_rounded,
-                  Icons.insights_outlined,
-                ),
-                _buildNavItem(
-                  context,
-                  3,
-                  Icons.savings_rounded,
-                  Icons.savings_outlined,
-                ),
-              ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildNavItem(0, Icons.grid_view_rounded, 'Home'),
+                  _buildNavItem(
+                    1,
+                    Icons.account_balance_wallet_rounded,
+                    'Budget',
+                  ),
+
+                  // Floating Action Button in the middle
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        PageRouteBuilder(
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  const AddTransactionScreen(),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                                const begin = Offset(0.0, 1.0);
+                                const end = Offset.zero;
+                                const curve = Curves.ease;
+                                var tween = Tween(
+                                  begin: begin,
+                                  end: end,
+                                ).chain(CurveTween(curve: curve));
+                                return SlideTransition(
+                                  position: animation.drive(tween),
+                                  child: child,
+                                );
+                              },
+                          opaque: false, // For glass effect overlay if needed
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: 55,
+                      height: 55,
+                      decoration: BoxDecoration(
+                        gradient: AppTheme.neonGradient,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.neonBlue.withOpacity(0.5),
+                            blurRadius: 15,
+                            spreadRadius: 2,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.add,
+                        color: Colors.white,
+                        size: 30,
+                      ),
+                    ),
+                  ),
+
+                  _buildNavItem(2, Icons.insights_rounded, 'Insights'),
+                  _buildNavItem(3, Icons.savings_rounded, 'Goals'),
+                ],
+              ),
             ),
           ),
         ),
@@ -148,39 +160,41 @@ class _AppShellState extends ConsumerState<AppShell> {
     );
   }
 
-  Widget _buildNavItem(
-    BuildContext context,
-    int index,
-    IconData selectedIcon,
-    IconData unselectedIcon,
-  ) {
+  Widget _buildNavItem(int index, IconData icon, String label) {
     final currentIndex = ref.watch(navIndexProvider);
     final isSelected = currentIndex == index;
-    final theme = Theme.of(context);
 
-    return InkWell(
+    return GestureDetector(
       onTap: () => ref.read(navIndexProvider.notifier).state = index,
-      borderRadius: BorderRadius.circular(16),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
-        padding: EdgeInsets.symmetric(
-          horizontal: isSelected ? 20 : 12,
-          vertical: 10,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFFFF5722).withAlpha(30)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Icon(
-          isSelected ? selectedIcon : unselectedIcon,
-          color: isSelected
-              ? const Color(0xFFFF5722)
-              : theme.colorScheme.onSurface.withAlpha(100),
-          size: 26,
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? Colors.white.withOpacity(0.1)
+                  : Colors.transparent,
+              shape: BoxShape.circle,
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: AppTheme.neonBlue.withOpacity(0.3),
+                        blurRadius: 12,
+                      ),
+                    ]
+                  : [],
+            ),
+            child: Icon(
+              icon,
+              color: isSelected
+                  ? AppTheme.neonBlue
+                  : Colors.white.withOpacity(0.6),
+              size: 24,
+            ),
+          ),
+        ],
       ),
     );
   }

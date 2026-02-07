@@ -1,0 +1,268 @@
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+/// A container with glassmorphism effect (blur, semi-transparent background, gradient border).
+class GlassContainer extends StatelessWidget {
+  final Widget child;
+  final double width;
+  final double? height;
+  final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry margin;
+  final double borderRadius;
+  final double blur;
+  final double opacity;
+  final Color? color;
+  final List<Color>? gradientColors;
+  final Border? border;
+
+  const GlassContainer({
+    super.key,
+    required this.child,
+    this.width = double.infinity,
+    this.height,
+    this.padding = const EdgeInsets.all(16),
+    this.margin = EdgeInsets.zero,
+    this.borderRadius = 20,
+    this.blur = 15,
+    this.opacity = 0.1,
+    this.color, // If provided, overrides gradientColors
+    this.gradientColors,
+    this.border,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: margin,
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(25),
+            blurRadius: 16,
+            spreadRadius: 2,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+          child: Container(
+            width: width,
+            height: height,
+            padding: padding,
+            decoration: BoxDecoration(
+              color:
+                  color?.withOpacity(opacity) ??
+                  Colors.white.withOpacity(opacity),
+              borderRadius: BorderRadius.circular(borderRadius),
+              border:
+                  border ??
+                  Border.all(color: Colors.white.withOpacity(0.2), width: 1.5),
+              gradient: color == null
+                  ? LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors:
+                          gradientColors ??
+                          [
+                            Colors.white.withOpacity(0.15),
+                            Colors.white.withOpacity(0.05),
+                          ],
+                    )
+                  : null,
+            ),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A button with glassmorphism styling.
+class GlassButton extends StatelessWidget {
+  final VoidCallback onPressed;
+  final String text;
+  final Widget? icon;
+  final double width;
+  final double height;
+  final double borderRadius;
+  final List<Color>? gradientColors;
+
+  const GlassButton({
+    super.key,
+    required this.onPressed,
+    required this.text,
+    this.icon,
+    this.width = double.infinity,
+    this.height = 56,
+    this.borderRadius = 16,
+    this.gradientColors,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: (gradientColors?.first ?? Colors.white).withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(borderRadius),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.2),
+                width: 1.5,
+              ),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors:
+                    gradientColors ??
+                    [
+                      Colors.white.withOpacity(0.2),
+                      Colors.white.withOpacity(0.1),
+                    ],
+              ),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onPressed,
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (icon != null) ...[icon!, const SizedBox(width: 8)],
+                      Text(
+                        text,
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A wrapper that provides the global background gradient and handles the Stack
+class GlassScaffold extends StatelessWidget {
+  final Widget body;
+  final Widget? bottomNavigationBar;
+  final Widget? floatingActionButton;
+  final FloatingActionButtonLocation? floatingActionButtonLocation;
+  final PreferredSizeWidget? appBar;
+  final bool extendBody;
+
+  const GlassScaffold({
+    super.key,
+    required this.body,
+    this.bottomNavigationBar,
+    this.floatingActionButton,
+    this.floatingActionButtonLocation,
+    this.appBar,
+    this.extendBody = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBody: extendBody,
+      appBar: appBar,
+      floatingActionButton: floatingActionButton,
+      floatingActionButtonLocation: floatingActionButtonLocation,
+      backgroundColor:
+          Colors.transparent, // Important for the background to show through
+      body: Stack(
+        children: [
+          // Global Background Gradient
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF0F2027), // Dark Blue/Black
+                  Color(0xFF203A43), // Teal/Blue
+                  Color(0xFF2C5364), // Lighter Blue
+                ],
+              ),
+            ),
+          ),
+          // Gradient Orbs for depth
+          Positioned(
+            top: -100,
+            left: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.purple.withOpacity(0.3),
+                backgroundBlendMode: BlendMode.overlay,
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.purple,
+                    blurRadius: 100,
+                    spreadRadius: 50,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -50,
+            right: -50,
+            child: Container(
+              width: 250,
+              height: 250,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.blue.withOpacity(0.3),
+                backgroundBlendMode: BlendMode.overlay,
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.blue,
+                    blurRadius: 100,
+                    spreadRadius: 50,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Main Body Content
+          SafeArea(child: body),
+
+          if (bottomNavigationBar != null)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: bottomNavigationBar!,
+            ),
+        ],
+      ),
+    );
+  }
+}

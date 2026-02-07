@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/utils/formatters.dart';
+import '../../../core/presentation/glass_widgets.dart';
 import '../providers/dashboard_providers.dart';
 
 /// Main balance card showing income, expenses, and remaining balance
@@ -18,42 +19,32 @@ class BalanceCard extends ConsumerWidget {
     return statsAsync.when(
       loading: () => _buildLoadingCard(context),
       error: (e, _) => _buildErrorCard(context, e.toString()),
-      data: (stats) => Container(
+      data: (stats) => GlassContainer(
         width: double.infinity,
-        height: 200,
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [
-              Color(0xFF2C3E50), // Dark Navy
-              Color(0xFF1A2533), // Darker Navy
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(32),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(50),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
+        height: 220,
+        borderRadius: 32,
+        padding: const EdgeInsets.all(28),
+        gradientColors: [
+          const Color(0xFF6366F1).withOpacity(0.4), // Indigo
+          const Color(0xFF8B5CF6).withOpacity(0.1), // Violet
+        ],
+        border: Border.all(
+          color: const Color(0xFF6366F1).withOpacity(0.3),
+          width: 1.5,
         ),
         child: Stack(
           children: [
-            // Background Pattern (subtle waves)
+            // Decorative circles
             Positioned(
-              right: -50,
-              top: -50,
+              right: -20,
+              top: -20,
               child: Container(
-                width: 200,
-                height: 200,
+                width: 150,
+                height: 150,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.white.withAlpha(10),
-                    width: 40,
+                  gradient: RadialGradient(
+                    colors: [Colors.white.withOpacity(0.2), Colors.transparent],
                   ),
                 ),
               ),
@@ -63,80 +54,107 @@ class BalanceCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Top: Label and Dots
+                // Top Row
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Total Balance',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white.withAlpha(180),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.account_balance_wallet_rounded,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Total Balance',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withOpacity(0.8),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.1),
+                        ),
+                      ),
+                      child: Text(
+                        'USD',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
-                    const Icon(Icons.more_horiz, color: Colors.white, size: 20),
                   ],
                 ),
 
-                // Middle: Amount
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    Formatters.currency(stats.balance),
-                    style: GoogleFonts.outfit(
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-
-                const Spacer(),
-
-                // Bottom: Card Info and Logo
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                // Main Balance
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '2644  7545  3867  1965',
-                      style: GoogleFonts.sourceCodePro(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white.withAlpha(120),
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    // Mastercard Logo Simulation
-                    SizedBox(
-                      width: 44,
-                      height: 28,
-                      child: Stack(
-                        children: [
-                          Positioned(
-                            left: 0,
-                            child: Container(
-                              width: 28,
-                              height: 28,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFEB001B), // Mastercard Red
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            right: 0,
-                            child: Container(
-                              width: 28,
-                              height: 28,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFF79E1B), // Mastercard Orange
-                                shape: BoxShape.circle,
-                              ),
-                            ),
+                      Formatters.currency(stats.balance),
+                      style: GoogleFonts.outfit(
+                        fontSize: 42, // Larger font
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        shadows: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Available Limit: \$5,000.00',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: Colors.white.withOpacity(0.5),
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Bottom Row (Simulated Chip & Contactless)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '****  ****  ****  1965',
+                      style: GoogleFonts.sourceCodePro(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white.withOpacity(0.9),
+                        letterSpacing: 2.0,
+                      ),
+                    ),
+                    const Icon(
+                      Icons.contactless_rounded,
+                      color: Colors.white,
+                      size: 28,
                     ),
                   ],
                 ),
