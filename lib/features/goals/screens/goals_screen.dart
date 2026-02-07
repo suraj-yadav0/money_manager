@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../core/presentation/glass_widgets.dart';
 import '../../../core/database/database.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
@@ -17,7 +18,7 @@ class GoalsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final goalsAsync = ref.watch(activeGoalsProvider);
 
-    return Scaffold(
+    return GlassScaffold(
       appBar: AppBar(
         title: Text(
           'Savings Goals',
@@ -41,7 +42,7 @@ class GoalsScreen extends ConsumerWidget {
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(
-          bottom: 90,
+          bottom: 120,
         ), // Spacing to clear the floating nav bar
         child: FloatingActionButton.extended(
           heroTag: 'goals_fab',

@@ -7,6 +7,7 @@ import '../../../core/database/database.dart';
 import '../../../core/navigation/app_shell.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/utils/constants.dart';
+import '../../../core/presentation/glass_widgets.dart';
 import '../../../core/utils/formatters.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -106,28 +107,26 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            children: [
-              // Progress indicator
-              LinearProgressIndicator(
-                value: (_currentStep + 1) / 3,
-                backgroundColor: colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              const SizedBox(height: 48),
+    return GlassScaffold(
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          children: [
+            // Progress indicator
+            LinearProgressIndicator(
+              value: (_currentStep + 1) / 3,
+              backgroundColor: colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            const SizedBox(height: 48),
 
-              Expanded(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: _buildStep(),
-                ),
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: _buildStep(),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

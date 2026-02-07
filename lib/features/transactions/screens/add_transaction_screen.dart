@@ -12,6 +12,8 @@ import '../../../core/database/database.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/utils/constants.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/presentation/glass_widgets.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../dashboard/providers/dashboard_providers.dart';
 import '../../goals/providers/goals_provider.dart';
 import '../services/categorization_engine.dart';
@@ -378,13 +380,11 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         ? ref.watch(expenseCategoriesProvider)
         : ref.watch(incomeCategoriesProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.transactionToEdit != null
-              ? 'Edit Transaction'
-              : (_type.isExpense ? 'Add Expense' : 'Add Income'),
-        ),
+    return GlassScaffold(
+      appBar: GlassAppBar(
+        title: widget.transactionToEdit != null
+            ? 'Edit Transaction'
+            : (_type.isExpense ? 'Add Expense' : 'Add Income'),
         actions: [
           TextButton(
             onPressed: _isLoading ? null : _saveTransaction,
@@ -394,7 +394,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Save'),
+                : Text(
+                    'Save',
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.narutoOrange,
+                    ),
+                  ),
           ),
         ],
       ),
