@@ -12,6 +12,7 @@ import '../../../core/database/database.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/utils/constants.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/presentation/glass_widgets.dart';
 import '../../dashboard/providers/dashboard_providers.dart';
 import '../../goals/providers/goals_provider.dart';
 import '../services/categorization_engine.dart';
@@ -378,7 +379,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         ? ref.watch(expenseCategoriesProvider)
         : ref.watch(incomeCategoriesProvider);
 
-    return Scaffold(
+    return GlassScaffold(
       appBar: AppBar(
         title: Text(
           widget.transactionToEdit != null

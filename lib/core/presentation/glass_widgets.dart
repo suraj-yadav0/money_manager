@@ -198,61 +198,11 @@ class GlassScaffold extends StatelessWidget {
           Colors.transparent, // Important for the background to show through
       body: Stack(
         children: [
-          // Global Background Gradient
+          // Plain Background
           Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF0F2027), // Dark Blue/Black
-                  Color(0xFF203A43), // Teal/Blue
-                  Color(0xFF2C5364), // Lighter Blue
-                ],
-              ),
-            ),
+            color: const Color(0xFF0F2027), // Dark Blue/Black base color
           ),
-          // Gradient Orbs for depth
-          Positioned(
-            top: -100,
-            left: -100,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.purple.withOpacity(0.3),
-                backgroundBlendMode: BlendMode.overlay,
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.purple,
-                    blurRadius: 100,
-                    spreadRadius: 50,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -50,
-            right: -50,
-            child: Container(
-              width: 250,
-              height: 250,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.blue.withOpacity(0.3),
-                backgroundBlendMode: BlendMode.overlay,
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.blue,
-                    blurRadius: 100,
-                    spreadRadius: 50,
-                  ),
-                ],
-              ),
-            ),
-          ),
+
           // Main Body Content
           SafeArea(child: body),
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/presentation/glass_widgets.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/icon_helper.dart';
 
@@ -19,7 +20,7 @@ class AllTransactionsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Scaffold(
+    return GlassScaffold(
       appBar: AppBar(
         title: Text(
           'All Transactions',
@@ -123,7 +124,8 @@ class AllTransactionsScreen extends ConsumerWidget {
                                   ),
                                 ),
                                 confirmDismiss: (direction) async {
-                                  if (direction == DismissDirection.startToEnd) {
+                                  if (direction ==
+                                      DismissDirection.startToEnd) {
                                     // Swipe left-to-right: Delete
                                     return await _confirmDelete(
                                       context,
@@ -143,7 +145,8 @@ class AllTransactionsScreen extends ConsumerWidget {
                                   }
                                 },
                                 onDismissed: (direction) {
-                                  if (direction == DismissDirection.startToEnd) {
+                                  if (direction ==
+                                      DismissDirection.startToEnd) {
                                     _deleteTransaction(context, ref, item);
                                   }
                                 },
@@ -192,7 +195,8 @@ class AllTransactionsScreen extends ConsumerWidget {
                                     ),
                                     subtitle: Row(
                                       children: [
-                                        if (item.transaction.receiptImagePath != null) ...[
+                                        if (item.transaction.receiptImagePath !=
+                                            null) ...[
                                           Icon(
                                             Icons.receipt,
                                             size: 14,
@@ -202,7 +206,8 @@ class AllTransactionsScreen extends ConsumerWidget {
                                         ],
                                         Expanded(
                                           child: Text(
-                                            item.transaction.note?.isNotEmpty == true
+                                            item.transaction.note?.isNotEmpty ==
+                                                    true
                                                 ? item.transaction.note!
                                                 : Formatters.relativeDate(
                                                     item.transaction.timestamp,

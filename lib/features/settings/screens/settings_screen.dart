@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../core/presentation/glass_widgets.dart';
 import '../../../core/database/database.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/utils/formatters.dart';
@@ -164,7 +165,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Scaffold(
+    return GlassScaffold(
       appBar: AppBar(
         title: Text(
           'Settings',
