@@ -111,10 +111,16 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        color: Colors.black.withOpacity(
-          0.05,
-        ), // Light mode glass card (subtle dark tint)
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(
+            color: Colors.white.withOpacity(0.4),
+            width: 1,
+            strokeAlign: BorderSide.strokeAlignOutside,
+          ),
+        ),
+        color: Colors.white.withOpacity(0.65), // Milky glass
+        shadowColor: Colors.black.withOpacity(0.05),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(

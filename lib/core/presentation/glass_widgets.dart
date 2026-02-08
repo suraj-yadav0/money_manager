@@ -38,11 +38,11 @@ class GlassContainer extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final defaultGradientColors = isDark
         ? [Colors.white.withOpacity(0.15), Colors.white.withOpacity(0.05)]
-        : [Colors.black.withOpacity(0.05), Colors.black.withOpacity(0.02)];
+        : [Colors.white.withOpacity(0.8), Colors.white.withOpacity(0.5)];
 
     final defaultBorderColor = isDark
         ? Colors.white.withOpacity(0.2)
-        : Colors.black.withOpacity(0.1);
+        : Colors.white.withOpacity(0.6);
 
     return Container(
       margin: margin,

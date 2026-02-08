@@ -25,10 +25,15 @@ class BalanceCard extends ConsumerWidget {
         height: 220,
         borderRadius: 32,
         padding: const EdgeInsets.all(28),
-        gradientColors: [
-          AppTheme.narutoOrange.withOpacity(0.4),
-          AppTheme.kuramaRed.withOpacity(0.2),
-        ],
+        gradientColors: Theme.of(context).brightness == Brightness.dark
+            ? [
+                AppTheme.narutoOrange.withOpacity(0.4),
+                AppTheme.kuramaRed.withOpacity(0.2),
+              ]
+            : [
+                AppTheme.narutoOrange.withOpacity(0.9),
+                AppTheme.kuramaRed.withOpacity(0.7),
+              ],
         border: Border.all(
           color: AppTheme.narutoOrange.withOpacity(0.5),
           width: 1.5,
