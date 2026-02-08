@@ -28,12 +28,6 @@ class BudgetScreen extends ConsumerWidget {
           'Budget',
           style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () => _showBudgetSettings(context, ref),
-          ),
-        ],
       ),
       body: budgetAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -87,6 +81,21 @@ class BudgetScreen extends ConsumerWidget {
           );
         },
       ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(
+          bottom: 120,
+        ), // Spacing to clear the floating nav bar
+        child: FloatingActionButton.extended(
+          heroTag: 'budget_fab',
+          onPressed: () => _showBudgetSettings(context, ref),
+          icon: const Icon(Icons.add),
+          label: const Text('Set Budget'),
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+          elevation: 4,
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
