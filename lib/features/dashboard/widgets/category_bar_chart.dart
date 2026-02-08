@@ -60,136 +60,152 @@ class CategoryBarChart extends ConsumerWidget {
         // Show all entries, sorted by value
         final displayEntries = entries;
 
-        // Calculate dynamic width based on number of entries
-        // Min width of 400 or content width (e.g. 50px per bar)
-        final chartWidth = (displayEntries.length * 60.0).clamp(400.0, 5000.0);
-
         return Card(
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    height: 350,
-                    width: chartWidth, // Dynamic width
-                    child: BarChart(
-                      BarChartData(
-                        alignment: BarChartAlignment.spaceAround,
-                        maxY: maxValue * 1.2,
-                        barTouchData: BarTouchData(
-                          enabled: true,
-                          touchTooltipData: BarTouchTooltipData(
-                            getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                              return BarTooltipItem(
-                                Formatters.currency(rod.toY),
-                                GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        titlesData: FlTitlesData(
-                          show: true,
-                          rightTitles: const AxisTitles(
-                            sideTitles: SideTitles(showTitles: false),
-                          ),
-                          topTitles: const AxisTitles(
-                            sideTitles: SideTitles(showTitles: false),
-                          ),
-                          leftTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              reservedSize: 60,
-                              // Calculate interval to show ~5 labels max prevents overlap
-                              interval: maxValue > 0 ? maxValue / 4 : 1.0,
-                              getTitlesWidget: (value, meta) {
-                                if (value == 0) return const SizedBox();
-                                return Container(
-                                  alignment: Alignment.centerRight,
-                                  padding: const EdgeInsets.only(right: 8),
-                                  child: Text(
-                                    Formatters.compactCurrency(value),
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      fontSize: 10,
-                                      color: colorScheme.onSurfaceVariant,
-                                    ),
-                                    overflow: TextOverflow.visible,
-                                    softWrap: false,
-                                  ),
-                                );
-                              },
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Calculate dynamic width based on number of entries
+                // Min width of 400 or content width (e.g. 60px per bar)
+                final minWidth = (displayEntries.length * 60.0).clamp(
+                  400.0,
+                  5000.0,
+                );
+                // Use the larger of available width or calculated min width
+                final chartWidth = constraints.maxWidth > minWidth
+                    ? constraints.maxWidth
+                    : minWidth;
+
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        height: 350,
+                        width: chartWidth, // Dynamic width
+                        child: BarChart(
+                          BarChartData(
+                            alignment: BarChartAlignment.spaceAround,
+                            maxY: maxValue * 1.2,
+                            barTouchData: BarTouchData(
+                              enabled: true,
+                              touchTooltipData: BarTouchTooltipData(
+                                getTooltipItem:
+                                    (group, groupIndex, rod, rodIndex) {
+                                      return BarTooltipItem(
+                                        Formatters.currency(rod.toY),
+                                        GoogleFonts.inter(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                        ),
+                                      );
+                                    },
+                              ),
                             ),
-                          ),
-                          bottomTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              reservedSize: 60,
-                              getTitlesWidget: (value, meta) {
-                                final index = value.toInt();
-                                if (index >= 0 &&
-                                    index < displayEntries.length) {
-                                  return Padding(
-                                    padding: const EdgeInsets.only(top: 8),
-                                    child: SizedBox(
-                                      width: 50,
+                            titlesData: FlTitlesData(
+                              show: true,
+                              rightTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                              topTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                              leftTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  reservedSize: 60,
+                                  // Calculate interval to show ~5 labels max prevents overlap
+                                  interval: maxValue > 0 ? maxValue / 4 : 1.0,
+                                  getTitlesWidget: (value, meta) {
+                                    if (value == 0) return const SizedBox();
+                                    return Container(
+                                      alignment: Alignment.centerRight,
+                                      padding: const EdgeInsets.only(right: 8),
                                       child: Text(
-                                        displayEntries[index].key,
+                                        Formatters.compactCurrency(value),
                                         style: theme.textTheme.bodySmall
-                                            ?.copyWith(fontSize: 10),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        textAlign: TextAlign.center,
+                                            ?.copyWith(
+                                              fontSize: 10,
+                                              color:
+                                                  colorScheme.onSurfaceVariant,
+                                            ),
+                                        overflow: TextOverflow.visible,
+                                        softWrap: false,
                                       ),
-                                    ),
-                                  );
-                                }
-                                return const SizedBox();
-                              },
-                            ),
-                          ),
-                        ),
-                        borderData: FlBorderData(show: false),
-                        gridData: FlGridData(
-                          show: true,
-                          drawVerticalLine: false,
-                          drawHorizontalLine: true,
-                          horizontalInterval: maxValue > 0 ? maxValue / 4 : 1.0,
-                          getDrawingHorizontalLine: (value) => FlLine(
-                            color: colorScheme.outlineVariant.withAlpha(50),
-                            strokeWidth: 1,
-                          ),
-                        ),
-                        barGroups: displayEntries.asMap().entries.map((e) {
-                          final index = e.key;
-                          final entry = e.value;
-                          return BarChartGroupData(
-                            x: index,
-                            barRods: [
-                              BarChartRodData(
-                                toY: entry.value,
-                                color:
-                                    AppTheme.categoryColors[index %
-                                        AppTheme.categoryColors.length],
-                                width: 24, // Slightly wider bars
-                                borderRadius: const BorderRadius.horizontal(
-                                  right: Radius.circular(4),
+                                    );
+                                  },
                                 ),
                               ),
-                            ],
-                          );
-                        }).toList(),
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  reservedSize: 60,
+                                  getTitlesWidget: (value, meta) {
+                                    final index = value.toInt();
+                                    if (index >= 0 &&
+                                        index < displayEntries.length) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(top: 8),
+                                        child: SizedBox(
+                                          width: 50,
+                                          child: Text(
+                                            displayEntries[index].key,
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(fontSize: 10),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                    return const SizedBox();
+                                  },
+                                ),
+                              ),
+                            ),
+                            borderData: FlBorderData(show: false),
+                            gridData: FlGridData(
+                              show: true,
+                              drawVerticalLine: false,
+                              drawHorizontalLine: true,
+                              horizontalInterval: maxValue > 0
+                                  ? maxValue / 4
+                                  : 1.0,
+                              getDrawingHorizontalLine: (value) => FlLine(
+                                color: colorScheme.outlineVariant.withAlpha(50),
+                                strokeWidth: 1,
+                              ),
+                            ),
+                            barGroups: displayEntries.asMap().entries.map((e) {
+                              final index = e.key;
+                              final entry = e.value;
+                              return BarChartGroupData(
+                                x: index,
+                                barRods: [
+                                  BarChartRodData(
+                                    toY: entry.value,
+                                    color:
+                                        AppTheme.categoryColors[index %
+                                            AppTheme.categoryColors.length],
+                                    width: 24, // Slightly wider bars
+                                    borderRadius: const BorderRadius.horizontal(
+                                      right: Radius.circular(4),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }).toList(),
+                          ),
+                          duration: const Duration(milliseconds: 300),
+                        ),
                       ),
-                      duration: const Duration(milliseconds: 300),
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                );
+              },
             ),
           ),
         );
