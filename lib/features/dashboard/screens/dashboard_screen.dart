@@ -6,7 +6,8 @@ import '../../../core/utils/formatters.dart';
 import '../providers/dashboard_providers.dart';
 import '../providers/chart_type_provider.dart';
 import '../widgets/balance_card.dart';
-import '../widgets/forecast_card.dart';
+// import '../widgets/forecast_card.dart';
+import '../widgets/income_trend_chart.dart';
 import '../widgets/category_pie_chart.dart';
 import '../widgets/category_bar_chart.dart';
 import '../widgets/spending_line_chart.dart';
@@ -23,6 +24,8 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final chartType = ref.watch(dashboardChartTypeProvider);
+    final userSettings = ref.watch(userSettingsStreamProvider);
+    final showIncomeChart = userSettings.value?.showIncomeChart ?? false;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -86,9 +89,15 @@ class DashboardScreen extends ConsumerWidget {
               const BalanceCard(),
               const SizedBox(height: 16),
 
-              // Forecast Card (Restored)
-              const ForecastCard(),
-              const SizedBox(height: 24),
+              // Income Trend Chart
+              if (showIncomeChart) ...[
+                const IncomeTrendChart(),
+                const SizedBox(height: 24),
+              ],
+
+              // Forecast Card (Removed)
+              // const ForecastCard(),
+              // const SizedBox(height: 24),
 
               // Category Breakdown with chart type selector
               Row(

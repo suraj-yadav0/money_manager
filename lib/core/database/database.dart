@@ -18,7 +18,8 @@ class Transactions extends Table {
   DateTimeColumn get timestamp => dateTime()();
   TextColumn get note => text().nullable()();
   TextColumn get paymentMode => text().nullable()(); // 'Cash', 'UPI', etc.
-  TextColumn get receiptImagePath => text().nullable()(); // Path to receipt/photo
+  TextColumn get receiptImagePath =>
+      text().nullable()(); // Path to receipt/photo
   BoolColumn get isRecurring => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
@@ -42,6 +43,8 @@ class UserSettings extends Table {
   TextColumn get currency => text().withDefault(const Constant('INR'))();
   BoolColumn get isOnboarded => boolean().withDefault(const Constant(false))();
   BoolColumn get biometricEnabled =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get showIncomeChart =>
       boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
@@ -90,7 +93,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration {
@@ -128,6 +131,12 @@ class AppDatabase extends _$AppDatabase {
           // Add receipt_image_path column to transactions table
           await customStatement(
             'ALTER TABLE transactions ADD COLUMN receipt_image_path TEXT',
+          );
+        }
+        if (from < 7) {
+          // Add show_income_chart column to user_settings table
+          await customStatement(
+            'ALTER TABLE user_settings ADD COLUMN show_income_chart INTEGER NOT NULL DEFAULT 0',
           );
         }
       },

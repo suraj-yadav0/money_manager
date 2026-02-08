@@ -1654,6 +1654,21 @@ class $UserSettingsTable extends UserSettings
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _showIncomeChartMeta = const VerificationMeta(
+    'showIncomeChart',
+  );
+  @override
+  late final GeneratedColumn<bool> showIncomeChart = GeneratedColumn<bool>(
+    'show_income_chart',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("show_income_chart" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -1673,6 +1688,7 @@ class $UserSettingsTable extends UserSettings
     currency,
     isOnboarded,
     biometricEnabled,
+    showIncomeChart,
     createdAt,
   ];
   @override
@@ -1723,6 +1739,15 @@ class $UserSettingsTable extends UserSettings
         ),
       );
     }
+    if (data.containsKey('show_income_chart')) {
+      context.handle(
+        _showIncomeChartMeta,
+        showIncomeChart.isAcceptableOrUnknown(
+          data['show_income_chart']!,
+          _showIncomeChartMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -1758,6 +1783,10 @@ class $UserSettingsTable extends UserSettings
         DriftSqlType.bool,
         data['${effectivePrefix}biometric_enabled'],
       )!,
+      showIncomeChart: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}show_income_chart'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -1777,6 +1806,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
   final String currency;
   final bool isOnboarded;
   final bool biometricEnabled;
+  final bool showIncomeChart;
   final DateTime createdAt;
   const UserSetting({
     required this.id,
@@ -1784,6 +1814,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
     required this.currency,
     required this.isOnboarded,
     required this.biometricEnabled,
+    required this.showIncomeChart,
     required this.createdAt,
   });
   @override
@@ -1794,6 +1825,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
     map['currency'] = Variable<String>(currency);
     map['is_onboarded'] = Variable<bool>(isOnboarded);
     map['biometric_enabled'] = Variable<bool>(biometricEnabled);
+    map['show_income_chart'] = Variable<bool>(showIncomeChart);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -1805,6 +1837,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
       currency: Value(currency),
       isOnboarded: Value(isOnboarded),
       biometricEnabled: Value(biometricEnabled),
+      showIncomeChart: Value(showIncomeChart),
       createdAt: Value(createdAt),
     );
   }
@@ -1820,6 +1853,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
       currency: serializer.fromJson<String>(json['currency']),
       isOnboarded: serializer.fromJson<bool>(json['isOnboarded']),
       biometricEnabled: serializer.fromJson<bool>(json['biometricEnabled']),
+      showIncomeChart: serializer.fromJson<bool>(json['showIncomeChart']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -1832,6 +1866,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
       'currency': serializer.toJson<String>(currency),
       'isOnboarded': serializer.toJson<bool>(isOnboarded),
       'biometricEnabled': serializer.toJson<bool>(biometricEnabled),
+      'showIncomeChart': serializer.toJson<bool>(showIncomeChart),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -1842,6 +1877,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
     String? currency,
     bool? isOnboarded,
     bool? biometricEnabled,
+    bool? showIncomeChart,
     DateTime? createdAt,
   }) => UserSetting(
     id: id ?? this.id,
@@ -1849,6 +1885,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
     currency: currency ?? this.currency,
     isOnboarded: isOnboarded ?? this.isOnboarded,
     biometricEnabled: biometricEnabled ?? this.biometricEnabled,
+    showIncomeChart: showIncomeChart ?? this.showIncomeChart,
     createdAt: createdAt ?? this.createdAt,
   );
   UserSetting copyWithCompanion(UserSettingsCompanion data) {
@@ -1864,6 +1901,9 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
       biometricEnabled: data.biometricEnabled.present
           ? data.biometricEnabled.value
           : this.biometricEnabled,
+      showIncomeChart: data.showIncomeChart.present
+          ? data.showIncomeChart.value
+          : this.showIncomeChart,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -1876,6 +1916,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
           ..write('currency: $currency, ')
           ..write('isOnboarded: $isOnboarded, ')
           ..write('biometricEnabled: $biometricEnabled, ')
+          ..write('showIncomeChart: $showIncomeChart, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -1888,6 +1929,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
     currency,
     isOnboarded,
     biometricEnabled,
+    showIncomeChart,
     createdAt,
   );
   @override
@@ -1899,6 +1941,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
           other.currency == this.currency &&
           other.isOnboarded == this.isOnboarded &&
           other.biometricEnabled == this.biometricEnabled &&
+          other.showIncomeChart == this.showIncomeChart &&
           other.createdAt == this.createdAt);
 }
 
@@ -1908,6 +1951,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
   final Value<String> currency;
   final Value<bool> isOnboarded;
   final Value<bool> biometricEnabled;
+  final Value<bool> showIncomeChart;
   final Value<DateTime> createdAt;
   const UserSettingsCompanion({
     this.id = const Value.absent(),
@@ -1915,6 +1959,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
     this.currency = const Value.absent(),
     this.isOnboarded = const Value.absent(),
     this.biometricEnabled = const Value.absent(),
+    this.showIncomeChart = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   UserSettingsCompanion.insert({
@@ -1923,6 +1968,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
     this.currency = const Value.absent(),
     this.isOnboarded = const Value.absent(),
     this.biometricEnabled = const Value.absent(),
+    this.showIncomeChart = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   static Insertable<UserSetting> custom({
@@ -1931,6 +1977,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
     Expression<String>? currency,
     Expression<bool>? isOnboarded,
     Expression<bool>? biometricEnabled,
+    Expression<bool>? showIncomeChart,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
@@ -1939,6 +1986,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
       if (currency != null) 'currency': currency,
       if (isOnboarded != null) 'is_onboarded': isOnboarded,
       if (biometricEnabled != null) 'biometric_enabled': biometricEnabled,
+      if (showIncomeChart != null) 'show_income_chart': showIncomeChart,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -1949,6 +1997,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
     Value<String>? currency,
     Value<bool>? isOnboarded,
     Value<bool>? biometricEnabled,
+    Value<bool>? showIncomeChart,
     Value<DateTime>? createdAt,
   }) {
     return UserSettingsCompanion(
@@ -1957,6 +2006,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
       currency: currency ?? this.currency,
       isOnboarded: isOnboarded ?? this.isOnboarded,
       biometricEnabled: biometricEnabled ?? this.biometricEnabled,
+      showIncomeChart: showIncomeChart ?? this.showIncomeChart,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -1979,6 +2029,9 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
     if (biometricEnabled.present) {
       map['biometric_enabled'] = Variable<bool>(biometricEnabled.value);
     }
+    if (showIncomeChart.present) {
+      map['show_income_chart'] = Variable<bool>(showIncomeChart.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -1993,6 +2046,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
           ..write('currency: $currency, ')
           ..write('isOnboarded: $isOnboarded, ')
           ..write('biometricEnabled: $biometricEnabled, ')
+          ..write('showIncomeChart: $showIncomeChart, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -4087,6 +4141,7 @@ typedef $$UserSettingsTableCreateCompanionBuilder =
       Value<String> currency,
       Value<bool> isOnboarded,
       Value<bool> biometricEnabled,
+      Value<bool> showIncomeChart,
       Value<DateTime> createdAt,
     });
 typedef $$UserSettingsTableUpdateCompanionBuilder =
@@ -4096,6 +4151,7 @@ typedef $$UserSettingsTableUpdateCompanionBuilder =
       Value<String> currency,
       Value<bool> isOnboarded,
       Value<bool> biometricEnabled,
+      Value<bool> showIncomeChart,
       Value<DateTime> createdAt,
     });
 
@@ -4130,6 +4186,11 @@ class $$UserSettingsTableFilterComposer
 
   ColumnFilters<bool> get biometricEnabled => $composableBuilder(
     column: $table.biometricEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get showIncomeChart => $composableBuilder(
+    column: $table.showIncomeChart,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4173,6 +4234,11 @@ class $$UserSettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get showIncomeChart => $composableBuilder(
+    column: $table.showIncomeChart,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -4206,6 +4272,11 @@ class $$UserSettingsTableAnnotationComposer
 
   GeneratedColumn<bool> get biometricEnabled => $composableBuilder(
     column: $table.biometricEnabled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get showIncomeChart => $composableBuilder(
+    column: $table.showIncomeChart,
     builder: (column) => column,
   );
 
@@ -4249,6 +4320,7 @@ class $$UserSettingsTableTableManager
                 Value<String> currency = const Value.absent(),
                 Value<bool> isOnboarded = const Value.absent(),
                 Value<bool> biometricEnabled = const Value.absent(),
+                Value<bool> showIncomeChart = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => UserSettingsCompanion(
                 id: id,
@@ -4256,6 +4328,7 @@ class $$UserSettingsTableTableManager
                 currency: currency,
                 isOnboarded: isOnboarded,
                 biometricEnabled: biometricEnabled,
+                showIncomeChart: showIncomeChart,
                 createdAt: createdAt,
               ),
           createCompanionCallback:
@@ -4265,6 +4338,7 @@ class $$UserSettingsTableTableManager
                 Value<String> currency = const Value.absent(),
                 Value<bool> isOnboarded = const Value.absent(),
                 Value<bool> biometricEnabled = const Value.absent(),
+                Value<bool> showIncomeChart = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => UserSettingsCompanion.insert(
                 id: id,
@@ -4272,6 +4346,7 @@ class $$UserSettingsTableTableManager
                 currency: currency,
                 isOnboarded: isOnboarded,
                 biometricEnabled: biometricEnabled,
+                showIncomeChart: showIncomeChart,
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0
