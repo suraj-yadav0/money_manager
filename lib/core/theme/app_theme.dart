@@ -9,7 +9,7 @@ class AppTheme {
   static const Color success = Color(0xFF10B981);
   static const Color warning = Color(0xFFF59E0B);
   static const Color error = Color(0xFFEF4444);
-  static const Color safe = leafGreen; // Green - safe forecast
+  static const Color safe = narutoOrange; // Blue - safe forecast
   static const Color caution = Color(0xFFFFD700); // Minato Gold - borderline
   static const Color danger = kuramaRed; // Red - deficit
 
