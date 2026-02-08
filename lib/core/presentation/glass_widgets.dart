@@ -26,8 +26,8 @@ class GlassContainer extends StatelessWidget {
     this.padding = const EdgeInsets.all(16),
     this.margin = EdgeInsets.zero,
     this.borderRadius = 20,
-    this.blur = 15,
-    this.opacity = 0.1,
+    this.blur = 8,
+    this.opacity = 0.3,
     this.color, // If provided, overrides gradientColors
     this.gradientColors,
     this.border,
