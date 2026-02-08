@@ -7,8 +7,11 @@ import '../../../core/theme/app_theme.dart';
 import '../providers/dashboard_providers.dart';
 
 /// Category pie chart showing spending breakdown
+/// Category pie chart showing spending or income breakdown
 class CategoryPieChart extends ConsumerWidget {
-  const CategoryPieChart({super.key});
+  final String transactionType;
+
+  const CategoryPieChart({super.key, this.transactionType = 'expense'});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -20,7 +23,11 @@ class CategoryPieChart extends ConsumerWidget {
       loading: () => const SizedBox(height: 200),
       error: (error, stack) => const SizedBox(),
       data: (stats) {
-        if (stats.categoryBreakdown.isEmpty) {
+        final data = transactionType == 'expense'
+            ? stats.categoryBreakdown
+            : stats.incomeCategoryBreakdown;
+
+        if (data.isEmpty) {
           return Card(
             child: Container(
               height: 200,
@@ -36,14 +43,18 @@ class CategoryPieChart extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'No expenses yet',
+                    transactionType == 'expense'
+                        ? 'No expenses yet'
+                        : 'No income yet',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Add your first expense to see the breakdown',
+                    transactionType == 'expense'
+                        ? 'Add your first expense to see the breakdown'
+                        : 'Add your first income to see the breakdown',
                     style: theme.textTheme.bodySmall,
                     textAlign: TextAlign.center,
                   ),
@@ -53,7 +64,7 @@ class CategoryPieChart extends ConsumerWidget {
           );
         }
 
-        final entries = stats.categoryBreakdown.entries.toList()
+        final entries = data.entries.toList()
           ..sort((a, b) => b.value.compareTo(a.value));
         final total = entries.fold<double>(0, (sum, e) => sum + e.value);
 

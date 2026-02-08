@@ -27,7 +27,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   double _originalIncome = 0;
   String _selectedCurrency = AppConstants.defaultCurrency;
   String _originalCurrency = AppConstants.defaultCurrency;
-  bool _showIncomeChart = false;
 
   @override
   void initState() {
@@ -44,7 +43,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         _originalIncome = settings.monthlyIncome;
         _originalCurrency = settings.currency;
         _selectedCurrency = settings.currency;
-        _showIncomeChart = settings.showIncomeChart;
 
         final symbol =
             AppConstants.supportedCurrencies[settings.currency] ??
@@ -79,18 +77,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _hasChanges =
           _selectedCurrency != _originalCurrency ||
           (double.tryParse(_incomeController.text.replaceAll(',', '')) ?? 0) !=
-              _originalIncome ||
-          _showIncomeChart !=
-              (ref.read(userSettingsStreamProvider).value?.showIncomeChart ??
-                  false);
-    });
-  }
-
-  void _onShowIncomeChartChanged(bool value) {
-    setState(() {
-      _showIncomeChart = value;
-      _hasChanges =
-          true; // Simplified change tracking for now, or compare with original
+              _originalIncome;
     });
   }
 
@@ -109,7 +96,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         UserSettingsCompanion(
           monthlyIncome: Value(newIncome),
           currency: Value(_selectedCurrency),
-          showIncomeChart: Value(_showIncomeChart),
         ),
       );
 
@@ -319,17 +305,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     subtitle: Text('Selected: $_selectedCurrency'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: _showCurrencyPicker,
-                  ),
-                  const Divider(height: 1),
-                  SwitchListTile(
-                    secondary: Icon(
-                      Icons.show_chart,
-                      color: colorScheme.primary,
-                    ),
-                    title: const Text('Show Income Chart'),
-                    subtitle: const Text('Display income trend on dashboard'),
-                    value: _showIncomeChart,
-                    onChanged: _onShowIncomeChartChanged,
                   ),
                 ],
               ),

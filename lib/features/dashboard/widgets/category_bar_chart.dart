@@ -8,8 +8,11 @@ import '../../../core/utils/formatters.dart';
 import '../providers/dashboard_providers.dart';
 
 /// Horizontal bar chart showing spending by category
+/// Horizontal bar chart showing spending or income by category
 class CategoryBarChart extends ConsumerWidget {
-  const CategoryBarChart({super.key});
+  final String transactionType;
+
+  const CategoryBarChart({super.key, this.transactionType = 'expense'});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -21,7 +24,11 @@ class CategoryBarChart extends ConsumerWidget {
       loading: () => const SizedBox(height: 200),
       error: (error, stack) => const SizedBox(),
       data: (stats) {
-        if (stats.categoryBreakdown.isEmpty) {
+        final data = transactionType == 'expense'
+            ? stats.categoryBreakdown
+            : stats.incomeCategoryBreakdown;
+
+        if (data.isEmpty) {
           return Card(
             child: Container(
               height: 200,
@@ -37,14 +44,18 @@ class CategoryBarChart extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'No expenses yet',
+                    transactionType == 'expense'
+                        ? 'No expenses yet'
+                        : 'No income yet',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Add your first expense to see the breakdown',
+                    transactionType == 'expense'
+                        ? 'Add your first expense to see the breakdown'
+                        : 'Add your first income to see the breakdown',
                     style: theme.textTheme.bodySmall,
                     textAlign: TextAlign.center,
                   ),
@@ -54,7 +65,7 @@ class CategoryBarChart extends ConsumerWidget {
           );
         }
 
-        final entries = stats.categoryBreakdown.entries.toList()
+        final entries = data.entries.toList()
           ..sort((a, b) => b.value.compareTo(a.value));
         final maxValue = entries.first.value;
         // Show all entries, sorted by value

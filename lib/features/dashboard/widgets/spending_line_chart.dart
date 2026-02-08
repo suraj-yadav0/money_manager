@@ -8,9 +8,11 @@ import '../../../core/providers/app_state_provider.dart';
 import '../../../core/utils/formatters.dart';
 import '../providers/dashboard_providers.dart';
 
-/// Line chart showing daily spending trends over the selected period
+/// Line chart showing daily spending or income trends over the selected period
 class SpendingLineChart extends ConsumerStatefulWidget {
-  const SpendingLineChart({super.key});
+  final String transactionType;
+
+  const SpendingLineChart({super.key, this.transactionType = 'expense'});
 
   @override
   ConsumerState<SpendingLineChart> createState() => _SpendingLineChartState();
@@ -76,7 +78,9 @@ class _SpendingLineChartState extends ConsumerState<SpendingLineChart> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Failed to load spending data',
+                    widget.transactionType == 'expense'
+                        ? 'Failed to load spending data'
+                        : 'Failed to load income data',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -103,7 +107,9 @@ class _SpendingLineChartState extends ConsumerState<SpendingLineChart> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'No spending data',
+                    widget.transactionType == 'expense'
+                        ? 'No spending data'
+                        : 'No income data',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -238,7 +244,9 @@ class _SpendingLineChartState extends ConsumerState<SpendingLineChart> {
                                 .toList(),
                             isCurved: true,
                             curveSmoothness: 0.3,
-                            color: colorScheme.primary,
+                            color: widget.transactionType == 'expense'
+                                ? colorScheme.primary
+                                : Colors.green, // Use green for income
                             barWidth: 3,
                             isStrokeCapRound: true,
                             dotData: FlDotData(
@@ -246,7 +254,9 @@ class _SpendingLineChartState extends ConsumerState<SpendingLineChart> {
                               getDotPainter: (spot, percent, bar, index) {
                                 return FlDotCirclePainter(
                                   radius: 4,
-                                  color: colorScheme.primary,
+                                  color: widget.transactionType == 'expense'
+                                      ? colorScheme.primary
+                                      : Colors.green, // Use green for income
                                   strokeWidth: 2,
                                   strokeColor: colorScheme.surface,
                                 );
@@ -258,8 +268,12 @@ class _SpendingLineChartState extends ConsumerState<SpendingLineChart> {
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
                                 colors: [
-                                  colorScheme.primary.withAlpha(80),
-                                  colorScheme.primary.withAlpha(10),
+                                  widget.transactionType == 'expense'
+                                      ? colorScheme.primary.withAlpha(80)
+                                      : Colors.green.withAlpha(80),
+                                  widget.transactionType == 'expense'
+                                      ? colorScheme.primary.withAlpha(10)
+                                      : Colors.green.withAlpha(10),
                                 ],
                               ),
                             ),
@@ -302,7 +316,7 @@ class _SpendingLineChartState extends ConsumerState<SpendingLineChart> {
     final allTransactions =
         await (db.select(db.transactions)..where(
               (t) =>
-                  t.type.equals('expense') &
+                  t.type.equals(widget.transactionType) &
                   t.timestamp.isBetweenValues(start, effectiveEnd),
             ))
             .join([
@@ -334,8 +348,8 @@ class _SpendingLineChartState extends ConsumerState<SpendingLineChart> {
 
       // Store transaction name (Note or Category or 'Expense')
       if (dailyNotes[date] == null) dailyNotes[date] = [];
-      String label = t.note ?? c?.name ?? 'Expense';
-      if (label.isEmpty) label = c?.name ?? 'Expense';
+      String label = t.note ?? c?.name ?? 'Transaction';
+      if (label.isEmpty) label = c?.name ?? 'Transaction';
 
       // Limit to top 3 per day to avoid huge tooltips
       if (dailyNotes[date]!.length < 3) {

@@ -7,7 +7,7 @@ import '../providers/dashboard_providers.dart';
 import '../providers/chart_type_provider.dart';
 import '../widgets/balance_card.dart';
 // import '../widgets/forecast_card.dart';
-import '../widgets/income_trend_chart.dart';
+// import '../widgets/income_trend_chart.dart';
 import '../widgets/category_pie_chart.dart';
 import '../widgets/category_bar_chart.dart';
 import '../widgets/spending_line_chart.dart';
@@ -24,8 +24,9 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final chartType = ref.watch(dashboardChartTypeProvider);
-    final userSettings = ref.watch(userSettingsStreamProvider);
-    final showIncomeChart = userSettings.value?.showIncomeChart ?? false;
+    final transactionType = ref.watch(dashboardTransactionTypeProvider);
+    // final userSettings = ref.watch(userSettingsStreamProvider);
+    // final showIncomeChart = userSettings.value?.showIncomeChart ?? false;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -89,11 +90,13 @@ class DashboardScreen extends ConsumerWidget {
               const BalanceCard(),
               const SizedBox(height: 16),
 
-              // Income Trend Chart
+              /*
+              // Income Trend Chart (Moved to main chart section)
               if (showIncomeChart) ...[
                 const IncomeTrendChart(),
                 const SizedBox(height: 24),
               ],
+*/
 
               // Forecast Card (Removed)
               // const ForecastCard(),
@@ -101,9 +104,37 @@ class DashboardScreen extends ConsumerWidget {
 
               // Category Breakdown with chart type selector
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Spending', style: theme.textTheme.titleMedium),
+                  // Transaction Type Query Selector
+                  SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(
+                        value: 'expense',
+                        label: Text('Expense'),
+                        icon: Icon(Icons.arrow_downward),
+                      ),
+                      ButtonSegment(
+                        value: 'income',
+                        label: Text('Income'),
+                        icon: Icon(Icons.arrow_upward),
+                      ),
+                    ],
+                    selected: {transactionType},
+                    onSelectionChanged: (selected) {
+                      ref
+                              .read(dashboardTransactionTypeProvider.notifier)
+                              .state =
+                          selected.first;
+                    },
+                    style: ButtonStyle(
+                      visualDensity: VisualDensity.compact,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      padding: WidgetStateProperty.all(
+                        const EdgeInsets.symmetric(horizontal: 8),
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
                   // Chart type selector
                   SegmentedButton<DashboardChartType>(
                     segments: DashboardChartType.values
@@ -134,7 +165,7 @@ class DashboardScreen extends ConsumerWidget {
               // Dynamic chart based on selection
               SizedBox(
                 height: chartType == DashboardChartType.pie ? 250 : 400,
-                child: _buildChart(chartType),
+                child: _buildChart(chartType, transactionType),
               ),
               const SizedBox(height: 24),
 
@@ -168,14 +199,14 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildChart(DashboardChartType type) {
+  Widget _buildChart(DashboardChartType type, String transactionType) {
     switch (type) {
       case DashboardChartType.pie:
-        return const CategoryPieChart();
+        return CategoryPieChart(transactionType: transactionType);
       case DashboardChartType.bar:
-        return const CategoryBarChart();
+        return CategoryBarChart(transactionType: transactionType);
       case DashboardChartType.line:
-        return const SpendingLineChart();
+        return SpendingLineChart(transactionType: transactionType);
     }
   }
 

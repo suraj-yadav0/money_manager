@@ -142,6 +142,7 @@ class DashboardStats {
   final double projectedBalance;
   final ForecastStatus forecastStatus;
   final Map<String, double> categoryBreakdown;
+  final Map<String, double> incomeCategoryBreakdown;
   final double goalAllocations; // Amount allocated to savings goals
 
   DashboardStats({
@@ -153,6 +154,7 @@ class DashboardStats {
     required this.projectedBalance,
     required this.forecastStatus,
     required this.categoryBreakdown,
+    required this.incomeCategoryBreakdown,
     this.goalAllocations = 0,
   });
 
@@ -165,6 +167,7 @@ class DashboardStats {
     projectedBalance: 0,
     forecastStatus: ForecastStatus.safe,
     categoryBreakdown: {},
+    incomeCategoryBreakdown: {},
     goalAllocations: 0,
   );
 }
@@ -188,11 +191,14 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
   double totalIncome = 0;
   double totalExpenses = 0;
   double goalAllocatedAmount = 0;
-  Map<int, double> categoryTotals = {};
+  Map<int, double> expenseCategoryTotals = {};
+  Map<int, double> incomeCategoryTotals = {};
 
   for (final tx in transactions) {
     if (tx.type == 'income') {
       totalIncome += tx.amount;
+      incomeCategoryTotals[tx.categoryId] =
+          (incomeCategoryTotals[tx.categoryId] ?? 0) + tx.amount;
     } else {
       totalExpenses += tx.amount;
       // Track goal allocations separately - don't add to category breakdown
@@ -200,8 +206,8 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
         goalAllocatedAmount += tx.amount;
       } else {
         // Only add non-goal expenses to category breakdown
-        categoryTotals[tx.categoryId] =
-            (categoryTotals[tx.categoryId] ?? 0) + tx.amount;
+        expenseCategoryTotals[tx.categoryId] =
+            (expenseCategoryTotals[tx.categoryId] ?? 0) + tx.amount;
       }
     }
   }
@@ -211,9 +217,15 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
   final categoryMap = {for (var c in categories) c.id: c.name};
 
   Map<String, double> categoryBreakdown = {};
-  for (final entry in categoryTotals.entries) {
+  for (final entry in expenseCategoryTotals.entries) {
     final name = categoryMap[entry.key] ?? 'Other';
     categoryBreakdown[name] = entry.value;
+  }
+
+  Map<String, double> incomeCategoryBreakdown = {};
+  for (final entry in incomeCategoryTotals.entries) {
+    final name = categoryMap[entry.key] ?? 'Other';
+    incomeCategoryBreakdown[name] = entry.value;
   }
 
   // Add goal allocations as a separate entry if any exist
@@ -261,6 +273,7 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
     projectedBalance: projectedBalance,
     forecastStatus: forecastStatus,
     categoryBreakdown: categoryBreakdown,
+    incomeCategoryBreakdown: incomeCategoryBreakdown,
     goalAllocations: goalAllocatedAmount,
   );
 });
@@ -369,3 +382,8 @@ final userSettingsStreamProvider = StreamProvider<UserSetting>((ref) {
   final db = ref.watch(databaseProvider);
   return db.select(db.userSettings).watchSingle();
 });
+
+/// Provider for selected transaction type in dashboard charts (expense/income)
+final dashboardTransactionTypeProvider = StateProvider<String>(
+  (ref) => 'expense',
+);
