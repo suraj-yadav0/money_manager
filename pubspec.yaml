@@ -78,6 +78,21 @@ dev_dependencies:
   # Linting
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.0
+
+flutter_native_splash:
+  color: "#FF5F1F"
+  image: "assets/app_icon.png"
+  branding: "assets/app_icon.png"
+  color_dark: "#1a1a1a"
+  image_dark: "assets/app_icon.png"
+  branding_dark: "assets/app_icon.png"
+
+  android_12:
+    image: "assets/app_icon.png"
+    icon_background_color: "#FF5F1F"
+    image_dark: "assets/app_icon.png"
+    icon_background_color_dark: "#1a1a1a"
 
 flutter_launcher_icons:
   android: "launcher_icon"
