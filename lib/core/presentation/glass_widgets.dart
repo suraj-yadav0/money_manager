@@ -205,6 +205,7 @@ class GlassScaffold extends StatelessWidget {
 
     return Scaffold(
       extendBody: extendBody,
+      extendBodyBehindAppBar: true,
       appBar: appBar,
       floatingActionButton: floatingActionButton,
       floatingActionButtonLocation: floatingActionButtonLocation,
@@ -259,15 +260,15 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
     final isDark = theme.brightness == Brightness.dark;
     final backgroundColor = isDark
         ? AppTheme.glassBackgroundDark.withOpacity(0.7)
-        : AppTheme.glassBackgroundWhite.withOpacity(0.7);
+        : AppTheme.glassBackgroundWhite.withOpacity(0.85);
 
     final borderColor = isDark
         ? Colors.white.withOpacity(0.1)
-        : Colors.black.withOpacity(0.05);
+        : Colors.black.withOpacity(0.03);
 
     return ClipRRect(
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: Container(
           decoration: BoxDecoration(
             color: backgroundColor, // Semi-transparent background
