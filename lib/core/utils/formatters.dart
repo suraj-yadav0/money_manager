@@ -7,19 +7,19 @@ class Formatters {
 
   static final _currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
-    symbol: AppConstants.currencySymbol,
+    symbol: '', // Symbol will be prepended manually
     decimalDigits: 0,
   );
 
   static final _currencyFormatWithDecimals = NumberFormat.currency(
     locale: 'en_IN',
-    symbol: AppConstants.currencySymbol,
+    symbol: '', // Symbol will be prepended manually
     decimalDigits: 2,
   );
 
   static final _compactCurrency = NumberFormat.compactCurrency(
     locale: 'en_IN',
-    symbol: AppConstants.currencySymbol,
+    symbol: '', // Symbol will be prepended manually
     decimalDigits: 1,
   );
 
@@ -30,18 +30,21 @@ class Formatters {
   static final _dayFormat = DateFormat('EEEE');
 
   /// Format amount as currency: ₹1,23,456
-  static String currency(double amount) {
-    return _currencyFormat.format(amount);
+  static String currency(double amount, {String? symbol}) {
+    final s = symbol ?? AppConstants.currencySymbol;
+    return '$s${_currencyFormat.format(amount).trim()}';
   }
 
   /// Format amount with decimals: ₹1,23,456.78
-  static String currencyWithDecimals(double amount) {
-    return _currencyFormatWithDecimals.format(amount);
+  static String currencyWithDecimals(double amount, {String? symbol}) {
+    final s = symbol ?? AppConstants.currencySymbol;
+    return '$s${_currencyFormatWithDecimals.format(amount).trim()}';
   }
 
   /// Format large amounts compactly: ₹1.2L
-  static String compactCurrency(double amount) {
-    return _compactCurrency.format(amount);
+  static String compactCurrency(double amount, {String? symbol}) {
+    final s = symbol ?? AppConstants.currencySymbol;
+    return '$s${_compactCurrency.format(amount).trim()}';
   }
 
   /// Format as percentage: 45%

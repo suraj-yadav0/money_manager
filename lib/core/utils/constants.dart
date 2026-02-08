@@ -10,6 +10,14 @@ class AppConstants {
   static const String defaultCurrency = 'INR';
   static const String currencySymbol = '₹';
 
+  static const Map<String, String> supportedCurrencies = {
+    'INR': '₹',
+    'USD': '\$',
+    'EUR': '€',
+    'GBP': '£',
+    'JPY': '¥',
+  };
+
   // Thresholds for insights
   static const double spendingSpikeFactor = 2.0; // 2x daily average
   static const double categoryDominanceThreshold = 0.4; // 40% of total

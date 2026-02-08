@@ -53,9 +53,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       final tx = widget.transactionToEdit!.transaction;
       final cat = widget.transactionToEdit!.category;
 
+      // Use regex to keep only digits and dots
       _amountController.text = Formatters.currency(
         tx.amount,
-      ).replaceAll(',', '');
+      ).replaceAll(RegExp(r'[^\d.]'), '');
       _noteController.text = tx.note ?? '';
       _type = TransactionType.values.firstWhere((e) => e.name == tx.type);
       _selectedCategory = cat;
@@ -380,6 +381,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         ? ref.watch(expenseCategoriesProvider)
         : ref.watch(incomeCategoriesProvider);
 
+    final currencySymbol = ref.watch(currencyProvider);
+
     return GlassScaffold(
       appBar: GlassAppBar(
         title: widget.transactionToEdit != null
@@ -454,7 +457,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   fontWeight: FontWeight.bold,
                 ),
                 decoration: InputDecoration(
-                  prefixText: '${AppConstants.currencySymbol} ',
+                  prefixText: '$currencySymbol ',
                   prefixStyle: GoogleFonts.outfit(
                     fontSize: 40,
                     fontWeight: FontWeight.bold,

@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/presentation/glass_widgets.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/providers/app_state_provider.dart';
+import '../../../core/utils/constants.dart';
 import '../providers/dashboard_providers.dart';
 
 /// Main balance card showing income, expenses, and remaining balance
@@ -14,6 +16,10 @@ class BalanceCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(dashboardStatsProvider);
+    final currencySymbol = ref.watch(currencyProvider);
+    final settingsAsync = ref.watch(userSettingsProvider);
+    final currencyCode =
+        settingsAsync.value?.currency ?? AppConstants.defaultCurrency;
     // final theme = Theme.of(context);
     // final colorScheme = theme.colorScheme;
 
@@ -102,7 +108,7 @@ class BalanceCard extends ConsumerWidget {
                         ),
                       ),
                       child: Text(
-                        'USD',
+                        currencyCode,
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -118,7 +124,10 @@ class BalanceCard extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      Formatters.currency(stats.balance),
+                      Formatters.currency(
+                        stats.balance,
+                        symbol: currencySymbol,
+                      ),
                       style: GoogleFonts.outfit(
                         fontSize: 42, // Larger font
                         fontWeight: FontWeight.bold,
@@ -134,7 +143,7 @@ class BalanceCard extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Available Limit: \$5,000.00',
+                      'Available Limit: ${currencySymbol}5,000.00',
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         color: Colors.white.withOpacity(0.5),

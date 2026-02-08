@@ -17,6 +17,7 @@ class AllTransactionsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final transactionsAsync = ref.watch(allTransactionsProvider);
+    final currencySymbol = ref.watch(currencyProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -227,7 +228,7 @@ class AllTransactionsScreen extends ConsumerWidget {
                                       ],
                                     ),
                                     trailing: Text(
-                                      '${isExpense ? '-' : '+'}${Formatters.currency(item.transaction.amount)}',
+                                      '${isExpense ? '-' : '+'}${Formatters.currency(item.transaction.amount, symbol: currencySymbol)}',
                                       style: GoogleFonts.outfit(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,

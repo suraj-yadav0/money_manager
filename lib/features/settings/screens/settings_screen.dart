@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/presentation/glass_widgets.dart';
 import '../../../core/database/database.dart';
 import '../../../core/providers/app_state_provider.dart';
+import '../../../core/utils/constants.dart';
 import '../../../core/utils/formatters.dart';
 import '../../dashboard/providers/dashboard_providers.dart';
 
@@ -24,6 +25,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _isLoading = false;
   bool _hasChanges = false;
   double _originalIncome = 0;
+  String _selectedCurrency = AppConstants.defaultCurrency;
+  String _originalCurrency = AppConstants.defaultCurrency;
 
   @override
   void initState() {
@@ -38,9 +41,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (settings != null && mounted) {
       setState(() {
         _originalIncome = settings.monthlyIncome;
+        _originalCurrency = settings.currency;
+        _selectedCurrency = settings.currency;
+
+        final symbol =
+            AppConstants.supportedCurrencies[settings.currency] ??
+            AppConstants.currencySymbol;
         _incomeController.text = Formatters.currency(
           settings.monthlyIncome,
-        ).replaceAll(',', '').replaceAll('₹', '').trim();
+          symbol: symbol,
+        ).replaceAll(',', '').replaceAll(symbol, '').trim();
       });
     }
   }
@@ -54,7 +64,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void _onIncomeChanged(String value) {
     final newIncome = double.tryParse(value.replaceAll(',', '')) ?? 0;
     setState(() {
-      _hasChanges = newIncome != _originalIncome;
+      _hasChanges =
+          newIncome != _originalIncome ||
+          _selectedCurrency != _originalCurrency;
+    });
+  }
+
+  void _onCurrencyChanged(String? newCurrency) {
+    if (newCurrency == null) return;
+    setState(() {
+      _selectedCurrency = newCurrency;
+      _hasChanges =
+          _selectedCurrency != _originalCurrency ||
+          (double.tryParse(_incomeController.text.replaceAll(',', '')) ?? 0) !=
+              _originalIncome;
     });
   }
 
@@ -70,7 +93,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
       // Update user settings
       await (db.update(db.userSettings)..where((t) => t.id.equals(1))).write(
-        UserSettingsCompanion(monthlyIncome: Value(newIncome)),
+        UserSettingsCompanion(
+          monthlyIncome: Value(newIncome),
+          currency: Value(_selectedCurrency),
+        ),
       );
 
       // If income changed, create/update the recurring income transaction for this month
@@ -78,12 +104,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         await _updateMonthlyIncomeTransaction(db, newIncome);
       }
 
-      // Refresh dashboard data
+      // Refresh providers
       ref.invalidate(dashboardStatsProvider);
       ref.invalidate(recentTransactionsProvider);
+      ref.invalidate(
+        userSettingsProvider,
+      ); // Also invalidate settings to update currency globally
 
       setState(() {
         _originalIncome = newIncome;
+        _originalCurrency = _selectedCurrency;
         _hasChanges = false;
       });
 
@@ -211,7 +241,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       decoration: InputDecoration(
-                        prefixText: '₹ ',
+                        prefixText:
+                            '${AppConstants.supportedCurrencies[_selectedCurrency]} ',
                         hintText: 'Enter your monthly income',
                         filled: true,
                         fillColor: colorScheme.surfaceContainerLowest,
@@ -243,6 +274,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                   ],
                 ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Preferences Section
+            _buildSectionHeader(context, 'Preferences', Icons.tune),
+            const SizedBox(height: 12),
+            Card(
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        AppConstants.supportedCurrencies[_selectedCurrency] ??
+                            '?',
+                        style: TextStyle(
+                          color: colorScheme.onPrimaryContainer,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    title: const Text('Currency'),
+                    subtitle: Text('Selected: $_selectedCurrency'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: _showCurrencyPicker,
+                  ),
+                ],
               ),
             ),
 
@@ -393,6 +457,64 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           behavior: SnackBarBehavior.floating,
         ),
       );
+    }
+  }
+
+  Future<void> _showCurrencyPicker() async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: const Text('Select Currency'),
+        children: AppConstants.supportedCurrencies.entries.map((entry) {
+          final isSelected = entry.key == _selectedCurrency;
+          return SimpleDialogOption(
+            onPressed: () => Navigator.pop(context, entry.key),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primaryContainer
+                            : Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        entry.value,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.onPrimaryContainer
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Text(entry.key, style: const TextStyle(fontSize: 16)),
+                  ],
+                ),
+                if (isSelected)
+                  Icon(
+                    Icons.check_circle,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+
+    if (result != null) {
+      _onCurrencyChanged(result);
     }
   }
 }

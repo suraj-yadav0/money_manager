@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../utils/constants.dart';
 import '../database/database.dart';
 
 /// Provides the AppDatabase instance
@@ -21,6 +22,21 @@ final isOnboardedProvider = FutureProvider<bool>((ref) async {
 final userSettingsProvider = StreamProvider<UserSetting?>((ref) {
   final db = ref.watch(databaseProvider);
   return db.select(db.userSettings).watchSingleOrNull();
+});
+
+/// Gets current currency symbol
+final currencyProvider = Provider<String>((ref) {
+  final settingsAsync = ref.watch(userSettingsProvider);
+
+  return settingsAsync.when(
+    data: (settings) {
+      final code = settings?.currency ?? AppConstants.defaultCurrency;
+      return AppConstants.supportedCurrencies[code] ??
+          AppConstants.currencySymbol;
+    },
+    loading: () => AppConstants.currencySymbol,
+    error: (_, __) => AppConstants.currencySymbol,
+  );
 });
 
 /// Shared preferences provider
