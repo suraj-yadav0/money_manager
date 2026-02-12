@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/budget/screens/budget_screen.dart';
 import '../../features/dashboard/screens/dashboard_screen.dart';
-import '../../features/insights/screens/insights_screen.dart';
+import '../../features/networth/screens/net_worth_screen.dart';
 import '../../features/goals/screens/goals_screen.dart';
 import '../../features/transactions/screens/add_transaction_screen.dart';
 import '../../features/transactions/services/recurring_service.dart';
@@ -26,7 +26,7 @@ class _AppShellState extends ConsumerState<AppShell> {
   final _screens = const [
     DashboardScreen(),
     BudgetScreen(),
-    InsightsScreen(),
+    NetWorthScreen(),
     GoalsScreen(),
   ];
 
@@ -161,7 +161,7 @@ class _AppShellState extends ConsumerState<AppShell> {
                     ),
                   ),
 
-                  _buildNavItem(2, Icons.insights_rounded, 'Insights'),
+                  _buildNavItem(2, Icons.account_balance_rounded, 'Net Worth'),
                   _buildNavItem(3, Icons.savings_rounded, 'Goals'),
                 ],
               ),

@@ -79,6 +79,20 @@ class CategorizationRules extends Table {
       integer().withDefault(const Constant(1))(); // Higher = stronger match
 }
 
+/// Assets table - tracks wealth items (savings, investments, loans, gold, etc.)
+class Assets extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text()(); // e.g. "SBI Savings", "Gold Chain"
+  TextColumn get type =>
+      text()(); // 'savings' | 'investment' | 'loan' | 'gold' | 'property' | 'other'
+  RealColumn get value => real()(); // Current value (always positive)
+  BoolColumn get isLiability =>
+      boolean().withDefault(const Constant(false))(); // true for loans
+  TextColumn get note => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+}
+
 @DriftDatabase(
   tables: [
     Transactions,
@@ -87,13 +101,14 @@ class CategorizationRules extends Table {
     Goals,
     GoalContributions,
     CategorizationRules,
+    Assets,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration {
@@ -138,6 +153,10 @@ class AppDatabase extends _$AppDatabase {
           await customStatement(
             'ALTER TABLE user_settings ADD COLUMN show_income_chart INTEGER NOT NULL DEFAULT 0',
           );
+        }
+        if (from < 8) {
+          // Create assets table for wealth tracking
+          await m.createTable(assets);
         }
       },
     );

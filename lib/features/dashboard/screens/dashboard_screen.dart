@@ -15,6 +15,7 @@ import '../widgets/recent_transactions.dart';
 import '../widgets/date_filter_bar.dart';
 import '../../transactions/screens/all_transactions_screen.dart';
 import '../../settings/screens/settings_screen.dart';
+import '../../insights/screens/insights_screen.dart';
 import 'calendar_view_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -58,7 +59,9 @@ class DashboardScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () {
-              // TODO: Show insights
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const InsightsScreen()));
             },
           ),
           IconButton(
@@ -103,63 +106,66 @@ class DashboardScreen extends ConsumerWidget {
               // const SizedBox(height: 24),
 
               // Category Breakdown with chart type selector
-              Row(
-                children: [
-                  // Transaction Type Query Selector
-                  SegmentedButton<String>(
-                    segments: const [
-                      ButtonSegment(
-                        value: 'expense',
-                        label: Text('Expense'),
-                        icon: Icon(Icons.arrow_downward),
-                      ),
-                      ButtonSegment(
-                        value: 'income',
-                        label: Text('Income'),
-                        icon: Icon(Icons.arrow_upward),
-                      ),
-                    ],
-                    selected: {transactionType},
-                    onSelectionChanged: (selected) {
-                      ref
-                              .read(dashboardTransactionTypeProvider.notifier)
-                              .state =
-                          selected.first;
-                    },
-                    style: ButtonStyle(
-                      visualDensity: VisualDensity.compact,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      padding: WidgetStateProperty.all(
-                        const EdgeInsets.symmetric(horizontal: 8),
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  // Chart type selector
-                  SegmentedButton<DashboardChartType>(
-                    segments: DashboardChartType.values
-                        .map(
-                          (type) => ButtonSegment(
-                            value: type,
-                            label: Text(type.label),
-                            tooltip: type.tooltip,
-                          ),
-                        )
-                        .toList(),
-                    selected: {chartType},
-                    onSelectionChanged: (selected) {
-                      ref.read(dashboardChartTypeProvider.notifier).state =
-                          selected.first;
-                    },
-                    showSelectedIcon: false,
-                    style: ButtonStyle(
-                      visualDensity: VisualDensity.compact,
-                      padding: WidgetStateProperty.all(
-                        const EdgeInsets.symmetric(horizontal: 12),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    // Transaction Type Query Selector
+                    SegmentedButton<String>(
+                      segments: const [
+                        ButtonSegment(
+                          value: 'expense',
+                          label: Text('Expense'),
+                          icon: Icon(Icons.arrow_downward),
+                        ),
+                        ButtonSegment(
+                          value: 'income',
+                          label: Text('Income'),
+                          icon: Icon(Icons.arrow_upward),
+                        ),
+                      ],
+                      selected: {transactionType},
+                      onSelectionChanged: (selected) {
+                        ref
+                                .read(dashboardTransactionTypeProvider.notifier)
+                                .state =
+                            selected.first;
+                      },
+                      style: ButtonStyle(
+                        visualDensity: VisualDensity.compact,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        padding: WidgetStateProperty.all(
+                          const EdgeInsets.symmetric(horizontal: 8),
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    // Chart type selector
+                    SegmentedButton<DashboardChartType>(
+                      segments: DashboardChartType.values
+                          .map(
+                            (type) => ButtonSegment(
+                              value: type,
+                              label: Text(type.label),
+                              tooltip: type.tooltip,
+                            ),
+                          )
+                          .toList(),
+                      selected: {chartType},
+                      onSelectionChanged: (selected) {
+                        ref.read(dashboardChartTypeProvider.notifier).state =
+                            selected.first;
+                      },
+                      showSelectedIcon: false,
+                      style: ButtonStyle(
+                        visualDensity: VisualDensity.compact,
+                        padding: WidgetStateProperty.all(
+                          const EdgeInsets.symmetric(horizontal: 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 12),
               // Dynamic chart based on selection
