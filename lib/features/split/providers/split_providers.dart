@@ -332,14 +332,14 @@ class SplitService {
 
   /// Simplify debts using a greedy algorithm (like Splitwise).
   List<DebtSummary> simplifyDebts(List<MemberBalance> balances) {
-    // Separate creditors (positive) and debtors (negative)
+    // Separate creditors (positive) and debtors (negative) as typed records
     final creditors = balances
         .where((b) => b.netBalance > 0.005)
-        .map((b) => [b.memberId, b.memberName, b.netBalance] as List)
+        .map((b) => _BalanceEntry(b.memberId, b.memberName, b.netBalance))
         .toList();
     final debtors = balances
         .where((b) => b.netBalance < -0.005)
-        .map((b) => [b.memberId, b.memberName, -b.netBalance] as List)
+        .map((b) => _BalanceEntry(b.memberId, b.memberName, -b.netBalance))
         .toList();
 
     final result = <DebtSummary>[];
@@ -347,26 +347,26 @@ class SplitService {
     int di = 0;
 
     while (ci < creditors.length && di < debtors.length) {
-      final creditAmount = creditors[ci][2] as double;
-      final debtAmount = debtors[di][2] as double;
+      final creditAmount = creditors[ci].amount;
+      final debtAmount = debtors[di].amount;
       final settleAmount =
           creditAmount < debtAmount ? creditAmount : debtAmount;
 
       result.add(
         DebtSummary(
-          fromMemberId: debtors[di][0] as int,
-          fromName: debtors[di][1] as String,
-          toMemberId: creditors[ci][0] as int,
-          toName: creditors[ci][1] as String,
+          fromMemberId: debtors[di].memberId,
+          fromName: debtors[di].memberName,
+          toMemberId: creditors[ci].memberId,
+          toName: creditors[ci].memberName,
           amount: settleAmount,
         ),
       );
 
-      creditors[ci][2] = creditAmount - settleAmount;
-      debtors[di][2] = debtAmount - settleAmount;
+      creditors[ci].amount -= settleAmount;
+      debtors[di].amount -= settleAmount;
 
-      if ((creditors[ci][2] as double) < 0.005) ci++;
-      if ((debtors[di][2] as double) < 0.005) di++;
+      if (creditors[ci].amount < 0.005) ci++;
+      if (debtors[di].amount < 0.005) di++;
     }
 
     return result;
@@ -377,3 +377,16 @@ final splitServiceProvider = Provider<SplitService>((ref) {
   final db = ref.watch(databaseProvider);
   return SplitService(db);
 });
+
+// ---------------------------------------------------------------------------
+// Internal helper
+// ---------------------------------------------------------------------------
+
+/// Mutable entry used by [SplitService.simplifyDebts].
+class _BalanceEntry {
+  final int memberId;
+  final String memberName;
+  double amount;
+
+  _BalanceEntry(this.memberId, this.memberName, this.amount);
+}

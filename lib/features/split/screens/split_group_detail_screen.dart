@@ -349,7 +349,7 @@ class _BalancesTab extends ConsumerWidget {
             _SectionHeader(title: 'Suggested Settlements'),
             const SizedBox(height: 8),
             if (debts.isEmpty)
-              _AllSettledCard()
+              const _AllSettledCard()
             else
               ...debts.map((d) => _DebtCard(debt: d)),
             const SizedBox(height: 20),
@@ -547,6 +547,8 @@ class _DebtCard extends StatelessWidget {
 }
 
 class _AllSettledCard extends StatelessWidget {
+  const _AllSettledCard();
+
   @override
   Widget build(BuildContext context) {
     return Container(
