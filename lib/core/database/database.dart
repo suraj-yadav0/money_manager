@@ -93,6 +93,60 @@ class Assets extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 }
 
+/// Split groups table - groups for shared expenses (e.g. "Weekend Trip")
+class SplitGroups extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text()();
+  TextColumn get description => text().nullable()();
+  BoolColumn get isActive =>
+      boolean().withDefault(const Constant(true))(); // false = archived/settled
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+/// Split members table - people in a split group
+class SplitMembers extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get groupId => integer().references(SplitGroups, #id)();
+  TextColumn get name => text()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+/// Split expenses table - individual expenses within a group
+class SplitExpenses extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get groupId => integer().references(SplitGroups, #id)();
+  IntColumn get paidByMemberId =>
+      integer().references(SplitMembers, #id)(); // who paid
+  RealColumn get amount => real()(); // total amount
+  TextColumn get description => text()(); // e.g. "Dinner at restaurant"
+  TextColumn get splitType =>
+      text().withDefault(const Constant('equal'))(); // 'equal' | 'custom'
+  DateTimeColumn get date => dateTime()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+/// Split expense shares table - per-member share of each expense
+class SplitExpenseShares extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get expenseId => integer().references(SplitExpenses, #id)();
+  IntColumn get memberId => integer().references(SplitMembers, #id)();
+  RealColumn get shareAmount => real()(); // how much this member owes
+}
+
+/// Split settlements table - records payments between members
+class SplitSettlements extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get groupId => integer().references(SplitGroups, #id)();
+  IntColumn get fromMemberId =>
+      integer().references(SplitMembers, #id)(); // who paid
+  IntColumn get toMemberId =>
+      integer().references(SplitMembers, #id)(); // who received
+  RealColumn get amount => real()();
+  TextColumn get note => text().nullable()();
+  DateTimeColumn get settledAt => dateTime()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
 @DriftDatabase(
   tables: [
     Transactions,
@@ -102,13 +156,18 @@ class Assets extends Table {
     GoalContributions,
     CategorizationRules,
     Assets,
+    SplitGroups,
+    SplitMembers,
+    SplitExpenses,
+    SplitExpenseShares,
+    SplitSettlements,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration {
@@ -157,6 +216,14 @@ class AppDatabase extends _$AppDatabase {
         if (from < 8) {
           // Create assets table for wealth tracking
           await m.createTable(assets);
+        }
+        if (from < 9) {
+          // Create split tables for split expense feature
+          await m.createTable(splitGroups);
+          await m.createTable(splitMembers);
+          await m.createTable(splitExpenses);
+          await m.createTable(splitExpenseShares);
+          await m.createTable(splitSettlements);
         }
       },
     );

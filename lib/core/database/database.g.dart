@@ -3190,6 +3190,1994 @@ class AssetsCompanion extends UpdateCompanion<Asset> {
   }
 }
 
+
+class $SplitGroupsTable extends SplitGroups
+    with TableInfo<$SplitGroupsTable, SplitGroup> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SplitGroupsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    description,
+    isActive,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'split_groups';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SplitGroup> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SplitGroup map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SplitGroup(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SplitGroupsTable createAlias(String alias) {
+    return $SplitGroupsTable(attachedDatabase, alias);
+  }
+}
+
+class SplitGroup extends DataClass implements Insertable<SplitGroup> {
+  final int id;
+  final String name;
+  final String? description;
+  final bool isActive;
+  final DateTime createdAt;
+  const SplitGroup({
+    required this.id,
+    required this.name,
+    this.description,
+    required this.isActive,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    map['is_active'] = Variable<bool>(isActive);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  SplitGroupsCompanion toCompanion(bool nullToAbsent) {
+    return SplitGroupsCompanion(
+      id: Value(id),
+      name: Value(name),
+      description:
+          description == null && nullToAbsent
+              ? const Value.absent()
+              : Value(description),
+      isActive: Value(isActive),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory SplitGroup.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SplitGroup(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      description: serializer.fromJson<String?>(json['description']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'description': serializer.toJson<String?>(description),
+      'isActive': serializer.toJson<bool>(isActive),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  SplitGroup copyWith({
+    int? id,
+    String? name,
+    Value<String?> description = const Value.absent(),
+    bool? isActive,
+    DateTime? createdAt,
+  }) => SplitGroup(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    description: description.present ? description.value : this.description,
+    isActive: isActive ?? this.isActive,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  SplitGroup copyWithCompanion(SplitGroupsCompanion data) {
+    return SplitGroup(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      description:
+          data.description.present ? data.description.value : this.description,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SplitGroup(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, description, isActive, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SplitGroup &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.description == this.description &&
+          other.isActive == this.isActive &&
+          other.createdAt == this.createdAt);
+}
+
+class SplitGroupsCompanion extends UpdateCompanion<SplitGroup> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<String?> description;
+  final Value<bool> isActive;
+  final Value<DateTime> createdAt;
+  const SplitGroupsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.description = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  SplitGroupsCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    this.description = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  }) : name = Value(name);
+  static Insertable<SplitGroup> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<String>? description,
+    Expression<bool>? isActive,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (description != null) 'description': description,
+      if (isActive != null) 'is_active': isActive,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  SplitGroupsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? name,
+    Value<String?>? description,
+    Value<bool>? isActive,
+    Value<DateTime>? createdAt,
+  }) {
+    return SplitGroupsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      isActive: isActive ?? this.isActive,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SplitGroupsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SplitMembersTable extends SplitMembers
+    with TableInfo<$SplitMembersTable, SplitMember> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SplitMembersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _groupIdMeta = const VerificationMeta(
+    'groupId',
+  );
+  @override
+  late final GeneratedColumn<int> groupId = GeneratedColumn<int>(
+    'group_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES split_groups (id)',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, groupId, name, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'split_members';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SplitMember> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('group_id')) {
+      context.handle(
+        _groupIdMeta,
+        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_groupIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SplitMember map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SplitMember(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}group_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SplitMembersTable createAlias(String alias) {
+    return $SplitMembersTable(attachedDatabase, alias);
+  }
+}
+
+class SplitMember extends DataClass implements Insertable<SplitMember> {
+  final int id;
+  final int groupId;
+  final String name;
+  final DateTime createdAt;
+  const SplitMember({
+    required this.id,
+    required this.groupId,
+    required this.name,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['group_id'] = Variable<int>(groupId);
+    map['name'] = Variable<String>(name);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  SplitMembersCompanion toCompanion(bool nullToAbsent) {
+    return SplitMembersCompanion(
+      id: Value(id),
+      groupId: Value(groupId),
+      name: Value(name),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory SplitMember.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SplitMember(
+      id: serializer.fromJson<int>(json['id']),
+      groupId: serializer.fromJson<int>(json['groupId']),
+      name: serializer.fromJson<String>(json['name']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'groupId': serializer.toJson<int>(groupId),
+      'name': serializer.toJson<String>(name),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  SplitMember copyWith({
+    int? id,
+    int? groupId,
+    String? name,
+    DateTime? createdAt,
+  }) => SplitMember(
+    id: id ?? this.id,
+    groupId: groupId ?? this.groupId,
+    name: name ?? this.name,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  SplitMember copyWithCompanion(SplitMembersCompanion data) {
+    return SplitMember(
+      id: data.id.present ? data.id.value : this.id,
+      groupId: data.groupId.present ? data.groupId.value : this.groupId,
+      name: data.name.present ? data.name.value : this.name,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SplitMember(')
+          ..write('id: $id, ')
+          ..write('groupId: $groupId, ')
+          ..write('name: $name, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, groupId, name, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SplitMember &&
+          other.id == this.id &&
+          other.groupId == this.groupId &&
+          other.name == this.name &&
+          other.createdAt == this.createdAt);
+}
+
+class SplitMembersCompanion extends UpdateCompanion<SplitMember> {
+  final Value<int> id;
+  final Value<int> groupId;
+  final Value<String> name;
+  final Value<DateTime> createdAt;
+  const SplitMembersCompanion({
+    this.id = const Value.absent(),
+    this.groupId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  SplitMembersCompanion.insert({
+    this.id = const Value.absent(),
+    required int groupId,
+    required String name,
+    this.createdAt = const Value.absent(),
+  }) : groupId = Value(groupId),
+       name = Value(name);
+  static Insertable<SplitMember> custom({
+    Expression<int>? id,
+    Expression<int>? groupId,
+    Expression<String>? name,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (groupId != null) 'group_id': groupId,
+      if (name != null) 'name': name,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  SplitMembersCompanion copyWith({
+    Value<int>? id,
+    Value<int>? groupId,
+    Value<String>? name,
+    Value<DateTime>? createdAt,
+  }) {
+    return SplitMembersCompanion(
+      id: id ?? this.id,
+      groupId: groupId ?? this.groupId,
+      name: name ?? this.name,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (groupId.present) {
+      map['group_id'] = Variable<int>(groupId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SplitMembersCompanion(')
+          ..write('id: $id, ')
+          ..write('groupId: $groupId, ')
+          ..write('name: $name, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SplitExpensesTable extends SplitExpenses
+    with TableInfo<$SplitExpensesTable, SplitExpense> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SplitExpensesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _groupIdMeta = const VerificationMeta(
+    'groupId',
+  );
+  @override
+  late final GeneratedColumn<int> groupId = GeneratedColumn<int>(
+    'group_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES split_groups (id)',
+    ),
+  );
+  static const VerificationMeta _paidByMemberIdMeta = const VerificationMeta(
+    'paidByMemberId',
+  );
+  @override
+  late final GeneratedColumn<int> paidByMemberId = GeneratedColumn<int>(
+    'paid_by_member_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES split_members (id)',
+    ),
+  );
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<double> amount = GeneratedColumn<double>(
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _splitTypeMeta = const VerificationMeta(
+    'splitType',
+  );
+  @override
+  late final GeneratedColumn<String> splitType = GeneratedColumn<String>(
+    'split_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('equal'),
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    groupId,
+    paidByMemberId,
+    amount,
+    description,
+    splitType,
+    date,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'split_expenses';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SplitExpense> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('group_id')) {
+      context.handle(
+        _groupIdMeta,
+        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_groupIdMeta);
+    }
+    if (data.containsKey('paid_by_member_id')) {
+      context.handle(
+        _paidByMemberIdMeta,
+        paidByMemberId.isAcceptableOrUnknown(
+          data['paid_by_member_id']!,
+          _paidByMemberIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_paidByMemberIdMeta);
+    }
+    if (data.containsKey('amount')) {
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('split_type')) {
+      context.handle(
+        _splitTypeMeta,
+        splitType.isAcceptableOrUnknown(data['split_type']!, _splitTypeMeta),
+      );
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SplitExpense map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SplitExpense(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}group_id'],
+      )!,
+      paidByMemberId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}paid_by_member_id'],
+      )!,
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}amount'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      )!,
+      splitType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}split_type'],
+      )!,
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}date'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SplitExpensesTable createAlias(String alias) {
+    return $SplitExpensesTable(attachedDatabase, alias);
+  }
+}
+
+class SplitExpense extends DataClass implements Insertable<SplitExpense> {
+  final int id;
+  final int groupId;
+  final int paidByMemberId;
+  final double amount;
+  final String description;
+  final String splitType;
+  final DateTime date;
+  final DateTime createdAt;
+  const SplitExpense({
+    required this.id,
+    required this.groupId,
+    required this.paidByMemberId,
+    required this.amount,
+    required this.description,
+    required this.splitType,
+    required this.date,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['group_id'] = Variable<int>(groupId);
+    map['paid_by_member_id'] = Variable<int>(paidByMemberId);
+    map['amount'] = Variable<double>(amount);
+    map['description'] = Variable<String>(description);
+    map['split_type'] = Variable<String>(splitType);
+    map['date'] = Variable<DateTime>(date);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  SplitExpensesCompanion toCompanion(bool nullToAbsent) {
+    return SplitExpensesCompanion(
+      id: Value(id),
+      groupId: Value(groupId),
+      paidByMemberId: Value(paidByMemberId),
+      amount: Value(amount),
+      description: Value(description),
+      splitType: Value(splitType),
+      date: Value(date),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory SplitExpense.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SplitExpense(
+      id: serializer.fromJson<int>(json['id']),
+      groupId: serializer.fromJson<int>(json['groupId']),
+      paidByMemberId: serializer.fromJson<int>(json['paidByMemberId']),
+      amount: serializer.fromJson<double>(json['amount']),
+      description: serializer.fromJson<String>(json['description']),
+      splitType: serializer.fromJson<String>(json['splitType']),
+      date: serializer.fromJson<DateTime>(json['date']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'groupId': serializer.toJson<int>(groupId),
+      'paidByMemberId': serializer.toJson<int>(paidByMemberId),
+      'amount': serializer.toJson<double>(amount),
+      'description': serializer.toJson<String>(description),
+      'splitType': serializer.toJson<String>(splitType),
+      'date': serializer.toJson<DateTime>(date),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  SplitExpense copyWith({
+    int? id,
+    int? groupId,
+    int? paidByMemberId,
+    double? amount,
+    String? description,
+    String? splitType,
+    DateTime? date,
+    DateTime? createdAt,
+  }) => SplitExpense(
+    id: id ?? this.id,
+    groupId: groupId ?? this.groupId,
+    paidByMemberId: paidByMemberId ?? this.paidByMemberId,
+    amount: amount ?? this.amount,
+    description: description ?? this.description,
+    splitType: splitType ?? this.splitType,
+    date: date ?? this.date,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  SplitExpense copyWithCompanion(SplitExpensesCompanion data) {
+    return SplitExpense(
+      id: data.id.present ? data.id.value : this.id,
+      groupId: data.groupId.present ? data.groupId.value : this.groupId,
+      paidByMemberId: data.paidByMemberId.present
+          ? data.paidByMemberId.value
+          : this.paidByMemberId,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      description:
+          data.description.present ? data.description.value : this.description,
+      splitType: data.splitType.present ? data.splitType.value : this.splitType,
+      date: data.date.present ? data.date.value : this.date,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SplitExpense(')
+          ..write('id: $id, ')
+          ..write('groupId: $groupId, ')
+          ..write('paidByMemberId: $paidByMemberId, ')
+          ..write('amount: $amount, ')
+          ..write('description: $description, ')
+          ..write('splitType: $splitType, ')
+          ..write('date: $date, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    groupId,
+    paidByMemberId,
+    amount,
+    description,
+    splitType,
+    date,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SplitExpense &&
+          other.id == this.id &&
+          other.groupId == this.groupId &&
+          other.paidByMemberId == this.paidByMemberId &&
+          other.amount == this.amount &&
+          other.description == this.description &&
+          other.splitType == this.splitType &&
+          other.date == this.date &&
+          other.createdAt == this.createdAt);
+}
+
+class SplitExpensesCompanion extends UpdateCompanion<SplitExpense> {
+  final Value<int> id;
+  final Value<int> groupId;
+  final Value<int> paidByMemberId;
+  final Value<double> amount;
+  final Value<String> description;
+  final Value<String> splitType;
+  final Value<DateTime> date;
+  final Value<DateTime> createdAt;
+  const SplitExpensesCompanion({
+    this.id = const Value.absent(),
+    this.groupId = const Value.absent(),
+    this.paidByMemberId = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.description = const Value.absent(),
+    this.splitType = const Value.absent(),
+    this.date = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  SplitExpensesCompanion.insert({
+    this.id = const Value.absent(),
+    required int groupId,
+    required int paidByMemberId,
+    required double amount,
+    required String description,
+    this.splitType = const Value.absent(),
+    required DateTime date,
+    this.createdAt = const Value.absent(),
+  }) : groupId = Value(groupId),
+       paidByMemberId = Value(paidByMemberId),
+       amount = Value(amount),
+       description = Value(description),
+       date = Value(date);
+  static Insertable<SplitExpense> custom({
+    Expression<int>? id,
+    Expression<int>? groupId,
+    Expression<int>? paidByMemberId,
+    Expression<double>? amount,
+    Expression<String>? description,
+    Expression<String>? splitType,
+    Expression<DateTime>? date,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (groupId != null) 'group_id': groupId,
+      if (paidByMemberId != null) 'paid_by_member_id': paidByMemberId,
+      if (amount != null) 'amount': amount,
+      if (description != null) 'description': description,
+      if (splitType != null) 'split_type': splitType,
+      if (date != null) 'date': date,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  SplitExpensesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? groupId,
+    Value<int>? paidByMemberId,
+    Value<double>? amount,
+    Value<String>? description,
+    Value<String>? splitType,
+    Value<DateTime>? date,
+    Value<DateTime>? createdAt,
+  }) {
+    return SplitExpensesCompanion(
+      id: id ?? this.id,
+      groupId: groupId ?? this.groupId,
+      paidByMemberId: paidByMemberId ?? this.paidByMemberId,
+      amount: amount ?? this.amount,
+      description: description ?? this.description,
+      splitType: splitType ?? this.splitType,
+      date: date ?? this.date,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (groupId.present) {
+      map['group_id'] = Variable<int>(groupId.value);
+    }
+    if (paidByMemberId.present) {
+      map['paid_by_member_id'] = Variable<int>(paidByMemberId.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<double>(amount.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (splitType.present) {
+      map['split_type'] = Variable<String>(splitType.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<DateTime>(date.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SplitExpensesCompanion(')
+          ..write('id: $id, ')
+          ..write('groupId: $groupId, ')
+          ..write('paidByMemberId: $paidByMemberId, ')
+          ..write('amount: $amount, ')
+          ..write('description: $description, ')
+          ..write('splitType: $splitType, ')
+          ..write('date: $date, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SplitExpenseSharesTable extends SplitExpenseShares
+    with TableInfo<$SplitExpenseSharesTable, SplitExpenseShare> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SplitExpenseSharesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _expenseIdMeta = const VerificationMeta(
+    'expenseId',
+  );
+  @override
+  late final GeneratedColumn<int> expenseId = GeneratedColumn<int>(
+    'expense_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES split_expenses (id)',
+    ),
+  );
+  static const VerificationMeta _memberIdMeta = const VerificationMeta(
+    'memberId',
+  );
+  @override
+  late final GeneratedColumn<int> memberId = GeneratedColumn<int>(
+    'member_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES split_members (id)',
+    ),
+  );
+  static const VerificationMeta _shareAmountMeta = const VerificationMeta(
+    'shareAmount',
+  );
+  @override
+  late final GeneratedColumn<double> shareAmount = GeneratedColumn<double>(
+    'share_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, expenseId, memberId, shareAmount];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'split_expense_shares';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SplitExpenseShare> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('expense_id')) {
+      context.handle(
+        _expenseIdMeta,
+        expenseId.isAcceptableOrUnknown(data['expense_id']!, _expenseIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_expenseIdMeta);
+    }
+    if (data.containsKey('member_id')) {
+      context.handle(
+        _memberIdMeta,
+        memberId.isAcceptableOrUnknown(data['member_id']!, _memberIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_memberIdMeta);
+    }
+    if (data.containsKey('share_amount')) {
+      context.handle(
+        _shareAmountMeta,
+        shareAmount.isAcceptableOrUnknown(
+          data['share_amount']!,
+          _shareAmountMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_shareAmountMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SplitExpenseShare map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SplitExpenseShare(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      expenseId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}expense_id'],
+      )!,
+      memberId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}member_id'],
+      )!,
+      shareAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}share_amount'],
+      )!,
+    );
+  }
+
+  @override
+  $SplitExpenseSharesTable createAlias(String alias) {
+    return $SplitExpenseSharesTable(attachedDatabase, alias);
+  }
+}
+
+class SplitExpenseShare extends DataClass
+    implements Insertable<SplitExpenseShare> {
+  final int id;
+  final int expenseId;
+  final int memberId;
+  final double shareAmount;
+  const SplitExpenseShare({
+    required this.id,
+    required this.expenseId,
+    required this.memberId,
+    required this.shareAmount,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['expense_id'] = Variable<int>(expenseId);
+    map['member_id'] = Variable<int>(memberId);
+    map['share_amount'] = Variable<double>(shareAmount);
+    return map;
+  }
+
+  SplitExpenseSharesCompanion toCompanion(bool nullToAbsent) {
+    return SplitExpenseSharesCompanion(
+      id: Value(id),
+      expenseId: Value(expenseId),
+      memberId: Value(memberId),
+      shareAmount: Value(shareAmount),
+    );
+  }
+
+  factory SplitExpenseShare.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SplitExpenseShare(
+      id: serializer.fromJson<int>(json['id']),
+      expenseId: serializer.fromJson<int>(json['expenseId']),
+      memberId: serializer.fromJson<int>(json['memberId']),
+      shareAmount: serializer.fromJson<double>(json['shareAmount']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'expenseId': serializer.toJson<int>(expenseId),
+      'memberId': serializer.toJson<int>(memberId),
+      'shareAmount': serializer.toJson<double>(shareAmount),
+    };
+  }
+
+  SplitExpenseShare copyWith({
+    int? id,
+    int? expenseId,
+    int? memberId,
+    double? shareAmount,
+  }) => SplitExpenseShare(
+    id: id ?? this.id,
+    expenseId: expenseId ?? this.expenseId,
+    memberId: memberId ?? this.memberId,
+    shareAmount: shareAmount ?? this.shareAmount,
+  );
+  SplitExpenseShare copyWithCompanion(SplitExpenseSharesCompanion data) {
+    return SplitExpenseShare(
+      id: data.id.present ? data.id.value : this.id,
+      expenseId: data.expenseId.present ? data.expenseId.value : this.expenseId,
+      memberId: data.memberId.present ? data.memberId.value : this.memberId,
+      shareAmount:
+          data.shareAmount.present ? data.shareAmount.value : this.shareAmount,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SplitExpenseShare(')
+          ..write('id: $id, ')
+          ..write('expenseId: $expenseId, ')
+          ..write('memberId: $memberId, ')
+          ..write('shareAmount: $shareAmount')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, expenseId, memberId, shareAmount);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SplitExpenseShare &&
+          other.id == this.id &&
+          other.expenseId == this.expenseId &&
+          other.memberId == this.memberId &&
+          other.shareAmount == this.shareAmount);
+}
+
+class SplitExpenseSharesCompanion extends UpdateCompanion<SplitExpenseShare> {
+  final Value<int> id;
+  final Value<int> expenseId;
+  final Value<int> memberId;
+  final Value<double> shareAmount;
+  const SplitExpenseSharesCompanion({
+    this.id = const Value.absent(),
+    this.expenseId = const Value.absent(),
+    this.memberId = const Value.absent(),
+    this.shareAmount = const Value.absent(),
+  });
+  SplitExpenseSharesCompanion.insert({
+    this.id = const Value.absent(),
+    required int expenseId,
+    required int memberId,
+    required double shareAmount,
+  }) : expenseId = Value(expenseId),
+       memberId = Value(memberId),
+       shareAmount = Value(shareAmount);
+  static Insertable<SplitExpenseShare> custom({
+    Expression<int>? id,
+    Expression<int>? expenseId,
+    Expression<int>? memberId,
+    Expression<double>? shareAmount,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (expenseId != null) 'expense_id': expenseId,
+      if (memberId != null) 'member_id': memberId,
+      if (shareAmount != null) 'share_amount': shareAmount,
+    });
+  }
+
+  SplitExpenseSharesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? expenseId,
+    Value<int>? memberId,
+    Value<double>? shareAmount,
+  }) {
+    return SplitExpenseSharesCompanion(
+      id: id ?? this.id,
+      expenseId: expenseId ?? this.expenseId,
+      memberId: memberId ?? this.memberId,
+      shareAmount: shareAmount ?? this.shareAmount,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (expenseId.present) {
+      map['expense_id'] = Variable<int>(expenseId.value);
+    }
+    if (memberId.present) {
+      map['member_id'] = Variable<int>(memberId.value);
+    }
+    if (shareAmount.present) {
+      map['share_amount'] = Variable<double>(shareAmount.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SplitExpenseSharesCompanion(')
+          ..write('id: $id, ')
+          ..write('expenseId: $expenseId, ')
+          ..write('memberId: $memberId, ')
+          ..write('shareAmount: $shareAmount')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SplitSettlementsTable extends SplitSettlements
+    with TableInfo<$SplitSettlementsTable, SplitSettlement> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SplitSettlementsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _groupIdMeta = const VerificationMeta(
+    'groupId',
+  );
+  @override
+  late final GeneratedColumn<int> groupId = GeneratedColumn<int>(
+    'group_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES split_groups (id)',
+    ),
+  );
+  static const VerificationMeta _fromMemberIdMeta = const VerificationMeta(
+    'fromMemberId',
+  );
+  @override
+  late final GeneratedColumn<int> fromMemberId = GeneratedColumn<int>(
+    'from_member_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES split_members (id)',
+    ),
+  );
+  static const VerificationMeta _toMemberIdMeta = const VerificationMeta(
+    'toMemberId',
+  );
+  @override
+  late final GeneratedColumn<int> toMemberId = GeneratedColumn<int>(
+    'to_member_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES split_members (id)',
+    ),
+  );
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<double> amount = GeneratedColumn<double>(
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _settledAtMeta = const VerificationMeta(
+    'settledAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> settledAt = GeneratedColumn<DateTime>(
+    'settled_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    groupId,
+    fromMemberId,
+    toMemberId,
+    amount,
+    note,
+    settledAt,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'split_settlements';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SplitSettlement> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('group_id')) {
+      context.handle(
+        _groupIdMeta,
+        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_groupIdMeta);
+    }
+    if (data.containsKey('from_member_id')) {
+      context.handle(
+        _fromMemberIdMeta,
+        fromMemberId.isAcceptableOrUnknown(
+          data['from_member_id']!,
+          _fromMemberIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_fromMemberIdMeta);
+    }
+    if (data.containsKey('to_member_id')) {
+      context.handle(
+        _toMemberIdMeta,
+        toMemberId.isAcceptableOrUnknown(
+          data['to_member_id']!,
+          _toMemberIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_toMemberIdMeta);
+    }
+    if (data.containsKey('amount')) {
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('settled_at')) {
+      context.handle(
+        _settledAtMeta,
+        settledAt.isAcceptableOrUnknown(data['settled_at']!, _settledAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_settledAtMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SplitSettlement map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SplitSettlement(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}group_id'],
+      )!,
+      fromMemberId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}from_member_id'],
+      )!,
+      toMemberId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}to_member_id'],
+      )!,
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}amount'],
+      )!,
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+      settledAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}settled_at'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SplitSettlementsTable createAlias(String alias) {
+    return $SplitSettlementsTable(attachedDatabase, alias);
+  }
+}
+
+class SplitSettlement extends DataClass implements Insertable<SplitSettlement> {
+  final int id;
+  final int groupId;
+  final int fromMemberId;
+  final int toMemberId;
+  final double amount;
+  final String? note;
+  final DateTime settledAt;
+  final DateTime createdAt;
+  const SplitSettlement({
+    required this.id,
+    required this.groupId,
+    required this.fromMemberId,
+    required this.toMemberId,
+    required this.amount,
+    this.note,
+    required this.settledAt,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['group_id'] = Variable<int>(groupId);
+    map['from_member_id'] = Variable<int>(fromMemberId);
+    map['to_member_id'] = Variable<int>(toMemberId);
+    map['amount'] = Variable<double>(amount);
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    map['settled_at'] = Variable<DateTime>(settledAt);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  SplitSettlementsCompanion toCompanion(bool nullToAbsent) {
+    return SplitSettlementsCompanion(
+      id: Value(id),
+      groupId: Value(groupId),
+      fromMemberId: Value(fromMemberId),
+      toMemberId: Value(toMemberId),
+      amount: Value(amount),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      settledAt: Value(settledAt),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory SplitSettlement.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SplitSettlement(
+      id: serializer.fromJson<int>(json['id']),
+      groupId: serializer.fromJson<int>(json['groupId']),
+      fromMemberId: serializer.fromJson<int>(json['fromMemberId']),
+      toMemberId: serializer.fromJson<int>(json['toMemberId']),
+      amount: serializer.fromJson<double>(json['amount']),
+      note: serializer.fromJson<String?>(json['note']),
+      settledAt: serializer.fromJson<DateTime>(json['settledAt']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'groupId': serializer.toJson<int>(groupId),
+      'fromMemberId': serializer.toJson<int>(fromMemberId),
+      'toMemberId': serializer.toJson<int>(toMemberId),
+      'amount': serializer.toJson<double>(amount),
+      'note': serializer.toJson<String?>(note),
+      'settledAt': serializer.toJson<DateTime>(settledAt),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  SplitSettlement copyWith({
+    int? id,
+    int? groupId,
+    int? fromMemberId,
+    int? toMemberId,
+    double? amount,
+    Value<String?> note = const Value.absent(),
+    DateTime? settledAt,
+    DateTime? createdAt,
+  }) => SplitSettlement(
+    id: id ?? this.id,
+    groupId: groupId ?? this.groupId,
+    fromMemberId: fromMemberId ?? this.fromMemberId,
+    toMemberId: toMemberId ?? this.toMemberId,
+    amount: amount ?? this.amount,
+    note: note.present ? note.value : this.note,
+    settledAt: settledAt ?? this.settledAt,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  SplitSettlement copyWithCompanion(SplitSettlementsCompanion data) {
+    return SplitSettlement(
+      id: data.id.present ? data.id.value : this.id,
+      groupId: data.groupId.present ? data.groupId.value : this.groupId,
+      fromMemberId: data.fromMemberId.present
+          ? data.fromMemberId.value
+          : this.fromMemberId,
+      toMemberId:
+          data.toMemberId.present ? data.toMemberId.value : this.toMemberId,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      note: data.note.present ? data.note.value : this.note,
+      settledAt: data.settledAt.present ? data.settledAt.value : this.settledAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SplitSettlement(')
+          ..write('id: $id, ')
+          ..write('groupId: $groupId, ')
+          ..write('fromMemberId: $fromMemberId, ')
+          ..write('toMemberId: $toMemberId, ')
+          ..write('amount: $amount, ')
+          ..write('note: $note, ')
+          ..write('settledAt: $settledAt, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    groupId,
+    fromMemberId,
+    toMemberId,
+    amount,
+    note,
+    settledAt,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SplitSettlement &&
+          other.id == this.id &&
+          other.groupId == this.groupId &&
+          other.fromMemberId == this.fromMemberId &&
+          other.toMemberId == this.toMemberId &&
+          other.amount == this.amount &&
+          other.note == this.note &&
+          other.settledAt == this.settledAt &&
+          other.createdAt == this.createdAt);
+}
+
+class SplitSettlementsCompanion extends UpdateCompanion<SplitSettlement> {
+  final Value<int> id;
+  final Value<int> groupId;
+  final Value<int> fromMemberId;
+  final Value<int> toMemberId;
+  final Value<double> amount;
+  final Value<String?> note;
+  final Value<DateTime> settledAt;
+  final Value<DateTime> createdAt;
+  const SplitSettlementsCompanion({
+    this.id = const Value.absent(),
+    this.groupId = const Value.absent(),
+    this.fromMemberId = const Value.absent(),
+    this.toMemberId = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.note = const Value.absent(),
+    this.settledAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  SplitSettlementsCompanion.insert({
+    this.id = const Value.absent(),
+    required int groupId,
+    required int fromMemberId,
+    required int toMemberId,
+    required double amount,
+    this.note = const Value.absent(),
+    required DateTime settledAt,
+    this.createdAt = const Value.absent(),
+  }) : groupId = Value(groupId),
+       fromMemberId = Value(fromMemberId),
+       toMemberId = Value(toMemberId),
+       amount = Value(amount),
+       settledAt = Value(settledAt);
+  static Insertable<SplitSettlement> custom({
+    Expression<int>? id,
+    Expression<int>? groupId,
+    Expression<int>? fromMemberId,
+    Expression<int>? toMemberId,
+    Expression<double>? amount,
+    Expression<String>? note,
+    Expression<DateTime>? settledAt,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (groupId != null) 'group_id': groupId,
+      if (fromMemberId != null) 'from_member_id': fromMemberId,
+      if (toMemberId != null) 'to_member_id': toMemberId,
+      if (amount != null) 'amount': amount,
+      if (note != null) 'note': note,
+      if (settledAt != null) 'settled_at': settledAt,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  SplitSettlementsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? groupId,
+    Value<int>? fromMemberId,
+    Value<int>? toMemberId,
+    Value<double>? amount,
+    Value<String?>? note,
+    Value<DateTime>? settledAt,
+    Value<DateTime>? createdAt,
+  }) {
+    return SplitSettlementsCompanion(
+      id: id ?? this.id,
+      groupId: groupId ?? this.groupId,
+      fromMemberId: fromMemberId ?? this.fromMemberId,
+      toMemberId: toMemberId ?? this.toMemberId,
+      amount: amount ?? this.amount,
+      note: note ?? this.note,
+      settledAt: settledAt ?? this.settledAt,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (groupId.present) {
+      map['group_id'] = Variable<int>(groupId.value);
+    }
+    if (fromMemberId.present) {
+      map['from_member_id'] = Variable<int>(fromMemberId.value);
+    }
+    if (toMemberId.present) {
+      map['to_member_id'] = Variable<int>(toMemberId.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<double>(amount.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (settledAt.present) {
+      map['settled_at'] = Variable<DateTime>(settledAt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SplitSettlementsCompanion(')
+          ..write('id: $id, ')
+          ..write('groupId: $groupId, ')
+          ..write('fromMemberId: $fromMemberId, ')
+          ..write('toMemberId: $toMemberId, ')
+          ..write('amount: $amount, ')
+          ..write('note: $note, ')
+          ..write('settledAt: $settledAt, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3202,6 +5190,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CategorizationRulesTable categorizationRules =
       $CategorizationRulesTable(this);
   late final $AssetsTable assets = $AssetsTable(this);
+  late final $SplitGroupsTable splitGroups = $SplitGroupsTable(this);
+  late final $SplitMembersTable splitMembers = $SplitMembersTable(this);
+  late final $SplitExpensesTable splitExpenses = $SplitExpensesTable(this);
+  late final $SplitExpenseSharesTable splitExpenseShares =
+      $SplitExpenseSharesTable(this);
+  late final $SplitSettlementsTable splitSettlements =
+      $SplitSettlementsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3214,6 +5209,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     goalContributions,
     categorizationRules,
     assets,
+    splitGroups,
+    splitMembers,
+    splitExpenses,
+    splitExpenseShares,
+    splitSettlements,
   ];
 }
 
@@ -5762,6 +7762,1968 @@ typedef $$AssetsTableProcessedTableManager =
       PrefetchHooks Function()
     >;
 
+
+typedef $$SplitGroupsTableCreateCompanionBuilder =
+    SplitGroupsCompanion Function({
+      Value<int> id,
+      required String name,
+      Value<String?> description,
+      Value<bool> isActive,
+      Value<DateTime> createdAt,
+    });
+typedef $$SplitGroupsTableUpdateCompanionBuilder =
+    SplitGroupsCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<String?> description,
+      Value<bool> isActive,
+      Value<DateTime> createdAt,
+    });
+
+class $$SplitGroupsTableFilterComposer
+    extends Composer<_$AppDatabase, $SplitGroupsTable> {
+  $$SplitGroupsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SplitGroupsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SplitGroupsTable> {
+  $$SplitGroupsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SplitGroupsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SplitGroupsTable> {
+  $$SplitGroupsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get description =>
+      $composableBuilder(
+        column: $table.description,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$SplitGroupsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SplitGroupsTable,
+          SplitGroup,
+          $$SplitGroupsTableFilterComposer,
+          $$SplitGroupsTableOrderingComposer,
+          $$SplitGroupsTableAnnotationComposer,
+          $$SplitGroupsTableCreateCompanionBuilder,
+          $$SplitGroupsTableUpdateCompanionBuilder,
+          (
+            SplitGroup,
+            BaseReferences<_$AppDatabase, $SplitGroupsTable, SplitGroup>,
+          ),
+          SplitGroup,
+          PrefetchHooks Function()
+        > {
+  $$SplitGroupsTableTableManager(_$AppDatabase db, $SplitGroupsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SplitGroupsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SplitGroupsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SplitGroupsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => SplitGroupsCompanion(
+                id: id,
+                name: name,
+                description: description,
+                isActive: isActive,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String name,
+                Value<String?> description = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => SplitGroupsCompanion.insert(
+                id: id,
+                name: name,
+                description: description,
+                isActive: isActive,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SplitGroupsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SplitGroupsTable,
+      SplitGroup,
+      $$SplitGroupsTableFilterComposer,
+      $$SplitGroupsTableOrderingComposer,
+      $$SplitGroupsTableAnnotationComposer,
+      $$SplitGroupsTableCreateCompanionBuilder,
+      $$SplitGroupsTableUpdateCompanionBuilder,
+      (
+        SplitGroup,
+        BaseReferences<_$AppDatabase, $SplitGroupsTable, SplitGroup>,
+      ),
+      SplitGroup,
+      PrefetchHooks Function()
+    >;
+typedef $$SplitMembersTableCreateCompanionBuilder =
+    SplitMembersCompanion Function({
+      Value<int> id,
+      required int groupId,
+      required String name,
+      Value<DateTime> createdAt,
+    });
+typedef $$SplitMembersTableUpdateCompanionBuilder =
+    SplitMembersCompanion Function({
+      Value<int> id,
+      Value<int> groupId,
+      Value<String> name,
+      Value<DateTime> createdAt,
+    });
+
+final class $$SplitMembersTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $SplitMembersTable, SplitMember> {
+  $$SplitMembersTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $SplitGroupsTable _groupIdTable(_$AppDatabase db) =>
+      db.splitGroups.createAlias(
+        $_aliasNameGenerator(db.splitMembers.groupId, db.splitGroups.id),
+      );
+
+  $$SplitGroupsTableProcessedTableManager get groupId {
+    final $_column = $_itemColumn<int>('group_id')!;
+
+    final manager = $$SplitGroupsTableTableManager(
+      $_db,
+      $_db.splitGroups,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_groupIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$SplitMembersTableFilterComposer
+    extends Composer<_$AppDatabase, $SplitMembersTable> {
+  $$SplitMembersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$SplitGroupsTableFilterComposer get groupId {
+    final $$SplitGroupsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.splitGroups,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SplitGroupsTableFilterComposer(
+            $db: $db,
+            $table: $db.splitGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SplitMembersTableOrderingComposer
+    extends Composer<_$AppDatabase, $SplitMembersTable> {
+  $$SplitMembersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$SplitGroupsTableOrderingComposer get groupId {
+    final $$SplitGroupsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.splitGroups,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SplitGroupsTableOrderingComposer(
+            $db: $db,
+            $table: $db.splitGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SplitMembersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SplitMembersTable> {
+  $$SplitMembersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$SplitGroupsTableAnnotationComposer get groupId {
+    final $$SplitGroupsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.splitGroups,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SplitGroupsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.splitGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SplitMembersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SplitMembersTable,
+          SplitMember,
+          $$SplitMembersTableFilterComposer,
+          $$SplitMembersTableOrderingComposer,
+          $$SplitMembersTableAnnotationComposer,
+          $$SplitMembersTableCreateCompanionBuilder,
+          $$SplitMembersTableUpdateCompanionBuilder,
+          (SplitMember, $$SplitMembersTableReferences),
+          SplitMember,
+          PrefetchHooks Function({bool groupId})
+        > {
+  $$SplitMembersTableTableManager(
+    _$AppDatabase db,
+    $SplitMembersTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SplitMembersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SplitMembersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SplitMembersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> groupId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => SplitMembersCompanion(
+                id: id,
+                groupId: groupId,
+                name: name,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int groupId,
+                required String name,
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => SplitMembersCompanion.insert(
+                id: id,
+                groupId: groupId,
+                name: name,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$SplitMembersTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({groupId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (groupId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.groupId,
+                                referencedTable:
+                                    $$SplitMembersTableReferences
+                                        ._groupIdTable(db),
+                                referencedColumn:
+                                    $$SplitMembersTableReferences
+                                        ._groupIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$SplitMembersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SplitMembersTable,
+      SplitMember,
+      $$SplitMembersTableFilterComposer,
+      $$SplitMembersTableOrderingComposer,
+      $$SplitMembersTableAnnotationComposer,
+      $$SplitMembersTableCreateCompanionBuilder,
+      $$SplitMembersTableUpdateCompanionBuilder,
+      (SplitMember, $$SplitMembersTableReferences),
+      SplitMember,
+      PrefetchHooks Function({bool groupId})
+    >;
+typedef $$SplitExpensesTableCreateCompanionBuilder =
+    SplitExpensesCompanion Function({
+      Value<int> id,
+      required int groupId,
+      required int paidByMemberId,
+      required double amount,
+      required String description,
+      Value<String> splitType,
+      required DateTime date,
+      Value<DateTime> createdAt,
+    });
+typedef $$SplitExpensesTableUpdateCompanionBuilder =
+    SplitExpensesCompanion Function({
+      Value<int> id,
+      Value<int> groupId,
+      Value<int> paidByMemberId,
+      Value<double> amount,
+      Value<String> description,
+      Value<String> splitType,
+      Value<DateTime> date,
+      Value<DateTime> createdAt,
+    });
+
+final class $$SplitExpensesTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $SplitExpensesTable, SplitExpense> {
+  $$SplitExpensesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $SplitGroupsTable _groupIdTable(_$AppDatabase db) =>
+      db.splitGroups.createAlias(
+        $_aliasNameGenerator(db.splitExpenses.groupId, db.splitGroups.id),
+      );
+
+  $$SplitGroupsTableProcessedTableManager get groupId {
+    final $_column = $_itemColumn<int>('group_id')!;
+
+    final manager = $$SplitGroupsTableTableManager(
+      $_db,
+      $_db.splitGroups,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_groupIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $SplitMembersTable _paidByMemberIdTable(_$AppDatabase db) =>
+      db.splitMembers.createAlias(
+        $_aliasNameGenerator(
+          db.splitExpenses.paidByMemberId,
+          db.splitMembers.id,
+        ),
+      );
+
+  $$SplitMembersTableProcessedTableManager get paidByMemberId {
+    final $_column = $_itemColumn<int>('paid_by_member_id')!;
+
+    final manager = $$SplitMembersTableTableManager(
+      $_db,
+      $_db.splitMembers,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_paidByMemberIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$SplitExpensesTableFilterComposer
+    extends Composer<_$AppDatabase, $SplitExpensesTable> {
+  $$SplitExpensesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get splitType => $composableBuilder(
+    column: $table.splitType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$SplitGroupsTableFilterComposer get groupId {
+    final $$SplitGroupsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.splitGroups,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SplitGroupsTableFilterComposer(
+            $db: $db,
+            $table: $db.splitGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SplitMembersTableFilterComposer get paidByMemberId {
+    final $$SplitMembersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.paidByMemberId,
+      referencedTable: $db.splitMembers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SplitMembersTableFilterComposer(
+            $db: $db,
+            $table: $db.splitMembers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SplitExpensesTableOrderingComposer
+    extends Composer<_$AppDatabase, $SplitExpensesTable> {
+  $$SplitExpensesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get splitType => $composableBuilder(
+    column: $table.splitType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$SplitGroupsTableOrderingComposer get groupId {
+    final $$SplitGroupsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.splitGroups,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SplitGroupsTableOrderingComposer(
+            $db: $db,
+            $table: $db.splitGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SplitMembersTableOrderingComposer get paidByMemberId {
+    final $$SplitMembersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.paidByMemberId,
+      referencedTable: $db.splitMembers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SplitMembersTableOrderingComposer(
+            $db: $db,
+            $table: $db.splitMembers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SplitExpensesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SplitExpensesTable> {
+  $$SplitExpensesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<double> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<String> get description =>
+      $composableBuilder(
+        column: $table.description,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<String> get splitType =>
+      $composableBuilder(column: $table.splitType, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$SplitGroupsTableAnnotationComposer get groupId {
+    final $$SplitGroupsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.splitGroups,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SplitGroupsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.splitGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SplitMembersTableAnnotationComposer get paidByMemberId {
+    final $$SplitMembersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.paidByMemberId,
+      referencedTable: $db.splitMembers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SplitMembersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.splitMembers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SplitExpensesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SplitExpensesTable,
+          SplitExpense,
+          $$SplitExpensesTableFilterComposer,
+          $$SplitExpensesTableOrderingComposer,
+          $$SplitExpensesTableAnnotationComposer,
+          $$SplitExpensesTableCreateCompanionBuilder,
+          $$SplitExpensesTableUpdateCompanionBuilder,
+          (SplitExpense, $$SplitExpensesTableReferences),
+          SplitExpense,
+          PrefetchHooks Function({bool groupId, bool paidByMemberId})
+        > {
+  $$SplitExpensesTableTableManager(
+    _$AppDatabase db,
+    $SplitExpensesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SplitExpensesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SplitExpensesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SplitExpensesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> groupId = const Value.absent(),
+                Value<int> paidByMemberId = const Value.absent(),
+                Value<double> amount = const Value.absent(),
+                Value<String> description = const Value.absent(),
+                Value<String> splitType = const Value.absent(),
+                Value<DateTime> date = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => SplitExpensesCompanion(
+                id: id,
+                groupId: groupId,
+                paidByMemberId: paidByMemberId,
+                amount: amount,
+                description: description,
+                splitType: splitType,
+                date: date,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int groupId,
+                required int paidByMemberId,
+                required double amount,
+                required String description,
+                Value<String> splitType = const Value.absent(),
+                required DateTime date,
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => SplitExpensesCompanion.insert(
+                id: id,
+                groupId: groupId,
+                paidByMemberId: paidByMemberId,
+                amount: amount,
+                description: description,
+                splitType: splitType,
+                date: date,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$SplitExpensesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({groupId = false, paidByMemberId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (groupId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.groupId,
+                                referencedTable:
+                                    $$SplitExpensesTableReferences
+                                        ._groupIdTable(db),
+                                referencedColumn:
+                                    $$SplitExpensesTableReferences
+                                        ._groupIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    if (paidByMemberId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.paidByMemberId,
+                                referencedTable:
+                                    $$SplitExpensesTableReferences
+                                        ._paidByMemberIdTable(db),
+                                referencedColumn:
+                                    $$SplitExpensesTableReferences
+                                        ._paidByMemberIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$SplitExpensesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SplitExpensesTable,
+      SplitExpense,
+      $$SplitExpensesTableFilterComposer,
+      $$SplitExpensesTableOrderingComposer,
+      $$SplitExpensesTableAnnotationComposer,
+      $$SplitExpensesTableCreateCompanionBuilder,
+      $$SplitExpensesTableUpdateCompanionBuilder,
+      (SplitExpense, $$SplitExpensesTableReferences),
+      SplitExpense,
+      PrefetchHooks Function({bool groupId, bool paidByMemberId})
+    >;
+typedef $$SplitExpenseSharesTableCreateCompanionBuilder =
+    SplitExpenseSharesCompanion Function({
+      Value<int> id,
+      required int expenseId,
+      required int memberId,
+      required double shareAmount,
+    });
+typedef $$SplitExpenseSharesTableUpdateCompanionBuilder =
+    SplitExpenseSharesCompanion Function({
+      Value<int> id,
+      Value<int> expenseId,
+      Value<int> memberId,
+      Value<double> shareAmount,
+    });
+
+final class $$SplitExpenseSharesTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $SplitExpenseSharesTable,
+          SplitExpenseShare
+        > {
+  $$SplitExpenseSharesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $SplitExpensesTable _expenseIdTable(_$AppDatabase db) =>
+      db.splitExpenses.createAlias(
+        $_aliasNameGenerator(
+          db.splitExpenseShares.expenseId,
+          db.splitExpenses.id,
+        ),
+      );
+
+  $$SplitExpensesTableProcessedTableManager get expenseId {
+    final $_column = $_itemColumn<int>('expense_id')!;
+
+    final manager = $$SplitExpensesTableTableManager(
+      $_db,
+      $_db.splitExpenses,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_expenseIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $SplitMembersTable _memberIdTable(_$AppDatabase db) =>
+      db.splitMembers.createAlias(
+        $_aliasNameGenerator(
+          db.splitExpenseShares.memberId,
+          db.splitMembers.id,
+        ),
+      );
+
+  $$SplitMembersTableProcessedTableManager get memberId {
+    final $_column = $_itemColumn<int>('member_id')!;
+
+    final manager = $$SplitMembersTableTableManager(
+      $_db,
+      $_db.splitMembers,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_memberIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$SplitExpenseSharesTableFilterComposer
+    extends Composer<_$AppDatabase, $SplitExpenseSharesTable> {
+  $$SplitExpenseSharesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get shareAmount => $composableBuilder(
+    column: $table.shareAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$SplitExpensesTableFilterComposer get expenseId {
+    final $$SplitExpensesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.expenseId,
+      referencedTable: $db.splitExpenses,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SplitExpensesTableFilterComposer(
+            $db: $db,
+            $table: $db.splitExpenses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SplitMembersTableFilterComposer get memberId {
+    final $$SplitMembersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.memberId,
+      referencedTable: $db.splitMembers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SplitMembersTableFilterComposer(
+            $db: $db,
+            $table: $db.splitMembers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SplitExpenseSharesTableOrderingComposer
+    extends Composer<_$AppDatabase, $SplitExpenseSharesTable> {
+  $$SplitExpenseSharesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get shareAmount => $composableBuilder(
+    column: $table.shareAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$SplitExpensesTableOrderingComposer get expenseId {
+    final $$SplitExpensesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.expenseId,
+      referencedTable: $db.splitExpenses,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SplitExpensesTableOrderingComposer(
+            $db: $db,
+            $table: $db.splitExpenses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SplitMembersTableOrderingComposer get memberId {
+    final $$SplitMembersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.memberId,
+      referencedTable: $db.splitMembers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SplitMembersTableOrderingComposer(
+            $db: $db,
+            $table: $db.splitMembers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SplitExpenseSharesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SplitExpenseSharesTable> {
+  $$SplitExpenseSharesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<double> get shareAmount =>
+      $composableBuilder(
+        column: $table.shareAmount,
+        builder: (column) => column,
+      );
+
+  $$SplitExpensesTableAnnotationComposer get expenseId {
+    final $$SplitExpensesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.expenseId,
+      referencedTable: $db.splitExpenses,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SplitExpensesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.splitExpenses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SplitMembersTableAnnotationComposer get memberId {
+    final $$SplitMembersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.memberId,
+      referencedTable: $db.splitMembers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SplitMembersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.splitMembers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SplitExpenseSharesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SplitExpenseSharesTable,
+          SplitExpenseShare,
+          $$SplitExpenseSharesTableFilterComposer,
+          $$SplitExpenseSharesTableOrderingComposer,
+          $$SplitExpenseSharesTableAnnotationComposer,
+          $$SplitExpenseSharesTableCreateCompanionBuilder,
+          $$SplitExpenseSharesTableUpdateCompanionBuilder,
+          (SplitExpenseShare, $$SplitExpenseSharesTableReferences),
+          SplitExpenseShare,
+          PrefetchHooks Function({bool expenseId, bool memberId})
+        > {
+  $$SplitExpenseSharesTableTableManager(
+    _$AppDatabase db,
+    $SplitExpenseSharesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SplitExpenseSharesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SplitExpenseSharesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SplitExpenseSharesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> expenseId = const Value.absent(),
+                Value<int> memberId = const Value.absent(),
+                Value<double> shareAmount = const Value.absent(),
+              }) => SplitExpenseSharesCompanion(
+                id: id,
+                expenseId: expenseId,
+                memberId: memberId,
+                shareAmount: shareAmount,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int expenseId,
+                required int memberId,
+                required double shareAmount,
+              }) => SplitExpenseSharesCompanion.insert(
+                id: id,
+                expenseId: expenseId,
+                memberId: memberId,
+                shareAmount: shareAmount,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$SplitExpenseSharesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({expenseId = false, memberId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (expenseId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.expenseId,
+                                referencedTable:
+                                    $$SplitExpenseSharesTableReferences
+                                        ._expenseIdTable(db),
+                                referencedColumn:
+                                    $$SplitExpenseSharesTableReferences
+                                        ._expenseIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    if (memberId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.memberId,
+                                referencedTable:
+                                    $$SplitExpenseSharesTableReferences
+                                        ._memberIdTable(db),
+                                referencedColumn:
+                                    $$SplitExpenseSharesTableReferences
+                                        ._memberIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$SplitExpenseSharesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SplitExpenseSharesTable,
+      SplitExpenseShare,
+      $$SplitExpenseSharesTableFilterComposer,
+      $$SplitExpenseSharesTableOrderingComposer,
+      $$SplitExpenseSharesTableAnnotationComposer,
+      $$SplitExpenseSharesTableCreateCompanionBuilder,
+      $$SplitExpenseSharesTableUpdateCompanionBuilder,
+      (SplitExpenseShare, $$SplitExpenseSharesTableReferences),
+      SplitExpenseShare,
+      PrefetchHooks Function({bool expenseId, bool memberId})
+    >;
+typedef $$SplitSettlementsTableCreateCompanionBuilder =
+    SplitSettlementsCompanion Function({
+      Value<int> id,
+      required int groupId,
+      required int fromMemberId,
+      required int toMemberId,
+      required double amount,
+      Value<String?> note,
+      required DateTime settledAt,
+      Value<DateTime> createdAt,
+    });
+typedef $$SplitSettlementsTableUpdateCompanionBuilder =
+    SplitSettlementsCompanion Function({
+      Value<int> id,
+      Value<int> groupId,
+      Value<int> fromMemberId,
+      Value<int> toMemberId,
+      Value<double> amount,
+      Value<String?> note,
+      Value<DateTime> settledAt,
+      Value<DateTime> createdAt,
+    });
+
+final class $$SplitSettlementsTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $SplitSettlementsTable, SplitSettlement> {
+  $$SplitSettlementsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $SplitGroupsTable _groupIdTable(_$AppDatabase db) =>
+      db.splitGroups.createAlias(
+        $_aliasNameGenerator(db.splitSettlements.groupId, db.splitGroups.id),
+      );
+
+  $$SplitGroupsTableProcessedTableManager get groupId {
+    final $_column = $_itemColumn<int>('group_id')!;
+
+    final manager = $$SplitGroupsTableTableManager(
+      $_db,
+      $_db.splitGroups,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_groupIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $SplitMembersTable _fromMemberIdTable(_$AppDatabase db) =>
+      db.splitMembers.createAlias(
+        $_aliasNameGenerator(
+          db.splitSettlements.fromMemberId,
+          db.splitMembers.id,
+        ),
+      );
+
+  $$SplitMembersTableProcessedTableManager get fromMemberId {
+    final $_column = $_itemColumn<int>('from_member_id')!;
+
+    final manager = $$SplitMembersTableTableManager(
+      $_db,
+      $_db.splitMembers,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_fromMemberIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $SplitMembersTable _toMemberIdTable(_$AppDatabase db) =>
+      db.splitMembers.createAlias(
+        $_aliasNameGenerator(
+          db.splitSettlements.toMemberId,
+          db.splitMembers.id,
+        ),
+      );
+
+  $$SplitMembersTableProcessedTableManager get toMemberId {
+    final $_column = $_itemColumn<int>('to_member_id')!;
+
+    final manager = $$SplitMembersTableTableManager(
+      $_db,
+      $_db.splitMembers,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_toMemberIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$SplitSettlementsTableFilterComposer
+    extends Composer<_$AppDatabase, $SplitSettlementsTable> {
+  $$SplitSettlementsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get settledAt => $composableBuilder(
+    column: $table.settledAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$SplitGroupsTableFilterComposer get groupId {
+    final $$SplitGroupsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.splitGroups,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SplitGroupsTableFilterComposer(
+            $db: $db,
+            $table: $db.splitGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SplitMembersTableFilterComposer get fromMemberId {
+    final $$SplitMembersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.fromMemberId,
+      referencedTable: $db.splitMembers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SplitMembersTableFilterComposer(
+            $db: $db,
+            $table: $db.splitMembers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SplitMembersTableFilterComposer get toMemberId {
+    final $$SplitMembersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.toMemberId,
+      referencedTable: $db.splitMembers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SplitMembersTableFilterComposer(
+            $db: $db,
+            $table: $db.splitMembers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SplitSettlementsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SplitSettlementsTable> {
+  $$SplitSettlementsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get settledAt => $composableBuilder(
+    column: $table.settledAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$SplitGroupsTableOrderingComposer get groupId {
+    final $$SplitGroupsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.splitGroups,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SplitGroupsTableOrderingComposer(
+            $db: $db,
+            $table: $db.splitGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SplitMembersTableOrderingComposer get fromMemberId {
+    final $$SplitMembersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.fromMemberId,
+      referencedTable: $db.splitMembers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SplitMembersTableOrderingComposer(
+            $db: $db,
+            $table: $db.splitMembers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SplitMembersTableOrderingComposer get toMemberId {
+    final $$SplitMembersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.toMemberId,
+      referencedTable: $db.splitMembers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SplitMembersTableOrderingComposer(
+            $db: $db,
+            $table: $db.splitMembers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SplitSettlementsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SplitSettlementsTable> {
+  $$SplitSettlementsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<double> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get settledAt =>
+      $composableBuilder(column: $table.settledAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$SplitGroupsTableAnnotationComposer get groupId {
+    final $$SplitGroupsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.splitGroups,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SplitGroupsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.splitGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SplitMembersTableAnnotationComposer get fromMemberId {
+    final $$SplitMembersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.fromMemberId,
+      referencedTable: $db.splitMembers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SplitMembersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.splitMembers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SplitMembersTableAnnotationComposer get toMemberId {
+    final $$SplitMembersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.toMemberId,
+      referencedTable: $db.splitMembers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SplitMembersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.splitMembers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SplitSettlementsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SplitSettlementsTable,
+          SplitSettlement,
+          $$SplitSettlementsTableFilterComposer,
+          $$SplitSettlementsTableOrderingComposer,
+          $$SplitSettlementsTableAnnotationComposer,
+          $$SplitSettlementsTableCreateCompanionBuilder,
+          $$SplitSettlementsTableUpdateCompanionBuilder,
+          (SplitSettlement, $$SplitSettlementsTableReferences),
+          SplitSettlement,
+          PrefetchHooks Function({bool groupId, bool fromMemberId, bool toMemberId})
+        > {
+  $$SplitSettlementsTableTableManager(
+    _$AppDatabase db,
+    $SplitSettlementsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SplitSettlementsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SplitSettlementsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SplitSettlementsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> groupId = const Value.absent(),
+                Value<int> fromMemberId = const Value.absent(),
+                Value<int> toMemberId = const Value.absent(),
+                Value<double> amount = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<DateTime> settledAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => SplitSettlementsCompanion(
+                id: id,
+                groupId: groupId,
+                fromMemberId: fromMemberId,
+                toMemberId: toMemberId,
+                amount: amount,
+                note: note,
+                settledAt: settledAt,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int groupId,
+                required int fromMemberId,
+                required int toMemberId,
+                required double amount,
+                Value<String?> note = const Value.absent(),
+                required DateTime settledAt,
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => SplitSettlementsCompanion.insert(
+                id: id,
+                groupId: groupId,
+                fromMemberId: fromMemberId,
+                toMemberId: toMemberId,
+                amount: amount,
+                note: note,
+                settledAt: settledAt,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$SplitSettlementsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({
+            groupId = false,
+            fromMemberId = false,
+            toMemberId = false,
+          }) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (groupId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.groupId,
+                                referencedTable:
+                                    $$SplitSettlementsTableReferences
+                                        ._groupIdTable(db),
+                                referencedColumn:
+                                    $$SplitSettlementsTableReferences
+                                        ._groupIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    if (fromMemberId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.fromMemberId,
+                                referencedTable:
+                                    $$SplitSettlementsTableReferences
+                                        ._fromMemberIdTable(db),
+                                referencedColumn:
+                                    $$SplitSettlementsTableReferences
+                                        ._fromMemberIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    if (toMemberId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.toMemberId,
+                                referencedTable:
+                                    $$SplitSettlementsTableReferences
+                                        ._toMemberIdTable(db),
+                                referencedColumn:
+                                    $$SplitSettlementsTableReferences
+                                        ._toMemberIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$SplitSettlementsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SplitSettlementsTable,
+      SplitSettlement,
+      $$SplitSettlementsTableFilterComposer,
+      $$SplitSettlementsTableOrderingComposer,
+      $$SplitSettlementsTableAnnotationComposer,
+      $$SplitSettlementsTableCreateCompanionBuilder,
+      $$SplitSettlementsTableUpdateCompanionBuilder,
+      (SplitSettlement, $$SplitSettlementsTableReferences),
+      SplitSettlement,
+      PrefetchHooks Function({bool groupId, bool fromMemberId, bool toMemberId})
+    >;
+
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
@@ -5779,4 +9741,14 @@ class $AppDatabaseManager {
       $$CategorizationRulesTableTableManager(_db, _db.categorizationRules);
   $$AssetsTableTableManager get assets =>
       $$AssetsTableTableManager(_db, _db.assets);
+  $$SplitGroupsTableTableManager get splitGroups =>
+      $$SplitGroupsTableTableManager(_db, _db.splitGroups);
+  $$SplitMembersTableTableManager get splitMembers =>
+      $$SplitMembersTableTableManager(_db, _db.splitMembers);
+  $$SplitExpensesTableTableManager get splitExpenses =>
+      $$SplitExpensesTableTableManager(_db, _db.splitExpenses);
+  $$SplitExpenseSharesTableTableManager get splitExpenseShares =>
+      $$SplitExpenseSharesTableTableManager(_db, _db.splitExpenseShares);
+  $$SplitSettlementsTableTableManager get splitSettlements =>
+      $$SplitSettlementsTableTableManager(_db, _db.splitSettlements);
 }
