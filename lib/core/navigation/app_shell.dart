@@ -6,6 +6,7 @@ import '../../features/budget/screens/budget_screen.dart';
 import '../../features/dashboard/screens/dashboard_screen.dart';
 import '../../features/networth/screens/net_worth_screen.dart';
 import '../../features/goals/screens/goals_screen.dart';
+import '../../features/split/screens/split_screen.dart';
 import '../../features/transactions/screens/add_transaction_screen.dart';
 import '../../features/transactions/services/recurring_service.dart';
 import '../presentation/glass_widgets.dart';
@@ -28,6 +29,7 @@ class _AppShellState extends ConsumerState<AppShell> {
     BudgetScreen(),
     NetWorthScreen(),
     GoalsScreen(),
+    SplitScreen(),
   ];
 
   @override
@@ -163,6 +165,7 @@ class _AppShellState extends ConsumerState<AppShell> {
 
                   _buildNavItem(2, Icons.account_balance_rounded, 'Net Worth'),
                   _buildNavItem(3, Icons.savings_rounded, 'Goals'),
+                  _buildNavItem(4, Icons.group_rounded, 'Split'),
                 ],
               ),
             ),
