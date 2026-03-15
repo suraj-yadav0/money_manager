@@ -387,3 +387,102 @@ final userSettingsStreamProvider = StreamProvider<UserSetting>((ref) {
 final dashboardTransactionTypeProvider = StateProvider<String>(
   (ref) => 'expense',
 );
+
+/// Parameters for the chart drill-down provider
+class DrillDownParams {
+  /// Category name filter (null means match all categories)
+  final String? categoryName;
+
+  /// Specific date filter (null means match all dates in range)
+  final DateTime? date;
+
+  /// Date range start
+  final DateTime start;
+
+  /// Date range end
+  final DateTime end;
+
+  /// Transaction type: 'expense' or 'income'
+  final String transactionType;
+
+  const DrillDownParams({
+    this.categoryName,
+    this.date,
+    required this.start,
+    required this.end,
+    required this.transactionType,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DrillDownParams &&
+          categoryName == other.categoryName &&
+          date == other.date &&
+          start == other.start &&
+          end == other.end &&
+          transactionType == other.transactionType;
+
+  @override
+  int get hashCode => Object.hash(categoryName, date, start, end, transactionType);
+}
+
+/// Provider that fetches detailed transactions for chart drill-down.
+/// Supports filtering by category name OR by a specific date within a range.
+final drillDownTransactionsProvider =
+    FutureProvider.family<List<TransactionWithCategory>, DrillDownParams>((
+      ref,
+      params,
+    ) async {
+      final db = ref.read(databaseProvider);
+
+      DateTime rangeStart = params.start;
+      DateTime rangeEnd = params.end;
+
+      // If a specific date is provided, narrow the range to that single day
+      if (params.date != null) {
+        final d = params.date!;
+        rangeStart = DateTime(d.year, d.month, d.day);
+        rangeEnd = DateTime(d.year, d.month, d.day, 23, 59, 59, 999);
+      }
+
+      final query =
+          db.select(db.transactions).join([
+              leftOuterJoin(
+                db.categories,
+                db.categories.id.equalsExp(db.transactions.categoryId),
+              ),
+            ])
+            ..where(
+              db.transactions.type.equals(params.transactionType) &
+                  db.transactions.timestamp.isBetweenValues(
+                    rangeStart,
+                    rangeEnd,
+                  ),
+            )
+            ..orderBy([OrderingTerm.desc(db.transactions.timestamp)]);
+
+      final rows = await query.get();
+
+      final results = rows.map((row) {
+        return TransactionWithCategory(
+          transaction: row.readTable(db.transactions),
+          category: row.readTableOrNull(db.categories),
+        );
+      }).toList();
+
+      // If a category name filter is provided, keep only matching rows.
+      // The '🎯 Savings Goals' pseudo-category is matched via goalId != null.
+      if (params.categoryName != null) {
+        if (params.categoryName == '🎯 Savings Goals') {
+          return results
+              .where((t) => t.transaction.goalId != null)
+              .toList();
+        }
+        return results
+            .where((t) => t.category?.name == params.categoryName)
+            .toList();
+      }
+
+      return results;
+    });

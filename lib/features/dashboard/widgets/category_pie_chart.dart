@@ -5,16 +5,24 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../providers/dashboard_providers.dart';
+import 'chart_drilldown_sheet.dart';
 
-/// Category pie chart showing spending breakdown
-/// Category pie chart showing spending or income breakdown
-class CategoryPieChart extends ConsumerWidget {
+/// Category pie chart showing spending or income breakdown.
+/// Tapping a pie slice opens a drill-down sheet with individual transactions.
+class CategoryPieChart extends ConsumerStatefulWidget {
   final String transactionType;
 
   const CategoryPieChart({super.key, this.transactionType = 'expense'});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CategoryPieChart> createState() => _CategoryPieChartState();
+}
+
+class _CategoryPieChartState extends ConsumerState<CategoryPieChart> {
+  int _touchedIndex = -1;
+
+  @override
+  Widget build(BuildContext context) {
     final statsAsync = ref.watch(dashboardStatsProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -23,7 +31,7 @@ class CategoryPieChart extends ConsumerWidget {
       loading: () => const SizedBox(height: 200),
       error: (error, stack) => const SizedBox(),
       data: (stats) {
-        final data = transactionType == 'expense'
+        final data = widget.transactionType == 'expense'
             ? stats.categoryBreakdown
             : stats.incomeCategoryBreakdown;
 
@@ -43,7 +51,7 @@ class CategoryPieChart extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    transactionType == 'expense'
+                    widget.transactionType == 'expense'
                         ? 'No expenses yet'
                         : 'No income yet',
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -52,7 +60,7 @@ class CategoryPieChart extends ConsumerWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    transactionType == 'expense'
+                    widget.transactionType == 'expense'
                         ? 'Add your first expense to see the breakdown'
                         : 'Add your first income to see the breakdown',
                     style: theme.textTheme.bodySmall,
@@ -67,6 +75,7 @@ class CategoryPieChart extends ConsumerWidget {
         final entries = data.entries.toList()
           ..sort((a, b) => b.value.compareTo(a.value));
         final total = entries.fold<double>(0, (sum, e) => sum + e.value);
+        final range = ref.read(dateRangeProvider);
 
         return Card(
           child: Padding(
@@ -86,6 +95,41 @@ class CategoryPieChart extends ConsumerWidget {
                             sectionsSpace: 2,
                             centerSpaceRadius: 35,
                             startDegreeOffset: -90,
+                            pieTouchData: PieTouchData(
+                              touchCallback: (event, response) {
+                                if (event is FlTapUpEvent) {
+                                  final sectionIndex =
+                                      response?.touchedSection
+                                          ?.touchedSectionIndex ??
+                                      -1;
+                                  if (sectionIndex >= 0 &&
+                                      sectionIndex < entries.length) {
+                                    final entry = entries[sectionIndex];
+                                    final color = AppTheme.categoryColors[
+                                        sectionIndex %
+                                            AppTheme.categoryColors.length];
+                                    showChartDrillDown(
+                                      context,
+                                      params: DrillDownParams(
+                                        categoryName: entry.key,
+                                        start: range.start,
+                                        end: range.end,
+                                        transactionType:
+                                            widget.transactionType,
+                                      ),
+                                      title: entry.key,
+                                      color: color,
+                                    );
+                                  }
+                                }
+                                setState(() {
+                                  _touchedIndex =
+                                      response?.touchedSection
+                                          ?.touchedSectionIndex ??
+                                      -1;
+                                });
+                              },
+                            ),
                           ),
                         ),
                       ),
@@ -105,46 +149,79 @@ class CategoryPieChart extends ConsumerWidget {
                                 final index = e.key;
                                 final entry = e.value;
                                 final percentage = (entry.value / total * 100);
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 4,
+                                final color = AppTheme.categoryColors[
+                                    index % AppTheme.categoryColors.length];
+                                return GestureDetector(
+                                  onTap: () => showChartDrillDown(
+                                    context,
+                                    params: DrillDownParams(
+                                      categoryName: entry.key,
+                                      start: range.start,
+                                      end: range.end,
+                                      transactionType: widget.transactionType,
+                                    ),
+                                    title: entry.key,
+                                    color: color,
                                   ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 12,
-                                        height: 12,
-                                        decoration: BoxDecoration(
-                                          color:
-                                              AppTheme.categoryColors[index %
-                                                  AppTheme
-                                                      .categoryColors
-                                                      .length],
-                                          borderRadius: BorderRadius.circular(
-                                            3,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 4,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 12,
+                                          height: 12,
+                                          decoration: BoxDecoration(
+                                            color: color,
+                                            borderRadius: BorderRadius.circular(
+                                              3,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          entry.key,
-                                          style: theme.textTheme.bodySmall,
-                                          overflow: TextOverflow.ellipsis,
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            entry.key,
+                                            style: theme.textTheme.bodySmall,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
                                         ),
-                                      ),
-                                      Text(
-                                        '${percentage.toStringAsFixed(0)}%',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
+                                        Text(
+                                          '${percentage.toStringAsFixed(0)}%',
+                                          style: GoogleFonts.inter(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 );
                               })
                               .toList(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Tap hint
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.touch_app_outlined,
+                        size: 14,
+                        color: colorScheme.onSurfaceVariant.withAlpha(150),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Tap a slice or label for details',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant.withAlpha(150),
+                          fontSize: 11,
                         ),
                       ),
                     ],
@@ -166,14 +243,15 @@ class CategoryPieChart extends ConsumerWidget {
       final index = e.key;
       final entry = e.value;
       final percentage = entry.value / total * 100;
+      final isTouched = index == _touchedIndex;
 
       return PieChartSectionData(
         color: AppTheme.categoryColors[index % AppTheme.categoryColors.length],
         value: entry.value,
         title: percentage >= 10 ? '${percentage.toStringAsFixed(0)}%' : '',
-        radius: 45,
+        radius: isTouched ? 55 : 45,
         titleStyle: GoogleFonts.inter(
-          fontSize: 11,
+          fontSize: isTouched ? 13 : 11,
           fontWeight: FontWeight.bold,
           color: Colors.white,
         ),

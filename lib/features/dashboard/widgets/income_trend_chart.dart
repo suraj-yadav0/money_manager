@@ -7,6 +7,7 @@ import 'package:drift/drift.dart' hide Column;
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/utils/formatters.dart';
 import '../providers/dashboard_providers.dart';
+import 'chart_drilldown_sheet.dart';
 
 /// Line chart showing daily income trends over the selected period
 class IncomeTrendChart extends ConsumerStatefulWidget {
@@ -236,6 +237,30 @@ class _IncomeTrendChartState extends ConsumerState<IncomeTrendChart> {
                                   }).toList();
                                 },
                               ),
+                              touchCallback: (event, response) {
+                                if (event is FlTapUpEvent) {
+                                  final spotIndex =
+                                      response?.lineBarSpots?.first.spotIndex ??
+                                      -1;
+                                  if (spotIndex >= 0 && spotIndex < data.length) {
+                                    final daily = data[spotIndex];
+                                    if (daily.amount > 0) {
+                                      final range = ref.read(dateRangeProvider);
+                                      showChartDrillDown(
+                                        context,
+                                        params: DrillDownParams(
+                                          date: daily.date,
+                                          start: range.start,
+                                          end: range.end,
+                                          transactionType: 'income',
+                                        ),
+                                        title: Formatters.date(daily.date),
+                                        color: Colors.green,
+                                      );
+                                    }
+                                  }
+                                }
+                              },
                             ),
                             lineBarsData: [
                               LineChartBarData(
@@ -284,6 +309,28 @@ class _IncomeTrendChartState extends ConsumerState<IncomeTrendChart> {
                             maxY: maxY * 1.1,
                           ),
                           duration: const Duration(milliseconds: 300),
+                        ),
+                      ),
+                      // Tap hint
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.touch_app_outlined,
+                              size: 14,
+                              color: colorScheme.onSurfaceVariant.withAlpha(150),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Tap a data point for details',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant.withAlpha(150),
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
