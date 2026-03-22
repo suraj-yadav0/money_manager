@@ -6,9 +6,10 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../providers/dashboard_providers.dart';
+import 'chart_drilldown_sheet.dart';
 
-/// Horizontal bar chart showing spending by category
-/// Horizontal bar chart showing spending or income by category
+/// Horizontal bar chart showing spending or income by category.
+/// Tapping a bar opens a drill-down sheet with individual transactions.
 class CategoryBarChart extends ConsumerWidget {
   final String transactionType;
 
@@ -70,6 +71,7 @@ class CategoryBarChart extends ConsumerWidget {
         final maxValue = entries.first.value;
         // Show all entries, sorted by value
         final displayEntries = entries;
+        final range = ref.read(dateRangeProvider);
 
         return Card(
           child: Padding(
@@ -114,6 +116,30 @@ class CategoryBarChart extends ConsumerWidget {
                                       );
                                     },
                               ),
+                              touchCallback: (event, response) {
+                                if (event is FlTapUpEvent) {
+                                  final groupIndex =
+                                      response?.spot?.touchedBarGroupIndex ?? -1;
+                                  if (groupIndex >= 0 &&
+                                      groupIndex < displayEntries.length) {
+                                    final entry = displayEntries[groupIndex];
+                                    final color = AppTheme.categoryColors[
+                                        groupIndex %
+                                            AppTheme.categoryColors.length];
+                                    showChartDrillDown(
+                                      context,
+                                      params: DrillDownParams(
+                                        categoryName: entry.key,
+                                        start: range.start,
+                                        end: range.end,
+                                        transactionType: transactionType,
+                                      ),
+                                      title: entry.key,
+                                      color: color,
+                                    );
+                                  }
+                                }
+                              },
                             ),
                             titlesData: FlTitlesData(
                               show: true,
@@ -211,6 +237,28 @@ class CategoryBarChart extends ConsumerWidget {
                             }).toList(),
                           ),
                           duration: const Duration(milliseconds: 300),
+                        ),
+                      ),
+                      // Tap hint
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.touch_app_outlined,
+                              size: 14,
+                              color: colorScheme.onSurfaceVariant.withAlpha(150),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Tap a bar for details',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant.withAlpha(150),
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
