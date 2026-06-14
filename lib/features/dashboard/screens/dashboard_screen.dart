@@ -170,7 +170,7 @@ class DashboardScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               // Dynamic chart based on selection
               SizedBox(
-                height: chartType == DashboardChartType.pie ? 275 : 400,
+                height: chartType == DashboardChartType.pie ? 275 : 425,
                 child: _buildChart(chartType, transactionType),
               ),
               const SizedBox(height: 24),
