@@ -28,35 +28,54 @@ class BalanceCard extends ConsumerWidget {
       error: (e, _) => _buildErrorCard(context, e.toString()),
       data: (stats) => GlassContainer(
         width: double.infinity,
-        height: 220,
         borderRadius: 32,
-        padding: const EdgeInsets.all(28),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
         gradientColors: Theme.of(context).brightness == Brightness.dark
             ? [
-                AppTheme.narutoOrange.withOpacity(0.4),
-                AppTheme.kuramaRed.withOpacity(0.2),
+                AppTheme.narutoOrange.withOpacity(0.35),
+                AppTheme.kuramaRed.withOpacity(0.15),
               ]
             : [
                 AppTheme.narutoOrange.withOpacity(0.9),
-                AppTheme.kuramaRed.withOpacity(0.7),
+                AppTheme.kuramaRed.withOpacity(0.75),
               ],
         border: Border.all(
-          color: AppTheme.narutoOrange.withOpacity(0.5),
+          color: Colors.white.withOpacity(0.25),
           width: 1.5,
         ),
         child: Stack(
           children: [
-            // Decorative circles
+            // Decorative background glowing circle
             Positioned(
-              right: -20,
-              top: -20,
+              right: -30,
+              top: -30,
               child: Container(
-                width: 150,
-                height: 150,
+                width: 160,
+                height: 160,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
-                    colors: [Colors.white.withOpacity(0.2), Colors.transparent],
+                    colors: [
+                      Colors.white.withOpacity(0.22),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              left: -40,
+              bottom: -40,
+              child: Container(
+                width: 140,
+                height: 140,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      Colors.white.withOpacity(0.1),
+                      Colors.transparent,
+                    ],
                   ),
                 ),
               ),
@@ -64,9 +83,9 @@ class BalanceCard extends ConsumerWidget {
 
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Top Row
+                // Header Row
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -75,22 +94,22 @@ class BalanceCard extends ConsumerWidget {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
+                            color: Colors.white.withOpacity(0.15),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
-                            Icons.account_balance_wallet_rounded,
+                            Icons.wallet_outlined,
                             color: Colors.white,
-                            size: 16,
+                            size: 18,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 10),
                         Text(
-                          'Total Balance',
+                          'Net Balance',
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: Colors.white.withOpacity(0.8),
+                            color: Colors.white.withOpacity(0.85),
                           ),
                         ),
                       ],
@@ -101,75 +120,167 @@ class BalanceCard extends ConsumerWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withOpacity(0.2),
+                          width: 1,
                         ),
                       ),
                       child: Text(
                         currencyCode,
                         style: GoogleFonts.inter(
-                          fontSize: 12,
+                          fontSize: 11,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 20),
 
-                // Main Balance
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      Formatters.currency(
-                        stats.balance,
-                        symbol: currencySymbol,
+                // Net Balance Figure
+                Text(
+                  Formatters.currency(
+                    stats.balance,
+                    symbol: currencySymbol,
+                  ),
+                  style: GoogleFonts.outfit(
+                    fontSize: 38,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    shadows: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.12),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
                       ),
-                      style: GoogleFonts.outfit(
-                        fontSize: 42, // Larger font
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        shadows: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Divider line
+                Container(
+                  height: 1,
+                  width: double.infinity,
+                  color: Colors.white.withOpacity(0.18),
+                ),
+                const SizedBox(height: 18),
+
+                // Income & Expense details Row
+                Row(
+                  children: [
+                    // Income Section
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.15),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.arrow_upward_rounded,
+                              color: Color(0xFF4ADE80), // Premium mint green
+                              size: 16,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Income',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    color: Colors.white.withOpacity(0.7),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    Formatters.currency(
+                                      stats.totalIncome,
+                                      symbol: currencySymbol,
+                                    ),
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Available Limit: ${currencySymbol}5,000.00',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: Colors.white.withOpacity(0.5),
-                      ),
-                    ),
-                  ],
-                ),
 
-                // Bottom Row (Simulated Chip & Contactless)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      '****  ****  ****  1965',
-                      style: GoogleFonts.sourceCodePro(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white.withOpacity(0.9),
-                        letterSpacing: 2.0,
-                      ),
+                    // Vertical Divider
+                    Container(
+                      width: 1,
+                      height: 32,
+                      color: Colors.white.withOpacity(0.18),
                     ),
-                    const Icon(
-                      Icons.contactless_rounded,
-                      color: Colors.white,
-                      size: 28,
+                    const SizedBox(width: 16),
+
+                    // Expense Section
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.15),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.arrow_downward_rounded,
+                              color: Color(0xFFFCA5A5), // Premium soft red/coral
+                              size: 16,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Expense',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    color: Colors.white.withOpacity(0.7),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    Formatters.currency(
+                                      stats.totalExpenses,
+                                      symbol: currencySymbol,
+                                    ),
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
