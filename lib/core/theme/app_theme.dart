@@ -171,6 +171,14 @@ class AppTheme {
         selectedItemColor: narutoOrange,
         unselectedItemColor: Colors.black.withOpacity(0.5),
       ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: Colors.white,
+        modalBackgroundColor: Colors.white,
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+      ),
     );
   }
 
@@ -255,6 +263,14 @@ class AppTheme {
         backgroundColor: Colors.transparent,
         selectedItemColor: neonBlue,
         unselectedItemColor: Colors.white.withOpacity(0.5),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: Color(0xFF1E1E1E),
+        modalBackgroundColor: Color(0xFF1E1E1E),
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
       ),
     );
   }

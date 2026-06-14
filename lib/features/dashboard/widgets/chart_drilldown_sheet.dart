@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -60,57 +61,76 @@ class ChartDrillDownSheet extends ConsumerWidget {
       maxChildSize: 0.92,
       expand: false,
       builder: (_, scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            children: [
-              // Drag handle
-              _DragHandle(color: colorScheme.onSurfaceVariant),
-              // Header
-              _SheetHeader(
-                title: sheetTitle,
-                accent: accent,
-                transactionsAsync: transactionsAsync,
-                transactionType: params.transactionType,
-              ),
-              const Divider(height: 1),
-              // Transaction list
-              Expanded(
-                child: transactionsAsync.when(
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                  error: (e, _) => Center(
-                    child: Text(
-                      'Failed to load transactions',
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                  ),
-                  data: (transactions) {
-                    if (transactions.isEmpty) {
-                      return _EmptyState(
-                        transactionType: params.transactionType,
-                      );
-                    }
-                    return ListView.separated(
-                      controller: scrollController,
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                      itemCount: transactions.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1),
-                      itemBuilder: (context, index) {
-                        return _TransactionTile(
-                          item: transactions[index],
-                          accentColor: accent,
-                        );
-                      },
-                    );
-                  },
+        final isDark = theme.brightness == Brightness.dark;
+        final backgroundColor = isDark
+            ? AppTheme.glassBackgroundDark.withOpacity(0.85)
+            : AppTheme.glassBackgroundWhite.withOpacity(0.9);
+        final borderColor = isDark
+            ? Colors.white.withOpacity(0.15)
+            : Colors.black.withOpacity(0.08);
+
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            child: Container(
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                border: Border(
+                  top: BorderSide(color: borderColor, width: 1.5),
+                  left: BorderSide(color: borderColor, width: 1.5),
+                  right: BorderSide(color: borderColor, width: 1.5),
                 ),
               ),
-            ],
+              child: Column(
+                children: [
+                  // Drag handle
+                  _DragHandle(color: colorScheme.onSurfaceVariant),
+                  // Header
+                  _SheetHeader(
+                    title: sheetTitle,
+                    accent: accent,
+                    transactionsAsync: transactionsAsync,
+                    transactionType: params.transactionType,
+                  ),
+                  const Divider(height: 1),
+                  // Transaction list
+                  Expanded(
+                    child: transactionsAsync.when(
+                      loading: () => const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                      error: (e, _) => Center(
+                        child: Text(
+                          'Failed to load transactions',
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                      ),
+                      data: (transactions) {
+                        if (transactions.isEmpty) {
+                          return _EmptyState(
+                            transactionType: params.transactionType,
+                          );
+                        }
+                        return ListView.separated(
+                          controller: scrollController,
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                          itemCount: transactions.length,
+                          separatorBuilder: (_, __) => const Divider(height: 1),
+                          itemBuilder: (context, index) {
+                            return _TransactionTile(
+                              item: transactions[index],
+                              accentColor: accent,
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         );
       },
