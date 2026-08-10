@@ -23,7 +23,8 @@ class SyncResult {
   });
 }
 
-/// Service managing bi-directional synchronization between local Drift DB and remote Cloud Firestore
+/// Service managing full bi-directional synchronization between local Drift DB and remote Cloud Firestore
+/// Covers ALL 7 tables: Transactions, Goals, Assets, UserSettings, Categories, GoalContributions, CategorizationRules
 class SyncService {
   final AppDatabase _db;
   final Uuid _uuid = const Uuid();
@@ -69,7 +70,7 @@ class SyncService {
     }
   }
 
-  /// Pushes unsynced local Drift records to Cloud Firestore
+  /// Pushes unsynced local Drift records to Cloud Firestore across all 7 tables
   Future<int> _pushLocalData(String userId) async {
     final db = FirebaseConfig.db;
     if (db == null) return 0;
@@ -184,10 +185,140 @@ class SyncService {
       totalUploaded++;
     }
 
+    // 4. User Settings
+    final unsyncedSettings = await (_db.select(_db.userSettings)
+          ..where((s) => s.isSynced.equals(false)))
+        .get();
+
+    for (final s in unsyncedSettings) {
+      final syncId = s.syncId ?? _uuid.v4();
+      if (s.syncId == null) {
+        await (_db.update(_db.userSettings)..where((u) => u.id.equals(s.id)))
+            .write(UserSettingsCompanion(syncId: Value(syncId)));
+      }
+
+      final payload = {
+        'sync_id': syncId,
+        'user_id': userId,
+        'monthly_income': s.monthlyIncome,
+        'currency': s.currency,
+        'is_onboarded': s.isOnboarded,
+        'biometric_enabled': s.biometricEnabled,
+        'show_income_chart': s.showIncomeChart,
+        'created_at': s.createdAt.toIso8601String(),
+        'updated_at': (s.updatedAt ?? DateTime.now()).toIso8601String(),
+      };
+
+      await userDocRef
+          .collection('user_settings')
+          .doc(syncId)
+          .set(payload, SetOptions(merge: true));
+
+      await (_db.update(_db.userSettings)..where((u) => u.id.equals(s.id)))
+          .write(const UserSettingsCompanion(isSynced: Value(true)));
+      totalUploaded++;
+    }
+
+    // 5. Categories
+    final unsyncedCat = await (_db.select(_db.categories)
+          ..where((c) => c.isSynced.equals(false)))
+        .get();
+
+    for (final c in unsyncedCat) {
+      final syncId = c.syncId ?? _uuid.v4();
+      if (c.syncId == null) {
+        await (_db.update(_db.categories)..where((cat) => cat.id.equals(c.id)))
+            .write(CategoriesCompanion(syncId: Value(syncId)));
+      }
+
+      final payload = {
+        'sync_id': syncId,
+        'user_id': userId,
+        'name': c.name,
+        'icon': c.icon,
+        'monthly_budget': c.monthlyBudget,
+        'type': c.type,
+        'is_default': c.isDefault,
+        'updated_at': (c.updatedAt ?? DateTime.now()).toIso8601String(),
+      };
+
+      await userDocRef
+          .collection('categories')
+          .doc(syncId)
+          .set(payload, SetOptions(merge: true));
+
+      await (_db.update(_db.categories)..where((cat) => cat.id.equals(c.id)))
+          .write(const CategoriesCompanion(isSynced: Value(true)));
+      totalUploaded++;
+    }
+
+    // 6. Goal Contributions
+    final unsyncedGc = await (_db.select(_db.goalContributions)
+          ..where((gc) => gc.isSynced.equals(false)))
+        .get();
+
+    for (final gc in unsyncedGc) {
+      final syncId = gc.syncId ?? _uuid.v4();
+      if (gc.syncId == null) {
+        await (_db.update(_db.goalContributions)..where((g) => g.id.equals(gc.id)))
+            .write(GoalContributionsCompanion(syncId: Value(syncId)));
+      }
+
+      final payload = {
+        'sync_id': syncId,
+        'user_id': userId,
+        'goal_id': gc.goalId,
+        'amount': gc.amount,
+        'note': gc.note,
+        'created_at': gc.createdAt.toIso8601String(),
+        'updated_at': (gc.updatedAt ?? DateTime.now()).toIso8601String(),
+      };
+
+      await userDocRef
+          .collection('goal_contributions')
+          .doc(syncId)
+          .set(payload, SetOptions(merge: true));
+
+      await (_db.update(_db.goalContributions)..where((g) => g.id.equals(gc.id)))
+          .write(const GoalContributionsCompanion(isSynced: Value(true)));
+      totalUploaded++;
+    }
+
+    // 7. Categorization Rules
+    final unsyncedRules = await (_db.select(_db.categorizationRules)
+          ..where((r) => r.isSynced.equals(false)))
+        .get();
+
+    for (final r in unsyncedRules) {
+      final syncId = r.syncId ?? _uuid.v4();
+      if (r.syncId == null) {
+        await (_db.update(_db.categorizationRules)..where((rule) => rule.id.equals(r.id)))
+            .write(CategorizationRulesCompanion(syncId: Value(syncId)));
+      }
+
+      final payload = {
+        'sync_id': syncId,
+        'user_id': userId,
+        'keyword': r.keyword,
+        'category_id': r.categoryId,
+        'weight': r.weight,
+        'updated_at': (r.updatedAt ?? DateTime.now()).toIso8601String(),
+      };
+
+      await userDocRef
+          .collection('categorization_rules')
+          .doc(syncId)
+          .set(payload, SetOptions(merge: true));
+
+      await (_db.update(_db.categorizationRules)..where((rule) => rule.id.equals(r.id)))
+          .write(const CategorizationRulesCompanion(isSynced: Value(true)));
+      totalUploaded++;
+    }
+
     return totalUploaded;
   }
 
-  /// Pulls remote Cloud Firestore records and merges into local Drift DB
+  /// Pulls remote Cloud Firestore records and merges into local Drift DB across all 7 tables
   Future<int> _pullRemoteData(String userId) async {
     final db = FirebaseConfig.db;
     if (db == null) return 0;
@@ -308,6 +439,127 @@ class SyncService {
       }
     } catch (e) {
       debugPrint('Error pulling assets: $e');
+    }
+
+    // 4. Pull Remote User Settings
+    try {
+      final snapshot = await userDocRef.collection('user_settings').get();
+
+      for (final doc in snapshot.docs) {
+        final raw = doc.data();
+        final syncId = (raw['sync_id'] as String?) ?? doc.id;
+
+        final existing = await (_db.select(_db.userSettings)
+              ..where((s) => s.syncId.equals(syncId)))
+            .getSingleOrNull();
+
+        if (existing == null) {
+          await _db.into(_db.userSettings).insertOnConflictUpdate(
+                UserSettingsCompanion.insert(
+                  id: const Value(1),
+                  syncId: Value(syncId),
+                  monthlyIncome: Value((raw['monthly_income'] as num? ?? 0).toDouble()),
+                  currency: Value(raw['currency'] as String? ?? 'INR'),
+                  isOnboarded: Value(raw['is_onboarded'] as bool? ?? false),
+                  biometricEnabled: Value(raw['biometric_enabled'] as bool? ?? false),
+                  showIncomeChart: Value(raw['show_income_chart'] as bool? ?? false),
+                  isSynced: const Value(true),
+                ),
+              );
+          totalDownloaded++;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error pulling user_settings: $e');
+    }
+
+    // 5. Pull Remote Categories
+    try {
+      final snapshot = await userDocRef.collection('categories').get();
+
+      for (final doc in snapshot.docs) {
+        final raw = doc.data();
+        final syncId = (raw['sync_id'] as String?) ?? doc.id;
+
+        final existing = await (_db.select(_db.categories)
+              ..where((c) => c.syncId.equals(syncId)))
+            .getSingleOrNull();
+
+        if (existing == null) {
+          await _db.into(_db.categories).insert(
+                CategoriesCompanion.insert(
+                  syncId: Value(syncId),
+                  name: raw['name'] as String,
+                  icon: raw['icon'] as String,
+                  monthlyBudget: Value((raw['monthly_budget'] as num?)?.toDouble()),
+                  type: Value(raw['type'] as String? ?? 'expense'),
+                  isDefault: Value(raw['is_default'] as bool? ?? false),
+                  isSynced: const Value(true),
+                ),
+              );
+          totalDownloaded++;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error pulling categories: $e');
+    }
+
+    // 6. Pull Remote Goal Contributions
+    try {
+      final snapshot = await userDocRef.collection('goal_contributions').get();
+
+      for (final doc in snapshot.docs) {
+        final raw = doc.data();
+        final syncId = (raw['sync_id'] as String?) ?? doc.id;
+
+        final existing = await (_db.select(_db.goalContributions)
+              ..where((gc) => gc.syncId.equals(syncId)))
+            .getSingleOrNull();
+
+        if (existing == null) {
+          await _db.into(_db.goalContributions).insert(
+                GoalContributionsCompanion.insert(
+                  syncId: Value(syncId),
+                  goalId: raw['goal_id'] as int,
+                  amount: (raw['amount'] as num).toDouble(),
+                  note: Value(raw['note'] as String?),
+                  isSynced: const Value(true),
+                ),
+              );
+          totalDownloaded++;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error pulling goal_contributions: $e');
+    }
+
+    // 7. Pull Remote Categorization Rules
+    try {
+      final snapshot = await userDocRef.collection('categorization_rules').get();
+
+      for (final doc in snapshot.docs) {
+        final raw = doc.data();
+        final syncId = (raw['sync_id'] as String?) ?? doc.id;
+
+        final existing = await (_db.select(_db.categorizationRules)
+              ..where((r) => r.syncId.equals(syncId)))
+            .getSingleOrNull();
+
+        if (existing == null) {
+          await _db.into(_db.categorizationRules).insert(
+                CategorizationRulesCompanion.insert(
+                  syncId: Value(syncId),
+                  keyword: raw['keyword'] as String,
+                  categoryId: raw['category_id'] as int,
+                  weight: Value(raw['weight'] as int? ?? 1),
+                  isSynced: const Value(true),
+                ),
+              );
+          totalDownloaded++;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error pulling categorization_rules: $e');
     }
 
     return totalDownloaded;
