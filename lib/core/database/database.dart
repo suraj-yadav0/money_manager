@@ -10,6 +10,7 @@ part 'database.g.dart';
 /// Transaction table - stores all income and expenses
 class Transactions extends Table {
   IntColumn get id => integer().autoIncrement()();
+  TextColumn get syncId => text().nullable()(); // UUID string for cloud sync
   RealColumn get amount => real()();
   TextColumn get type => text()(); // 'income' | 'expense'
   IntColumn get categoryId => integer().references(Categories, #id)();
@@ -21,12 +22,15 @@ class Transactions extends Table {
   TextColumn get receiptImagePath =>
       text().nullable()(); // Path to receipt/photo
   BoolColumn get isRecurring => boolean().withDefault(const Constant(false))();
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 }
 
 /// Category table - predefined and user categories
 class Categories extends Table {
   IntColumn get id => integer().autoIncrement()();
+  TextColumn get syncId => text().nullable()();
   TextColumn get name => text().unique()();
   TextColumn get icon => text()(); // Material icon name
   RealColumn get monthlyBudget => real().nullable()();
@@ -34,11 +38,14 @@ class Categories extends Table {
       text().withDefault(const Constant('expense'))(); // 'income' | 'expense'
   BoolColumn get isDefault =>
       boolean().withDefault(const Constant(true))(); // System vs user-created
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 }
 
 /// User settings table - stores user preferences
 class UserSettings extends Table {
   IntColumn get id => integer().autoIncrement()();
+  TextColumn get syncId => text().nullable()();
   RealColumn get monthlyIncome => real().withDefault(const Constant(0))();
   TextColumn get currency => text().withDefault(const Constant('INR'))();
   BoolColumn get isOnboarded => boolean().withDefault(const Constant(false))();
@@ -46,42 +53,54 @@ class UserSettings extends Table {
       boolean().withDefault(const Constant(false))();
   BoolColumn get showIncomeChart =>
       boolean().withDefault(const Constant(false))();
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 }
 
 /// Goal table - savings goals
 class Goals extends Table {
   IntColumn get id => integer().autoIncrement()();
+  TextColumn get syncId => text().nullable()();
   TextColumn get name => text()();
   RealColumn get targetAmount => real()();
   DateTimeColumn get deadline => dateTime()();
   RealColumn get savedAmount => real().withDefault(const Constant(0))();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
   BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 }
 
 /// Goal contributions table - tracks individual savings contributions
 class GoalContributions extends Table {
   IntColumn get id => integer().autoIncrement()();
+  TextColumn get syncId => text().nullable()();
   IntColumn get goalId => integer().references(Goals, #id)();
   RealColumn get amount => real()();
   TextColumn get note => text().nullable()();
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 }
 
 /// Categorization rules table - learns from user corrections
 class CategorizationRules extends Table {
   IntColumn get id => integer().autoIncrement()();
+  TextColumn get syncId => text().nullable()();
   TextColumn get keyword => text()();
   IntColumn get categoryId => integer().references(Categories, #id)();
   IntColumn get weight =>
       integer().withDefault(const Constant(1))(); // Higher = stronger match
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 }
 
 /// Assets table - tracks wealth items (savings, investments, loans, gold, etc.)
 class Assets extends Table {
   IntColumn get id => integer().autoIncrement()();
+  TextColumn get syncId => text().nullable()();
   TextColumn get name => text()(); // e.g. "SBI Savings", "Gold Chain"
   TextColumn get type =>
       text()(); // 'savings' | 'investment' | 'loan' | 'gold' | 'property' | 'other'
@@ -89,6 +108,7 @@ class Assets extends Table {
   BoolColumn get isLiability =>
       boolean().withDefault(const Constant(false))(); // true for loans
   TextColumn get note => text().nullable()();
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 }
@@ -108,7 +128,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration {
@@ -157,6 +177,28 @@ class AppDatabase extends _$AppDatabase {
         if (from < 8) {
           // Create assets table for wealth tracking
           await m.createTable(assets);
+        }
+        if (from < 9) {
+          // Add cloud synchronization columns
+          for (final table in [
+            'transactions',
+            'categories',
+            'user_settings',
+            'goals',
+            'goal_contributions',
+            'categorization_rules',
+            'assets'
+          ]) {
+            await customStatement('ALTER TABLE $table ADD COLUMN sync_id TEXT');
+            await customStatement(
+                'ALTER TABLE $table ADD COLUMN is_synced INTEGER NOT NULL DEFAULT 0');
+          }
+          await customStatement('ALTER TABLE transactions ADD COLUMN updated_at INTEGER');
+          await customStatement('ALTER TABLE categories ADD COLUMN updated_at INTEGER');
+          await customStatement('ALTER TABLE user_settings ADD COLUMN updated_at INTEGER');
+          await customStatement('ALTER TABLE goals ADD COLUMN updated_at INTEGER');
+          await customStatement('ALTER TABLE goal_contributions ADD COLUMN updated_at INTEGER');
+          await customStatement('ALTER TABLE categorization_rules ADD COLUMN updated_at INTEGER');
         }
       },
     );

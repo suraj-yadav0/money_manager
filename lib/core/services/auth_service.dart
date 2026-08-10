@@ -1,0 +1,115 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../config/firebase_config.dart';
+
+/// Service managing user authentication with Firebase Auth and Guest Mode fallback
+class AuthService {
+  static const String _guestModeKey = 'quantro_is_guest_mode';
+  final SharedPreferences? _prefs;
+
+  AuthService(this._prefs);
+
+  /// Get current authenticated Firebase user
+  User? get currentUser {
+    if (!FirebaseConfig.isConfigured) return null;
+    return FirebaseConfig.auth?.currentUser;
+  }
+
+  /// Check if user is currently logged in via Firebase
+  bool get isLoggedIn => currentUser != null;
+
+  /// Check if user has selected Guest (Offline-Only) Mode
+  bool get isGuestMode => _prefs?.getBool(_guestModeKey) ?? false;
+
+  /// Auth state change stream
+  Stream<User?>? get authStateStream {
+    if (!FirebaseConfig.isConfigured) return null;
+    return FirebaseConfig.auth?.authStateChanges();
+  }
+
+  /// Sign up with Email and Password
+  Future<UserCredential> signUpWithEmail({
+    required String email,
+    required String password,
+  }) async {
+    final auth = _requireFirebase();
+    final credential = await auth.createUserWithEmailAndPassword(
+      email: email.trim(),
+      password: password,
+    );
+    // Exit guest mode upon successful account creation
+    await setGuestMode(false);
+    return credential;
+  }
+
+  /// Sign in with Email and Password
+  Future<UserCredential> signInWithEmail({
+    required String email,
+    required String password,
+  }) async {
+    final auth = _requireFirebase();
+    final credential = await auth.signInWithEmailAndPassword(
+      email: email.trim(),
+      password: password,
+    );
+    // Exit guest mode upon successful login
+    await setGuestMode(false);
+    return credential;
+  }
+
+  /// Sign in with Google OAuth
+  Future<bool> signInWithGoogle() async {
+    final auth = _requireFirebase();
+    try {
+      final googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return false;
+
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      await auth.signInWithCredential(credential);
+      await setGuestMode(false);
+      return true;
+    } catch (e) {
+      debugPrint('Google sign in error: $e');
+      rethrow;
+    }
+  }
+
+  /// Send password reset email
+  Future<void> resetPassword(String email) async {
+    final auth = _requireFirebase();
+    await auth.sendPasswordResetEmail(email: email.trim());
+  }
+
+  /// Enable or disable Guest Mode
+  Future<void> setGuestMode(bool value) async {
+    await _prefs?.setBool(_guestModeKey, value);
+  }
+
+  /// Sign out from Firebase account
+  Future<void> signOut() async {
+    if (FirebaseConfig.isConfigured && auth != null) {
+      await auth!.signOut();
+    }
+    // Note: signing out does not force guest mode automatically; user goes to AuthScreen
+    await setGuestMode(false);
+  }
+
+  FirebaseAuth _requireFirebase() {
+    final instance = FirebaseConfig.auth;
+    if (instance == null) {
+      throw Exception(
+        'Firebase is not configured yet. Please configure credentials in Settings or continue in Offline Guest Mode.',
+      );
+    }
+    return instance;
+  }
+
+  FirebaseAuth? get auth => FirebaseConfig.auth;
+}

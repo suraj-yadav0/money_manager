@@ -69,7 +69,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               savedAmount: 0,
               isActive: true,
               isCompleted: false,
+              isSynced: false,
               createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
             )
           : null; // Ideally fetch the goal or trust the ID
       _selectedPaymentMode =

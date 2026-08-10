@@ -378,9 +378,9 @@ final incomeCategoriesProvider = StreamProvider<List<Category>>((ref) {
 });
 
 /// Stream provider for user settings
-final userSettingsStreamProvider = StreamProvider<UserSetting>((ref) {
+final userSettingsStreamProvider = StreamProvider<UserSetting?>((ref) {
   final db = ref.watch(databaseProvider);
-  return db.select(db.userSettings).watchSingle();
+  return db.select(db.userSettings).watchSingleOrNull();
 });
 
 /// Provider for selected transaction type in dashboard charts (expense/income)
