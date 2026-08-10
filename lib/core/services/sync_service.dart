@@ -102,7 +102,7 @@ class SyncService {
         'receipt_image_path': tx.receiptImagePath,
         'is_recurring': tx.isRecurring,
         'created_at': tx.createdAt.toIso8601String(),
-        'updated_at': tx.updatedAt.toIso8601String(),
+        'updated_at': (tx.updatedAt ?? DateTime.now()).toIso8601String(),
       };
 
       await userDocRef
@@ -137,7 +137,7 @@ class SyncService {
         'is_active': g.isActive,
         'is_completed': g.isCompleted,
         'created_at': g.createdAt.toIso8601String(),
-        'updated_at': g.updatedAt.toIso8601String(),
+        'updated_at': (g.updatedAt ?? DateTime.now()).toIso8601String(),
       };
 
       await userDocRef
@@ -171,7 +171,7 @@ class SyncService {
         'is_liability': a.isLiability,
         'note': a.note,
         'created_at': a.createdAt.toIso8601String(),
-        'updated_at': a.updatedAt.toIso8601String(),
+        'updated_at': (a.updatedAt ?? DateTime.now()).toIso8601String(),
       };
 
       await userDocRef

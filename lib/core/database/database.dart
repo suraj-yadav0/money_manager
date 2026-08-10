@@ -24,7 +24,8 @@ class Transactions extends Table {
   BoolColumn get isRecurring => boolean().withDefault(const Constant(false))();
   BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
-  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().nullable().withDefault(currentDateAndTime)();
 }
 
 /// Category table - predefined and user categories
@@ -39,7 +40,8 @@ class Categories extends Table {
   BoolColumn get isDefault =>
       boolean().withDefault(const Constant(true))(); // System vs user-created
   BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
-  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().nullable().withDefault(currentDateAndTime)();
 }
 
 /// User settings table - stores user preferences
@@ -55,7 +57,8 @@ class UserSettings extends Table {
       boolean().withDefault(const Constant(false))();
   BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
-  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().nullable().withDefault(currentDateAndTime)();
 }
 
 /// Goal table - savings goals
@@ -70,7 +73,8 @@ class Goals extends Table {
   BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
   BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
-  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().nullable().withDefault(currentDateAndTime)();
 }
 
 /// Goal contributions table - tracks individual savings contributions
@@ -82,7 +86,8 @@ class GoalContributions extends Table {
   TextColumn get note => text().nullable()();
   BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
-  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().nullable().withDefault(currentDateAndTime)();
 }
 
 /// Categorization rules table - learns from user corrections
@@ -94,7 +99,8 @@ class CategorizationRules extends Table {
   IntColumn get weight =>
       integer().withDefault(const Constant(1))(); // Higher = stronger match
   BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
-  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().nullable().withDefault(currentDateAndTime)();
 }
 
 /// Assets table - tracks wealth items (savings, investments, loans, gold, etc.)
@@ -110,7 +116,8 @@ class Assets extends Table {
   TextColumn get note => text().nullable()();
   BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
-  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().nullable().withDefault(currentDateAndTime)();
 }
 
 @DriftDatabase(

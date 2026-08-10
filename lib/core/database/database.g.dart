@@ -108,7 +108,7 @@ class $CategoriesTable extends Categories
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
     'updated_at',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
@@ -239,7 +239,7 @@ class $CategoriesTable extends Categories
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
-      )!,
+      ),
     );
   }
 
@@ -258,7 +258,7 @@ class Category extends DataClass implements Insertable<Category> {
   final String type;
   final bool isDefault;
   final bool isSynced;
-  final DateTime updatedAt;
+  final DateTime? updatedAt;
   const Category({
     required this.id,
     this.syncId,
@@ -268,7 +268,7 @@ class Category extends DataClass implements Insertable<Category> {
     required this.type,
     required this.isDefault,
     required this.isSynced,
-    required this.updatedAt,
+    this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -285,7 +285,9 @@ class Category extends DataClass implements Insertable<Category> {
     map['type'] = Variable<String>(type);
     map['is_default'] = Variable<bool>(isDefault);
     map['is_synced'] = Variable<bool>(isSynced);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
     return map;
   }
 
@@ -303,7 +305,9 @@ class Category extends DataClass implements Insertable<Category> {
       type: Value(type),
       isDefault: Value(isDefault),
       isSynced: Value(isSynced),
-      updatedAt: Value(updatedAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
     );
   }
 
@@ -321,7 +325,7 @@ class Category extends DataClass implements Insertable<Category> {
       type: serializer.fromJson<String>(json['type']),
       isDefault: serializer.fromJson<bool>(json['isDefault']),
       isSynced: serializer.fromJson<bool>(json['isSynced']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
   }
   @override
@@ -336,7 +340,7 @@ class Category extends DataClass implements Insertable<Category> {
       'type': serializer.toJson<String>(type),
       'isDefault': serializer.toJson<bool>(isDefault),
       'isSynced': serializer.toJson<bool>(isSynced),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
   }
 
@@ -349,7 +353,7 @@ class Category extends DataClass implements Insertable<Category> {
     String? type,
     bool? isDefault,
     bool? isSynced,
-    DateTime? updatedAt,
+    Value<DateTime?> updatedAt = const Value.absent(),
   }) => Category(
     id: id ?? this.id,
     syncId: syncId.present ? syncId.value : this.syncId,
@@ -361,7 +365,7 @@ class Category extends DataClass implements Insertable<Category> {
     type: type ?? this.type,
     isDefault: isDefault ?? this.isDefault,
     isSynced: isSynced ?? this.isSynced,
-    updatedAt: updatedAt ?? this.updatedAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   Category copyWithCompanion(CategoriesCompanion data) {
     return Category(
@@ -431,7 +435,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
   final Value<String> type;
   final Value<bool> isDefault;
   final Value<bool> isSynced;
-  final Value<DateTime> updatedAt;
+  final Value<DateTime?> updatedAt;
   const CategoriesCompanion({
     this.id = const Value.absent(),
     this.syncId = const Value.absent(),
@@ -488,7 +492,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     Value<String>? type,
     Value<bool>? isDefault,
     Value<bool>? isSynced,
-    Value<DateTime>? updatedAt,
+    Value<DateTime?>? updatedAt,
   }) {
     return CategoriesCompanion(
       id: id ?? this.id,
@@ -687,7 +691,7 @@ class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
     'updated_at',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
@@ -848,7 +852,7 @@ class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
-      )!,
+      ),
     );
   }
 
@@ -869,7 +873,7 @@ class Goal extends DataClass implements Insertable<Goal> {
   final bool isCompleted;
   final bool isSynced;
   final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? updatedAt;
   const Goal({
     required this.id,
     this.syncId,
@@ -881,7 +885,7 @@ class Goal extends DataClass implements Insertable<Goal> {
     required this.isCompleted,
     required this.isSynced,
     required this.createdAt,
-    required this.updatedAt,
+    this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -898,7 +902,9 @@ class Goal extends DataClass implements Insertable<Goal> {
     map['is_completed'] = Variable<bool>(isCompleted);
     map['is_synced'] = Variable<bool>(isSynced);
     map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
     return map;
   }
 
@@ -916,7 +922,9 @@ class Goal extends DataClass implements Insertable<Goal> {
       isCompleted: Value(isCompleted),
       isSynced: Value(isSynced),
       createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
     );
   }
 
@@ -936,7 +944,7 @@ class Goal extends DataClass implements Insertable<Goal> {
       isCompleted: serializer.fromJson<bool>(json['isCompleted']),
       isSynced: serializer.fromJson<bool>(json['isSynced']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
   }
   @override
@@ -953,7 +961,7 @@ class Goal extends DataClass implements Insertable<Goal> {
       'isCompleted': serializer.toJson<bool>(isCompleted),
       'isSynced': serializer.toJson<bool>(isSynced),
       'createdAt': serializer.toJson<DateTime>(createdAt),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
   }
 
@@ -968,7 +976,7 @@ class Goal extends DataClass implements Insertable<Goal> {
     bool? isCompleted,
     bool? isSynced,
     DateTime? createdAt,
-    DateTime? updatedAt,
+    Value<DateTime?> updatedAt = const Value.absent(),
   }) => Goal(
     id: id ?? this.id,
     syncId: syncId.present ? syncId.value : this.syncId,
@@ -980,7 +988,7 @@ class Goal extends DataClass implements Insertable<Goal> {
     isCompleted: isCompleted ?? this.isCompleted,
     isSynced: isSynced ?? this.isSynced,
     createdAt: createdAt ?? this.createdAt,
-    updatedAt: updatedAt ?? this.updatedAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   Goal copyWithCompanion(GoalsCompanion data) {
     return Goal(
@@ -1064,7 +1072,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
   final Value<bool> isCompleted;
   final Value<bool> isSynced;
   final Value<DateTime> createdAt;
-  final Value<DateTime> updatedAt;
+  final Value<DateTime?> updatedAt;
   const GoalsCompanion({
     this.id = const Value.absent(),
     this.syncId = const Value.absent(),
@@ -1132,7 +1140,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
     Value<bool>? isCompleted,
     Value<bool>? isSynced,
     Value<DateTime>? createdAt,
-    Value<DateTime>? updatedAt,
+    Value<DateTime?>? updatedAt,
   }) {
     return GoalsCompanion(
       id: id ?? this.id,
@@ -1370,7 +1378,7 @@ class $TransactionsTable extends Transactions
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
     'updated_at',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
@@ -1566,7 +1574,7 @@ class $TransactionsTable extends Transactions
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
-      )!,
+      ),
     );
   }
 
@@ -1590,7 +1598,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   final bool isRecurring;
   final bool isSynced;
   final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? updatedAt;
   const Transaction({
     required this.id,
     this.syncId,
@@ -1605,7 +1613,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     required this.isRecurring,
     required this.isSynced,
     required this.createdAt,
-    required this.updatedAt,
+    this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1633,7 +1641,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     map['is_recurring'] = Variable<bool>(isRecurring);
     map['is_synced'] = Variable<bool>(isSynced);
     map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
     return map;
   }
 
@@ -1660,7 +1670,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       isRecurring: Value(isRecurring),
       isSynced: Value(isSynced),
       createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
     );
   }
 
@@ -1683,7 +1695,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       isRecurring: serializer.fromJson<bool>(json['isRecurring']),
       isSynced: serializer.fromJson<bool>(json['isSynced']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
   }
   @override
@@ -1703,7 +1715,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       'isRecurring': serializer.toJson<bool>(isRecurring),
       'isSynced': serializer.toJson<bool>(isSynced),
       'createdAt': serializer.toJson<DateTime>(createdAt),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
   }
 
@@ -1721,7 +1733,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     bool? isRecurring,
     bool? isSynced,
     DateTime? createdAt,
-    DateTime? updatedAt,
+    Value<DateTime?> updatedAt = const Value.absent(),
   }) => Transaction(
     id: id ?? this.id,
     syncId: syncId.present ? syncId.value : this.syncId,
@@ -1738,7 +1750,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     isRecurring: isRecurring ?? this.isRecurring,
     isSynced: isSynced ?? this.isSynced,
     createdAt: createdAt ?? this.createdAt,
-    updatedAt: updatedAt ?? this.updatedAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   Transaction copyWithCompanion(TransactionsCompanion data) {
     return Transaction(
@@ -1839,7 +1851,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
   final Value<bool> isRecurring;
   final Value<bool> isSynced;
   final Value<DateTime> createdAt;
-  final Value<DateTime> updatedAt;
+  final Value<DateTime?> updatedAt;
   const TransactionsCompanion({
     this.id = const Value.absent(),
     this.syncId = const Value.absent(),
@@ -1923,7 +1935,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     Value<bool>? isRecurring,
     Value<bool>? isSynced,
     Value<DateTime>? createdAt,
-    Value<DateTime>? updatedAt,
+    Value<DateTime?>? updatedAt,
   }) {
     return TransactionsCompanion(
       id: id ?? this.id,
@@ -2144,7 +2156,7 @@ class $UserSettingsTable extends UserSettings
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
     'updated_at',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
@@ -2291,7 +2303,7 @@ class $UserSettingsTable extends UserSettings
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
-      )!,
+      ),
     );
   }
 
@@ -2311,7 +2323,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
   final bool showIncomeChart;
   final bool isSynced;
   final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? updatedAt;
   const UserSetting({
     required this.id,
     this.syncId,
@@ -2322,7 +2334,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
     required this.showIncomeChart,
     required this.isSynced,
     required this.createdAt,
-    required this.updatedAt,
+    this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2338,7 +2350,9 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
     map['show_income_chart'] = Variable<bool>(showIncomeChart);
     map['is_synced'] = Variable<bool>(isSynced);
     map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
     return map;
   }
 
@@ -2355,7 +2369,9 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
       showIncomeChart: Value(showIncomeChart),
       isSynced: Value(isSynced),
       createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
     );
   }
 
@@ -2374,7 +2390,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
       showIncomeChart: serializer.fromJson<bool>(json['showIncomeChart']),
       isSynced: serializer.fromJson<bool>(json['isSynced']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
   }
   @override
@@ -2390,7 +2406,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
       'showIncomeChart': serializer.toJson<bool>(showIncomeChart),
       'isSynced': serializer.toJson<bool>(isSynced),
       'createdAt': serializer.toJson<DateTime>(createdAt),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
   }
 
@@ -2404,7 +2420,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
     bool? showIncomeChart,
     bool? isSynced,
     DateTime? createdAt,
-    DateTime? updatedAt,
+    Value<DateTime?> updatedAt = const Value.absent(),
   }) => UserSetting(
     id: id ?? this.id,
     syncId: syncId.present ? syncId.value : this.syncId,
@@ -2415,7 +2431,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
     showIncomeChart: showIncomeChart ?? this.showIncomeChart,
     isSynced: isSynced ?? this.isSynced,
     createdAt: createdAt ?? this.createdAt,
-    updatedAt: updatedAt ?? this.updatedAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   UserSetting copyWithCompanion(UserSettingsCompanion data) {
     return UserSetting(
@@ -2496,7 +2512,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
   final Value<bool> showIncomeChart;
   final Value<bool> isSynced;
   final Value<DateTime> createdAt;
-  final Value<DateTime> updatedAt;
+  final Value<DateTime?> updatedAt;
   const UserSettingsCompanion({
     this.id = const Value.absent(),
     this.syncId = const Value.absent(),
@@ -2557,7 +2573,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
     Value<bool>? showIncomeChart,
     Value<bool>? isSynced,
     Value<DateTime>? createdAt,
-    Value<DateTime>? updatedAt,
+    Value<DateTime?>? updatedAt,
   }) {
     return UserSettingsCompanion(
       id: id ?? this.id,
@@ -2719,7 +2735,7 @@ class $GoalContributionsTable extends GoalContributions
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
     'updated_at',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
@@ -2836,7 +2852,7 @@ class $GoalContributionsTable extends GoalContributions
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
-      )!,
+      ),
     );
   }
 
@@ -2855,7 +2871,7 @@ class GoalContribution extends DataClass
   final String? note;
   final bool isSynced;
   final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? updatedAt;
   const GoalContribution({
     required this.id,
     this.syncId,
@@ -2864,7 +2880,7 @@ class GoalContribution extends DataClass
     this.note,
     required this.isSynced,
     required this.createdAt,
-    required this.updatedAt,
+    this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2880,7 +2896,9 @@ class GoalContribution extends DataClass
     }
     map['is_synced'] = Variable<bool>(isSynced);
     map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
     return map;
   }
 
@@ -2895,7 +2913,9 @@ class GoalContribution extends DataClass
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
       isSynced: Value(isSynced),
       createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
     );
   }
 
@@ -2912,7 +2932,7 @@ class GoalContribution extends DataClass
       note: serializer.fromJson<String?>(json['note']),
       isSynced: serializer.fromJson<bool>(json['isSynced']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
   }
   @override
@@ -2926,7 +2946,7 @@ class GoalContribution extends DataClass
       'note': serializer.toJson<String?>(note),
       'isSynced': serializer.toJson<bool>(isSynced),
       'createdAt': serializer.toJson<DateTime>(createdAt),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
   }
 
@@ -2938,7 +2958,7 @@ class GoalContribution extends DataClass
     Value<String?> note = const Value.absent(),
     bool? isSynced,
     DateTime? createdAt,
-    DateTime? updatedAt,
+    Value<DateTime?> updatedAt = const Value.absent(),
   }) => GoalContribution(
     id: id ?? this.id,
     syncId: syncId.present ? syncId.value : this.syncId,
@@ -2947,7 +2967,7 @@ class GoalContribution extends DataClass
     note: note.present ? note.value : this.note,
     isSynced: isSynced ?? this.isSynced,
     createdAt: createdAt ?? this.createdAt,
-    updatedAt: updatedAt ?? this.updatedAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   GoalContribution copyWithCompanion(GoalContributionsCompanion data) {
     return GoalContribution(
@@ -3010,7 +3030,7 @@ class GoalContributionsCompanion extends UpdateCompanion<GoalContribution> {
   final Value<String?> note;
   final Value<bool> isSynced;
   final Value<DateTime> createdAt;
-  final Value<DateTime> updatedAt;
+  final Value<DateTime?> updatedAt;
   const GoalContributionsCompanion({
     this.id = const Value.absent(),
     this.syncId = const Value.absent(),
@@ -3062,7 +3082,7 @@ class GoalContributionsCompanion extends UpdateCompanion<GoalContribution> {
     Value<String?>? note,
     Value<bool>? isSynced,
     Value<DateTime>? createdAt,
-    Value<DateTime>? updatedAt,
+    Value<DateTime?>? updatedAt,
   }) {
     return GoalContributionsCompanion(
       id: id ?? this.id,
@@ -3207,7 +3227,7 @@ class $CategorizationRulesTable extends CategorizationRules
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
     'updated_at',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
@@ -3313,7 +3333,7 @@ class $CategorizationRulesTable extends CategorizationRules
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
-      )!,
+      ),
     );
   }
 
@@ -3331,7 +3351,7 @@ class CategorizationRule extends DataClass
   final int categoryId;
   final int weight;
   final bool isSynced;
-  final DateTime updatedAt;
+  final DateTime? updatedAt;
   const CategorizationRule({
     required this.id,
     this.syncId,
@@ -3339,7 +3359,7 @@ class CategorizationRule extends DataClass
     required this.categoryId,
     required this.weight,
     required this.isSynced,
-    required this.updatedAt,
+    this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3352,7 +3372,9 @@ class CategorizationRule extends DataClass
     map['category_id'] = Variable<int>(categoryId);
     map['weight'] = Variable<int>(weight);
     map['is_synced'] = Variable<bool>(isSynced);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
     return map;
   }
 
@@ -3366,7 +3388,9 @@ class CategorizationRule extends DataClass
       categoryId: Value(categoryId),
       weight: Value(weight),
       isSynced: Value(isSynced),
-      updatedAt: Value(updatedAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
     );
   }
 
@@ -3382,7 +3406,7 @@ class CategorizationRule extends DataClass
       categoryId: serializer.fromJson<int>(json['categoryId']),
       weight: serializer.fromJson<int>(json['weight']),
       isSynced: serializer.fromJson<bool>(json['isSynced']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
   }
   @override
@@ -3395,7 +3419,7 @@ class CategorizationRule extends DataClass
       'categoryId': serializer.toJson<int>(categoryId),
       'weight': serializer.toJson<int>(weight),
       'isSynced': serializer.toJson<bool>(isSynced),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
   }
 
@@ -3406,7 +3430,7 @@ class CategorizationRule extends DataClass
     int? categoryId,
     int? weight,
     bool? isSynced,
-    DateTime? updatedAt,
+    Value<DateTime?> updatedAt = const Value.absent(),
   }) => CategorizationRule(
     id: id ?? this.id,
     syncId: syncId.present ? syncId.value : this.syncId,
@@ -3414,7 +3438,7 @@ class CategorizationRule extends DataClass
     categoryId: categoryId ?? this.categoryId,
     weight: weight ?? this.weight,
     isSynced: isSynced ?? this.isSynced,
-    updatedAt: updatedAt ?? this.updatedAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   CategorizationRule copyWithCompanion(CategorizationRulesCompanion data) {
     return CategorizationRule(
@@ -3467,7 +3491,7 @@ class CategorizationRulesCompanion extends UpdateCompanion<CategorizationRule> {
   final Value<int> categoryId;
   final Value<int> weight;
   final Value<bool> isSynced;
-  final Value<DateTime> updatedAt;
+  final Value<DateTime?> updatedAt;
   const CategorizationRulesCompanion({
     this.id = const Value.absent(),
     this.syncId = const Value.absent(),
@@ -3514,7 +3538,7 @@ class CategorizationRulesCompanion extends UpdateCompanion<CategorizationRule> {
     Value<int>? categoryId,
     Value<int>? weight,
     Value<bool>? isSynced,
-    Value<DateTime>? updatedAt,
+    Value<DateTime?>? updatedAt,
   }) {
     return CategorizationRulesCompanion(
       id: id ?? this.id,
@@ -3681,7 +3705,7 @@ class $AssetsTable extends Assets with TableInfo<$AssetsTable, Asset> {
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
     'updated_at',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
@@ -3825,7 +3849,7 @@ class $AssetsTable extends Assets with TableInfo<$AssetsTable, Asset> {
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
-      )!,
+      ),
     );
   }
 
@@ -3845,7 +3869,7 @@ class Asset extends DataClass implements Insertable<Asset> {
   final String? note;
   final bool isSynced;
   final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? updatedAt;
   const Asset({
     required this.id,
     this.syncId,
@@ -3856,7 +3880,7 @@ class Asset extends DataClass implements Insertable<Asset> {
     this.note,
     required this.isSynced,
     required this.createdAt,
-    required this.updatedAt,
+    this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3874,7 +3898,9 @@ class Asset extends DataClass implements Insertable<Asset> {
     }
     map['is_synced'] = Variable<bool>(isSynced);
     map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
     return map;
   }
 
@@ -3891,7 +3917,9 @@ class Asset extends DataClass implements Insertable<Asset> {
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
       isSynced: Value(isSynced),
       createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
     );
   }
 
@@ -3910,7 +3938,7 @@ class Asset extends DataClass implements Insertable<Asset> {
       note: serializer.fromJson<String?>(json['note']),
       isSynced: serializer.fromJson<bool>(json['isSynced']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
   }
   @override
@@ -3926,7 +3954,7 @@ class Asset extends DataClass implements Insertable<Asset> {
       'note': serializer.toJson<String?>(note),
       'isSynced': serializer.toJson<bool>(isSynced),
       'createdAt': serializer.toJson<DateTime>(createdAt),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
   }
 
@@ -3940,7 +3968,7 @@ class Asset extends DataClass implements Insertable<Asset> {
     Value<String?> note = const Value.absent(),
     bool? isSynced,
     DateTime? createdAt,
-    DateTime? updatedAt,
+    Value<DateTime?> updatedAt = const Value.absent(),
   }) => Asset(
     id: id ?? this.id,
     syncId: syncId.present ? syncId.value : this.syncId,
@@ -3951,7 +3979,7 @@ class Asset extends DataClass implements Insertable<Asset> {
     note: note.present ? note.value : this.note,
     isSynced: isSynced ?? this.isSynced,
     createdAt: createdAt ?? this.createdAt,
-    updatedAt: updatedAt ?? this.updatedAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   Asset copyWithCompanion(AssetsCompanion data) {
     return Asset(
@@ -4026,7 +4054,7 @@ class AssetsCompanion extends UpdateCompanion<Asset> {
   final Value<String?> note;
   final Value<bool> isSynced;
   final Value<DateTime> createdAt;
-  final Value<DateTime> updatedAt;
+  final Value<DateTime?> updatedAt;
   const AssetsCompanion({
     this.id = const Value.absent(),
     this.syncId = const Value.absent(),
@@ -4089,7 +4117,7 @@ class AssetsCompanion extends UpdateCompanion<Asset> {
     Value<String?>? note,
     Value<bool>? isSynced,
     Value<DateTime>? createdAt,
-    Value<DateTime>? updatedAt,
+    Value<DateTime?>? updatedAt,
   }) {
     return AssetsCompanion(
       id: id ?? this.id,
@@ -4196,7 +4224,7 @@ typedef $$CategoriesTableCreateCompanionBuilder =
       Value<String> type,
       Value<bool> isDefault,
       Value<bool> isSynced,
-      Value<DateTime> updatedAt,
+      Value<DateTime?> updatedAt,
     });
 typedef $$CategoriesTableUpdateCompanionBuilder =
     CategoriesCompanion Function({
@@ -4208,7 +4236,7 @@ typedef $$CategoriesTableUpdateCompanionBuilder =
       Value<String> type,
       Value<bool> isDefault,
       Value<bool> isSynced,
-      Value<DateTime> updatedAt,
+      Value<DateTime?> updatedAt,
     });
 
 final class $$CategoriesTableReferences
@@ -4553,7 +4581,7 @@ class $$CategoriesTableTableManager
                 Value<String> type = const Value.absent(),
                 Value<bool> isDefault = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => CategoriesCompanion(
                 id: id,
                 syncId: syncId,
@@ -4575,7 +4603,7 @@ class $$CategoriesTableTableManager
                 Value<String> type = const Value.absent(),
                 Value<bool> isDefault = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => CategoriesCompanion.insert(
                 id: id,
                 syncId: syncId,
@@ -4685,7 +4713,7 @@ typedef $$GoalsTableCreateCompanionBuilder =
       Value<bool> isCompleted,
       Value<bool> isSynced,
       Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
+      Value<DateTime?> updatedAt,
     });
 typedef $$GoalsTableUpdateCompanionBuilder =
     GoalsCompanion Function({
@@ -4699,7 +4727,7 @@ typedef $$GoalsTableUpdateCompanionBuilder =
       Value<bool> isCompleted,
       Value<bool> isSynced,
       Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
+      Value<DateTime?> updatedAt,
     });
 
 final class $$GoalsTableReferences
@@ -5069,7 +5097,7 @@ class $$GoalsTableTableManager
                 Value<bool> isCompleted = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => GoalsCompanion(
                 id: id,
                 syncId: syncId,
@@ -5095,7 +5123,7 @@ class $$GoalsTableTableManager
                 Value<bool> isCompleted = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => GoalsCompanion.insert(
                 id: id,
                 syncId: syncId,
@@ -5208,7 +5236,7 @@ typedef $$TransactionsTableCreateCompanionBuilder =
       Value<bool> isRecurring,
       Value<bool> isSynced,
       Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
+      Value<DateTime?> updatedAt,
     });
 typedef $$TransactionsTableUpdateCompanionBuilder =
     TransactionsCompanion Function({
@@ -5225,7 +5253,7 @@ typedef $$TransactionsTableUpdateCompanionBuilder =
       Value<bool> isRecurring,
       Value<bool> isSynced,
       Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
+      Value<DateTime?> updatedAt,
     });
 
 final class $$TransactionsTableReferences
@@ -5641,7 +5669,7 @@ class $$TransactionsTableTableManager
                 Value<bool> isRecurring = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => TransactionsCompanion(
                 id: id,
                 syncId: syncId,
@@ -5673,7 +5701,7 @@ class $$TransactionsTableTableManager
                 Value<bool> isRecurring = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => TransactionsCompanion.insert(
                 id: id,
                 syncId: syncId,
@@ -5781,7 +5809,7 @@ typedef $$UserSettingsTableCreateCompanionBuilder =
       Value<bool> showIncomeChart,
       Value<bool> isSynced,
       Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
+      Value<DateTime?> updatedAt,
     });
 typedef $$UserSettingsTableUpdateCompanionBuilder =
     UserSettingsCompanion Function({
@@ -5794,7 +5822,7 @@ typedef $$UserSettingsTableUpdateCompanionBuilder =
       Value<bool> showIncomeChart,
       Value<bool> isSynced,
       Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
+      Value<DateTime?> updatedAt,
     });
 
 class $$UserSettingsTableFilterComposer
@@ -6005,7 +6033,7 @@ class $$UserSettingsTableTableManager
                 Value<bool> showIncomeChart = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => UserSettingsCompanion(
                 id: id,
                 syncId: syncId,
@@ -6029,7 +6057,7 @@ class $$UserSettingsTableTableManager
                 Value<bool> showIncomeChart = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => UserSettingsCompanion.insert(
                 id: id,
                 syncId: syncId,
@@ -6076,7 +6104,7 @@ typedef $$GoalContributionsTableCreateCompanionBuilder =
       Value<String?> note,
       Value<bool> isSynced,
       Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
+      Value<DateTime?> updatedAt,
     });
 typedef $$GoalContributionsTableUpdateCompanionBuilder =
     GoalContributionsCompanion Function({
@@ -6087,7 +6115,7 @@ typedef $$GoalContributionsTableUpdateCompanionBuilder =
       Value<String?> note,
       Value<bool> isSynced,
       Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
+      Value<DateTime?> updatedAt,
     });
 
 final class $$GoalContributionsTableReferences
@@ -6352,7 +6380,7 @@ class $$GoalContributionsTableTableManager
                 Value<String?> note = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => GoalContributionsCompanion(
                 id: id,
                 syncId: syncId,
@@ -6372,7 +6400,7 @@ class $$GoalContributionsTableTableManager
                 Value<String?> note = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => GoalContributionsCompanion.insert(
                 id: id,
                 syncId: syncId,
@@ -6460,7 +6488,7 @@ typedef $$CategorizationRulesTableCreateCompanionBuilder =
       required int categoryId,
       Value<int> weight,
       Value<bool> isSynced,
-      Value<DateTime> updatedAt,
+      Value<DateTime?> updatedAt,
     });
 typedef $$CategorizationRulesTableUpdateCompanionBuilder =
     CategorizationRulesCompanion Function({
@@ -6470,7 +6498,7 @@ typedef $$CategorizationRulesTableUpdateCompanionBuilder =
       Value<int> categoryId,
       Value<int> weight,
       Value<bool> isSynced,
-      Value<DateTime> updatedAt,
+      Value<DateTime?> updatedAt,
     });
 
 final class $$CategorizationRulesTableReferences
@@ -6728,7 +6756,7 @@ class $$CategorizationRulesTableTableManager
                 Value<int> categoryId = const Value.absent(),
                 Value<int> weight = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => CategorizationRulesCompanion(
                 id: id,
                 syncId: syncId,
@@ -6746,7 +6774,7 @@ class $$CategorizationRulesTableTableManager
                 required int categoryId,
                 Value<int> weight = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => CategorizationRulesCompanion.insert(
                 id: id,
                 syncId: syncId,
@@ -6836,7 +6864,7 @@ typedef $$AssetsTableCreateCompanionBuilder =
       Value<String?> note,
       Value<bool> isSynced,
       Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
+      Value<DateTime?> updatedAt,
     });
 typedef $$AssetsTableUpdateCompanionBuilder =
     AssetsCompanion Function({
@@ -6849,7 +6877,7 @@ typedef $$AssetsTableUpdateCompanionBuilder =
       Value<String?> note,
       Value<bool> isSynced,
       Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
+      Value<DateTime?> updatedAt,
     });
 
 class $$AssetsTableFilterComposer
@@ -7051,7 +7079,7 @@ class $$AssetsTableTableManager
                 Value<String?> note = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => AssetsCompanion(
                 id: id,
                 syncId: syncId,
@@ -7075,7 +7103,7 @@ class $$AssetsTableTableManager
                 Value<String?> note = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => AssetsCompanion.insert(
                 id: id,
                 syncId: syncId,
