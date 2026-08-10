@@ -25,7 +25,10 @@ class BalanceCard extends ConsumerWidget {
 
     return statsAsync.when(
       loading: () => _buildLoadingCard(context),
-      error: (e, _) => _buildErrorCard(context, e.toString()),
+      error: (e, st) {
+        debugPrint('BALANCE_CARD_ERROR: $e\n$st');
+        return _buildErrorCard(context, e.toString());
+      },
       data: (stats) => GlassContainer(
         width: double.infinity,
         borderRadius: 32,

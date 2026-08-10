@@ -126,6 +126,7 @@ class Assets extends Table {
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
+  AppDatabase.forTesting(QueryExecutor e) : super(e);
 
   @override
   int get schemaVersion => 9;
@@ -133,6 +134,25 @@ class AppDatabase extends _$AppDatabase {
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
+      beforeOpen: (details) async {
+        // Fix any null updated_at fields from legacy schema v9 migrations
+        final nowSeconds = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+        for (final table in [
+          'transactions',
+          'categories',
+          'user_settings',
+          'goals',
+          'goal_contributions',
+          'categorization_rules',
+          'assets'
+        ]) {
+          try {
+            await customStatement(
+              'UPDATE $table SET updated_at = $nowSeconds WHERE updated_at IS NULL',
+            );
+          } catch (_) {}
+        }
+      },
       onCreate: (Migrator m) async {
         await m.createAll();
         await _seedDefaultCategories();
@@ -193,12 +213,13 @@ class AppDatabase extends _$AppDatabase {
             await customStatement(
                 'ALTER TABLE $table ADD COLUMN is_synced INTEGER NOT NULL DEFAULT 0');
           }
-          await customStatement('ALTER TABLE transactions ADD COLUMN updated_at INTEGER');
-          await customStatement('ALTER TABLE categories ADD COLUMN updated_at INTEGER');
-          await customStatement('ALTER TABLE user_settings ADD COLUMN updated_at INTEGER');
-          await customStatement('ALTER TABLE goals ADD COLUMN updated_at INTEGER');
-          await customStatement('ALTER TABLE goal_contributions ADD COLUMN updated_at INTEGER');
-          await customStatement('ALTER TABLE categorization_rules ADD COLUMN updated_at INTEGER');
+          final nowSec = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+          await customStatement('ALTER TABLE transactions ADD COLUMN updated_at INTEGER NOT NULL DEFAULT $nowSec');
+          await customStatement('ALTER TABLE categories ADD COLUMN updated_at INTEGER NOT NULL DEFAULT $nowSec');
+          await customStatement('ALTER TABLE user_settings ADD COLUMN updated_at INTEGER NOT NULL DEFAULT $nowSec');
+          await customStatement('ALTER TABLE goals ADD COLUMN updated_at INTEGER NOT NULL DEFAULT $nowSec');
+          await customStatement('ALTER TABLE goal_contributions ADD COLUMN updated_at INTEGER NOT NULL DEFAULT $nowSec');
+          await customStatement('ALTER TABLE categorization_rules ADD COLUMN updated_at INTEGER NOT NULL DEFAULT $nowSec');
         }
       },
     );
