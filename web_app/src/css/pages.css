@@ -1,0 +1,403 @@
+/* Page-specific layouts (Onboarding, Auth, Dashboard, Budget, Goals, Networth, etc.) */
+
+/* Onboarding Screen */
+.onboarding-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 32px 24px;
+  justify-content: space-between;
+}
+
+.onboarding-logo {
+  font-size: 64px;
+  color: var(--primary);
+  background: rgba(255, 95, 31, 0.15);
+  width: 120px;
+  height: 120px;
+  border-radius: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 32px;
+  border: 1px solid rgba(255, 95, 31, 0.3);
+}
+
+.onboarding-title {
+  font-size: 32px;
+  text-align: center;
+  margin-bottom: 16px;
+  line-height: 1.2;
+}
+
+.onboarding-desc {
+  font-size: 15px;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.onboarding-income-input {
+  font-family: var(--font-heading);
+  font-size: 36px;
+  font-weight: 700;
+  text-align: center;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--glass-border);
+  padding: 10px;
+  width: 100%;
+  transition: var(--transition-fast);
+}
+
+.onboarding-income-input:focus {
+  outline: none;
+  border-bottom-color: var(--primary);
+}
+
+/* Auth Page */
+.auth-header-logo {
+  font-size: 54px;
+  color: var(--primary);
+  background: rgba(255, 95, 31, 0.15);
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px auto 16px;
+  border: 1px solid rgba(255, 95, 31, 0.3);
+}
+
+.auth-card {
+  margin-top: 16px;
+}
+
+.auth-error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #F87171;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.divider-text {
+  text-align: center;
+  position: relative;
+  margin: 20px 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.divider-text::before, .divider-text::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: var(--divider);
+}
+
+.divider-text::before { left: 0; }
+.divider-text::after { right: 0; }
+
+/* Dashboard Widgets */
+.balance-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.balance-title {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.balance-value {
+  font-family: var(--font-heading);
+  font-size: 36px;
+  font-weight: 700;
+}
+
+.balance-stats-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--divider);
+}
+
+.balance-stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.balance-stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.balance-stat-val {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.forecast-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.forecast-safe { background: rgba(255, 95, 31, 0.15); color: var(--primary); }
+.forecast-caution { background: rgba(255, 215, 0, 0.15); color: #FFD700; }
+.forecast-deficit { background: rgba(255, 0, 51, 0.15); color: var(--accent); }
+
+/* Transaction Row List */
+.transaction-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+  margin-bottom: 12px;
+}
+
+.transaction-list-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.transaction-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--divider);
+  transition: var(--transition-fast);
+  cursor: pointer;
+}
+
+.transaction-row:last-child {
+  border-bottom: none;
+}
+
+.transaction-row:hover {
+  opacity: 0.8;
+}
+
+.transaction-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.tx-details {
+  flex: 1;
+  margin-left: 12px;
+}
+
+.tx-note {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.tx-category {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.tx-amount-box {
+  text-align: right;
+}
+
+.tx-amount {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.tx-amount.income { color: var(--success); }
+.tx-amount.expense { color: var(--text-primary); }
+
+.tx-date {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Category Budget Row */
+.budget-category-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--divider);
+}
+
+.budget-category-row:last-child {
+  border-bottom: none;
+}
+
+.budget-cat-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.budget-cat-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.budget-cat-progress {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.budget-overrun {
+  color: var(--error);
+  font-weight: 600;
+}
+
+/* Goal Card */
+.goal-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.goal-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.goal-name {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.goal-target {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.goal-progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+/* Settings List Tiles */
+.settings-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-tile {
+  display: flex;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--divider);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.settings-tile:last-child {
+  border-bottom: none;
+}
+
+.settings-tile:hover {
+  opacity: 0.8;
+}
+
+.settings-tile-icon {
+  font-size: 22px;
+  color: var(--primary);
+  width: 36px;
+}
+
+.settings-tile-content {
+  flex: 1;
+}
+
+.settings-tile-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.settings-tile-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.settings-tile-action {
+  color: var(--text-muted);
+}
+
+/* Insights screen cards */
+.insight-card {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.insight-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.insight-critical .insight-icon-box { background: rgba(239, 68, 68, 0.15); color: var(--error); }
+.insight-warning .insight-icon-box { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+.insight-info .insight-icon-box { background: rgba(0, 198, 255, 0.15); color: var(--secondary); }
+
+.insight-content {
+  flex: 1;
+}
+
+.insight-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.insight-description {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.insight-tip {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 8px;
+  font-style: italic;
+}
