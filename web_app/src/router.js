@@ -1,4 +1,4 @@
-/* Client-side Single Page Application router matching Flutter screen logic */
+/* Client-side Single Page Application router with Modern Website Architecture */
 import { StateManager } from './state.js';
 import { AuthPage } from './pages/auth.js';
 import { OnboardingPage } from './pages/onboarding.js';
@@ -13,14 +13,13 @@ import { AllTransactionsPage } from './pages/all-transactions.js';
 import { DbService } from './db.js';
 
 export const Router = {
-  // Mount target container
   targetElement: null,
-  activeOverlayPage: null, // Settings, Insights, Calendar, AllTransactions
+  activeOverlayPage: null, // 'settings', 'insights', 'calendar', 'all-transactions'
 
   init(selector) {
     this.targetElement = document.querySelector(selector);
     
-    // Subscribe to State Changes to automatically re-route/re-render
+    // Subscribe to State Changes to automatically re-render
     StateManager.subscribe((state) => {
       this.render(state);
     });
@@ -29,10 +28,10 @@ export const Router = {
     this.render(StateManager.state);
   },
 
-  // Navigate to overlays (Settings, Insights, Calendar)
-  navigateToOverlay(pageKey) {
+  // Open modal overlay
+  openOverlay(pageKey) {
     this.activeOverlayPage = pageKey;
-    StateManager.notify(); // Trigger re-render with overlay active
+    StateManager.notify();
   },
 
   closeOverlay() {
@@ -43,17 +42,17 @@ export const Router = {
   render(state) {
     if (!this.targetElement) return;
 
-    // 1. If user is logged in with Firebase:
+    // 1. If user is authenticated with Firebase:
     if (state.user) {
-      this.renderAppShell(state);
+      this.renderWebsite(state);
       return;
     }
 
-    // 2. If user is explicitly in guest mode:
+    // 2. If user is in guest mode:
     if (state.isGuestMode) {
       const isOnboarded = state.userSettings && (state.userSettings.is_onboarded === true || state.userSettings.isOnboarded === true);
       if (isOnboarded) {
-        this.renderAppShell(state);
+        this.renderWebsite(state);
         return;
       }
       this.targetElement.innerHTML = OnboardingPage.render(state);
@@ -61,161 +60,188 @@ export const Router = {
       return;
     }
 
-    // 3. Unauthenticated and not guest mode: Show Auth Page (Login / Sign Up / Continue as Guest)
+    // 3. Unauthenticated landing / auth view
     this.targetElement.innerHTML = AuthPage.render(state);
     AuthPage.bindEvents();
   },
 
-  renderAppShell(state) {
-    const navIndex = state.navIndex;
+  renderWebsite(state) {
+    const navIndex = state.navIndex || 0;
 
-    let pageTitle = 'Quantro';
     let contentHtml = '';
     
-    // Render main pages based on navIndex
     if (navIndex === 0) {
-      pageTitle = 'Dashboard';
       contentHtml = DashboardPage.render(state);
     } else if (navIndex === 1) {
-      pageTitle = 'Budget';
-      contentHtml = BudgetPage.render(state);
+      contentHtml = AllTransactionsPage.render(state);
     } else if (navIndex === 2) {
-      pageTitle = 'Net Worth';
-      contentHtml = NetWorthPage.render(state);
+      contentHtml = BudgetPage.render(state);
     } else if (navIndex === 3) {
-      pageTitle = 'Goals';
       contentHtml = GoalsPage.render(state);
+    } else if (navIndex === 4) {
+      contentHtml = NetWorthPage.render(state);
+    } else if (navIndex === 5) {
+      contentHtml = InsightsPage.render(state);
+    } else if (navIndex === 6) {
+      contentHtml = CalendarPage.render(state);
+    } else {
+      contentHtml = DashboardPage.render(state);
     }
 
-    // Desktop App Shell HTML
-    const shellHtml = `
-      <div class="app-container">
-        <!-- Floating animated blobs in shell background -->
-        <div class="bg-blobs">
-          <div class="blob blob-orange"></div>
-          <div class="blob blob-blue"></div>
-          <div class="blob blob-red"></div>
+    // Sync Status badge indicators
+    let syncLabel = 'Cloud Synced';
+    let syncClass = '';
+    if (state.syncStatus === 'syncing') {
+      syncLabel = 'Syncing...';
+      syncClass = 'syncing';
+    } else if (state.syncStatus === 'error') {
+      syncLabel = 'Sync Warning';
+      syncClass = 'error';
+    }
+
+    const html = `
+      <div class="site-wrapper animate-fade-in">
+        <!-- Ambient lighting mesh -->
+        <div class="ambient-glow">
+          <div class="ambient-circle-1"></div>
+          <div class="ambient-circle-2"></div>
         </div>
 
-        <!-- Desktop Sidebar -->
-        <aside class="sidebar">
-          <div class="sidebar-header">
-            <div style="width:36px; height:36px; background:linear-gradient(135deg, var(--primary) 0%, #FF8C42 100%); border-radius:10px; display:flex; align-items:center; justify-content:center;">
-              <span class="material-icons" style="color:#FFF; font-size:20px;">account_balance_wallet</span>
-            </div>
-            <div class="sidebar-title">Quantro</div>
-          </div>
-
-          <button class="nav-fab-desktop" id="nav-add-btn">
-            <span class="material-icons">add</span> Add Transaction
-          </button>
-
-          <div class="nav-links">
-            <div class="nav-item ${navIndex === 0 ? 'active' : ''}" data-index="0">
-              <span class="material-icons">grid_view</span> Dashboard
-            </div>
-            <div class="nav-item ${navIndex === 1 ? 'active' : ''}" data-index="1">
-              <span class="material-icons">account_balance_wallet</span> Budget
-            </div>
-            <div class="nav-item ${navIndex === 2 ? 'active' : ''}" data-index="2">
-              <span class="material-icons">account_balance</span> Net Worth
-            </div>
-            <div class="nav-item ${navIndex === 3 ? 'active' : ''}" data-index="3">
-              <span class="material-icons">savings</span> Goals
-            </div>
-            <div class="divider" style="background: rgba(255,255,255,0.05); margin:8px 0;"></div>
-            <div class="nav-item" id="sidebar-insights-btn">
-              <span class="material-icons">insights</span> Insights
-              ${state.transactions.length > 5 ? '<div style="margin-left:auto; width:8px; height:8px; background:var(--primary); border-radius:50%;"></div>' : ''}
-            </div>
-            <div class="nav-item" id="sidebar-calendar-btn">
-              <span class="material-icons">calendar_month</span> Calendar
-            </div>
-            <div class="nav-item" id="sidebar-transactions-btn">
-              <span class="material-icons">receipt_long</span> All Transactions
-            </div>
-          </div>
-
-          <div class="sidebar-footer">
-            <div class="nav-item" id="sidebar-settings-btn">
-              <span class="material-icons">settings</span> Settings
-            </div>
-          </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main-content">
-          <header class="desktop-header">
-            <div class="header-title">${pageTitle}</div>
-            <div class="header-actions" style="display:flex; align-items:center; gap:12px;">
-              ${state.user ? `
-                <div id="header-sync-status" style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--text-secondary); background:rgba(255,255,255,0.05); padding:6px 14px; border-radius:20px; cursor:pointer; transition:var(--transition-fast);" title="Click to sync cloud data">
-                  <span class="material-icons ${state.syncStatus === 'syncing' ? 'animate-spin' : ''}" style="font-size:16px; color:${state.syncStatus === 'syncing' ? 'var(--primary)' : 'var(--success)'};">
-                    ${state.syncStatus === 'syncing' ? 'sync' : 'cloud_done'}
-                  </span>
-                  <span>${state.syncStatus === 'syncing' ? 'Syncing...' : 'Cloud Synced'}</span>
+        <!-- Top Navigation Header -->
+        <header class="site-header">
+          <div class="site-container">
+            <div class="header-inner">
+              <!-- Brand Logo -->
+              <div class="brand-link" id="brand-logo-btn">
+                <div class="brand-icon">
+                  <span class="material-icons">account_balance_wallet</span>
                 </div>
-                <div style="font-size:13px; font-weight:600; color:var(--text-primary); background:rgba(255,255,255,0.05); padding:6px 14px; border-radius:20px;">
-                  ${state.user.email || 'User'}
+                <div class="brand-name">
+                  Quantro
+                  <span class="brand-tag">PRO</span>
                 </div>
-              ` : `
-                <div style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--text-muted); background:rgba(255,255,255,0.05); padding:6px 12px; border-radius:20px;">
-                  <span class="material-icons" style="font-size:16px;">cloud_off</span>
-                  <span>Offline Guest</span>
-                </div>
-              `}
+              </div>
+
+              <!-- Main Navigation Links -->
+              <nav class="header-nav">
+                <button class="nav-link-btn ${navIndex === 0 ? 'active' : ''}" data-nav="0">
+                  <span class="material-icons">dashboard</span> Overview
+                </button>
+                <button class="nav-link-btn ${navIndex === 1 ? 'active' : ''}" data-nav="1">
+                  <span class="material-icons">receipt_long</span> Ledger
+                </button>
+                <button class="nav-link-btn ${navIndex === 2 ? 'active' : ''}" data-nav="2">
+                  <span class="material-icons">pie_chart</span> Budget
+                </button>
+                <button class="nav-link-btn ${navIndex === 3 ? 'active' : ''}" data-nav="3">
+                  <span class="material-icons">savings</span> Goals
+                </button>
+                <button class="nav-link-btn ${navIndex === 4 ? 'active' : ''}" data-nav="4">
+                  <span class="material-icons">account_balance</span> Net Worth
+                </button>
+                <button class="nav-link-btn ${navIndex === 5 ? 'active' : ''}" data-nav="5">
+                  <span class="material-icons">insights</span> Insights
+                </button>
+                <button class="nav-link-btn ${navIndex === 6 ? 'active' : ''}" data-nav="6">
+                  <span class="material-icons">calendar_month</span> Calendar
+                </button>
+              </nav>
+
+              <!-- Header Action Controls -->
+              <div class="header-actions">
+                ${state.user ? `
+                  <div class="sync-pill ${syncClass}" id="header-sync-btn" title="Click to trigger full Cloud Sync">
+                    <span class="sync-dot"></span>
+                    <span>${syncLabel}</span>
+                  </div>
+                ` : `
+                  <div class="sync-pill" id="header-connect-btn" style="border-color: rgba(255,255,255,0.12);" title="Connect Firebase account">
+                    <span class="material-icons" style="font-size: 14px; color: var(--text-muted);">cloud_off</span>
+                    <span>Guest Mode</span>
+                  </div>
+                `}
+
+                <button class="btn-primary" id="header-add-tx-btn">
+                  <span class="material-icons" style="font-size: 18px;">add</span> Record
+                </button>
+
+                <button class="btn-icon" id="header-settings-btn" title="Account & Preferences">
+                  <span class="material-icons">settings</span>
+                </button>
+              </div>
             </div>
-          </header>
-          
-          <div class="app-body" id="app-content-body">
+          </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="main-content-section" style="flex: 1;">
+          <div class="site-container">
             ${contentHtml}
           </div>
         </main>
+
+        <!-- Footer -->
+        <footer class="site-footer">
+          <div class="site-container">
+            <div class="footer-inner">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 20px; height: 20px; border-radius: 6px; background: var(--primary); display: flex; align-items: center; justify-content: center;">
+                  <span class="material-icons" style="font-size: 12px; color: #FFF;">account_balance_wallet</span>
+                </div>
+                <span style="font-weight: 700; color: var(--text-primary);">Quantro Finance</span>
+                <span>• Privacy-first Cloud Synced Wealth Platform</span>
+              </div>
+              <div>
+                <span>Encrypted with Cloud Firestore • Real-time Cross-Platform Sync</span>
+              </div>
+            </div>
+          </div>
+        </footer>
       </div>
 
-      <!-- Full-Screen Overlays -->
-      <div class="modal-overlay" id="overlay-container">
-        <!-- Dynamic overlay page container -->
+      <!-- Global Overlay Container for Modals -->
+      <div class="modal-overlay ${this.activeOverlayPage ? 'active' : ''}" id="app-overlay-container">
+        <!-- Render Active Overlay Dialog -->
       </div>
     `;
 
-    this.targetElement.innerHTML = shellHtml;
+    this.targetElement.innerHTML = html;
 
-    // Bind navigation and overlay buttons
-    this.bindShellEvents(state);
-
-    // Call active page bindings
+    // Bind Page Events
     if (navIndex === 0) DashboardPage.bindEvents(state);
-    else if (navIndex === 1) BudgetPage.bindEvents(state);
-    else if (navIndex === 2) NetWorthPage.bindEvents(state);
+    else if (navIndex === 1) AllTransactionsPage.bindEvents(state);
+    else if (navIndex === 2) BudgetPage.bindEvents(state);
     else if (navIndex === 3) GoalsPage.bindEvents(state);
+    else if (navIndex === 4) NetWorthPage.bindEvents(state);
+    else if (navIndex === 5) InsightsPage.bindEvents(state);
+    else if (navIndex === 6) CalendarPage.bindEvents(state);
 
-    // Render active overlay if any exists
-    if (this.activeOverlayPage) {
-      const overlayOverlay = document.getElementById('overlay-container');
-      overlayOverlay.classList.add('active');
-      
-      if (this.activeOverlayPage === 'settings') {
-        overlayOverlay.innerHTML = SettingsPage.render(state);
-        SettingsPage.bindEvents(state);
-      } else if (this.activeOverlayPage === 'insights') {
-        overlayOverlay.innerHTML = InsightsPage.render(state);
-        InsightsPage.bindEvents(state);
-      } else if (this.activeOverlayPage === 'calendar') {
-        overlayOverlay.innerHTML = CalendarPage.render(state);
-        CalendarPage.bindEvents(state);
-      } else if (this.activeOverlayPage === 'all-transactions') {
-        overlayOverlay.innerHTML = AllTransactionsPage.render(state);
-        AllTransactionsPage.bindEvents(state);
-      }
-    }
+    // Bind Global Header Navigation Events
+    this.bindHeaderEvents(state);
+
+    // Render Overlay if active
+    this.renderActiveOverlay(state);
   },
 
-  bindShellEvents(state) {
-    // Header sync status click trigger
-    const headerSync = document.getElementById('header-sync-status');
-    if (headerSync && state.user) {
-      headerSync.addEventListener('click', async () => {
+  bindHeaderEvents(state) {
+    // Brand click returns to overview
+    document.getElementById('brand-logo-btn')?.addEventListener('click', () => {
+      StateManager.setState({ navIndex: 0 });
+    });
+
+    // Nav Link tabs
+    const navButtons = document.querySelectorAll('.header-nav .nav-link-btn');
+    navButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const index = parseInt(btn.getAttribute('data-nav'), 10);
+        StateManager.setState({ navIndex: index });
+      });
+    });
+
+    // Cloud Sync trigger in header
+    const syncBtn = document.getElementById('header-sync-btn');
+    if (syncBtn && state.user) {
+      syncBtn.addEventListener('click', async () => {
         try {
           const res = await DbService.syncNow(state.user.uid);
           alert(`Cloud sync complete!\n\nSynced:\n• ${res.count.transactions} Transactions\n• ${res.count.categories} Categories\n• ${res.count.goals} Goals\n• ${res.count.assets} Assets`);
@@ -226,40 +252,46 @@ export const Router = {
       });
     }
 
-    // Navigation items click
-    const navItems = document.querySelectorAll('.nav-links .nav-item[data-index]');
-    navItems.forEach(item => {
-      item.addEventListener('click', () => {
-        const index = parseInt(item.getAttribute('data-index'), 10);
-        StateManager.setState({ navIndex: index });
+    // Connect cloud account button for guests
+    document.getElementById('header-connect-btn')?.addEventListener('click', () => {
+      StateManager.disableGuestMode();
+    });
+
+    // Record Transaction quick action button
+    document.getElementById('header-add-tx-btn')?.addEventListener('click', () => {
+      import('./pages/add-transaction.js').then(({ AddTransactionModal }) => {
+        AddTransactionModal.show(null);
       });
     });
 
-    // Add Transaction button click
-    const addBtn = document.getElementById('nav-add-btn');
-    if (addBtn) {
-      addBtn.addEventListener('click', () => {
-        import('./pages/add-transaction.js').then(({ AddTransactionModal }) => {
-          AddTransactionModal.show(null);
-        });
-      });
+    // Settings trigger button
+    document.getElementById('header-settings-btn')?.addEventListener('click', () => {
+      this.openOverlay('settings');
+    });
+  },
+
+  renderActiveOverlay(state) {
+    const overlayContainer = document.getElementById('app-overlay-container');
+    if (!overlayContainer) return;
+
+    if (!this.activeOverlayPage) {
+      overlayContainer.innerHTML = '';
+      overlayContainer.classList.remove('active');
+      return;
     }
 
-    // Overlays click
-    document.getElementById('sidebar-settings-btn')?.addEventListener('click', () => {
-      this.navigateToOverlay('settings');
-    });
+    overlayContainer.classList.add('active');
 
-    document.getElementById('sidebar-insights-btn')?.addEventListener('click', () => {
-      this.navigateToOverlay('insights');
-    });
+    if (this.activeOverlayPage === 'settings') {
+      overlayContainer.innerHTML = SettingsPage.render(state);
+      SettingsPage.bindEvents(state);
+    }
 
-    document.getElementById('sidebar-calendar-btn')?.addEventListener('click', () => {
-      this.navigateToOverlay('calendar');
-    });
-
-    document.getElementById('sidebar-transactions-btn')?.addEventListener('click', () => {
-      this.navigateToOverlay('all-transactions');
+    // Close overlay on backdrop click
+    overlayContainer.addEventListener('click', (e) => {
+      if (e.target === overlayContainer) {
+        this.closeOverlay();
+      }
     });
   }
 };

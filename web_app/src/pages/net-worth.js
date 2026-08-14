@@ -1,372 +1,272 @@
-/* Net Worth & Assets Management Screen Module (wealth items, liabilities, net worth cumulative charts) */
-import { Chart } from 'chart.js';
+/* Modern Net Worth & Asset Intelligence Module */
 import { StateManager } from '../state.js';
 import { DbService } from '../db.js';
 import { Formatters } from '../utils/formatters.js';
-import { IconHelper } from '../utils/icons.js';
-
-let networthChartInstance = null;
 
 export const NetWorthPage = {
-  activeAssetFilter: 'all', // 'all', 'assets', 'liabilities'
-
   render(state) {
-    const data = this.calculateNetWorthData(state);
-    const filteredAssets = this.getFilteredAssets(state);
-
-    return `
-      <div class="animate-fade-in" style="display:flex; flex-wrap:wrap; gap:24px; align-items:flex-start;">
-        
-        <!-- Left Column: Summary & Chart -->
-        <div style="flex: 1 1 360px; max-width: 100%; display:flex; flex-direction:column; gap:24px; min-width:0;">
-          
-          <!-- Net Worth glass card -->
-          <div class="glass-card balance-container" style="margin:0;">
-            <div class="balance-title">Net Worth</div>
-            <div class="balance-value" style="color: ${data.netWorth >= 0 ? 'var(--success)' : 'var(--error)'}; font-size:32px;">
-              ${Formatters.currency(data.netWorth)}
-            </div>
-            
-            <div class="balance-stats-row" style="margin-top:24px;">
-              <div class="balance-stat-item">
-                <div class="balance-stat-label">Total Assets</div>
-                <div class="balance-stat-val" style="color: var(--success); font-size:16px;">${Formatters.currency(data.totalAssets)}</div>
-              </div>
-              <div class="balance-stat-item" style="text-align: right;">
-                <div class="balance-stat-label">Total Liabilities</div>
-                <div class="balance-stat-val" style="color: var(--error); font-size:16px;">${Formatters.currency(data.totalLiabilities)}</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Net Worth Trend Chart Card -->
-          <div class="glass-card">
-            <h3 style="font-size: 15px; margin-bottom: 16px;">Net Worth Trend</h3>
-            <div style="position: relative; height: 180px; width: 100%;">
-              <canvas id="networth-trend-chart"></canvas>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right Column: Assets & Liabilities List -->
-        <div style="flex: 1 1 500px; display:flex; flex-direction:column; gap:16px; min-width:0;">
-          
-          <!-- Filter Controls & Add Asset Button -->
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div class="tab-bar" style="padding: 2px; border-radius: 20px;">
-              <button class="tab-button ${this.activeAssetFilter === 'all' ? 'active' : ''}" 
-                      style="padding: 6px 12px; font-size: 11px; border-radius: 16px;" 
-                      id="asset-filter-all">All</button>
-              <button class="tab-button ${this.activeAssetFilter === 'assets' ? 'active' : ''}" 
-                      style="padding: 6px 12px; font-size: 11px; border-radius: 16px;" 
-                      id="asset-filter-assets">Assets</button>
-              <button class="tab-button ${this.activeAssetFilter === 'liabilities' ? 'active' : ''}" 
-                      style="padding: 6px 12px; font-size: 11px; border-radius: 16px;" 
-                      id="asset-filter-liabilities">Liabilities</button>
-            </div>
-
-            <button class="btn btn-primary" id="networth-add-asset-btn" style="width:auto; padding: 8px 16px; font-size:12px;">
-              <span class="material-icons" style="font-size:16px;">add</span>
-              Add Asset
-            </button>
-          </div>
-
-          <!-- Assets List Card -->
-          <div class="glass-card" style="padding: 10px 20px; min-height:400px;">
-            ${filteredAssets.length === 0 ? `
-              <div style="text-align: center; padding: 60px 0; color: var(--text-muted); font-size: 14px;">
-                <span class="material-icons" style="font-size: 48px; opacity:0.3; margin-bottom:12px;">account_balance</span><br>
-                No assets or liabilities found.
-              </div>
-            ` : filteredAssets.map(asset => this.renderAssetRow(asset)).join('')}
-          </div>
-        </div>
-
-      </div>
-    `;
-  },
-
-  renderAssetRow(asset) {
-    const emoji = IconHelper.getAssetEmoji(asset.type);
-    const label = IconHelper.getAssetLabel(asset.type);
-    const valColor = asset.isLiability ? 'var(--error)' : 'var(--success)';
-    const amount = (asset.isLiability ? '-' : '') + Formatters.currency(asset.value);
-
-    return `
-      <div class="transaction-row" style="cursor:default;">
-        <div class="transaction-icon-box" style="background: rgba(255, 255, 255, 0.05); font-size: 20px;">
-          ${emoji}
-        </div>
-        <div class="tx-details">
-          <div class="tx-note" style="font-weight:600;">${asset.name}</div>
-          <div class="tx-category">${label}</div>
-        </div>
-        <div style="display:flex; align-items:center; gap:16px;">
-          <div style="text-align: right;">
-            <div class="tx-amount" style="color: ${valColor}; font-weight:700;">${amount}</div>
-            <div class="tx-date" style="font-size:10px;">${asset.note || ''}</div>
-          </div>
-          <button class="btn-icon delete-asset-row-btn" 
-                  style="width:32px; height:32px; font-size:16px; border:none; background:rgba(239,68,68,0.1); color:var(--error);"
-                  data-sync-id="${asset.sync_id}"
-                  data-id="${asset.id || ''}">
-            <span class="material-icons" style="font-size:16px;">delete_outline</span>
-          </button>
-        </div>
-      </div>
-    `;
-  },
-
-  calculateNetWorthData(state) {
-    let totalIncome = 0;
-    let totalExpenses = 0;
-
-    for (const tx of state.transactions) {
-      if (tx.type === 'income') totalIncome += tx.amount;
-      else totalExpenses += tx.amount;
-    }
-
-    const cashflow = totalIncome - totalExpenses;
-
+    const assets = state.assets || [];
+    
     let totalAssets = 0;
     let totalLiabilities = 0;
 
-    for (const asset of state.assets) {
-      if (asset.is_liability === true || asset.isLiability === true) {
-        totalLiabilities += asset.value;
+    assets.forEach(a => {
+      const val = Number(a.value || 0);
+      if (a.is_liability || a.isLiability) {
+        totalLiabilities += val;
       } else {
-        totalAssets += asset.value;
+        totalAssets += val;
       }
-    }
-
-    const netWorth = cashflow + totalAssets - totalLiabilities;
-
-    return {
-      netWorth,
-      totalAssets,
-      totalLiabilities
-    };
-  },
-
-  getFilteredAssets(state) {
-    return state.assets.filter(asset => {
-      const isL = asset.is_liability === true || asset.isLiability === true;
-      if (this.activeAssetFilter === 'assets') return !isL;
-      if (this.activeAssetFilter === 'liabilities') return isL;
-      return true;
     });
+
+    const netWorth = totalAssets - totalLiabilities;
+    const debtRatio = totalAssets > 0 ? Math.round((totalLiabilities / totalAssets) * 100) : 0;
+
+    return `
+      <div class="animate-fade-in" style="display: flex; flex-direction: column; gap: 28px;">
+        
+        <!-- Hero Header -->
+        <section class="hero-section" style="padding-bottom: 0;">
+          <div class="hero-header">
+            <div>
+              <h1 class="hero-welcome-title">Net Worth & Wealth Matrix</h1>
+              <p class="hero-subtitle">Holistic balance sheet evaluation, capital assets, investment portfolios, and liability exposure.</p>
+            </div>
+            
+            <button class="btn-primary" id="add-asset-btn">
+              <span class="material-icons" style="font-size: 18px;">add</span> Add Asset / Debt
+            </button>
+          </div>
+
+          <!-- Net Worth KPI Stat Cards -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">Consolidated Net Worth</span>
+                <div class="kpi-icon-box" style="background: rgba(16, 185, 129, 0.12); color: var(--primary);">
+                  <span class="material-icons" style="font-size: 20px;">account_balance</span>
+                </div>
+              </div>
+              <div class="kpi-value" style="color: ${netWorth >= 0 ? '#FFF' : 'var(--error)'};">
+                ${Formatters.currency(netWorth)}
+              </div>
+              <div class="kpi-footer">
+                <span class="kpi-badge ${netWorth >= 0 ? 'positive' : 'negative'}">
+                  ${debtRatio}% Debt Ratio
+                </span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">Gross Capital Assets</span>
+                <div class="kpi-icon-box" style="background: rgba(56, 189, 248, 0.12); color: var(--secondary);">
+                  <span class="material-icons" style="font-size: 20px;">trending_up</span>
+                </div>
+              </div>
+              <div class="kpi-value" style="color: var(--secondary);">${Formatters.currency(totalAssets)}</div>
+              <div class="kpi-footer">
+                <span>${assets.filter(a => !(a.is_liability || a.isLiability)).length} Asset Holdings</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">Total Liabilities & Debt</span>
+                <div class="kpi-icon-box" style="background: rgba(244, 63, 94, 0.12); color: var(--error);">
+                  <span class="material-icons" style="font-size: 20px;">trending_down</span>
+                </div>
+              </div>
+              <div class="kpi-value" style="color: var(--error);">${Formatters.currency(totalLiabilities)}</div>
+              <div class="kpi-footer">
+                <span>${assets.filter(a => a.is_liability || a.isLiability).length} Active Liabilities</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">Financial Solvency</span>
+                <div class="kpi-icon-box" style="background: rgba(99, 102, 241, 0.12); color: var(--indigo);">
+                  <span class="material-icons" style="font-size: 20px;">verified</span>
+                </div>
+              </div>
+              <div class="kpi-value" style="font-size: 22px;">${debtRatio < 30 ? 'Pristine' : debtRatio < 60 ? 'Moderate' : 'Leveraged'}</div>
+              <div class="kpi-footer">
+                <span>Leverage profile tier</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Assets & Liabilities Split Grid -->
+        <div class="dashboard-split-grid">
+          
+          <!-- Assets Column -->
+          <div class="fintech-card">
+            <div class="card-header">
+              <div class="card-title">
+                <span class="material-icons" style="color: var(--secondary);">account_balance_wallet</span>
+                <span>Assets & Holdings (${Formatters.currency(totalAssets)})</span>
+              </div>
+            </div>
+
+            <div class="assets-grid">
+              ${assets.filter(a => !(a.is_liability || a.isLiability)).length === 0 ? `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 32px 0; color: var(--text-muted); font-size: 13px;">
+                  No asset records added yet. Add bank accounts, investments, or properties.
+                </div>
+              ` : assets.filter(a => !(a.is_liability || a.isLiability)).map(a => `
+                <div class="asset-card">
+                  <div>
+                    <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">${a.name}</div>
+                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-top: 2px;">${a.type || 'Savings'}</div>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="font-weight: 800; font-size: 15px; color: var(--secondary);">${Formatters.currency(a.value)}</div>
+                    <button class="btn-icon btn-icon-sm delete-asset-btn" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" style="color: var(--error); border: none;">
+                      <span class="material-icons" style="font-size: 16px;">delete_outline</span>
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Liabilities Column -->
+          <div class="fintech-card">
+            <div class="card-header">
+              <div class="card-title">
+                <span class="material-icons" style="color: var(--error);">credit_card</span>
+                <span>Liabilities & Debts (${Formatters.currency(totalLiabilities)})</span>
+              </div>
+            </div>
+
+            <div class="assets-grid">
+              ${assets.filter(a => a.is_liability || a.isLiability).length === 0 ? `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 32px 0; color: var(--text-muted); font-size: 13px;">
+                  Zero liabilities recorded. You have a 100% debt-free profile!
+                </div>
+              ` : assets.filter(a => a.is_liability || a.isLiability).map(a => `
+                <div class="asset-card">
+                  <div>
+                    <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">${a.name}</div>
+                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-top: 2px;">${a.type || 'Debt'}</div>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="font-weight: 800; font-size: 15px; color: var(--error);">${Formatters.currency(a.value)}</div>
+                    <button class="btn-icon btn-icon-sm delete-asset-btn" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" style="color: var(--error); border: none;">
+                      <span class="material-icons" style="font-size: 16px;">delete_outline</span>
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    `;
   },
 
   bindEvents(state) {
-    // Filter controls
-    const filterAll = document.getElementById('asset-filter-all');
-    if (filterAll) {
-      filterAll.addEventListener('click', () => {
-        this.activeAssetFilter = 'all';
-        StateManager.notify();
-      });
-    }
+    // Add Asset Modal CTA
+    document.getElementById('add-asset-btn')?.addEventListener('click', () => {
+      this.showAddAssetModal();
+    });
 
-    const filterAssets = document.getElementById('asset-filter-assets');
-    if (filterAssets) {
-      filterAssets.addEventListener('click', () => {
-        this.activeAssetFilter = 'assets';
-        StateManager.notify();
-      });
-    }
-
-    const filterLiabilities = document.getElementById('asset-filter-liabilities');
-    if (filterLiabilities) {
-      filterLiabilities.addEventListener('click', () => {
-        this.activeAssetFilter = 'liabilities';
-        StateManager.notify();
-      });
-    }
-
-    // Add Asset click
-    const addAssetBtn = document.getElementById('networth-add-asset-btn');
-    if (addAssetBtn) {
-      addAssetBtn.addEventListener('click', () => {
-        this.showAddAssetModal();
-      });
-    }
-
-    // Delete asset row buttons
-    const deleteBtns = document.querySelectorAll('.delete-asset-row-btn');
+    // Delete asset button
+    const deleteBtns = document.querySelectorAll('.delete-asset-btn');
     deleteBtns.forEach(btn => {
-      btn.addEventListener('click', async () => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
         const syncId = btn.getAttribute('data-sync-id');
-        const localId = parseInt(btn.getAttribute('data-id'), 10) || null;
-        if (confirm('Are you sure you want to delete this asset?')) {
+        const localId = btn.getAttribute('data-id');
+        if (confirm('Delete this asset/liability entry?')) {
           await DbService.deleteAsset(syncId, localId);
         }
       });
     });
-
-    // Render Net Worth trend chart
-    this.renderTrendChart(state);
   },
 
   showAddAssetModal() {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay active';
     overlay.innerHTML = `
-      <div class="modal-card animate-fade-in" style="background:#1E1E2C;">
+      <div class="modern-modal-dialog animate-scale-up" style="max-width: 440px;">
         <div class="modal-header">
-          <h3 style="color:#FFF;">Add Wealth Asset</h3>
-          <button class="modal-close" id="asset-modal-close">&times;</button>
+          <div class="modal-title">
+            <span class="material-icons" style="color: var(--primary);">account_balance</span>
+            <span>New Asset / Liability</span>
+          </div>
+          <button class="modal-close-btn" id="modal-close-asset">&times;</button>
         </div>
-        
+
         <div class="form-group">
-          <label class="form-label">Asset Name</label>
-          <input type="text" class="form-input" id="asset-name-field" placeholder="SBI Savings, Gold chain, etc.">
+          <label class="form-label">Name / Description</label>
+          <input type="text" class="form-control" id="asset-name-field" placeholder="e.g. HDFC Bank, Mutual Funds, Home Loan">
         </div>
-        
+
         <div class="form-group">
-          <label class="form-label">Asset Type</label>
-          <select class="form-input" id="asset-type-field" style="background:var(--input-bg); color:#FFF; border:1px solid var(--input-border);">
-            <option value="savings">💰 Savings Account</option>
-            <option value="investment">📈 Mutual Funds/Stocks</option>
-            <option value="gold">🥇 Gold</option>
-            <option value="property">🏠 Property / Real Estate</option>
-            <option value="loan">💳 Loan / Debt Liability</option>
-            <option value="other">📦 Other Asset</option>
+          <label class="form-label">Classification Type</label>
+          <select class="form-control" id="asset-is-liability-field">
+            <option value="false">Asset (Positive Capital)</option>
+            <option value="true">Liability / Debt (Negative Capital)</option>
           </select>
         </div>
-        
+
         <div class="form-group">
-          <label class="form-label">Current Value (₹)</label>
-          <input type="number" class="form-input" id="asset-value-field" placeholder="10000">
+          <label class="form-label">Valuation / Amount (₹)</label>
+          <input type="number" class="form-control" id="asset-val-field" placeholder="50000">
         </div>
-        
+
         <div class="form-group">
-          <label class="form-label">Note (Optional)</label>
-          <input type="text" class="form-input" id="asset-note-field" placeholder="Description">
+          <label class="form-label">Category Classification</label>
+          <select class="form-control" id="asset-type-field">
+            <option value="savings">Cash / Bank Account</option>
+            <option value="investment">Investments & Stocks</option>
+            <option value="real_estate">Real Estate</option>
+            <option value="crypto">Cryptocurrency</option>
+            <option value="vehicle">Vehicle</option>
+            <option value="loan">Personal / Home Loan</option>
+            <option value="credit_card">Credit Card Debt</option>
+            <option value="other">Other Asset / Liability</option>
+          </select>
         </div>
-        
-        <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:20px;">
-          <button class="btn btn-outline" id="asset-cancel-btn" style="width:auto; padding:10px 20px;">Cancel</button>
-          <button class="btn btn-primary" id="asset-save-btn" style="width:auto; padding:10px 20px;">Add Asset</button>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--glass-border);">
+          <button class="btn-secondary" id="modal-cancel-asset" style="width: auto;">Cancel</button>
+          <button class="btn-primary" id="modal-submit-asset" style="width: auto;">Save Entry</button>
         </div>
       </div>
     `;
 
     document.body.appendChild(overlay);
+    const closeModal = () => { if (document.body.contains(overlay)) document.body.removeChild(overlay); };
 
-    const closeModal = () => {
-      document.body.removeChild(overlay);
-    };
+    document.getElementById('modal-close-asset')?.addEventListener('click', closeModal);
+    document.getElementById('modal-cancel-asset')?.addEventListener('click', closeModal);
 
-    document.getElementById('asset-modal-close').addEventListener('click', closeModal);
-    document.getElementById('asset-cancel-btn').addEventListener('click', closeModal);
-
-    document.getElementById('asset-save-btn').addEventListener('click', async () => {
+    document.getElementById('modal-submit-asset')?.addEventListener('click', async () => {
       const name = document.getElementById('asset-name-field').value.trim();
+      const val = parseFloat(document.getElementById('asset-val-field').value);
+      const isLiability = document.getElementById('asset-is-liability-field').value === 'true';
       const type = document.getElementById('asset-type-field').value;
-      const value = parseFloat(document.getElementById('asset-value-field').value) || 0;
-      const note = document.getElementById('asset-note-field').value.trim();
 
-      if (!name) {
-        alert('Please enter asset name.');
+      if (!name || isNaN(val) || val <= 0) {
+        alert('Please enter a valid asset name and valuation.');
         return;
       }
-      if (value <= 0) {
-        alert('Please enter value amount.');
-        return;
-      }
-
-      const isLiability = type === 'loan';
 
       await DbService.addAsset({
         name,
-        type,
-        value,
+        value: val,
         isLiability,
         is_liability: isLiability,
-        note: note || null
+        type
       });
 
       closeModal();
-    });
-  },
-
-  renderTrendChart(state) {
-    const canvas = document.getElementById('networth-trend-chart');
-    if (!canvas) return;
-
-    if (networthChartInstance) networthChartInstance.destroy();
-
-    // Group transactions by month to construct networth trends (replicates monthlyNetWorthProvider)
-    const monthlyNet = {};
-    for (const tx of state.transactions) {
-      const date = new Date(tx.timestamp);
-      const key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-      if (!monthlyNet[key]) {
-        monthlyNet[key] = { income: 0, expenses: 0 };
-      }
-      if (tx.type === 'income') {
-        monthlyNet[key].income += tx.amount;
-      } else {
-        monthlyNet[key].expenses += tx.amount;
-      }
-    }
-
-    const sortedMonths = Object.keys(monthlyNet).sort();
-    let cumulative = 0;
-    
-    // Add current assets/liabilities to all-time initial networth baseline
-    let assetsNetVal = 0;
-    for (const asset of state.assets) {
-      const val = asset.value || 0;
-      const isL = asset.is_liability === true || asset.isLiability === true;
-      if (isL) assetsNetVal -= val;
-      else assetsNetVal += val;
-    }
-
-    const data = [];
-    const labels = [];
-
-    for (const month of sortedMonths) {
-      const net = monthlyNet[month].income - monthlyNet[month].expenses;
-      cumulative += net;
-      
-      const parts = month.split('-');
-      const date = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, 1);
-      const label = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-      
-      labels.push(label);
-      data.push(cumulative + assetsNetVal);
-    }
-
-    // Default mock data if no transactions
-    if (labels.length === 0) {
-      labels.push('Now');
-      data.push(assetsNetVal);
-    }
-
-    networthChartInstance = new Chart(canvas, {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [{
-          data,
-          borderColor: '#00C6FF', // Chakra Blue
-          backgroundColor: 'rgba(0, 198, 255, 0.1)',
-          fill: true,
-          tension: 0.3,
-          borderWidth: 2,
-          pointRadius: 3
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { ticks: { color: 'rgba(255, 255, 255, 0.5)', font: { size: 9 } }, grid: { display: false } },
-          y: { ticks: { color: 'rgba(255, 255, 255, 0.5)', font: { size: 9 } }, grid: { color: 'rgba(255, 255, 255, 0.05)' } }
-        }
-      }
+      StateManager.notify();
     });
   }
 };

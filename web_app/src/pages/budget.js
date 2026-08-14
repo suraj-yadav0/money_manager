@@ -1,4 +1,4 @@
-/* Budget Screen Module (Category budgets, utilization bars, suggestions and adjustments) */
+/* Modern Budget Planning & Allocations Module */
 import { StateManager } from '../state.js';
 import { DbService } from '../db.js';
 import { DateRangeHelper } from '../utils/date-range.js';
@@ -8,134 +8,184 @@ import { IconHelper, findCategory } from '../utils/icons.js';
 export const BudgetPage = {
   render(state) {
     const stats = this.calculateBudgetStats(state);
-    
+    const suggestions = this.calculateAverageCategorySpending(state);
+    const suggestionEntries = Object.entries(suggestions);
+
     return `
-      <div class="animate-fade-in" style="display:flex; flex-wrap:wrap; gap:24px; align-items:flex-start;">
+      <div class="animate-fade-in" style="display: flex; flex-direction: column; gap: 28px;">
         
-        <!-- Left Column: Summary & Suggestions -->
-        <div style="flex: 1 1 360px; max-width: 100%; display:flex; flex-direction:column; gap:24px; min-width:0;">
-          
-          <!-- Budget Stats Summary Card -->
-          <div class="glass-card balance-container" style="margin:0;">
-            <div class="balance-title">Monthly Budget Pool</div>
-            <div class="balance-value" style="color: ${stats.totalRemaining >= 0 ? 'var(--text-primary)' : 'var(--error)'}; font-size:32px;">
-              ${Formatters.currency(stats.totalBudget)}
+        <!-- Hero Header -->
+        <section class="hero-section" style="padding-bottom: 0;">
+          <div class="hero-header">
+            <div>
+              <h1 class="hero-welcome-title">Budget & Allocations</h1>
+              <p class="hero-subtitle">Set category thresholds, track utilization burn rates, and receive automated pacing suggestions.</p>
             </div>
             
-            <div style="margin-top: 16px;">
-              <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text-secondary); margin-bottom: 8px;">
-                <span>Spent ${Formatters.currency(stats.totalSpent)}</span>
-                <span>${stats.percentUsed.toFixed(0)}% Used</span>
-              </div>
-              <div class="progress-container" style="height: 6px;">
-                <div class="progress-bar" style="width: ${stats.percentUsed}%; background: ${stats.percentUsed >= 100 ? 'var(--error)' : 'var(--primary)'};"></div>
-              </div>
-            </div>
-
-            <div class="balance-stats-row" style="margin-top:24px;">
-              <div class="balance-stat-item">
-                <div class="balance-stat-label">Remaining</div>
-                <div class="balance-stat-val" style="color: ${stats.totalRemaining >= 0 ? 'var(--success)' : 'var(--error)'}; font-size:16px;">
-                  ${Formatters.currency(stats.totalRemaining)}
-                </div>
-              </div>
-              <div class="balance-stat-item" style="text-align: right;">
-                <div class="balance-stat-label">Daily Allowance</div>
-                <div class="balance-stat-val" style="font-size:16px;">${Formatters.currency(stats.dailyAllowance)}/day</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Suggestions Banner if any exist -->
-          ${this.renderBudgetSuggestions(state)}
-
-        </div>
-
-        <!-- Right Column: Category Budgets list -->
-        <div style="flex: 1 1 500px; display:flex; flex-direction:column; gap:16px; min-width:0;">
-          <div class="transaction-list-header" style="margin:0;">
-            <h3 class="transaction-list-title" style="font-size:18px;">Category Budgets</h3>
-            <button class="btn btn-outline" id="budget-edit-limits-btn" style="width:auto; padding: 6px 12px; font-size:12px;">
-              <span class="material-icons" style="font-size:16px;">edit</span>
-              Adjust Budgets
+            <button class="btn-primary" id="budget-set-all-btn">
+              <span class="material-icons" style="font-size: 18px;">tune</span> Adjust Budgets
             </button>
           </div>
 
-          <div class="glass-card" style="padding: 10px 20px; min-height:400px;">
-            ${stats.categoryStats.length === 0 ? `
-              <div style="text-align: center; padding: 60px 0; color: var(--text-muted); font-size: 14px;">
-                <span class="material-icons" style="font-size: 48px; opacity:0.3; margin-bottom:12px;">account_balance_wallet</span><br>
-                No category budgets set.<br>Click "Adjust Budgets" to configure.
+          <!-- Top Budget Summary KPI Cards -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">Monthly Budget Pool</span>
+                <div class="kpi-icon-box" style="background: rgba(16, 185, 129, 0.12); color: var(--primary);">
+                  <span class="material-icons" style="font-size: 20px;">account_balance_wallet</span>
+                </div>
               </div>
-            ` : stats.categoryStats.map(cat => this.renderCategoryBudgetRow(cat)).join('')}
-          </div>
-        </div>
+              <div class="kpi-value">${Formatters.currency(stats.totalBudget)}</div>
+              <div class="kpi-footer">
+                <span class="kpi-badge ${stats.percentUsed > 100 ? 'negative' : 'positive'}">
+                  ${stats.percentUsed.toFixed(0)}% Allocated
+                </span>
+              </div>
+            </div>
 
-      </div>
-    `;
-  },
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">Total Spent to Date</span>
+                <div class="kpi-icon-box" style="background: rgba(244, 63, 94, 0.12); color: var(--error);">
+                  <span class="material-icons" style="font-size: 20px;">shopping_bag</span>
+                </div>
+              </div>
+              <div class="kpi-value" style="color: ${stats.totalSpent > stats.totalBudget ? 'var(--error)' : 'var(--text-primary)'};">
+                ${Formatters.currency(stats.totalSpent)}
+              </div>
+              <div class="kpi-footer">
+                <span>In current monthly cycle</span>
+              </div>
+            </div>
 
-  renderCategoryBudgetRow(cat) {
-    const isOver = cat.spent > cat.budget;
-    const isNear = cat.percentUsed >= 80 && !isOver;
-    const barColor = isOver ? 'var(--error)' : isNear ? 'var(--warning)' : 'var(--primary)';
-    
-    return `
-      <div class="budget-category-row">
-        <div class="budget-cat-info">
-          <div class="budget-cat-name">
-            <span class="material-icons" style="font-size:18px; color:var(--text-muted);">${IconHelper.getMaterialIcon(cat.icon)}</span>
-            <span>${cat.name}</span>
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">Remaining Margin</span>
+                <div class="kpi-icon-box" style="background: ${stats.totalRemaining >= 0 ? 'rgba(56, 189, 248, 0.12)' : 'rgba(244, 63, 94, 0.12)'}; color: ${stats.totalRemaining >= 0 ? 'var(--secondary)' : 'var(--error)'};">
+                  <span class="material-icons" style="font-size: 20px;">savings</span>
+                </div>
+              </div>
+              <div class="kpi-value" style="color: ${stats.totalRemaining >= 0 ? 'var(--secondary)' : 'var(--error)'};">
+                ${Formatters.currency(stats.totalRemaining)}
+              </div>
+              <div class="kpi-footer">
+                <span class="kpi-badge ${stats.totalRemaining >= 0 ? 'positive' : 'negative'}">
+                  ${stats.daysRemaining} days left in cycle
+                </span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">Daily Safe Allowance</span>
+                <div class="kpi-icon-box" style="background: rgba(99, 102, 241, 0.12); color: var(--indigo);">
+                  <span class="material-icons" style="font-size: 20px;">today</span>
+                </div>
+              </div>
+              <div class="kpi-value" style="color: #FFF;">
+                ${Formatters.currency(stats.dailyAllowance)}
+              </div>
+              <div class="kpi-footer">
+                <span>Per day for remainder of month</span>
+              </div>
+            </div>
           </div>
-          <div style="color: ${isOver ? 'var(--error)' : 'var(--text-primary)'}">
-            ${Formatters.currency(cat.spent)} / <span style="color:var(--text-muted);">${Formatters.currency(cat.budget)}</span>
+        </section>
+
+        <!-- Smart Budget Recommendations Banner (if any) -->
+        ${suggestionEntries.length > 0 ? `
+          <div class="fintech-card" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.08) 0%, rgba(99, 102, 241, 0.04) 100%); border-color: rgba(56, 189, 248, 0.25);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+              <span class="material-icons" style="color: var(--secondary); font-size: 22px;">tips_and_updates</span>
+              <span style="font-weight: 700; font-size: 16px; color: var(--text-primary);">Smart Budget Recommendations (3-Month Rolling Average)</span>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+              ${suggestionEntries.slice(0, 4).map(([catName, avg]) => {
+                const cat = state.categories.find(c => c.name === catName);
+                const currentBudget = Number(cat ? (cat.monthly_budget || cat.monthlyBudget || 0) : 0);
+                if (currentBudget === avg) return '';
+                return `
+                  <div style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 8px 14px; border-radius: var(--radius-md); display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 13px; color: var(--text-secondary);">Set <b>${catName}</b> to <b>${Formatters.currency(avg)}</b></span>
+                    <button class="btn-primary apply-suggestion-btn" 
+                            style="padding: 4px 12px; font-size: 12px;"
+                            data-cat-sync-id="${cat ? (cat.sync_id || '') : ''}"
+                            data-cat-local-id="${cat ? (cat.id || '') : ''}"
+                            data-amount="${avg}">
+                      Apply
+                    </button>
+                  </div>
+                `;
+              }).filter(Boolean).join('')}
+            </div>
           </div>
-        </div>
-        <div class="progress-container">
-          <div class="progress-bar" style="width: ${cat.percentUsed}%; background: ${barColor};"></div>
-        </div>
-        <div class="budget-cat-progress">
-          <span>${cat.percentUsed.toFixed(0)}% used</span>
-          ${isOver ? `
-            <span class="budget-overrun">Over budget by ${Formatters.currency(cat.spent - cat.budget)}</span>
+        ` : ''}
+
+        <!-- Category Budgets Grid -->
+        <div>
+          <div class="card-header" style="margin-bottom: 16px;">
+            <div class="card-title">
+              <span class="material-icons">category</span>
+              <span>Category Budget Limits</span>
+            </div>
+          </div>
+
+          ${stats.categoryStats.length === 0 ? `
+            <div class="fintech-card" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+              <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                <span class="material-icons" style="font-size: 28px; opacity: 0.5;">pie_chart_outline</span>
+              </div>
+              <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">No category budgets assigned yet</div>
+              <div style="font-size: 13px; margin-bottom: 20px;">Assign target caps to expense categories to start monitoring pacing.</div>
+              <button class="btn-primary" id="budget-empty-set-btn" style="width: auto;">
+                <span class="material-icons" style="font-size: 16px;">tune</span> Set Category Budgets
+              </button>
+            </div>
           ` : `
-            <span>${Formatters.currency(cat.budget - cat.spent)} remaining</span>
+            <div class="budget-grid">
+              ${stats.categoryStats.map(item => {
+                const progressClass = item.percentUsed > 100 ? 'danger' : item.percentUsed > 80 ? 'warning' : 'safe';
+                return `
+                  <div class="budget-card">
+                    <div class="budget-card-header">
+                      <div class="budget-cat-name">
+                        <div class="tx-icon-box" style="width: 36px; height: 36px; background: rgba(255,255,255,0.05); color: var(--primary);">
+                          <span class="material-icons" style="font-size: 20px;">${IconHelper.getMaterialIcon(item.icon)}</span>
+                        </div>
+                        <span>${item.name}</span>
+                      </div>
+                      <span class="kpi-badge ${item.percentUsed > 100 ? 'negative' : item.percentUsed > 80 ? 'neutral' : 'positive'}">
+                        ${item.percentUsed.toFixed(0)}%
+                      </span>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
+                      <span style="color: var(--text-muted);">Spent: <b style="color: var(--text-primary);">${Formatters.currency(item.spent)}</b></span>
+                      <span style="color: var(--text-muted);">Cap: <b style="color: var(--text-primary);">${Formatters.currency(item.budget)}</b></span>
+                    </div>
+
+                    <div class="progress-track">
+                      <div class="progress-bar-fill ${progressClass}" style="width: ${Math.min(100, item.percentUsed)}%;"></div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: 12px;">
+                      <span style="color: ${item.budget - item.spent >= 0 ? 'var(--text-secondary)' : 'var(--error)'};">
+                        ${item.budget - item.spent >= 0 ? `${Formatters.currency(item.budget - item.spent)} remaining` : `${Formatters.currency(item.spent - item.budget)} over cap`}
+                      </span>
+                      <button class="btn-ghost edit-single-budget-btn" 
+                              data-cat-sync-id="${item.sync_id || ''}" 
+                              data-cat-local-id="${item.id || ''}"
+                              data-cat-name="${item.name}"
+                              data-current-budget="${item.budget}">
+                        Edit
+                      </button>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
           `}
-        </div>
-      </div>
-    `;
-  },
-
-  renderBudgetSuggestions(state) {
-    const avgSpending = this.calculateAverageCategorySpending(state);
-    const suggestionEntries = Object.entries(avgSpending).filter(([_, avg]) => avg > 0).slice(0, 2);
-
-    if (suggestionEntries.length === 0) return '';
-
-    return `
-      <div class="glass-card" style="background: rgba(0, 198, 255, 0.05); border-color: rgba(0, 198, 255, 0.15);">
-        <div style="display:flex; align-items:center; gap:8px; color:var(--secondary); font-size:14px; font-weight:600; margin-bottom:8px;">
-          <span class="material-icons" style="font-size:18px;">tips_and_updates</span>
-          Smart Budget Recommendations
-        </div>
-        <div style="font-size:12px; color:var(--text-secondary); line-height:1.5; display:flex; flex-direction:column; gap:6px;">
-          ${suggestionEntries.map(([catName, avg]) => {
-            const cat = state.categories.find(c => c.name === catName);
-            const currentBudget = cat ? cat.monthly_budget : 0;
-            if (currentBudget === avg) return '';
-            return `
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span>Set budget for <b>${catName}</b> to ${Formatters.currency(avg)} (3-month avg)</span>
-                <button class="btn btn-outline apply-suggestion-btn" 
-                        style="width:auto; padding:4px 8px; font-size:11px; margin-left:12px;"
-                        data-cat-sync-id="${cat ? cat.sync_id : ''}"
-                        data-cat-local-id="${cat ? cat.id : ''}"
-                        data-amount="${avg}">
-                  Apply
-                </button>
-              </div>
-            `;
-          }).join('')}
         </div>
       </div>
     `;
@@ -182,12 +232,11 @@ export const BudgetPage = {
       }
     }
 
-    // Sort by percent used (highest first)
     categoryStats.sort((a, b) => b.percentUsed - a.percentUsed);
 
     const totalRemaining = totalBudget - totalSpent;
-    const daysRemaining = Formatters.daysRemainingInMonth();
-    const dailyAllowance = daysRemaining > 0 ? totalRemaining / daysRemaining : 0;
+    const daysRemaining = Math.max(1, Formatters.daysRemainingInMonth());
+    const dailyAllowance = totalRemaining > 0 ? totalRemaining / daysRemaining : 0;
 
     return {
       totalBudget,
@@ -200,7 +249,6 @@ export const BudgetPage = {
     };
   },
 
-  // Calculate 3-month average category spending to suggest budgets
   calculateAverageCategorySpending(state) {
     const now = new Date();
     const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
@@ -222,75 +270,90 @@ export const BudgetPage = {
     const suggestions = {};
     for (const catName in categorySpending) {
       const total = categorySpending[catName];
-      const avg = total / 3;
-      // Round to nearest 100
-      suggestions[catName] = Math.round(avg / 100) * 100;
+      const avg = Math.round((total / 3) / 100) * 100;
+      if (avg > 0) suggestions[catName] = avg;
     }
 
     return suggestions;
   },
 
   bindEvents(state) {
-    // Edit Limits button click
-    const adjustBtn = document.getElementById('budget-edit-limits-btn');
-    if (adjustBtn) {
-      adjustBtn.addEventListener('click', () => {
-        this.showAdjustBudgetsModal(state);
-      });
-    }
+    // Open All Category Budgets Modal
+    const openSetModal = () => this.showAdjustBudgetsModal(state);
+    document.getElementById('budget-set-all-btn')?.addEventListener('click', openSetModal);
+    document.getElementById('budget-empty-set-btn')?.addEventListener('click', openSetModal);
 
-    // Apply suggestion buttons click
-    const suggestionBtns = document.querySelectorAll('.apply-suggestion-btn');
-    suggestionBtns.forEach(btn => {
+    // Apply suggestion button
+    const applyBtns = document.querySelectorAll('.apply-suggestion-btn');
+    applyBtns.forEach(btn => {
       btn.addEventListener('click', async () => {
         const syncId = btn.getAttribute('data-cat-sync-id');
-        const localId = parseInt(btn.getAttribute('data-cat-local-id'), 10) || null;
+        const localId = btn.getAttribute('data-cat-local-id');
         const amount = parseFloat(btn.getAttribute('data-amount')) || 0;
-
         await DbService.updateCategoryBudget(syncId, localId, amount);
+      });
+    });
+
+    // Edit single category budget button
+    const editBtns = document.querySelectorAll('.edit-single-budget-btn');
+    editBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const syncId = btn.getAttribute('data-cat-sync-id');
+        const localId = btn.getAttribute('data-cat-local-id');
+        const name = btn.getAttribute('data-cat-name');
+        const current = btn.getAttribute('data-current-budget');
+        
+        const input = prompt(`Enter new monthly budget cap for ${name}:`, current || '0');
+        if (input !== null) {
+          const val = parseFloat(input);
+          if (!isNaN(val) && val >= 0) {
+            DbService.updateCategoryBudget(syncId, localId, val);
+          }
+        }
       });
     });
   },
 
   showAdjustBudgetsModal(state) {
-    // Show overlay modal list of all expense categories and inputs to edit budget limits
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay active';
-    
     const expenseCats = state.categories.filter(c => c.type === 'expense');
 
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay active';
     overlay.innerHTML = `
-      <div class="modal-card animate-fade-in" style="background:#1E1E2C; max-height:85vh; display:flex; flex-direction:column; width:95%; max-width:440px; padding:24px 16px;">
-        <div class="modal-header" style="margin-bottom:12px;">
-          <h3 style="color:#FFF;">Adjust Category Budgets</h3>
-          <button class="modal-close" id="adjust-modal-close">&times;</button>
+      <div class="modern-modal-dialog animate-scale-up" style="max-width: 520px;">
+        <div class="modal-header">
+          <div class="modal-title">
+            <span class="material-icons" style="color: var(--primary);">tune</span>
+            <span>Category Budget Caps</span>
+          </div>
+          <button class="modal-close-btn" id="modal-close-budgets">&times;</button>
         </div>
-        <p style="color:var(--text-secondary); font-size:12px; margin-bottom:16px;">
-          Set monthly spending limits for categories. Set to 0 to remove budget.
-        </p>
-        
-        <div style="flex:1; overflow-y:auto; padding-right:8px; display:flex; flex-direction:column; gap:12px;" id="adjust-categories-list">
-          ${expenseCats.map(cat => `
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; border-bottom:1px solid var(--divider); padding-bottom:8px;">
-              <div style="display:flex; align-items:center; gap:8px;">
-                <span class="material-icons" style="color:var(--primary); font-size:20px;">${IconHelper.getMaterialIcon(cat.icon)}</span>
-                <span style="font-size:14px; font-weight:600;">${cat.name}</span>
+
+        <div style="display: flex; flex-direction: column; gap: 14px; max-height: 55vh; overflow-y: auto; padding-right: 4px;">
+          ${expenseCats.map(cat => {
+            const budgetVal = Number(cat.monthly_budget || cat.monthlyBudget || 0);
+            return `
+              <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.03); padding: 12px 16px; border-radius: var(--radius-md); border: 1px solid var(--glass-border);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span class="material-icons" style="color: var(--primary); font-size: 20px;">${IconHelper.getMaterialIcon(cat.icon)}</span>
+                  <span style="font-weight: 600; font-size: 14px;">${cat.name}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; width: 140px;">
+                  <span style="font-weight: 700; color: var(--primary);">₹</span>
+                  <input type="number" class="form-control budget-modal-input" 
+                         data-cat-sync-id="${cat.sync_id || ''}" 
+                         data-cat-local-id="${cat.id || ''}"
+                         value="${budgetVal}" 
+                         style="padding: 6px 10px; font-weight: 700; text-align: right;">
+                </div>
               </div>
-              <div style="display:flex; align-items:center; max-width:120px;">
-                <span style="color:var(--text-muted); margin-right:4px;">₹</span>
-                <input type="number" class="form-input budget-input-field" 
-                       style="padding:8px 12px; text-align:right;"
-                       data-cat-sync-id="${cat.sync_id}"
-                       data-cat-local-id="${cat.id || ''}"
-                       value="${cat.monthly_budget || 0}">
-              </div>
-            </div>
-          `).join('')}
+            `;
+          }).join('')}
         </div>
-        
-        <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:20px; border-top:1px solid var(--divider); padding-top:12px;">
-          <button class="btn btn-outline" id="adjust-cancel-btn" style="width:auto; padding:10px 20px;">Cancel</button>
-          <button class="btn btn-primary" id="adjust-save-btn" style="width:auto; padding:10px 20px;">Save Changes</button>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--glass-border);">
+          <button class="btn-secondary" id="modal-cancel-budgets" style="width: auto;">Cancel</button>
+          <button class="btn-primary" id="modal-save-budgets" style="width: auto;">Save All Changes</button>
         </div>
       </div>
     `;
@@ -298,26 +361,22 @@ export const BudgetPage = {
     document.body.appendChild(overlay);
 
     const closeModal = () => {
-      document.body.removeChild(overlay);
+      if (document.body.contains(overlay)) document.body.removeChild(overlay);
     };
 
-    document.getElementById('adjust-modal-close').addEventListener('click', closeModal);
-    document.getElementById('adjust-cancel-btn').addEventListener('click', closeModal);
+    document.getElementById('modal-close-budgets')?.addEventListener('click', closeModal);
+    document.getElementById('modal-cancel-budgets')?.addEventListener('click', closeModal);
 
-    document.getElementById('adjust-save-btn').addEventListener('click', async () => {
-      const inputs = overlay.querySelectorAll('.budget-input-field');
-      const promises = [];
-
-      inputs.forEach(input => {
+    document.getElementById('modal-save-budgets')?.addEventListener('click', async () => {
+      const inputs = overlay.querySelectorAll('.budget-modal-input');
+      for (const input of inputs) {
         const syncId = input.getAttribute('data-cat-sync-id');
-        const localId = parseInt(input.getAttribute('data-cat-local-id'), 10) || null;
-        const value = parseFloat(input.value) || 0;
-        
-        promises.push(DbService.updateCategoryBudget(syncId, localId, value));
-      });
-
-      await Promise.all(promises);
+        const localId = input.getAttribute('data-cat-local-id');
+        const val = parseFloat(input.value) || 0;
+        await DbService.updateCategoryBudget(syncId, localId, val);
+      }
       closeModal();
+      StateManager.notify();
     });
   }
 };

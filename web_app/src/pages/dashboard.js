@@ -1,4 +1,4 @@
-/* Dashboard Page Module (Home screen showing balances, forecast, charts, and recent items) */
+/* Modern Financial Overview & Command Center Module */
 import { Chart, registerables } from 'chart.js';
 import { StateManager } from '../state.js';
 import { DateRangeHelper } from '../utils/date-range.js';
@@ -6,129 +6,276 @@ import { Formatters } from '../utils/formatters.js';
 import { IconHelper, findCategory } from '../utils/icons.js';
 import { Router } from '../router.js';
 
-// Register all Chart.js modules
+// Register Chart.js
 Chart.register(...registerables);
 
-// Track active chart instances to prevent canvas re-use errors
-let pieChartInstance = null;
-let lineChartInstance = null;
+let cashFlowChartInstance = null;
+let categoryChartInstance = null;
 
 export const DashboardPage = {
   render(state) {
     const stats = this.calculateStats(state);
     const recentTx = this.getRecentTransactions(state);
-    const currencySymbol = Formatters.currency(0).substring(0, 1);
+    const topCategories = this.getTopCategories(state, stats.totalExpenses);
+    const activeGoals = state.goals.filter(g => g.is_active !== false && !g.is_completed).slice(0, 2);
 
     return `
-      <div class="animate-fade-in" style="display:flex; flex-wrap:wrap; gap:24px; align-items:flex-start;">
-        
-        <!-- Left Column: Stats & Charts -->
-        <div style="flex: 1 1 500px; display:flex; flex-direction:column; gap:24px; min-width:0;">
-          
-          <!-- Date Filters -->
-          <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;">
-            ${this.renderFilterButton('thisWeek', 'This Week', state.dateFilter)}
-            ${this.renderFilterButton('lastWeek', 'Last Week', state.dateFilter)}
-            ${this.renderFilterButton('thisMonth', 'This Month', state.dateFilter)}
-            ${this.renderFilterButton('lastMonth', 'Last Month', state.dateFilter)}
-            ${this.renderFilterButton('thisYear', 'This Year', state.dateFilter)}
-            ${this.renderFilterButton('allTime', 'All Time', state.dateFilter)}
+      <div class="animate-fade-in">
+        <!-- Hero Header -->
+        <section class="hero-section">
+          <div class="hero-header">
+            <div>
+              <h1 class="hero-welcome-title">Financial Overview</h1>
+              <p class="hero-subtitle">Unified capital tracking, automated cash flow forecasting & real-time analytics.</p>
+            </div>
+
+            <!-- Date Filter Pills -->
+            <div class="filter-group">
+              ${this.renderFilterChip('thisWeek', '7 Days', state.dateFilter)}
+              ${this.renderFilterChip('thisMonth', 'This Month', state.dateFilter)}
+              ${this.renderFilterChip('lastMonth', 'Last Month', state.dateFilter)}
+              ${this.renderFilterChip('thisYear', 'This Year', state.dateFilter)}
+              ${this.renderFilterChip('allTime', 'All Time', state.dateFilter)}
+            </div>
           </div>
 
-          <!-- Top Stats Row -->
-          <div class="grid-2">
-            <!-- Balance glass card -->
-            <div class="glass-card balance-container" style="margin:0; height: 100%;">
-              <div class="balance-title">Net Balance</div>
-              <div class="balance-value" style="color: ${stats.balance >= 0 ? 'var(--success)' : 'var(--error)'}; font-size: 32px;">
+          <!-- 4 KPI Stat Cards -->
+          <div class="kpi-grid">
+            <!-- 1. Net Cash / Balance -->
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">Net Balance</span>
+                <div class="kpi-icon-box" style="background: ${stats.balance >= 0 ? 'var(--success-bg)' : 'var(--error-bg)'}; color: ${stats.balance >= 0 ? 'var(--success)' : 'var(--error)'};">
+                  <span class="material-icons" style="font-size: 20px;">account_balance_wallet</span>
+                </div>
+              </div>
+              <div class="kpi-value" style="color: ${stats.balance >= 0 ? '#FFF' : 'var(--error)'};">
                 ${Formatters.currency(stats.balance)}
               </div>
-              
-              <div class="balance-stats-row" style="margin-top:auto;">
-                <div class="balance-stat-item">
-                  <div class="balance-stat-label">Income</div>
-                  <div class="balance-stat-val" style="color: var(--success);">${Formatters.currency(stats.totalIncome)}</div>
-                </div>
-                <div class="balance-stat-item" style="text-align: right;">
-                  <div class="balance-stat-label">Expenses</div>
-                  <div class="balance-stat-val" style="color: var(--text-primary);">${Formatters.currency(stats.totalExpenses)}</div>
-                </div>
+              <div class="kpi-footer">
+                <span class="kpi-badge ${stats.balance >= 0 ? 'positive' : 'negative'}">
+                  <span class="material-icons" style="font-size: 14px;">${stats.balance >= 0 ? 'trending_up' : 'trending_down'}</span>
+                  ${stats.savingsRate}% saved
+                </span>
+                <span>In selected period</span>
               </div>
             </div>
 
-            <!-- Forecast widget -->
-            ${state.dateFilter === 'thisMonth' ? `
-              <div class="glass-card" style="display:flex; flex-direction:column; justify-content:center; padding: 20px;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                  <div>
-                    <div style="font-size: 13px; color: var(--text-muted); text-transform: uppercase;">Month-End Projection</div>
-                    <div style="font-size: 24px; font-weight: 700; margin-top: 8px;">
-                      ${Formatters.currency(stats.projectedBalance)}
+            <!-- 2. Monthly Income -->
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">Total Inflow</span>
+                <div class="kpi-icon-box" style="background: rgba(56, 189, 248, 0.12); color: var(--secondary);">
+                  <span class="material-icons" style="font-size: 20px;">arrow_downward</span>
+                </div>
+              </div>
+              <div class="kpi-value" style="color: var(--secondary);">
+                ${Formatters.currency(stats.totalIncome)}
+              </div>
+              <div class="kpi-footer">
+                <span class="kpi-badge neutral">
+                  Baseline: ${Formatters.currency(state.userSettings?.monthlyIncome || 0)}
+                </span>
+              </div>
+            </div>
+
+            <!-- 3. Total Outflow -->
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">Total Outflow</span>
+                <div class="kpi-icon-box" style="background: rgba(244, 63, 94, 0.12); color: var(--error);">
+                  <span class="material-icons" style="font-size: 20px;">arrow_upward</span>
+                </div>
+              </div>
+              <div class="kpi-value" style="color: #FFF;">
+                ${Formatters.currency(stats.totalExpenses)}
+              </div>
+              <div class="kpi-footer">
+                <span class="kpi-badge ${stats.burnRateStatus}">
+                  Burn: ${Formatters.currency(stats.dailyBurnRate)}/day
+                </span>
+              </div>
+            </div>
+
+            <!-- 4. Month-End Forecast -->
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">Month-End Projection</span>
+                <div class="kpi-icon-box" style="background: rgba(99, 102, 241, 0.12); color: var(--indigo);">
+                  <span class="material-icons" style="font-size: 20px;">auto_graph</span>
+                </div>
+              </div>
+              <div class="kpi-value" style="color: #FFF;">
+                ${Formatters.currency(stats.projectedBalance)}
+              </div>
+              <div class="kpi-footer">
+                <span class="kpi-badge ${stats.forecastStatus === 'safe' ? 'positive' : stats.forecastStatus === 'caution' ? 'neutral' : 'negative'}">
+                  ${stats.forecastStatus === 'safe' ? 'Healthy Trajectory' : stats.forecastStatus === 'caution' ? 'Moderate Margin' : 'Deficit Risk'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Main Content Split Section -->
+        <div class="dashboard-split-grid">
+          
+          <!-- Left Column (Cash Flow Chart & Recent Transactions) -->
+          <div style="display: flex; flex-direction: column; gap: 24px;">
+            
+            <!-- Cash Flow Chart Card -->
+            <div class="fintech-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <span class="material-icons">query_stats</span>
+                  <span>Cash Flow Trajectory</span>
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted); font-weight: 600;">
+                  Cumulative Inflows vs Outflows
+                </div>
+              </div>
+              <div style="position: relative; height: 280px; width: 100%;">
+                <canvas id="cashflow-chart-canvas"></canvas>
+              </div>
+            </div>
+
+            <!-- Recent Activity Feed -->
+            <div class="fintech-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <span class="material-icons">receipt_long</span>
+                  <span>Recent Activity</span>
+                </div>
+                <button class="btn-ghost" id="view-all-tx-btn">
+                  View Full Ledger <span class="material-icons" style="font-size: 16px;">arrow_forward</span>
+                </button>
+              </div>
+
+              ${recentTx.length === 0 ? `
+                <div style="text-align: center; padding: 48px 20px; color: var(--text-muted);">
+                  <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                    <span class="material-icons" style="font-size: 28px; opacity: 0.5;">receipt</span>
+                  </div>
+                  <div style="font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">No transactions recorded yet</div>
+                  <div style="font-size: 13px; margin-bottom: 20px;">Add your first transaction or sync with your cloud account.</div>
+                  <button class="btn-primary" id="empty-add-tx-btn" style="width: auto;">
+                    <span class="material-icons" style="font-size: 16px;">add</span> Add Transaction
+                  </button>
+                </div>
+              ` : `
+                <div class="tx-list">
+                  ${recentTx.map(tx => this.renderTransactionRow(tx, state.categories)).join('')}
+                </div>
+              `}
+            </div>
+          </div>
+
+          <!-- Right Column (Category Breakdown, Goals & Intelligence) -->
+          <div style="display: flex; flex-direction: column; gap: 24px;">
+            
+            <!-- Category Spending Donut & Top List -->
+            <div class="fintech-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <span class="material-icons">donut_large</span>
+                  <span>Spending by Category</span>
+                </div>
+              </div>
+
+              ${stats.totalExpenses > 0 ? `
+                <div style="position: relative; height: 200px; width: 100%; margin-bottom: 20px;">
+                  <canvas id="category-donut-canvas"></canvas>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                  ${topCategories.map(cat => `
+                    <div>
+                      <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 6px;">
+                        <span style="display: flex; align-items: center; gap: 6px; color: var(--text-primary);">
+                          <span class="material-icons" style="font-size: 16px; color: var(--primary);">${IconHelper.getMaterialIcon(cat.icon)}</span>
+                          ${cat.name}
+                        </span>
+                        <span style="color: var(--text-primary);">${Formatters.currency(cat.amount)} (${cat.percent}%)</span>
+                      </div>
+                      <div class="progress-track" style="margin: 0;">
+                        <div class="progress-bar-fill safe" style="width: ${cat.percent}%;"></div>
+                      </div>
                     </div>
-                  </div>
-                  <div class="forecast-badge forecast-${stats.forecastStatus}" style="padding:6px 12px;">
-                    ${stats.forecastStatus === 'safe' ? 'On Track' : stats.forecastStatus === 'caution' ? 'Borderline' : 'At Risk'}
-                  </div>
+                  `).join('')}
                 </div>
-              </div>
-            ` : `
-              <div class="glass-card" style="display:flex; align-items:center; justify-content:center; padding: 20px; color:var(--text-muted);">
-                <div style="text-align:center;">
-                  <span class="material-icons" style="font-size:32px; opacity:0.5; margin-bottom:8px;">auto_graph</span>
-                  <div style="font-size:13px;">Forecast available for 'This Month'</div>
+              ` : `
+                <div style="text-align: center; padding: 36px 0; color: var(--text-muted); font-size: 13px;">
+                  No expense records in this period.
                 </div>
-              </div>
-            `}
-          </div>
+              `}
+            </div>
 
-          <!-- Charts Container -->
-          ${stats.totalExpenses > 0 ? `
-            <div class="grid-2">
-              <div class="glass-card">
-                <h3 style="font-size: 15px; margin-bottom: 16px;">Spending Breakdown</h3>
-                <div style="position: relative; height: 260px; width: 100%;">
-                  <canvas id="dashboard-pie-chart"></canvas>
+            <!-- Active Savings Goals Quick Preview -->
+            <div class="fintech-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <span class="material-icons">savings</span>
+                  <span>Savings Goals</span>
                 </div>
+                <button class="btn-ghost" id="view-all-goals-btn">
+                  Manage <span class="material-icons" style="font-size: 16px;">arrow_forward</span>
+                </button>
               </div>
-              <div class="glass-card">
-                <h3 style="font-size: 15px; margin-bottom: 16px;">Cumulative Spend</h3>
-                <div style="position: relative; height: 260px; width: 100%;">
-                  <canvas id="dashboard-line-chart"></canvas>
+
+              ${activeGoals.length === 0 ? `
+                <div style="text-align: center; padding: 24px 0; color: var(--text-muted); font-size: 13px;">
+                  No active savings goals. Create one to track your milestones!
+                </div>
+              ` : `
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                  ${activeGoals.map(goal => {
+                    const pct = Math.min(100, Math.round(((goal.savedAmount || goal.saved_amount || 0) / (goal.targetAmount || goal.target_amount || 1)) * 100));
+                    return `
+                      <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 14px; border-radius: var(--radius-md);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                          <span style="font-weight: 700; font-size: 14px; color: var(--text-primary);">${goal.name}</span>
+                          <span style="font-size: 12px; font-weight: 700; color: var(--primary);">${pct}%</span>
+                        </div>
+                        <div class="progress-track" style="margin: 6px 0 8px;">
+                          <div class="progress-bar-fill safe" style="width: ${pct}%;"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted);">
+                          <span>${Formatters.currency(goal.savedAmount || goal.saved_amount || 0)} saved</span>
+                          <span>Target: ${Formatters.currency(goal.targetAmount || goal.target_amount || 0)}</span>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              `}
+            </div>
+
+            <!-- Financial Intelligence Advice Card -->
+            <div class="fintech-card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(56, 189, 248, 0.04) 100%); border-color: rgba(16, 185, 129, 0.2);">
+              <div style="display: flex; gap: 12px; align-items: flex-start;">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(16, 185, 129, 0.15); display: flex; align-items: center; justify-content: center; color: var(--primary); flex-shrink: 0;">
+                  <span class="material-icons" style="font-size: 20px;">lightbulb</span>
+                </div>
+                <div>
+                  <div style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Smart Wealth Insight</div>
+                  <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+                    ${stats.savingsRate >= 20 
+                      ? `Excellent savings discipline! You are currently retaining ${stats.savingsRate}% of your capital this period.`
+                      : `Your burn rate is ₹${Math.round(stats.dailyBurnRate)}/day. Consider reducing non-essential expenses in your top spending category.`}
+                  </div>
                 </div>
               </div>
             </div>
-          ` : `
-            <div class="glass-card" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
-              <span class="material-icons" style="font-size: 48px; margin-bottom: 12px; color: var(--glass-border);">pie_chart_outlined</span>
-              <p style="font-size: 14px;">No expense data for this period.</p>
-            </div>
-          `}
-        </div>
 
-        <!-- Right Column: Recent Transactions -->
-        <div style="flex: 1 1 360px; max-width: 100%; display:flex; flex-direction:column; gap:16px;">
-          <div class="transaction-list-header" style="margin:0;">
-            <h3 class="transaction-list-title" style="font-size:18px;">Recent Transactions</h3>
-            <a href="#" id="dashboard-see-all" style="font-size: 13px; font-weight: 600;">See All</a>
-          </div>
-
-          <div class="glass-card" style="padding: 10px 20px; min-height: 500px;">
-            ${recentTx.length === 0 ? `
-              <div style="text-align: center; padding: 40px 0; color: var(--text-muted); font-size: 13px;">No transactions found.</div>
-            ` : recentTx.map(tx => this.renderTransactionRow(tx, state.categories)).join('')}
           </div>
         </div>
-
       </div>
     `;
   },
 
-  renderFilterButton(filterKey, label, activeFilter) {
-    const isActive = filterKey === activeFilter;
+  renderFilterChip(key, label, activeKey) {
+    const isActive = key === activeKey;
     return `
-      <button class="tab-button ${isActive ? 'active' : ''}" 
-              style="flex: none; padding: 8px 16px; border-radius: 20px; font-size: 13px; white-space: nowrap;"
-              data-filter="${filterKey}">
+      <button class="filter-chip ${isActive ? 'active' : ''}" data-filter="${key}">
         ${label}
       </button>
     `;
@@ -140,28 +287,68 @@ export const DashboardPage = {
     const isIncome = tx.type === 'income';
     const formattedAmount = (isIncome ? '+' : '-') + Formatters.currency(tx.amount);
     
-    // Set custom icon background colors based on category names
-    let iconBg = 'rgba(255, 255, 255, 0.08)';
-    if (cat) {
-      if (cat.type === 'income') iconBg = 'rgba(16, 185, 129, 0.15)';
-      else iconBg = 'rgba(255, 95, 31, 0.15)';
-    }
+    let iconBg = isIncome ? 'rgba(16, 185, 129, 0.12)' : 'rgba(244, 63, 94, 0.12)';
+    let iconColor = isIncome ? 'var(--success)' : 'var(--error)';
 
     return `
-      <div class="transaction-row" data-sync-id="${tx.sync_id}" data-id="${tx.id || ''}">
-        <div class="transaction-icon-box" style="background: ${iconBg}; color: ${isIncome ? 'var(--success)' : 'var(--primary)'};">
-          <span class="material-icons">${icon}</span>
+      <div class="tx-row" data-sync-id="${tx.sync_id || ''}" data-id="${tx.id || ''}">
+        <div class="tx-left">
+          <div class="tx-icon-box" style="background: ${iconBg}; color: ${iconColor};">
+            <span class="material-icons">${icon}</span>
+          </div>
+          <div class="tx-info">
+            <div class="tx-title">${tx.note || (cat ? cat.name : 'Transaction')}</div>
+            <div class="tx-meta">
+              <span class="tx-tag">${cat ? cat.name : 'Other'}</span>
+              <span>•</span>
+              <span>${tx.paymentMode || tx.payment_mode || 'Cash'}</span>
+            </div>
+          </div>
         </div>
-        <div class="tx-details">
-          <div class="tx-note">${tx.note || (cat ? cat.name : 'Transaction')}</div>
-          <div class="tx-category">${cat ? cat.name : 'Other'}</div>
-        </div>
-        <div class="tx-amount-box">
-          <div class="tx-amount ${isIncome ? 'income' : 'expense'}">${formattedAmount}</div>
-          <div class="tx-date">${Formatters.relativeDate(tx.timestamp)}</div>
+        <div class="tx-right">
+          <div>
+            <div class="tx-amount ${isIncome ? 'income' : 'expense'}">${formattedAmount}</div>
+            <div class="tx-date">${Formatters.relativeDate(tx.timestamp)}</div>
+          </div>
+          <span class="material-icons" style="color: var(--text-muted); font-size: 18px;">chevron_right</span>
         </div>
       </div>
     `;
+  },
+
+  getRecentTransactions(state) {
+    return [...state.transactions]
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+      .slice(0, 6);
+  },
+
+  getTopCategories(state, totalExpenses) {
+    if (!totalExpenses || totalExpenses <= 0) return [];
+
+    const categoryMap = {};
+    const range = DateRangeHelper.getDateRange(state.dateFilter);
+    const txList = state.transactions.filter(t => {
+      const ts = new Date(t.timestamp);
+      return t.type === 'expense' && ts >= range.start && ts <= range.end;
+    });
+
+    for (const tx of txList) {
+      const cat = findCategory(state.categories, tx.categoryId || tx.category_id);
+      const name = cat ? cat.name : 'Other';
+      const icon = cat ? cat.icon : 'category';
+      if (!categoryMap[name]) {
+        categoryMap[name] = { name, icon, amount: 0 };
+      }
+      categoryMap[name].amount += tx.amount;
+    }
+
+    return Object.values(categoryMap)
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 4)
+      .map(c => ({
+        ...c,
+        percent: Math.round((c.amount / totalExpenses) * 100)
+      }));
   },
 
   calculateStats(state) {
@@ -173,35 +360,30 @@ export const DashboardPage = {
 
     let totalIncome = 0;
     let totalExpenses = 0;
-    let categoryMap = {};
 
     for (const tx of txList) {
       if (tx.type === 'income') {
         totalIncome += tx.amount;
       } else {
         totalExpenses += tx.amount;
-        
-        // Populate category totals for charts
-        const cat = findCategory(state.categories, tx.categoryId || tx.category_id);
-        const name = cat ? cat.name : 'Other';
-        categoryMap[name] = (categoryMap[name] || 0) + tx.amount;
       }
     }
 
     const balance = totalIncome - totalExpenses;
-    
-    // Projections logic (matches Flutter)
+    const savingsRate = totalIncome > 0 ? Math.max(0, Math.round(((totalIncome - totalExpenses) / totalIncome) * 100)) : 0;
+
     let dailyBurnRate = 0;
     let projectedBalance = balance;
     let forecastStatus = 'safe';
+    let burnRateStatus = 'positive';
 
     if (state.dateFilter === 'thisMonth') {
-      const daysElapsed = Formatters.daysElapsedInMonth();
+      const daysElapsed = Math.max(1, Formatters.daysElapsedInMonth());
       const daysRemaining = Formatters.daysRemainingInMonth();
-      dailyBurnRate = daysElapsed > 0 ? totalExpenses / daysElapsed : 0;
+      dailyBurnRate = totalExpenses / daysElapsed;
       projectedBalance = balance - (dailyBurnRate * daysRemaining);
       
-      const monthlyIncome = state.userSettings ? state.userSettings.monthlyIncome : 0;
+      const monthlyIncome = state.userSettings?.monthlyIncome || state.userSettings?.monthly_income || 0;
 
       if (projectedBalance > monthlyIncome * 0.2) {
         forecastStatus = 'safe';
@@ -210,64 +392,58 @@ export const DashboardPage = {
       } else {
         forecastStatus = 'deficit';
       }
+
+      if (dailyBurnRate > (monthlyIncome / 30)) {
+        burnRateStatus = 'negative';
+      }
     }
 
     return {
       totalIncome,
       totalExpenses,
       balance,
+      savingsRate,
+      dailyBurnRate,
       projectedBalance,
       forecastStatus,
-      categoryTotals: categoryMap
+      burnRateStatus
     };
   },
 
-  getRecentTransactions(state) {
-    const range = DateRangeHelper.getDateRange(state.dateFilter);
-    return state.transactions
-      .filter(t => {
-        const ts = new Date(t.timestamp);
-        return ts >= range.start && ts <= range.end;
-      })
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-      .slice(0, 5);
-  },
-
   bindEvents(state) {
-    // Date filter click events
-    const filterButtons = document.querySelectorAll('[data-filter]');
-    filterButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const filter = btn.getAttribute('data-filter');
+    // Filter chip clicks
+    const chips = document.querySelectorAll('.filter-chip[data-filter]');
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        const filter = chip.getAttribute('data-filter');
         StateManager.setState({ dateFilter: filter });
       });
     });
 
-    // Calendar view button click
-    const calBtn = document.getElementById('dashboard-cal-btn');
-    if (calBtn) {
-      calBtn.addEventListener('click', () => {
-        Router.navigateToOverlay('calendar');
-      });
-    }
+    // View All Transactions CTA
+    document.getElementById('view-all-tx-btn')?.addEventListener('click', () => {
+      StateManager.setState({ navIndex: 1 });
+    });
 
-    // See all transactions click
-    const seeAllBtn = document.getElementById('dashboard-see-all');
-    if (seeAllBtn) {
-      seeAllBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        Router.navigateToOverlay('all-transactions');
-      });
-    }
+    // View All Goals CTA
+    document.getElementById('view-all-goals-btn')?.addEventListener('click', () => {
+      StateManager.setState({ navIndex: 3 });
+    });
 
-    // Row edit clicks
-    const rows = document.querySelectorAll('.transaction-row');
+    // Empty state Add Tx CTA
+    document.getElementById('empty-add-tx-btn')?.addEventListener('click', () => {
+      import('./add-transaction.js').then(({ AddTransactionModal }) => {
+        AddTransactionModal.show(null);
+      });
+    });
+
+    // Transaction row click to edit
+    const rows = document.querySelectorAll('.tx-row');
     rows.forEach(row => {
       row.addEventListener('click', () => {
         const syncId = row.getAttribute('data-sync-id');
-        const localId = parseInt(row.getAttribute('data-id'), 10) || null;
-        const tx = state.transactions.find(t => t.sync_id === syncId || (localId && t.id === localId));
-        
+        const localId = row.getAttribute('data-id');
+        const tx = state.transactions.find(t => (syncId && t.sync_id === syncId) || (localId && String(t.id) === String(localId)));
         if (tx) {
           import('./add-transaction.js').then(({ AddTransactionModal }) => {
             AddTransactionModal.show(tx);
@@ -276,55 +452,125 @@ export const DashboardPage = {
       });
     });
 
-    // Render Charts
+    // Initialize Charts after DOM render
     this.renderCharts(state);
   },
 
   renderCharts(state) {
-    const stats = this.calculateStats(state);
-    if (stats.totalExpenses <= 0) return;
+    // 1. Cash Flow Trend Chart
+    const cashFlowCtx = document.getElementById('cashflow-chart-canvas');
+    if (cashFlowCtx) {
+      if (cashFlowChartInstance) cashFlowChartInstance.destroy();
 
-    // 1. Pie Chart for Category Spending
-    const pieCtx = document.getElementById('dashboard-pie-chart');
-    if (pieCtx) {
-      if (pieChartInstance) pieChartInstance.destroy();
-      
-      const labels = Object.keys(stats.categoryTotals);
-      const data = Object.values(stats.categoryTotals);
-      
-      // Beautiful Naruto color palette mapping
-      const chartColors = [
-        '#FF5F1F', // Naruto Orange
-        '#00C6FF', // Chakra Blue
-        '#FF0033', // Kurama Red
-        '#10B981', // Leaf Green
-        '#FFD700', // Gold
-        '#9D50BB', // Purple
-        '#FF69B4', // Pink
-        '#8B0000', // Dark Red
-        '#4B0082'  // Indigo
-      ];
+      const range = DateRangeHelper.getDateRange(state.dateFilter);
+      const filteredTx = state.transactions
+        .filter(t => {
+          const ts = new Date(t.timestamp);
+          return ts >= range.start && ts <= range.end;
+        })
+        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
-      pieChartInstance = new Chart(pieCtx, {
-        type: 'doughnut',
+      // Build daily cumulative trend
+      const labels = [];
+      const incomeData = [];
+      const expenseData = [];
+      
+      let cumIncome = 0;
+      let cumExpense = 0;
+
+      // Group by date
+      const daysMap = {};
+      filteredTx.forEach(tx => {
+        const dStr = new Date(tx.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        if (!daysMap[dStr]) daysMap[dStr] = { income: 0, expense: 0 };
+        if (tx.type === 'income') daysMap[dStr].income += tx.amount;
+        else daysMap[dStr].expense += tx.amount;
+      });
+
+      const dayEntries = Object.entries(daysMap);
+      if (dayEntries.length === 0) {
+        labels.push('Today');
+        incomeData.push(0);
+        expenseData.push(0);
+      } else {
+        dayEntries.forEach(([day, vals]) => {
+          labels.push(day);
+          cumIncome += vals.income;
+          cumExpense += vals.expense;
+          incomeData.push(cumIncome);
+          expenseData.push(cumExpense);
+        });
+      }
+
+      const gradientEmerald = cashFlowCtx.getContext('2d').createLinearGradient(0, 0, 0, 260);
+      gradientEmerald.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
+      gradientEmerald.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+
+      const gradientRose = cashFlowCtx.getContext('2d').createLinearGradient(0, 0, 0, 260);
+      gradientRose.addColorStop(0, 'rgba(244, 63, 94, 0.25)');
+      gradientRose.addColorStop(1, 'rgba(244, 63, 94, 0.0)');
+
+      cashFlowChartInstance = new Chart(cashFlowCtx, {
+        type: 'line',
         data: {
           labels,
-          datasets: [{
-            data,
-            backgroundColor: chartColors.slice(0, labels.length),
-            borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.1)'
-          }]
+          datasets: [
+            {
+              label: 'Inflows',
+              data: incomeData,
+              borderColor: '#10B981',
+              backgroundColor: gradientEmerald,
+              borderWidth: 2.5,
+              tension: 0.35,
+              fill: true,
+              pointRadius: labels.length > 20 ? 0 : 3,
+              pointBackgroundColor: '#10B981',
+            },
+            {
+              label: 'Outflows',
+              data: expenseData,
+              borderColor: '#F43F5E',
+              backgroundColor: gradientRose,
+              borderWidth: 2,
+              tension: 0.35,
+              fill: true,
+              pointRadius: labels.length > 20 ? 0 : 3,
+              pointBackgroundColor: '#F43F5E',
+            }
+          ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
             legend: {
-              position: 'right',
-              labels: {
-                color: '#FFF',
-                font: { family: 'Inter', size: 11 }
+              position: 'top',
+              labels: { color: '#94A3B8', font: { family: 'Plus Jakarta Sans', size: 12, weight: 600 }, boxWidth: 12 }
+            },
+            tooltip: {
+              backgroundColor: '#0E121A',
+              titleColor: '#F8FAFC',
+              bodyColor: '#94A3B8',
+              borderColor: 'rgba(255,255,255,0.1)',
+              borderWidth: 1,
+              padding: 12,
+              cornerRadius: 8,
+              callbacks: {
+                label: (ctx) => ` ${ctx.dataset.label}: ${Formatters.currency(ctx.parsed.y)}`
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255, 255, 255, 0.04)' },
+              ticks: { color: '#64748B', font: { family: 'Plus Jakarta Sans', size: 11 } }
+            },
+            y: {
+              grid: { color: 'rgba(255, 255, 255, 0.04)' },
+              ticks: {
+                color: '#64748B',
+                font: { family: 'Plus Jakarta Sans', size: 11 },
+                callback: (val) => Formatters.compactCurrency(val)
               }
             }
           }
@@ -332,78 +578,50 @@ export const DashboardPage = {
       });
     }
 
-    // 2. Line Chart for Cumulative Spending Trend
-    const lineCtx = document.getElementById('dashboard-line-chart');
-    if (lineCtx) {
-      if (lineChartInstance) lineChartInstance.destroy();
+    // 2. Category Donut Chart
+    const categoryCtx = document.getElementById('category-donut-canvas');
+    if (categoryCtx) {
+      if (categoryChartInstance) categoryChartInstance.destroy();
 
-      const range = DateRangeHelper.getDateRange(state.dateFilter);
-      const txList = state.transactions
-        .filter(t => t.type === 'expense' && new Date(t.timestamp) >= range.start && new Date(t.timestamp) <= range.end)
-        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+      const topCats = this.getTopCategories(state, 100);
+      if (topCats.length > 0) {
+        const labels = topCats.map(c => c.name);
+        const data = topCats.map(c => c.amount);
+        const colors = ['#10B981', '#38BDF8', '#6366F1', '#F59E0B', '#F43F5E', '#A855F7'];
 
-      // Calculate cumulative spending per day
-      const dailyMap = {};
-      
-      // Seed all dates in range with cumulative value
-      let current = new Date(range.start);
-      const end = new Date(range.end > new Date() ? new Date() : range.end); // don't forecast past today on cumulative actuals
-      
-      while (current <= end) {
-        const key = current.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
-        dailyMap[key] = 0;
-        current.setDate(current.getDate() + 1);
-      }
-
-      // Populate spending amounts
-      for (const tx of txList) {
-        const key = new Date(tx.timestamp).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
-        if (dailyMap[key] !== undefined) {
-          dailyMap[key] += tx.amount;
-        }
-      }
-
-      // Make cumulative
-      let runningTotal = 0;
-      const labels = Object.keys(dailyMap);
-      const data = labels.map(label => {
-        runningTotal += dailyMap[label];
-        return runningTotal;
-      });
-
-      lineChartInstance = new Chart(lineCtx, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            label: 'Cumulative Spending',
-            data,
-            borderColor: '#FF5F1F',
-            backgroundColor: 'rgba(255, 95, 31, 0.1)',
-            fill: true,
-            tension: 0.3,
-            borderWidth: 2,
-            pointRadius: labels.length > 31 ? 0 : 2
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
+        categoryChartInstance = new Chart(categoryCtx, {
+          type: 'doughnut',
+          data: {
+            labels,
+            datasets: [{
+              data,
+              backgroundColor: colors.slice(0, labels.length),
+              borderWidth: 0,
+              hoverOffset: 4
+            }]
           },
-          scales: {
-            x: {
-              ticks: { color: 'rgba(255, 255, 255, 0.5)', maxRotation: 45, minRotation: 45, font: { size: 9 } },
-              grid: { display: false }
-            },
-            y: {
-              ticks: { color: 'rgba(255, 255, 255, 0.5)', font: { size: 9 } },
-              grid: { color: 'rgba(255, 255, 255, 0.05)' }
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '72%',
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: '#0E121A',
+                titleColor: '#F8FAFC',
+                bodyColor: '#94A3B8',
+                borderColor: 'rgba(255,255,255,0.1)',
+                borderWidth: 1,
+                padding: 10,
+                cornerRadius: 8,
+                callbacks: {
+                  label: (ctx) => ` ${ctx.label}: ${Formatters.currency(ctx.parsed)}`
+                }
+              }
             }
           }
-        }
-      });
+        });
+      }
     }
   }
 };

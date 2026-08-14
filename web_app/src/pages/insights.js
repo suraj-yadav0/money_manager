@@ -1,110 +1,111 @@
-/* Insights Screen Module (AI-lite insights card list generated from actual transactions) */
+/* Modern AI Financial Intelligence & Insights Module */
 import { StateManager } from '../state.js';
 import { Formatters } from '../utils/formatters.js';
 import { findCategory } from '../utils/icons.js';
-import { Router } from '../router.js';
 
 export const InsightsPage = {
   render(state) {
     const insights = this.generateDailyInsights(state);
 
     return `
-      <div class="modal-card animate-fade-in" style="background:#131124; max-height:90vh; display:flex; flex-direction:column; width:100%; max-width:600px; padding:32px 40px;">
-        <div class="modal-header" style="border-bottom: 1px solid var(--divider); padding-bottom:12px; margin-bottom:16px;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span class="material-icons" style="color:var(--primary);">insights</span>
-            <h3 style="color:#FFF; font-size:20px;">Financial Insights</h3>
-          </div>
-          <button class="modal-close" id="insights-close-btn">&times;</button>
-        </div>
-
-        <div style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:16px;" id="insights-list-container">
-          ${insights.length === 0 ? `
-            <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
-              <span class="material-icons" style="font-size: 54px; margin-bottom: 12px;">lightbulb_outline</span>
-              <p style="font-size: 15px;">No financial insights available yet.</p>
-              <p style="font-size: 12px; margin-top: 4px;">Insights will generate once you log expenses.</p>
+      <div class="animate-fade-in" style="display: flex; flex-direction: column; gap: 28px;">
+        
+        <!-- Hero Header -->
+        <section class="hero-section" style="padding-bottom: 0;">
+          <div class="hero-header">
+            <div>
+              <h1 class="hero-welcome-title">Financial Intelligence</h1>
+              <p class="hero-subtitle">Algorithmic spending anomaly detection, recurring leakage prevention, and wealth acceleration advice.</p>
             </div>
-          ` : insights.map(ins => this.renderInsightCard(ins)).join('')}
-        </div>
+
+            <div style="font-size: 13px; font-weight: 700; color: var(--primary); background: var(--success-bg); padding: 8px 16px; border-radius: var(--radius-full); border: 1px solid rgba(16, 185, 129, 0.2);">
+              ${insights.length} Active Observations
+            </div>
+          </div>
+        </section>
+
+        <!-- Insights List -->
+        ${insights.length === 0 ? `
+          <div class="fintech-card" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+              <span class="material-icons" style="font-size: 28px; opacity: 0.5;">insights</span>
+            </div>
+            <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">Need more transaction data</div>
+            <div style="font-size: 13px;">Add more expenses and income to generate smart AI pacing insights.</div>
+          </div>
+        ` : `
+          <div class="insights-feed">
+            ${insights.map(item => {
+              const isWarning = item.severity === 'warning';
+              const isSuccess = item.severity === 'success';
+              const iconName = isWarning ? 'warning_amber' : isSuccess ? 'verified' : 'lightbulb';
+              const iconColor = isWarning ? 'var(--error)' : isSuccess ? 'var(--success)' : 'var(--secondary)';
+              const iconBg = isWarning ? 'var(--error-bg)' : isSuccess ? 'var(--success-bg)' : 'rgba(56, 189, 248, 0.12)';
+
+              return `
+                <div class="insight-card">
+                  <div class="insight-icon-box" style="background: ${iconBg}; color: ${iconColor};">
+                    <span class="material-icons">${iconName}</span>
+                  </div>
+                  <div class="insight-content">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                      <div class="insight-title">${item.title}</div>
+                      <span class="kpi-badge ${isWarning ? 'negative' : isSuccess ? 'positive' : 'neutral'}">
+                        ${item.severity.toUpperCase()}
+                      </span>
+                    </div>
+                    <div class="insight-desc">${item.description}</div>
+                    ${item.tip ? `
+                      <div class="insight-tip">
+                        <b>Actionable Tip:</b> ${item.tip}
+                      </div>
+                    ` : ''}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `}
       </div>
     `;
   },
 
-  renderInsightCard(ins) {
-    let cardClass = 'insight-info';
-    let icon = 'info_outline';
-    if (ins.severity === 'critical') {
-      cardClass = 'insight-critical';
-      icon = 'warning_amber';
-    } else if (ins.severity === 'warning') {
-      cardClass = 'insight-warning';
-      icon = 'error_outline';
-    }
-
-    return `
-      <div class="glass-card insight-card ${cardClass}" style="padding:16px;">
-        <div class="insight-icon-box">
-          <span class="material-icons">${icon}</span>
-        </div>
-        <div class="insight-content">
-          <h4 class="insight-title">${ins.title}</h4>
-          <p class="insight-description">${ins.description}</p>
-          ${ins.tip ? `<p class="insight-tip">💡 Tip: ${ins.tip}</p>` : ''}
-        </div>
-      </div>
-    `;
-  },
-
-  // JavaScript implementation of insights_engine.dart logic
   generateDailyInsights(state) {
     const insights = [];
     const transactions = state.transactions;
-    if (transactions.length === 0) return insights;
-
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
-    // Filter expenses for this month
-    const expenses = transactions.filter(t => {
-      const ts = new Date(t.timestamp);
-      return t.type === 'expense' && ts >= startOfMonth;
-    });
+    const expenses = transactions.filter(t => t.type === 'expense' && new Date(t.timestamp) >= startOfMonth);
+    const incomes = transactions.filter(t => t.type === 'income' && new Date(t.timestamp) >= startOfMonth);
 
-    const totalExpenses = expenses.reduce((sum, t) => sum + t.amount, 0);
-    const settings = state.userSettings || { monthlyIncome: 0 };
-    const monthlyIncome = settings.monthlyIncome || 0;
+    const totalExpenses = expenses.reduce((acc, t) => acc + t.amount, 0);
+    const totalIncome = incomes.reduce((acc, t) => acc + t.amount, 0);
 
-    // 1. Spending Spike Detection
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const todayExpenses = expenses.filter(t => {
-      const ts = new Date(t.timestamp);
-      return ts.getFullYear() === today.getFullYear() &&
-             ts.getMonth() === today.getMonth() &&
-             ts.getDate() === today.getDate();
-    });
-
-    if (todayExpenses.length > 0) {
-      const todayTotal = todayExpenses.reduce((sum, t) => sum + t.amount, 0);
-      const otherExpenses = expenses.filter(t => {
-        const ts = new Date(t.timestamp);
-        return ts.getDate() !== today.getDate();
-      });
-
-      if (otherExpenses.length > 0) {
-        // Unique days count
-        const otherDays = new Set(otherExpenses.map(t => new Date(t.timestamp).toDateString())).size;
-        if (otherDays > 0) {
-          const dailyAverage = otherExpenses.reduce((sum, t) => sum + t.amount, 0) / otherDays;
-          if (todayTotal > dailyAverage * 2.0) {
-            insights.push({
-              title: 'Spending Spike Detected',
-              severity: 'warning',
-              description: `Today's spending is ${Formatters.currency(todayTotal)}, which is ${(todayTotal / dailyAverage).toFixed(1)}x your daily average.`,
-              tip: 'Try a "no-spend day" tomorrow to balance this out.'
-            });
-          }
-        }
+    // 1. Savings Rate
+    if (totalIncome > 0) {
+      const savingsRate = ((totalIncome - totalExpenses) / totalIncome) * 100;
+      if (savingsRate >= 30) {
+        insights.push({
+          title: 'Exceptional Savings Discipline',
+          severity: 'success',
+          description: `You have maintained a ${savingsRate.toFixed(0)}% savings rate this month, outpacing standard 20% benchmarks.`,
+          tip: 'Consider routing excess capital into active savings goals or high-yield investments.'
+        });
+      } else if (savingsRate < 10 && savingsRate >= 0) {
+        insights.push({
+          title: 'Tight Cash Flow Margin',
+          severity: 'warning',
+          description: `Your monthly savings rate is currently ${savingsRate.toFixed(0)}%. Most of your inflow is being consumed by outgoing expenses.`,
+          tip: 'Audit non-essential categories (Dining, Shopping, Entertainment) to increase your safety buffer.'
+        });
+      } else if (savingsRate < 0) {
+        insights.push({
+          title: 'Negative Cash Flow Alert',
+          severity: 'warning',
+          description: `Outflows exceed inflows by ${Formatters.currency(totalExpenses - totalIncome)} this month.`,
+          tip: 'Pause discretionary purchases until the next income cycle to prevent drawing from reserve capital.'
+        });
       }
     }
 
@@ -119,109 +120,31 @@ export const InsightsPage = {
 
       for (const [name, amount] of Object.entries(categoryTotals)) {
         const ratio = amount / totalExpenses;
-        if (ratio > 0.40) {
+        if (ratio > 0.35) {
           insights.push({
-            title: `${name} Leads Spending`,
+            title: `${name} Represents ${Math.round(ratio * 100)}% of Outflow`,
             severity: 'info',
-            description: `${(ratio * 100).toFixed(0)}% of your expenses (${Formatters.currency(amount)}) went to ${name} this month.`,
-            tip: `Check if there are cheaper alternatives for your major expenses in ${name}.`
+            description: `${Formatters.currency(amount)} of your total monthly expenditures went toward ${name}.`,
+            tip: `Set a dedicated category budget cap for ${name} to keep this category under control.`
           });
         }
       }
     }
 
-    // 3. Budget / Spending Progress
-    if (monthlyIncome > 0 && totalExpenses > 0) {
-      const ratio = totalExpenses / monthlyIncome;
-      const daysElapsed = Formatters.daysElapsedInMonth();
-      const totalDays = Formatters.daysInCurrentMonth();
-      const expectedRatio = daysElapsed / totalDays;
-
-      if (ratio > expectedRatio + 0.15) {
-        insights.push({
-          title: 'Spending Ahead of Schedule',
-          severity: 'warning',
-          description: `You've spent ${Formatters.percentage(ratio)} of your income with ${Formatters.percentage(1 - expectedRatio)} of the month remaining.`,
-          tip: 'Consider pausing non-essential subscriptions until next month.'
-        });
-      }
-    }
-
-    // 4. Weekend Spending Pattern
-    if (expenses.length >= 7) {
-      let weekendTotal = 0;
-      let weekdayTotal = 0;
-      const weekendDays = new Set();
-      const weekdayDays = new Set();
-
-      for (const tx of expenses) {
-        const date = new Date(tx.timestamp);
-        const day = date.getDay(); // 0 = Sunday, 6 = Saturday
-        const isWeekend = day === 0 || day === 6;
-        const dateStr = date.toDateString();
-
-        if (isWeekend) {
-          weekendTotal += tx.amount;
-          weekendDays.add(dateStr);
-        } else {
-          weekdayTotal += tx.amount;
-          weekdayDays.add(dateStr);
-        }
-      }
-
-      if (weekendDays.size > 0 && weekdayDays.size > 0) {
-        const weekendAvg = weekendTotal / weekendDays.size;
-        const weekdayAvg = weekdayTotal / weekdayDays.size;
-
-        if (weekendAvg > weekdayAvg * 1.8) {
-          insights.push({
-            title: 'Weekend Spending Pattern',
-            severity: 'info',
-            description: `You spend ${(weekendAvg / weekdayAvg).toFixed(1)}x more on weekends (${Formatters.currency(weekendAvg)}/day) than weekdays.`,
-            tip: 'Planning weekend activities in advance can help avoid impulse spending.'
-          });
-        }
-      }
-    }
-
-    // 5. Forecast / Deficit warnings
-    if (monthlyIncome > 0 && totalExpenses > 0) {
-      const daysElapsed = Formatters.daysElapsedInMonth();
-      const daysRemaining = Formatters.daysRemainingInMonth();
-      
-      if (daysElapsed > 0) {
-        const dailyBurn = totalExpenses / daysElapsed;
-        const projectedTotal = totalExpenses + (dailyBurn * daysRemaining);
-        const projectedBalance = monthlyIncome - projectedTotal;
-
-        if (projectedBalance < 0) {
-          insights.push({
-            title: 'Deficit Warning',
-            severity: 'critical',
-            description: `At this rate, you'll overspend by ${Formatters.currency(-projectedBalance)} this month.`,
-            tip: 'Look for one variable expense you can cut this week (e.g., dining out).'
-          });
-        } else if (projectedBalance < monthlyIncome * 0.1) {
-          insights.push({
-            title: 'Tight Month Ahead',
-            severity: 'warning',
-            description: `You'll have only ${Formatters.currency(projectedBalance)} left at month-end.`,
-            tip: `Try to limit daily spending to ${Formatters.currency(projectedBalance / daysRemaining)} for the rest of the month.`
-          });
-        }
-      }
+    // 3. Recurring Subscriptions
+    const recurringExpenses = expenses.filter(t => t.isRecurring || t.is_recurring);
+    if (recurringExpenses.length > 0) {
+      const recurringTotal = recurringExpenses.reduce((acc, t) => acc + t.amount, 0);
+      insights.push({
+        title: `${recurringExpenses.length} Fixed Subscriptions Active`,
+        severity: 'info',
+        description: `Recurring charges amount to ${Formatters.currency(recurringTotal)} this month across ${recurringExpenses.length} commitments.`,
+        tip: 'Regularly audit automated subscriptions to ensure you are actively using all active memberships.'
+      });
     }
 
     return insights;
   },
 
-  bindEvents(state) {
-    // Close button click
-    const closeBtn = document.getElementById('insights-close-btn');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => {
-        Router.closeOverlay();
-      });
-    }
-  }
+  bindEvents() {}
 };

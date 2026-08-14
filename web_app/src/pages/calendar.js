@@ -1,113 +1,194 @@
-/* Calendar Screen Module (monthly calendar grid, daily transaction indicators and listings) */
+/* Modern Calendar Financial Grid Module */
 import { StateManager } from '../state.js';
 import { Formatters } from '../utils/formatters.js';
 import { IconHelper, findCategory } from '../utils/icons.js';
-import { Router } from '../router.js';
 
 export const CalendarPage = {
-  selectedYear: new Date().getFullYear(),
-  selectedMonth: new Date().getMonth(), // 0-11
-  selectedDay: new Date().getDate(),    // 1-31
+  currentDate: new Date(),
+  selectedDay: new Date().getDate(),
 
   render(state) {
-    const daysInMonth = new Date(this.selectedYear, this.selectedMonth + 1, 0).getDate();
-    const firstDayIndex = new Date(this.selectedYear, this.selectedMonth, 1).getDay(); // 0=Sunday, 1=Monday
-    
-    // Convert firstDayIndex so Monday = 0, Sunday = 6 to match ISO week layout
-    const startOffset = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+    const year = this.currentDate.getFullYear();
+    const month = this.currentDate.getMonth();
+    const monthName = this.currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
-    const monthLabel = new Date(this.selectedYear, this.selectedMonth, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    const dailyTx = this.getTransactionsForSelectedDay(state);
-    const dayStats = this.calculateDailyTotals(state);
+    // Transactions for selected day
+    const dayTransactions = this.getDayTransactions(state, year, month, this.selectedDay);
+    
+    // Month totals
+    const monthTx = state.transactions.filter(t => {
+      const ts = new Date(t.timestamp);
+      return ts.getFullYear() === year && ts.getMonth() === month;
+    });
+
+    let monthIncome = 0;
+    let monthExpense = 0;
+    monthTx.forEach(t => {
+      if (t.type === 'income') monthIncome += t.amount;
+      else monthExpense += t.amount;
+    });
 
     return `
-      <div class="modal-card animate-fade-in" style="background:#131124; max-height:90vh; display:flex; flex-direction:column; width:100%; max-width:600px; padding:32px 40px;">
-        <div class="modal-header" style="border-bottom:1px solid var(--divider); padding-bottom:12px; margin-bottom:12px;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span class="material-icons" style="color:var(--primary);">calendar_today</span>
-            <h3 style="color:#FFF; font-size:20px;">Calendar View</h3>
-          </div>
-          <button class="modal-close" id="cal-close-btn">&times;</button>
-        </div>
-
-        <div style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:16px;">
-          <!-- Month selector -->
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <button class="btn-icon" id="cal-prev-month" style="width:36px; height:36px;"><span class="material-icons">chevron_left</span></button>
-            <div style="font-size:16px; font-weight:700;">${monthLabel}</div>
-            <button class="btn-icon" id="cal-next-month" style="width:36px; height:36px;"><span class="material-icons">chevron_right</span></button>
-          </div>
-
-          <!-- Calendar Grid -->
-          <div>
-            <!-- Weekday headers -->
-            <div style="display:grid; grid-template-columns:repeat(7, 1fr); text-align:center; font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:8px;">
-              <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+      <div class="animate-fade-in" style="display: flex; flex-direction: column; gap: 28px;">
+        
+        <!-- Hero Header -->
+        <section class="hero-section" style="padding-bottom: 0;">
+          <div class="hero-header">
+            <div>
+              <h1 class="hero-welcome-title">Calendar Schedule</h1>
+              <p class="hero-subtitle">Chronological expenditure heatmap and daily financial events.</p>
             </div>
-            
-            <!-- Calendar days grid -->
-            <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; text-align:center;" id="calendar-days-grid">
-              ${this.renderCalendarDays(state, startOffset, daysInMonth)}
+
+            <!-- Month Navigator -->
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <button class="btn-icon" id="cal-prev-month">
+                <span class="material-icons">chevron_left</span>
+              </button>
+              <div style="font-weight: 800; font-size: 17px; min-width: 160px; text-align: center; color: var(--text-primary); font-family: var(--font-heading);">
+                ${monthName}
+              </div>
+              <button class="btn-icon" id="cal-next-month">
+                <span class="material-icons">chevron_right</span>
+              </button>
             </div>
           </div>
 
-          <!-- Selected Day Stats -->
-          <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); border-radius:12px; padding:12px 16px; border:1px solid var(--glass-border);">
-            <div style="font-weight:600; font-size:13px;">
-              ${this.selectedDay} ${new Date(this.selectedYear, this.selectedMonth, 1).toLocaleDateString('en-US', { month: 'short' })} Summary
+          <!-- Calendar KPI Stat Cards -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">Month Inflow</span>
+                <div class="kpi-icon-box" style="background: rgba(16, 185, 129, 0.12); color: var(--primary);">
+                  <span class="material-icons" style="font-size: 20px;">arrow_downward</span>
+                </div>
+              </div>
+              <div class="kpi-value" style="color: var(--primary);">${Formatters.currency(monthIncome)}</div>
             </div>
-            <div style="display:flex; gap:16px; font-size:13px; font-weight:700;">
-              ${dayStats.income > 0 ? `<span style="color:var(--success);">+${Formatters.currency(dayStats.income)}</span>` : ''}
-              ${dayStats.expense > 0 ? `<span style="color:var(--text-primary);">${Formatters.currency(dayStats.expense)}</span>` : ''}
-              ${dayStats.income === 0 && dayStats.expense === 0 ? '<span style="color:var(--text-muted);">No activity</span>' : ''}
+
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">Month Outflow</span>
+                <div class="kpi-icon-box" style="background: rgba(244, 63, 94, 0.12); color: var(--error);">
+                  <span class="material-icons" style="font-size: 20px;">arrow_upward</span>
+                </div>
+              </div>
+              <div class="kpi-value" style="color: #FFF;">${Formatters.currency(monthExpense)}</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">Active Days with Spend</span>
+                <div class="kpi-icon-box" style="background: rgba(56, 189, 248, 0.12); color: var(--secondary);">
+                  <span class="material-icons" style="font-size: 20px;">calendar_month</span>
+                </div>
+              </div>
+              <div class="kpi-value">${new Set(monthTx.map(t => new Date(t.timestamp).getDate())).size} days</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">Net Monthly Flow</span>
+                <div class="kpi-icon-box" style="background: rgba(99, 102, 241, 0.12); color: var(--indigo);">
+                  <span class="material-icons" style="font-size: 20px;">account_balance</span>
+                </div>
+              </div>
+              <div class="kpi-value" style="color: ${monthIncome >= monthExpense ? 'var(--primary)' : 'var(--error)'};">
+                ${Formatters.currency(monthIncome - monthExpense)}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Calendar Grid & Day Activity Split -->
+        <div class="dashboard-split-grid">
+          
+          <!-- Calendar Matrix Card -->
+          <div class="fintech-card">
+            <!-- Day of Week Header -->
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">
+              <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+            </div>
+
+            <!-- Calendar Cells -->
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;" id="calendar-days-grid">
+              ${this.renderCalendarCells(state, year, month)}
             </div>
           </div>
 
-          <!-- Selected Day Transactions list -->
-          <div class="glass-card" style="padding:10px 20px; flex:1; min-height:120px; overflow-y:auto;">
-            ${dailyTx.length === 0 ? `
-              <div style="text-align:center; padding:20px 0; color:var(--text-muted); font-size:13px;">No transactions recorded on this day.</div>
-            ` : dailyTx.map(tx => this.renderTransactionRow(tx, state.categories)).join('')}
+          <!-- Day Transactions Drilldown -->
+          <div class="fintech-card">
+            <div class="card-header">
+              <div class="card-title">
+                <span class="material-icons">event</span>
+                <span>Day ${this.selectedDay} Activity</span>
+              </div>
+              <span style="font-size: 13px; font-weight: 700; color: var(--text-secondary);">
+                ${dayTransactions.length} events
+              </span>
+            </div>
+
+            ${dayTransactions.length === 0 ? `
+              <div style="text-align: center; padding: 48px 0; color: var(--text-muted); font-size: 13px;">
+                No transactions recorded on this day.
+              </div>
+            ` : `
+              <div class="tx-list">
+                ${dayTransactions.map(tx => this.renderTransactionRow(tx, state.categories)).join('')}
+              </div>
+            `}
           </div>
+
         </div>
       </div>
     `;
   },
 
-  renderCalendarDays(state, offset, daysInMonth) {
+  renderCalendarCells(state, year, month) {
+    const firstDayIndex = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    // Group transactions by day
+    const dayTotals = {};
+    state.transactions.forEach(t => {
+      const ts = new Date(t.timestamp);
+      if (ts.getFullYear() === year && ts.getMonth() === month) {
+        const d = ts.getDate();
+        if (!dayTotals[d]) dayTotals[d] = { count: 0, expense: 0, income: 0 };
+        dayTotals[d].count++;
+        if (t.type === 'income') dayTotals[d].income += t.amount;
+        else dayTotals[d].expense += t.amount;
+      }
+    });
+
     let cellsHtml = '';
 
-    // Empty offset cells
-    for (let i = 0; i < offset; i++) {
-      cellsHtml += `<div style="height:40px;"></div>`;
+    // Empty lead cells
+    for (let i = 0; i < firstDayIndex; i++) {
+      cellsHtml += `<div style="height: 52px; border-radius: var(--radius-sm); opacity: 0.2;"></div>`;
     }
 
-    // Days cells
+    // Days in Month
     for (let day = 1; day <= daysInMonth; day++) {
       const isSelected = day === this.selectedDay;
-      const dayTx = this.getTransactionsForDay(state, day);
-      
-      const hasIncome = dayTx.some(t => t.type === 'income');
-      const hasExpense = dayTx.some(t => t.type === 'expense');
+      const data = dayTotals[day];
+      const hasSpend = data && data.expense > 0;
+      const hasIncome = data && data.income > 0;
 
-      let dotHtml = '';
-      if (hasIncome && hasExpense) {
-        dotHtml = `<div style="display:flex; justify-content:center; gap:2px; margin-top:2px;">
-                     <span style="width:4px; height:4px; border-radius:50%; background:var(--success);"></span>
-                     <span style="width:4px; height:4px; border-radius:50%; background:var(--primary);"></span>
-                   </div>`;
-      } else if (hasIncome) {
-        dotHtml = `<div style="margin-top:2px;"><span style="display:inline-block; width:4px; height:4px; border-radius:50%; background:var(--success);"></span></div>`;
-      } else if (hasExpense) {
-        dotHtml = `<div style="margin-top:2px;"><span style="display:inline-block; width:4px; height:4px; border-radius:50%; background:var(--primary);"></span></div>`;
-      }
+      let borderStyle = isSelected ? '1px solid var(--primary)' : '1px solid var(--glass-border)';
+      let bgStyle = isSelected ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.02)';
 
       cellsHtml += `
-        <div class="calendar-day-cell ${isSelected ? 'active' : ''}" 
-             data-day="${day}"
-             style="height:44px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:8px; cursor:pointer; font-weight:600; font-size:13px; background:${isSelected ? 'var(--primary)' : 'transparent'}; color:${isSelected ? '#FFF' : 'var(--text-primary)'}; transition:var(--transition-fast);">
-          <span>${day}</span>
-          ${dotHtml}
+        <div class="cal-day-cell" data-day="${day}" 
+             style="height: 54px; padding: 6px; border-radius: var(--radius-md); background: ${bgStyle}; border: ${borderStyle}; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; transition: var(--transition-fast);">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 13px; font-weight: ${isSelected ? '800' : '600'}; color: ${isSelected ? '#FFF' : 'var(--text-primary)'};">${day}</span>
+            ${data && data.count > 0 ? `
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: ${hasIncome ? 'var(--success)' : 'var(--error)'};"></span>
+            ` : ''}
+          </div>
+          <div style="font-size: 10px; font-weight: 700; color: ${hasIncome ? 'var(--success)' : 'var(--error)'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            ${data ? (hasIncome ? `+${Formatters.compactCurrency(data.income)}` : `-${Formatters.compactCurrency(data.expense)}`) : ''}
+          </div>
         </div>
       `;
     }
@@ -121,107 +202,61 @@ export const CalendarPage = {
     const isIncome = tx.type === 'income';
     const formattedAmount = (isIncome ? '+' : '-') + Formatters.currency(tx.amount);
     
-    let iconBg = 'rgba(255, 255, 255, 0.08)';
-    if (cat) {
-      if (cat.type === 'income') iconBg = 'rgba(16, 185, 129, 0.15)';
-      else iconBg = 'rgba(255, 95, 31, 0.15)';
-    }
+    let iconBg = isIncome ? 'rgba(16, 185, 129, 0.12)' : 'rgba(244, 63, 94, 0.12)';
+    let iconColor = isIncome ? 'var(--success)' : 'var(--error)';
 
     return `
-      <div class="calendar-tx-row" data-sync-id="${tx.sync_id}" data-id="${tx.id || ''}"
-           style="display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--divider); cursor:pointer;">
-        <div class="transaction-icon-box" style="background: ${iconBg}; color: ${isIncome ? 'var(--success)' : 'var(--primary)'}; width:36px; height:36px; font-size:18px;">
-          <span class="material-icons" style="font-size:18px;">${icon}</span>
+      <div class="tx-row" data-sync-id="${tx.sync_id || ''}" data-id="${tx.id || ''}">
+        <div class="tx-left">
+          <div class="tx-icon-box" style="background: ${iconBg}; color: ${iconColor};">
+            <span class="material-icons">${icon}</span>
+          </div>
+          <div class="tx-info">
+            <div class="tx-title">${tx.note || (cat ? cat.name : 'Transaction')}</div>
+            <div class="tx-meta">
+              <span class="tx-tag">${cat ? cat.name : 'Other'}</span>
+            </div>
+          </div>
         </div>
-        <div class="tx-details" style="margin-left:10px;">
-          <div class="tx-note" style="font-size:13px;">${tx.note || (cat ? cat.name : 'Transaction')}</div>
-          <div class="tx-category" style="font-size:11px;">${cat ? cat.name : 'Other'}</div>
-        </div>
-        <div style="text-align:right;">
-          <div class="tx-amount ${isIncome ? 'income' : 'expense'}" style="font-size:14px; font-weight:600;">${formattedAmount}</div>
-          <div class="tx-date" style="font-size:10px; color:var(--text-muted);">${Formatters.time(new Date(tx.timestamp))}</div>
+        <div class="tx-right">
+          <div>
+            <div class="tx-amount ${isIncome ? 'income' : 'expense'}">${formattedAmount}</div>
+            <div class="tx-date">${Formatters.time(tx.timestamp)}</div>
+          </div>
         </div>
       </div>
     `;
   },
 
-  getTransactionsForDay(state, day) {
+  getDayTransactions(state, year, month, day) {
     return state.transactions.filter(t => {
       const ts = new Date(t.timestamp);
-      return ts.getFullYear() === this.selectedYear &&
-             ts.getMonth() === this.selectedMonth &&
-             ts.getDate() === day;
+      return ts.getFullYear() === year && ts.getMonth() === month && ts.getDate() === day;
     });
-  },
-
-  getTransactionsForSelectedDay(state) {
-    return this.getTransactionsForDay(state, this.selectedDay)
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  },
-
-  calculateDailyTotals(state) {
-    const list = this.getTransactionsForSelectedDay(state);
-    let income = 0;
-    let expense = 0;
-
-    for (const t of list) {
-      if (t.type === 'income') income += t.amount;
-      else expense += t.amount;
-    }
-
-    return { income, expense };
   },
 
   bindEvents(state) {
-    // Close button
-    document.getElementById('cal-close-btn').addEventListener('click', () => {
-      Router.closeOverlay();
-    });
-
-    // Month navigation
-    document.getElementById('cal-prev-month').addEventListener('click', () => {
-      this.selectedMonth--;
-      if (this.selectedMonth < 0) {
-        this.selectedMonth = 11;
-        this.selectedYear--;
-      }
+    // Prev Month
+    document.getElementById('cal-prev-month')?.addEventListener('click', () => {
+      this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() - 1, 1);
       this.selectedDay = 1;
       StateManager.notify();
     });
 
-    document.getElementById('cal-next-month').addEventListener('click', () => {
-      this.selectedMonth++;
-      if (this.selectedMonth > 11) {
-        this.selectedMonth = 0;
-        this.selectedYear++;
-      }
+    // Next Month
+    document.getElementById('cal-next-month')?.addEventListener('click', () => {
+      this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 1);
       this.selectedDay = 1;
       StateManager.notify();
     });
 
-    // Grid day cell click events
-    const dayCells = document.querySelectorAll('.calendar-day-cell');
-    dayCells.forEach(cell => {
+    // Day cell click
+    const cells = document.querySelectorAll('.cal-day-cell');
+    cells.forEach(cell => {
       cell.addEventListener('click', () => {
         const day = parseInt(cell.getAttribute('data-day'), 10);
         this.selectedDay = day;
         StateManager.notify();
-      });
-    });
-
-    // Row edit clicks
-    const rows = document.querySelectorAll('.calendar-tx-row');
-    rows.forEach(row => {
-      row.addEventListener('click', () => {
-        const syncId = row.getAttribute('data-sync-id');
-        const localId = parseInt(row.getAttribute('data-id'), 10) || null;
-        const tx = state.transactions.find(t => t.sync_id === syncId || (localId && t.id === localId));
-        
-        if (tx) {
-          import('./add-transaction.js').then(({ AddTransactionModal }) => {
-            AddTransactionModal.show(tx);
-          });
-        }
       });
     });
   }
