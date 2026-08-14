@@ -4,11 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/database/database.dart';
-import '../../../core/navigation/app_shell.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/utils/constants.dart';
 import '../../../core/presentation/glass_widgets.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/providers/auth_providers.dart';
+import '../../../main.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -54,11 +55,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         return;
       }
 
-      // Update user settings
-      await (db.update(db.userSettings)..where((t) => t.id.equals(1))).write(
+      // Upsert user settings (create row 1 if it doesn't exist yet)
+      await db.into(db.userSettings).insertOnConflictUpdate(
         UserSettingsCompanion(
+          id: const Value(1),
           monthlyIncome: Value(income),
           isOnboarded: const Value(true),
+          updatedAt: Value(DateTime.now()),
         ),
       );
 
@@ -86,10 +89,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             );
       }
 
+      // Enable guest mode if not logged in so the user enters the app directly
+      final currentUser = ref.read(currentUserProvider);
+      if (currentUser == null) {
+        await ref.read(guestModeProvider.notifier).enableGuestMode();
+      }
+
+      // Refresh providers
+      ref.invalidate(isOnboardedProvider);
+      ref.invalidate(userSettingsProvider);
+
       if (mounted) {
         Navigator.of(
           context,
-        ).pushReplacement(MaterialPageRoute(builder: (_) => const AppShell()));
+        ).pushReplacement(MaterialPageRoute(builder: (_) => const AuthWrapper()));
       }
     } catch (e) {
       if (mounted) {

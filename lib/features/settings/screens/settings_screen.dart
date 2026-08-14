@@ -7,6 +7,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/presentation/glass_widgets.dart';
 import '../../../core/database/database.dart';
 import '../../../core/providers/app_state_provider.dart';
+import '../../../core/providers/auth_providers.dart';
+import '../../../core/services/sync_service.dart';
 import '../../../core/utils/constants.dart';
 import '../../../core/utils/formatters.dart';
 import '../../dashboard/providers/dashboard_providers.dart';
@@ -91,11 +93,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final newIncome =
           double.tryParse(_incomeController.text.replaceAll(',', '')) ?? 0;
 
-      // Update user settings
-      await (db.update(db.userSettings)..where((t) => t.id.equals(1))).write(
+      // Upsert user settings
+      await db.into(db.userSettings).insertOnConflictUpdate(
         UserSettingsCompanion(
+          id: const Value(1),
           monthlyIncome: Value(newIncome),
           currency: Value(_selectedCurrency),
+          updatedAt: Value(DateTime.now()),
         ),
       );
 
@@ -220,6 +224,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            // Account & Cloud Sync Section
+            _buildSectionHeader(context, 'Account & Cloud Sync', Icons.cloud_sync_outlined),
+            const SizedBox(height: 12),
+            _buildAccountCloudSyncCard(context),
+
+            const SizedBox(height: 24),
+
             // Income Section
             _buildSectionHeader(context, 'Income', Icons.attach_money),
             const SizedBox(height: 12),
@@ -266,11 +277,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       onChanged: _onIncomeChanged,
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      'This will update your recurring salary transaction',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'This will update your recurring salary transaction',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        if (_hasChanges) ...[
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: _isLoading ? null : _saveSettings,
+                            style: ElevatedButton.styleFrom(
+                              visualDensity: VisualDensity.compact,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text('Save'),
+                          ),
+                        ],
+                      ],
                     ),
                   ],
                 ),
@@ -397,6 +436,96 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                 ],
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAccountCloudSyncCard(BuildContext context) {
+    final user = ref.watch(currentUserProvider);
+    final syncState = ref.watch(syncNotifierProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: CircleAvatar(
+                backgroundColor: user != null
+                    ? colorScheme.primaryContainer
+                    : colorScheme.surfaceContainerHighest,
+                child: Icon(
+                  user != null ? Icons.cloud_done_rounded : Icons.cloud_off_rounded,
+                  color: user != null
+                      ? colorScheme.onPrimaryContainer
+                      : colorScheme.onSurfaceVariant,
+                ),
+              ),
+              title: Text(
+                user != null ? (user.email ?? 'Cloud Account') : 'Offline Guest Mode',
+                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              subtitle: Text(
+                user != null
+                    ? (syncState.message ?? 'Cloud Data Sync Active')
+                    : 'Data stored locally on this device only',
+                style: theme.textTheme.bodySmall,
+              ),
+            ),
+            const Divider(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (user != null) ...[
+                  OutlinedButton.icon(
+                    icon: syncState.status == SyncStatus.syncing
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.sync, size: 16),
+                    label: const Text('Sync Now'),
+                    onPressed: syncState.status == SyncStatus.syncing
+                        ? null
+                        : () async {
+                            final res = await ref
+                                .read(syncNotifierProvider.notifier)
+                                .triggerSync();
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(res.message),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+                          },
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton.icon(
+                    icon: const Icon(Icons.logout, size: 16, color: Colors.redAccent),
+                    label: const Text('Sign Out', style: TextStyle(color: Colors.redAccent)),
+                    onPressed: () async {
+                      await ref.read(authServiceProvider).signOut();
+                    },
+                  ),
+                ] else ...[
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.login, size: 16),
+                    label: const Text('Sign In / Connect Cloud'),
+                    onPressed: () async {
+                      await ref.read(guestModeProvider.notifier).disableGuestMode();
+                    },
+                  ),
+                ],
+              ],
             ),
           ],
         ),
