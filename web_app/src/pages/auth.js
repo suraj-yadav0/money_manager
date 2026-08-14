@@ -7,9 +7,7 @@ export const AuthPage = {
   isSignUp: false,
   errorMessage: null,
   isLoading: false,
-  
   emailInput: '',
-  passwordInput: '',
 
   render(state) {
     return `
@@ -92,7 +90,7 @@ export const AuthPage = {
                     <a href="#" id="auth-forgot-pwd" style="font-size: 12px; color: var(--primary);">Forgot?</a>
                   ` : ''}
                 </div>
-                <input type="password" class="form-control" id="auth-password-input" placeholder="••••••••" value="${this.passwordInput}">
+                <input type="password" class="form-control" id="auth-password-input" placeholder="••••••••">
               </div>
 
               <!-- Submit Button -->
@@ -182,27 +180,24 @@ export const AuthPage = {
       this.emailInput = e.target.value;
     });
 
-    const passwordInputElement = document.getElementById('auth-password-input');
-    if (passwordInputElement) {
-      passwordInputElement.addEventListener('input', (e) => {
-        this.passwordInput = e.target.value;
-      });
-      passwordInputElement.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') document.getElementById('auth-submit-btn')?.click();
-      });
-    }
+    document.getElementById('auth-password-input')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('auth-submit-btn')?.click();
+    });
 
     // Submit Auth
     document.getElementById('auth-submit-btn')?.addEventListener('click', async () => {
-      const emailValue = (this.emailInput || '').trim();
-      const enteredPassword = this.passwordInput || '';
+      const emailField = document.getElementById('auth-email-input');
+      const passField = document.getElementById('auth-password-input');
+      
+      const emailVal = emailField ? emailField.value.trim() : '';
+      const passVal = passField ? passField.value : '';
 
-      if (!emailValue || emailValue.indexOf('@') === -1) {
+      if (!emailVal || emailVal.indexOf('@') === -1) {
         this.errorMessage = 'Please enter a valid email address.';
         StateManager.notify();
         return;
       }
-      if (!enteredPassword || enteredPassword.length < 6) {
+      if (!passVal || passVal.length < 6) {
         this.errorMessage = 'Password must be at least 6 characters.';
         StateManager.notify();
         return;
@@ -214,11 +209,11 @@ export const AuthPage = {
 
       try {
         if (this.isSignUp) {
-          const res = await AuthService.signUpWithEmail(emailValue, enteredPassword);
+          const res = await AuthService.signUpWithEmail(emailVal, passVal);
           DbService.startSync(res.user.uid);
           await DbService.syncGuestDataToCloud(res.user.uid);
         } else {
-          const res = await AuthService.signInWithEmail(emailValue, enteredPassword);
+          const res = await AuthService.signInWithEmail(emailVal, passVal);
           DbService.startSync(res.user.uid);
           await DbService.syncGuestDataToCloud(res.user.uid);
         }
