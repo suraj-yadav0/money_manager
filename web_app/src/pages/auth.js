@@ -182,27 +182,27 @@ export const AuthPage = {
       this.emailInput = e.target.value;
     });
 
-    const pwdField = document.getElementById('auth-password-input');
-    if (pwdField) {
-      pwdField.addEventListener('input', (e) => {
+    const passwordInputElement = document.getElementById('auth-password-input');
+    if (passwordInputElement) {
+      passwordInputElement.addEventListener('input', (e) => {
         this.passwordInput = e.target.value;
       });
-      pwdField.addEventListener('keydown', (e) => {
+      passwordInputElement.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') document.getElementById('auth-submit-btn')?.click();
       });
     }
 
     // Submit Auth
     document.getElementById('auth-submit-btn')?.addEventListener('click', async () => {
-      const email = (this.emailInput || '').trim();
-      const pwd = this.passwordInput || '';
+      const emailValue = (this.emailInput || '').trim();
+      const enteredPassword = this.passwordInput || '';
 
-      if (!email || email.indexOf('@') === -1) {
+      if (!emailValue || emailValue.indexOf('@') === -1) {
         this.errorMessage = 'Please enter a valid email address.';
         StateManager.notify();
         return;
       }
-      if (!pwd || pwd.length < 6) {
+      if (!enteredPassword || enteredPassword.length < 6) {
         this.errorMessage = 'Password must be at least 6 characters.';
         StateManager.notify();
         return;
@@ -214,11 +214,11 @@ export const AuthPage = {
 
       try {
         if (this.isSignUp) {
-          const res = await AuthService.signUpWithEmail(email, pwd);
+          const res = await AuthService.signUpWithEmail(emailValue, enteredPassword);
           DbService.startSync(res.user.uid);
           await DbService.syncGuestDataToCloud(res.user.uid);
         } else {
-          const res = await AuthService.signInWithEmail(email, pwd);
+          const res = await AuthService.signInWithEmail(emailValue, enteredPassword);
           DbService.startSync(res.user.uid);
           await DbService.syncGuestDataToCloud(res.user.uid);
         }
