@@ -1,4 +1,4 @@
-/* Base resets, background lighting, modern typography, and keyframe animations */
+/* Base resets, ambient lighting, modern typography, and theme transitions */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -17,17 +17,18 @@ body {
   color: var(--text-primary);
   background-color: var(--bg-main);
   background-image: 
-    radial-gradient(at 15% 10%, rgba(16, 185, 129, 0.08) 0px, transparent 50%),
-    radial-gradient(at 85% 15%, rgba(56, 189, 248, 0.07) 0px, transparent 50%),
-    radial-gradient(at 50% 90%, rgba(99, 102, 241, 0.06) 0px, transparent 50%);
+    radial-gradient(at 15% 10%, var(--primary-glow) 0px, transparent 45%),
+    radial-gradient(at 85% 15%, var(--secondary-glow) 0px, transparent 45%),
+    radial-gradient(at 50% 90%, var(--indigo-glow) 0px, transparent 45%);
   background-attachment: fixed;
   min-height: 100vh;
-  line-height: 1.55;
+  line-height: 1.6;
   overflow-x: hidden;
   font-size: 15px;
+  transition: background-color var(--transition-smooth), color var(--transition-smooth);
 }
 
-/* Background Atmosphere */
+/* Ambient Atmospheric Lights */
 .ambient-glow {
   position: fixed;
   top: 0;
@@ -41,39 +42,39 @@ body {
 
 .ambient-circle-1 {
   position: absolute;
-  top: -150px;
-  right: 15%;
-  width: 600px;
-  height: 600px;
+  top: -200px;
+  right: 10%;
+  width: 700px;
+  height: 700px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0) 70%);
-  filter: blur(60px);
+  background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+  filter: blur(80px);
 }
 
 .ambient-circle-2 {
   position: absolute;
-  bottom: 10%;
+  bottom: 5%;
   left: 5%;
-  width: 700px;
-  height: 700px;
+  width: 800px;
+  height: 800px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.08) 0%, rgba(56, 189, 248, 0) 70%);
-  filter: blur(80px);
+  background: radial-gradient(circle, var(--secondary-glow) 0%, transparent 70%);
+  filter: blur(100px);
 }
 
 /* Typography Hierarchy */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   color: var(--text-primary);
-  letter-spacing: -0.03em;
+  letter-spacing: -0.035em;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
-h1 { font-size: 36px; }
-h2 { font-size: 28px; }
-h3 { font-size: 20px; }
-h4 { font-size: 16px; }
+h1 { font-size: 36px; font-weight: 800; letter-spacing: -0.04em; }
+h2 { font-size: 26px; font-weight: 700; }
+h3 { font-size: 19px; font-weight: 700; }
+h4 { font-size: 16px; font-weight: 600; }
 
 p {
   color: var(--text-secondary);
@@ -98,8 +99,8 @@ button, input, select, textarea {
 
 /* Custom Sleek Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
@@ -107,17 +108,17 @@ button, input, select, textarea {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(148, 163, 184, 0.25);
   border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(148, 163, 184, 0.4);
 }
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -132,12 +133,12 @@ button, input, select, textarea {
 }
 
 @keyframes pulseGlow {
-  0%, 100% { opacity: 0.8; }
-  50% { opacity: 0.4; }
+  0%, 100% { opacity: 0.9; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.92); }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-scale-up {
@@ -149,7 +150,7 @@ button, input, select, textarea {
   display: inline-block;
 }
 
-/* App Wrapper */
+/* App Wrapper & Spacious Container */
 .site-wrapper {
   position: relative;
   z-index: 1;
@@ -162,5 +163,11 @@ button, input, select, textarea {
   width: 100%;
   max-width: var(--container-max);
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 32px;
+}
+
+@media (max-width: 768px) {
+  .site-container {
+    padding: 0 20px;
+  }
 }

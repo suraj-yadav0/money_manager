@@ -28,13 +28,33 @@ class AppStateManager {
       categorizationRules: [],
       assets: [],
 
+      // Theme State ('dark' | 'light')
+      theme: localStorage.getItem('quantro_theme') || 'dark',
+
       // Cloud Sync Metadata
       syncStatus: 'idle',        // 'idle' | 'syncing' | 'synced' | 'error'
       lastSyncedAt: null,       // ISO timestamp of last successful sync
       syncError: null
     };
     
+    // Apply theme on load
+    document.documentElement.setAttribute('data-theme', this.state.theme);
+
     this.loadGuestState();
+  }
+
+  // Set Theme
+  setTheme(theme) {
+    this.state.theme = theme;
+    localStorage.setItem('quantro_theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+    this.notify();
+  }
+
+  // Toggle Theme
+  toggleTheme() {
+    const nextTheme = this.state.theme === 'dark' ? 'light' : 'dark';
+    this.setTheme(nextTheme);
   }
 
   // Register listener for state changes

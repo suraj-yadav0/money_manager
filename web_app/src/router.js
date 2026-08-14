@@ -161,6 +161,10 @@ export const Router = {
                   </div>
                 `}
 
+                <button class="btn-icon" id="header-theme-btn" title="Toggle Light / Dark Mode">
+                  <span class="material-icons" style="font-size: 18px;">${state.theme === 'light' ? 'dark_mode' : 'light_mode'}</span>
+                </button>
+
                 <button class="btn-primary" id="header-add-tx-btn">
                   <span class="material-icons" style="font-size: 18px;">add</span> Record
                 </button>
@@ -262,6 +266,11 @@ export const Router = {
       import('./pages/add-transaction.js').then(({ AddTransactionModal }) => {
         AddTransactionModal.show(null);
       });
+    });
+
+    // Theme toggle button in header
+    document.getElementById('header-theme-btn')?.addEventListener('click', () => {
+      StateManager.toggleTheme();
     });
 
     // Settings trigger button

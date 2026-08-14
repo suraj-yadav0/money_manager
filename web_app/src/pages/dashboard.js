@@ -462,6 +462,13 @@ export const DashboardPage = {
     if (cashFlowCtx) {
       if (cashFlowChartInstance) cashFlowChartInstance.destroy();
 
+      const isLight = state.theme === 'light';
+      const textColor = isLight ? '#475569' : '#94A3B8';
+      const gridColor = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
+      const tooltipBg = isLight ? '#FFFFFF' : '#11141E';
+      const tooltipTitle = isLight ? '#0F172A' : '#FFFFFF';
+      const tooltipBorder = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)';
+
       const range = DateRangeHelper.getDateRange(state.dateFilter);
       const filteredTx = state.transactions
         .filter(t => {
@@ -503,12 +510,12 @@ export const DashboardPage = {
       }
 
       const gradientEmerald = cashFlowCtx.getContext('2d').createLinearGradient(0, 0, 0, 260);
-      gradientEmerald.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
-      gradientEmerald.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+      gradientEmerald.addColorStop(0, isLight ? 'rgba(5, 150, 105, 0.25)' : 'rgba(0, 229, 153, 0.35)');
+      gradientEmerald.addColorStop(1, isLight ? 'rgba(5, 150, 105, 0.0)' : 'rgba(0, 229, 153, 0.0)');
 
       const gradientRose = cashFlowCtx.getContext('2d').createLinearGradient(0, 0, 0, 260);
-      gradientRose.addColorStop(0, 'rgba(244, 63, 94, 0.25)');
-      gradientRose.addColorStop(1, 'rgba(244, 63, 94, 0.0)');
+      gradientRose.addColorStop(0, isLight ? 'rgba(225, 29, 72, 0.2)' : 'rgba(255, 51, 102, 0.25)');
+      gradientRose.addColorStop(1, isLight ? 'rgba(225, 29, 72, 0.0)' : 'rgba(255, 51, 102, 0.0)');
 
       cashFlowChartInstance = new Chart(cashFlowCtx, {
         type: 'line',
@@ -518,24 +525,24 @@ export const DashboardPage = {
             {
               label: 'Inflows',
               data: incomeData,
-              borderColor: '#10B981',
+              borderColor: isLight ? '#059669' : '#00E599',
               backgroundColor: gradientEmerald,
               borderWidth: 2.5,
               tension: 0.35,
               fill: true,
-              pointRadius: labels.length > 20 ? 0 : 3,
-              pointBackgroundColor: '#10B981',
+              pointRadius: labels.length > 20 ? 0 : 4,
+              pointBackgroundColor: isLight ? '#059669' : '#00E599',
             },
             {
               label: 'Outflows',
               data: expenseData,
-              borderColor: '#F43F5E',
+              borderColor: isLight ? '#E11D48' : '#FF3366',
               backgroundColor: gradientRose,
               borderWidth: 2,
               tension: 0.35,
               fill: true,
-              pointRadius: labels.length > 20 ? 0 : 3,
-              pointBackgroundColor: '#F43F5E',
+              pointRadius: labels.length > 20 ? 0 : 4,
+              pointBackgroundColor: isLight ? '#E11D48' : '#FF3366',
             }
           ]
         },
@@ -545,16 +552,17 @@ export const DashboardPage = {
           plugins: {
             legend: {
               position: 'top',
-              labels: { color: '#94A3B8', font: { family: 'Plus Jakarta Sans', size: 12, weight: 600 }, boxWidth: 12 }
+              labels: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 12, weight: 600 }, boxWidth: 12 }
             },
             tooltip: {
-              backgroundColor: '#0E121A',
-              titleColor: '#F8FAFC',
-              bodyColor: '#94A3B8',
-              borderColor: 'rgba(255,255,255,0.1)',
+              backgroundColor: tooltipBg,
+              titleColor: tooltipTitle,
+              bodyColor: textColor,
+              borderColor: tooltipBorder,
               borderWidth: 1,
               padding: 12,
-              cornerRadius: 8,
+              cornerRadius: 10,
+              boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
               callbacks: {
                 label: (ctx) => ` ${ctx.dataset.label}: ${Formatters.currency(ctx.parsed.y)}`
               }
@@ -562,13 +570,13 @@ export const DashboardPage = {
           },
           scales: {
             x: {
-              grid: { color: 'rgba(255, 255, 255, 0.04)' },
-              ticks: { color: '#64748B', font: { family: 'Plus Jakarta Sans', size: 11 } }
+              grid: { color: gridColor },
+              ticks: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 11 } }
             },
             y: {
-              grid: { color: 'rgba(255, 255, 255, 0.04)' },
+              grid: { color: gridColor },
               ticks: {
-                color: '#64748B',
+                color: textColor,
                 font: { family: 'Plus Jakarta Sans', size: 11 },
                 callback: (val) => Formatters.compactCurrency(val)
               }
@@ -583,11 +591,14 @@ export const DashboardPage = {
     if (categoryCtx) {
       if (categoryChartInstance) categoryChartInstance.destroy();
 
+      const isLight = state.theme === 'light';
       const topCats = this.getTopCategories(state, 100);
       if (topCats.length > 0) {
         const labels = topCats.map(c => c.name);
         const data = topCats.map(c => c.amount);
-        const colors = ['#10B981', '#38BDF8', '#6366F1', '#F59E0B', '#F43F5E', '#A855F7'];
+        const colors = isLight 
+          ? ['#059669', '#0284C7', '#4F46E5', '#D97706', '#E11D48', '#7C3AED']
+          : ['#00E599', '#38BDF8', '#6366F1', '#F59E0B', '#FF3366', '#A855F7'];
 
         categoryChartInstance = new Chart(categoryCtx, {
           type: 'doughnut',
@@ -597,20 +608,20 @@ export const DashboardPage = {
               data,
               backgroundColor: colors.slice(0, labels.length),
               borderWidth: 0,
-              hoverOffset: 4
+              hoverOffset: 6
             }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '72%',
+            cutout: '74%',
             plugins: {
               legend: { display: false },
               tooltip: {
-                backgroundColor: '#0E121A',
-                titleColor: '#F8FAFC',
-                bodyColor: '#94A3B8',
-                borderColor: 'rgba(255,255,255,0.1)',
+                backgroundColor: isLight ? '#FFFFFF' : '#11141E',
+                titleColor: isLight ? '#0F172A' : '#FFFFFF',
+                bodyColor: isLight ? '#475569' : '#94A3B8',
+                borderColor: isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)',
                 borderWidth: 1,
                 padding: 10,
                 cornerRadius: 8,

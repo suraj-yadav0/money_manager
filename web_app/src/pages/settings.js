@@ -41,83 +41,95 @@ export const SettingsPage = {
           <button class="modal-close-btn" id="settings-close-btn">&times;</button>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 20px; max-height: 65vh; overflow-y: auto; padding-right: 4px;">
+        <div style="display: flex; flex-direction: column; gap: 22px; max-height: 65vh; overflow-y: auto; padding-right: 4px;">
           
           <!-- Cloud Sync Card -->
-          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: 18px;">
-            <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 14px;">
-              <div style="width: 44px; height: 44px; border-radius: 50%; background: ${user ? 'var(--success-bg)' : 'rgba(255,255,255,0.05)'}; display: flex; align-items: center; justify-content: center;">
-                <span class="material-icons ${this.isSyncing ? 'animate-spin' : ''}" style="color: ${user ? 'var(--success)' : 'var(--text-muted)'}; font-size: 22px;">
+          <div style="background: var(--bg-surface-subtle); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: 20px;">
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+              <div style="width: 46px; height: 46px; border-radius: 50%; background: ${user ? 'var(--success-bg)' : 'var(--bg-surface-hover)'}; display: flex; align-items: center; justify-content: center;">
+                <span class="material-icons ${this.isSyncing ? 'animate-spin' : ''}" style="color: ${user ? 'var(--success)' : 'var(--text-muted)'}; font-size: 24px;">
                   ${this.isSyncing ? 'sync' : user ? 'cloud_done' : 'cloud_off'}
                 </span>
               </div>
               <div style="flex: 1;">
-                <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">${user ? (user.email || 'Cloud Account') : 'Guest Mode (Offline)'}</div>
-                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
-                  ${user ? `Status: ${this.isSyncing ? 'Syncing...' : 'Connected to Cloud Firestore'} • Last: ${lastSyncLabel}` : 'Data is stored locally on this browser'}
+                <div style="font-weight: 700; font-size: 16px; color: var(--text-primary);">${user ? (user.email || 'Cloud Account') : 'Guest Mode (Offline)'}</div>
+                <div style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">
+                  ${user ? `Connected to Cloud Firestore • Last synced: ${lastSyncLabel}` : 'Data is cached locally on this browser'}
                 </div>
               </div>
             </div>
 
-            <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--glass-border); padding-top: 12px;">
+            <div style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--glass-border); padding-top: 14px;">
               ${user ? `
-                <button class="btn-secondary" id="settings-sync-now-btn" ${this.isSyncing ? 'disabled' : ''} style="padding: 6px 14px; font-size: 13px;">
+                <button class="btn-secondary" id="settings-sync-now-btn" ${this.isSyncing ? 'disabled' : ''} style="padding: 7px 16px; font-size: 13px;">
                   <span class="material-icons ${this.isSyncing ? 'animate-spin' : ''}" style="font-size: 16px;">sync</span>
                   ${this.isSyncing ? 'Syncing...' : 'Sync Now'}
                 </button>
-                <button class="btn-ghost" id="settings-signout-btn" style="color: var(--error); padding: 6px 14px; font-size: 13px;">
+                <button class="btn-ghost" id="settings-signout-btn" style="color: var(--error); padding: 7px 16px; font-size: 13px;">
                   <span class="material-icons" style="font-size: 16px;">logout</span> Sign Out
                 </button>
               ` : `
-                <button class="btn-primary" id="settings-connect-btn" style="padding: 8px 16px; font-size: 13px;">
+                <button class="btn-primary" id="settings-connect-btn" style="padding: 8px 18px; font-size: 13px;">
                   <span class="material-icons" style="font-size: 16px;">login</span> Connect Cloud Account
                 </button>
               `}
             </div>
           </div>
 
+          <!-- Appearance / Theme Preference -->
+          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-surface-subtle); border: 1px solid var(--glass-border); padding: 16px 20px; border-radius: var(--radius-md);">
+            <div>
+              <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">Interface Theme</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Current: ${state.theme === 'light' ? 'Crisp Light Mode' : 'Midnight Obsidian Dark Mode'}</div>
+            </div>
+            <button class="btn-secondary" id="settings-theme-toggle-btn" style="padding: 7px 16px; font-size: 13px;">
+              <span class="material-icons" style="font-size: 16px;">${state.theme === 'light' ? 'dark_mode' : 'light_mode'}</span>
+              Switch to ${state.theme === 'light' ? 'Dark' : 'Light'}
+            </button>
+          </div>
+
           <!-- Monthly Income Baseline -->
-          <div class="form-group">
+          <div class="form-group" style="margin-bottom: 0;">
             <label class="form-label">Monthly Inflow Baseline</label>
             <div style="position: relative; display: flex; align-items: center;">
-              <span style="position: absolute; left: 16px; font-weight: 700; color: var(--primary); font-size: 16px;">${symbol}</span>
-              <input type="number" class="form-control" id="settings-income-field" value="${this.incomeInputVal}" style="padding-left: 36px; font-weight: 700;">
+              <span style="position: absolute; left: 18px; font-weight: 800; color: var(--primary); font-size: 17px;">${symbol}</span>
+              <input type="number" class="form-control" id="settings-income-field" value="${this.incomeInputVal}" style="padding-left: 40px; font-weight: 700;">
             </div>
-            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
-              Used for daily burn calculations and projection models.
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">
+              Baseline benchmark for monthly savings rates and budget burn forecasts.
             </div>
           </div>
 
           <!-- Currency Selector -->
-          <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); padding: 14px 18px; border-radius: var(--radius-md); cursor: pointer;" id="settings-currency-row">
+          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-surface-subtle); border: 1px solid var(--glass-border); padding: 16px 20px; border-radius: var(--radius-md); cursor: pointer;" id="settings-currency-row">
             <div>
-              <div style="font-weight: 600; font-size: 14px; color: var(--text-primary);">Base Currency</div>
+              <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">Base Currency</div>
               <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Active: ${this.selectedCurrency} (${symbol})</div>
             </div>
             <span class="material-icons" style="color: var(--text-muted);">chevron_right</span>
           </div>
 
           <!-- Data Export -->
-          <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); padding: 14px 18px; border-radius: var(--radius-md); cursor: pointer;" id="settings-export-row">
+          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-surface-subtle); border: 1px solid var(--glass-border); padding: 16px 20px; border-radius: var(--radius-md); cursor: pointer;" id="settings-export-row">
             <div>
-              <div style="font-weight: 600; font-size: 14px; color: var(--text-primary);">Export Local JSON Backup</div>
-              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Download all records to JSON file</div>
+              <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">Export Local JSON Backup</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Download entire transaction dataset</div>
             </div>
             <span class="material-icons" style="color: var(--text-muted);">download</span>
           </div>
 
           <!-- Reset Local Storage -->
-          <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(244, 63, 94, 0.04); border: 1px solid rgba(244, 63, 94, 0.2); padding: 14px 18px; border-radius: var(--radius-md); cursor: pointer;" id="settings-reset-row">
+          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--error-bg); border: 1px solid rgba(255, 51, 102, 0.25); padding: 16px 20px; border-radius: var(--radius-md); cursor: pointer;" id="settings-reset-row">
             <div>
-              <div style="font-weight: 600; font-size: 14px; color: var(--error);">Reset Local Cache</div>
-              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Purge local browser cache without deleting cloud records</div>
+              <div style="font-weight: 700; font-size: 15px; color: var(--error);">Reset Local Cache</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Purge local browser cache without affecting Firebase cloud data</div>
             </div>
             <span class="material-icons" style="color: var(--error);">delete_forever</span>
           </div>
 
         </div>
 
-        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--glass-border);">
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--glass-border);">
           <button class="btn-secondary" id="settings-cancel-btn" style="width: auto;">Cancel</button>
           <button class="btn-primary" id="settings-save-btn" style="width: auto;">Save Preferences</button>
         </div>
@@ -132,6 +144,11 @@ export const SettingsPage = {
     });
     document.getElementById('settings-cancel-btn')?.addEventListener('click', () => {
       Router.closeOverlay();
+    });
+
+    // Theme toggle button
+    document.getElementById('settings-theme-toggle-btn')?.addEventListener('click', () => {
+      StateManager.toggleTheme();
     });
 
     // Save preferences
