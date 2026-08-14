@@ -166,7 +166,7 @@ export const Router = {
                 </button>
 
                 <button class="btn-primary" id="header-add-tx-btn">
-                  <span class="material-icons" style="font-size: 18px;">add</span> Record
+                  <span class="material-icons" style="font-size: 18px;">add</span> <span>Record</span>
                 </button>
 
                 <button class="btn-icon" id="header-settings-btn" title="Account & Preferences">
@@ -176,6 +176,35 @@ export const Router = {
             </div>
           </div>
         </header>
+
+        <!-- Tablet / Mobile Sub-Navigation Bar -->
+        <div class="mobile-subnav-bar">
+          <div class="site-container">
+            <div class="mobile-subnav-inner">
+              <button class="nav-link-btn ${navIndex === 0 ? 'active' : ''}" data-nav="0">
+                <span class="material-icons">dashboard</span> Overview
+              </button>
+              <button class="nav-link-btn ${navIndex === 1 ? 'active' : ''}" data-nav="1">
+                <span class="material-icons">receipt_long</span> Ledger
+              </button>
+              <button class="nav-link-btn ${navIndex === 2 ? 'active' : ''}" data-nav="2">
+                <span class="material-icons">pie_chart</span> Budget
+              </button>
+              <button class="nav-link-btn ${navIndex === 3 ? 'active' : ''}" data-nav="3">
+                <span class="material-icons">savings</span> Goals
+              </button>
+              <button class="nav-link-btn ${navIndex === 4 ? 'active' : ''}" data-nav="4">
+                <span class="material-icons">account_balance</span> Net Worth
+              </button>
+              <button class="nav-link-btn ${navIndex === 5 ? 'active' : ''}" data-nav="5">
+                <span class="material-icons">insights</span> Insights
+              </button>
+              <button class="nav-link-btn ${navIndex === 6 ? 'active' : ''}" data-nav="6">
+                <span class="material-icons">calendar_month</span> Calendar
+              </button>
+            </div>
+          </div>
+        </div>
 
         <!-- Main Content Area -->
         <main class="main-content-section" style="flex: 1;">

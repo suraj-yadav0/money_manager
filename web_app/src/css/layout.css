@@ -1,4 +1,4 @@
-/* Website Header, Navigation, Hero Section, Content Grids, and Footer with Proper Spacing */
+/* Responsive Website Layout, Header, Navigation, Grids & Breakpoints */
 
 /* Site Navigation Header */
 .site-header {
@@ -17,29 +17,31 @@
   align-items: center;
   justify-content: space-between;
   height: 76px;
-  gap: 24px;
+  gap: 16px;
 }
 
 /* Brand Logo */
 .brand-link {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   text-decoration: none;
   cursor: pointer;
   user-select: none;
+  flex-shrink: 0;
 }
 
 .brand-icon {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   background: var(--primary-gradient);
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px var(--primary-glow);
+  box-shadow: 0 4px 14px var(--primary-glow);
   transition: var(--transition-fast);
+  flex-shrink: 0;
 }
 
 .brand-icon .material-icons {
@@ -49,49 +51,57 @@
 
 .brand-link:hover .brand-icon {
   transform: scale(1.05);
-  box-shadow: 0 6px 22px var(--primary-glow);
+  box-shadow: 0 6px 20px var(--primary-glow);
 }
 
 .brand-name {
   font-family: var(--font-heading);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: -0.04em;
   display: flex;
   align-items: baseline;
   gap: 6px;
+  white-space: nowrap;
 }
 
 .brand-tag {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--primary);
   background: var(--success-bg);
-  padding: 2px 7px;
+  padding: 2px 6px;
   border-radius: var(--radius-sm);
   border: 1px solid rgba(0, 229, 153, 0.25);
 }
 
-/* Navigation Links */
+/* Main Navigation Links */
 .header-nav {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   background: var(--bg-surface-subtle);
-  padding: 5px;
+  padding: 4px;
   border-radius: var(--radius-full);
   border: 1px solid var(--glass-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.header-nav::-webkit-scrollbar {
+  display: none;
 }
 
 .nav-link-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 18px;
-  font-size: 14px;
+  gap: 7px;
+  padding: 8px 16px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
   background: transparent;
@@ -101,6 +111,7 @@
   transition: var(--transition-fast);
   text-decoration: none;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .nav-link-btn .material-icons {
@@ -128,16 +139,42 @@
   color: var(--primary);
 }
 
-/* Header Actions */
+/* Header Action Controls (Sync, Theme, Record, Settings) */
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.header-actions > * {
+  flex-shrink: 0;
+}
+
+/* Mobile Bottom / Secondary Navigation Bar */
+.mobile-subnav-bar {
+  display: none;
+  background: var(--bg-header);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 10px 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-subnav-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-subnav-inner {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px;
 }
 
 /* Hero Section */
 .hero-section {
-  padding: 40px 0 28px;
+  padding: 36px 0 24px;
 }
 
 .hero-header {
@@ -145,12 +182,12 @@
   align-items: flex-end;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 20px;
-  margin-bottom: 32px;
+  gap: 16px;
+  margin-bottom: 28px;
 }
 
 .hero-welcome-title {
-  font-size: 34px;
+  font-size: 32px;
   font-weight: 800;
   margin-bottom: 6px;
   color: var(--text-primary);
@@ -158,7 +195,7 @@
 
 .hero-subtitle {
   color: var(--text-secondary);
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.5;
 }
 
@@ -166,40 +203,20 @@
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-  margin-bottom: 36px;
-}
-
-@media (max-width: 1150px) {
-  .kpi-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 18px;
-  }
-}
-
-@media (max-width: 600px) {
-  .kpi-grid {
-    grid-template-columns: 1fr;
-  }
+  gap: 20px;
+  margin-bottom: 32px;
 }
 
 /* Content Layout Grids */
 .main-content-section {
-  padding-bottom: 80px;
+  padding-bottom: 70px;
 }
 
 .dashboard-split-grid {
   display: grid;
   grid-template-columns: 1.75fr 1.25fr;
-  gap: 32px;
+  gap: 28px;
   align-items: flex-start;
-}
-
-@media (max-width: 1024px) {
-  .dashboard-split-grid {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
 }
 
 /* Footer */
@@ -207,7 +224,7 @@
   margin-top: auto;
   border-top: 1px solid var(--glass-border);
   background: var(--bg-surface-subtle);
-  padding: 32px 0;
+  padding: 28px 0;
   color: var(--text-muted);
   font-size: 13px;
 }
@@ -217,5 +234,135 @@
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 18px;
+  gap: 16px;
+}
+
+/* ==========================================================================
+   RESPONSIVE BREAKPOINTS (Desktop, Laptop, Tablet, Mobile)
+   ========================================================================== */
+
+/* Laptop / Medium Desktop (< 1200px) */
+@media (max-width: 1200px) {
+  .header-nav {
+    display: none; /* Switch to sub-nav bar for clean header layout */
+  }
+
+  .mobile-subnav-bar {
+    display: block;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+}
+
+/* Tablet (< 992px) */
+@media (max-width: 992px) {
+  .site-container {
+    padding: 0 20px;
+  }
+
+  .dashboard-split-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .hero-welcome-title {
+    font-size: 28px;
+  }
+}
+
+/* Mobile Screen (< 640px) */
+@media (max-width: 640px) {
+  .site-container {
+    padding: 0 16px;
+  }
+
+  .header-inner {
+    height: 68px;
+    gap: 10px;
+  }
+
+  .brand-name {
+    font-size: 18px;
+  }
+
+  .brand-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Compact Sync Pill on Mobile */
+  .sync-pill {
+    padding: 6px 10px;
+    gap: 6px;
+    font-size: 11px;
+  }
+  
+  .sync-pill span:last-child {
+    display: none; /* Show dot only on very compact screens to save space */
+  }
+
+  /* Action Buttons on Mobile */
+  .header-actions {
+    gap: 8px;
+  }
+
+  .btn-primary#header-add-tx-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  .btn-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* KPI Grid Stacking on Mobile */
+  .kpi-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .kpi-value {
+    font-size: 28px;
+  }
+
+  .hero-section {
+    padding: 24px 0 16px;
+  }
+
+  .hero-welcome-title {
+    font-size: 24px;
+  }
+
+  .hero-header {
+    margin-bottom: 20px;
+  }
+
+  .filter-group {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .fintech-card {
+    padding: 22px 18px;
+  }
+
+  .modal-overlay {
+    padding: 12px;
+  }
+
+  .modern-modal-dialog {
+    padding: 24px 18px;
+    border-radius: var(--radius-lg);
+  }
+
+  .footer-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
 }
