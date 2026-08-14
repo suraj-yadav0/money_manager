@@ -151,25 +151,45 @@
   flex-shrink: 0;
 }
 
-/* Mobile Bottom / Secondary Navigation Bar */
+/* Mobile Bottom / Secondary Navigation Bar with Smooth Horizontal Scrolling */
 .mobile-subnav-bar {
   display: none;
   background: var(--bg-header);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   border-bottom: 1px solid var(--glass-border);
-  padding: 10px 0;
-  overflow-x: auto;
-  scrollbar-width: none;
+  padding: 8px 0;
+  width: 100%;
+  overflow-x: auto !important;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
 }
 
 .mobile-subnav-bar::-webkit-scrollbar {
-  display: none;
+  height: 3px;
+  display: block;
+}
+
+.mobile-subnav-bar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: var(--radius-full);
 }
 
 .mobile-subnav-inner {
-  display: flex;
+  display: inline-flex;
+  align-items: center;
   gap: 8px;
   padding: 0 16px;
+  min-width: 100%;
+  width: max-content;
+}
+
+.mobile-subnav-inner .nav-link-btn {
+  flex-shrink: 0;
 }
 
 /* Hero Section */
