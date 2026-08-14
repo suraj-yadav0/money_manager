@@ -1,0 +1,412 @@
+/* Specific styles for Transactions, Budget, Goals, Net Worth, Insights, Calendar, and Auth Landing */
+
+/* ==========================================================================
+   TRANSACTIONS LEDGER & ACTIVITY FEED
+   ========================================================================== */
+.tx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tx-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+  cursor: pointer;
+}
+
+.tx-row:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--glass-border-hover);
+  transform: translateX(4px);
+}
+
+.tx-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.tx-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tx-icon-box .material-icons {
+  font-size: 22px;
+}
+
+.tx-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tx-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+}
+
+.tx-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.tx-tag {
+  background: var(--bg-surface-hover);
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.tx-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.tx-amount {
+  font-size: 17px;
+  font-weight: 800;
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+}
+
+.tx-amount.income {
+  color: var(--success);
+}
+
+.tx-amount.expense {
+  color: var(--error);
+}
+
+.tx-date {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ==========================================================================
+   BUDGET SECTION
+   ========================================================================== */
+.budget-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 24px;
+}
+
+.budget-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 26px 24px;
+  transition: transform var(--transition-smooth), border-color var(--transition-smooth);
+}
+
+.budget-card:hover {
+  border-color: var(--glass-border-hover);
+  transform: translateY(-2px);
+}
+
+.budget-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.budget-cat-name {
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progress-track {
+  width: 100%;
+  height: 9px;
+  background: var(--bg-surface-subtle);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin: 14px 0 10px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.progress-bar-fill.safe {
+  background: var(--primary-gradient);
+}
+
+.progress-bar-fill.warning {
+  background: linear-gradient(90deg, #F59E0B 0%, #FBBF24 100%);
+}
+
+.progress-bar-fill.danger {
+  background: linear-gradient(90deg, #FF3366 0%, #FB7185 100%);
+}
+
+/* ==========================================================================
+   SAVINGS GOALS
+   ========================================================================== */
+.goals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 24px;
+}
+
+.goal-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 28px 26px;
+  transition: transform var(--transition-smooth), border-color var(--transition-smooth), box-shadow var(--transition-smooth);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.goal-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 10px 30px var(--primary-glow);
+  transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   NET WORTH & ASSETS
+   ========================================================================== */
+.assets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.asset-card {
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.asset-card:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--glass-border-hover);
+}
+
+/* ==========================================================================
+   AI INSIGHTS CARDS
+   ========================================================================== */
+.insights-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.insight-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 24px 26px;
+  display: flex;
+  gap: 20px;
+  transition: transform var(--transition-smooth), border-color var(--transition-smooth);
+}
+
+.insight-card:hover {
+  border-color: var(--glass-border-hover);
+  transform: translateY(-2px);
+}
+
+.insight-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.insight-content {
+  flex: 1;
+}
+
+.insight-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.insight-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.insight-tip {
+  background: var(--bg-surface-subtle);
+  border-left: 3px solid var(--primary);
+  padding: 10px 14px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+/* ==========================================================================
+   AUTHENTICATION & LANDING PAGE
+   ========================================================================== */
+.landing-hero {
+  text-align: center;
+  max-width: 760px;
+  margin: 70px auto 48px;
+  padding: 0 20px;
+}
+
+.landing-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid rgba(0, 229, 153, 0.25);
+  padding: 7px 18px;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.landing-title {
+  font-size: 52px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+  margin-bottom: 20px;
+}
+
+.landing-subtitle {
+  font-size: 18px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 40px;
+}
+
+.landing-auth-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--glass-border-hover);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: 40px 36px;
+  max-width: 460px;
+  margin: 0 auto 70px;
+}
+
+/* ==========================================================================
+   PAGE RESPONSIVENESS (Mobile & Tablet)
+   ========================================================================== */
+@media (max-width: 768px) {
+  .budget-grid, .goals-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .landing-title {
+    font-size: 36px;
+  }
+
+  .landing-subtitle {
+    font-size: 15px;
+    margin-bottom: 28px;
+  }
+
+  .landing-auth-card {
+    padding: 28px 20px;
+    border-radius: var(--radius-lg);
+  }
+}
+
+@media (max-width: 640px) {
+  .tx-row {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .tx-left {
+    gap: 12px;
+  }
+
+  .tx-icon-box {
+    width: 38px;
+    height: 38px;
+  }
+
+  .tx-icon-box .material-icons {
+    font-size: 20px;
+  }
+
+  .tx-title {
+    font-size: 14px;
+  }
+
+  .tx-meta {
+    font-size: 11px;
+    gap: 6px;
+  }
+
+  .tx-amount {
+    font-size: 15px;
+  }
+
+  .tx-date {
+    font-size: 11px;
+  }
+
+  .tx-right {
+    gap: 12px;
+  }
+
+  .insight-card {
+    padding: 18px 16px;
+    gap: 14px;
+  }
+
+  .insight-icon-box {
+    width: 40px;
+    height: 40px;
+  }
+}

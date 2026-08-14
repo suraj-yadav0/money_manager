@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../core/config/firebase_config.dart';
+import '../../../core/providers/auth_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/providers/app_state_provider.dart';
@@ -403,11 +405,30 @@ class DayTransactionsScreen extends ConsumerWidget {
           ..where((t) => t.id.equals(item.transaction.id)))
         .go();
 
+    // Delete directly from Firestore if cloud user
+    final currentUser = FirebaseConfig.auth?.currentUser;
+    if (currentUser != null && item.transaction.syncId != null) {
+      FirebaseConfig.db
+          ?.collection('users')
+          .doc(currentUser.uid)
+          .collection('transactions')
+          .doc(item.transaction.syncId!)
+          .delete()
+          .catchError((e) {
+            debugPrint('Error deleting transaction from Firestore: $e');
+          });
+    }
+
     // Refresh data
     ref.invalidate(selectedDayTransactionsProvider);
     ref.invalidate(calendarDailySummariesProvider);
     ref.invalidate(calendarMonthTotalsProvider);
     ref.invalidate(dashboardStatsProvider);
+
+    // Trigger cloud sync
+    if (currentUser != null) {
+      ref.read(syncNotifierProvider.notifier).triggerSync();
+    }
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

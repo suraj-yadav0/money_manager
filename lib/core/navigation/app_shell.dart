@@ -9,6 +9,7 @@ import '../../features/goals/screens/goals_screen.dart';
 import '../../features/transactions/screens/add_transaction_screen.dart';
 import '../../features/transactions/services/recurring_service.dart';
 import '../presentation/glass_widgets.dart';
+import '../providers/auth_providers.dart';
 import '../theme/app_theme.dart';
 
 /// Main app shell with bottom navigation
@@ -33,10 +34,22 @@ class _AppShellState extends ConsumerState<AppShell> {
   @override
   void initState() {
     super.initState();
-    // Process recurring transactions on app startup
+    // Process recurring transactions & trigger background sync on app startup
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _processRecurringTransactions();
+      _triggerCloudSync();
     });
+  }
+
+  Future<void> _triggerCloudSync() async {
+    try {
+      final user = ref.read(currentUserProvider);
+      if (user != null) {
+        ref.read(syncNotifierProvider.notifier).triggerSync();
+      }
+    } catch (e) {
+      debugPrint('Error triggering startup sync: $e');
+    }
   }
 
   Future<void> _processRecurringTransactions() async {

@@ -10,6 +10,7 @@ import 'package:path/path.dart' as p;
 
 import '../../../core/database/database.dart';
 import '../../../core/providers/app_state_provider.dart';
+import '../../../core/providers/auth_providers.dart';
 import '../../../core/utils/constants.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/presentation/glass_widgets.dart';
@@ -359,6 +360,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       // Refresh dashboard
       ref.invalidate(dashboardStatsProvider);
       ref.invalidate(recentTransactionsProvider);
+
+      // Trigger background cloud sync if user is logged in
+      final currentUser = ref.read(currentUserProvider);
+      if (currentUser != null) {
+        ref.read(syncNotifierProvider.notifier).triggerSync();
+      }
 
       if (mounted) {
         Navigator.of(context).pop();
