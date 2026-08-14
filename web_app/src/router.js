@@ -213,13 +213,15 @@ export const Router = {
 
   bindShellEvents(state) {
     // Header sync status click trigger
-    const syncStatusBtn = document.getElementById('header-sync-status');
-    if (syncStatusBtn && state.user) {
-      syncStatusBtn.addEventListener('click', async () => {
+    const headerSync = document.getElementById('header-sync-status');
+    if (headerSync && state.user) {
+      headerSync.addEventListener('click', async () => {
         try {
-          await DbService.syncNow(state.user.uid);
+          const res = await DbService.syncNow(state.user.uid);
+          alert(`Cloud sync complete!\n\nSynced:\n• ${res.count.transactions} Transactions\n• ${res.count.categories} Categories\n• ${res.count.goals} Goals\n• ${res.count.assets} Assets`);
         } catch (e) {
           console.error('Header sync error:', e);
+          alert('Sync error: ' + (e.message || 'Unknown network error'));
         }
       });
     }

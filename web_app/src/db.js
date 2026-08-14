@@ -25,6 +25,27 @@ function generateUUID() {
 // Active subscription cleanups
 let activeListeners = [];
 
+// Robust timestamp parser supporting Firestore Timestamp, ISO strings, and epoch millis
+function parseTimestamp(val) {
+  if (!val) return new Date().toISOString();
+  if (typeof val.toDate === 'function') {
+    try {
+      return val.toDate().toISOString();
+    } catch (_) {}
+  }
+  if (typeof val === 'object' && val.seconds !== undefined) {
+    return new Date(val.seconds * 1000).toISOString();
+  }
+  if (typeof val === 'number') {
+    return new Date(val).toISOString();
+  }
+  if (typeof val === 'string') {
+    const d = new Date(val);
+    if (!isNaN(d.getTime())) return d.toISOString();
+  }
+  return new Date().toISOString();
+}
+
 // Normalization Helpers
 function normalizeCategory(raw, docId) {
   const syncId = raw.sync_id || docId;
@@ -49,7 +70,7 @@ function normalizeCategory(raw, docId) {
     monthlyBudget: Number(raw.monthly_budget || raw.monthlyBudget || 0),
     is_default: raw.is_default !== undefined ? raw.is_default : Boolean(raw.isDefault),
     isDefault: raw.is_default !== undefined ? raw.is_default : Boolean(raw.isDefault),
-    updated_at: raw.updated_at || raw.updatedAt || new Date().toISOString()
+    updated_at: parseTimestamp(raw.updated_at || raw.updatedAt)
   };
 }
 
@@ -69,7 +90,7 @@ function normalizeTransaction(raw, docId) {
     category_id: categoryId,
     goalId,
     goal_id: goalId,
-    timestamp: raw.timestamp || new Date().toISOString(),
+    timestamp: parseTimestamp(raw.timestamp),
     note: raw.note || '',
     paymentMode,
     payment_mode: paymentMode,
@@ -78,8 +99,8 @@ function normalizeTransaction(raw, docId) {
     isRecurring,
     is_recurring: isRecurring,
     is_synced: true,
-    created_at: raw.created_at || raw.createdAt || new Date().toISOString(),
-    updated_at: raw.updated_at || raw.updatedAt || new Date().toISOString()
+    created_at: parseTimestamp(raw.created_at || raw.createdAt),
+    updated_at: parseTimestamp(raw.updated_at || raw.updatedAt)
   };
 }
 
@@ -98,13 +119,13 @@ function normalizeGoal(raw, docId) {
     target_amount: targetAmount,
     savedAmount,
     saved_amount: savedAmount,
-    deadline: raw.deadline || new Date(Date.now() + 90 * 86400000).toISOString(),
+    deadline: parseTimestamp(raw.deadline || new Date(Date.now() + 90 * 86400000).toISOString()),
     isActive,
     is_active: isActive,
     isCompleted,
     is_completed: isCompleted,
-    created_at: raw.created_at || raw.createdAt || new Date().toISOString(),
-    updated_at: raw.updated_at || raw.updatedAt || new Date().toISOString()
+    created_at: parseTimestamp(raw.created_at || raw.createdAt),
+    updated_at: parseTimestamp(raw.updated_at || raw.updatedAt)
   };
 }
 
@@ -119,8 +140,8 @@ function normalizeContribution(raw, docId) {
     goal_id: goalId,
     amount: Number(raw.amount || 0),
     note: raw.note || '',
-    created_at: raw.created_at || raw.createdAt || new Date().toISOString(),
-    updated_at: raw.updated_at || raw.updatedAt || new Date().toISOString()
+    created_at: parseTimestamp(raw.created_at || raw.createdAt),
+    updated_at: parseTimestamp(raw.updated_at || raw.updatedAt)
   };
 }
 
@@ -135,7 +156,7 @@ function normalizeRule(raw, docId) {
     categoryId,
     category_id: categoryId,
     weight: Number(raw.weight || 1),
-    updated_at: raw.updated_at || raw.updatedAt || new Date().toISOString()
+    updated_at: parseTimestamp(raw.updated_at || raw.updatedAt)
   };
 }
 
@@ -152,8 +173,8 @@ function normalizeAsset(raw, docId) {
     isLiability,
     is_liability: isLiability,
     note: raw.note || '',
-    created_at: raw.created_at || raw.createdAt || new Date().toISOString(),
-    updated_at: raw.updated_at || raw.updatedAt || new Date().toISOString()
+    created_at: parseTimestamp(raw.created_at || raw.createdAt),
+    updated_at: parseTimestamp(raw.updated_at || raw.updatedAt)
   };
 }
 
@@ -172,8 +193,8 @@ function normalizeSettings(raw, docId) {
     is_onboarded: isOnboarded,
     showIncomeChart: Boolean(raw.show_income_chart || raw.showIncomeChart),
     show_income_chart: Boolean(raw.show_income_chart || raw.showIncomeChart),
-    created_at: raw.created_at || raw.createdAt || new Date().toISOString(),
-    updated_at: raw.updated_at || raw.updatedAt || new Date().toISOString()
+    created_at: parseTimestamp(raw.created_at || raw.createdAt),
+    updated_at: parseTimestamp(raw.updated_at || raw.updatedAt)
   };
 }
 
@@ -183,11 +204,15 @@ export const DbService = {
     if (!userId) return;
     this.stopSync();
 
-    StateManager.setState({ syncStatus: 'syncing' });
-    const userDocRef = doc(db, 'users', userId);
+    StateManager.setState({ syncStatus: 'syncing', syncError: null });
 
-    // 1. Settings listener
-    const unsubSettings = onSnapshot(collection(userDocRef, 'user_settings'), (snapshot) => {
+    // 1. Trigger immediate parallel getDocs to populate UI instantly
+    this.syncNow(userId).catch(err => {
+      console.warn('[Quantro Sync] Initial syncNow warning:', err.message);
+    });
+
+    // 2. Settings listener
+    const unsubSettings = onSnapshot(collection(db, 'users', userId, 'user_settings'), (snapshot) => {
       if (!snapshot.empty) {
         const firstDoc = snapshot.docs[0];
         const normalized = normalizeSettings(firstDoc.data(), firstDoc.id);
@@ -201,13 +226,13 @@ export const DbService = {
         this.seedUserSettings(userId);
       }
     }, (err) => {
-      console.error('Firestore user_settings listener error:', err);
-      StateManager.setState({ syncStatus: 'error', syncError: err.message });
+      console.error('[Quantro Sync] Firestore user_settings error:', err);
+      StateManager.setState({ syncStatus: 'error', syncError: err.message || err.code });
     });
     activeListeners.push(unsubSettings);
 
-    // 2. Categories listener
-    const unsubCategories = onSnapshot(collection(userDocRef, 'categories'), (snapshot) => {
+    // 3. Categories listener
+    const unsubCategories = onSnapshot(collection(db, 'users', userId, 'categories'), (snapshot) => {
       if (!snapshot.empty) {
         const cats = snapshot.docs.map(d => normalizeCategory(d.data(), d.id));
         StateManager.setState({ 
@@ -220,27 +245,29 @@ export const DbService = {
         this.seedDefaultCategories(userId);
       }
     }, (err) => {
-      console.error('Firestore categories listener error:', err);
-      StateManager.setState({ syncStatus: 'error', syncError: err.message });
+      console.error('[Quantro Sync] Firestore categories error:', err);
+      StateManager.setState({ syncStatus: 'error', syncError: err.message || err.code });
     });
     activeListeners.push(unsubCategories);
 
-    // 3. Transactions listener
-    const unsubTransactions = onSnapshot(collection(userDocRef, 'transactions'), (snapshot) => {
+    // 4. Transactions listener
+    const unsubTransactions = onSnapshot(collection(db, 'users', userId, 'transactions'), (snapshot) => {
       const txs = snapshot.docs.map(d => normalizeTransaction(d.data(), d.id));
+      console.log(`[Quantro Sync] Received ${txs.length} transactions from cloud for user ${userId}`);
       StateManager.setState({ 
         transactions: txs,
         syncStatus: 'synced',
-        lastSyncedAt: new Date().toISOString()
+        lastSyncedAt: new Date().toISOString(),
+        syncError: null
       });
     }, (err) => {
-      console.error('Firestore transactions listener error:', err);
-      StateManager.setState({ syncStatus: 'error', syncError: err.message });
+      console.error('[Quantro Sync] Firestore transactions error:', err);
+      StateManager.setState({ syncStatus: 'error', syncError: err.message || err.code });
     });
     activeListeners.push(unsubTransactions);
 
-    // 4. Goals listener
-    const unsubGoals = onSnapshot(collection(userDocRef, 'goals'), (snapshot) => {
+    // 5. Goals listener
+    const unsubGoals = onSnapshot(collection(db, 'users', userId, 'goals'), (snapshot) => {
       const goals = snapshot.docs.map(d => normalizeGoal(d.data(), d.id));
       StateManager.setState({ 
         goals: goals,
@@ -248,12 +275,12 @@ export const DbService = {
         lastSyncedAt: new Date().toISOString()
       });
     }, (err) => {
-      console.error('Firestore goals listener error:', err);
+      console.error('[Quantro Sync] Firestore goals error:', err);
     });
     activeListeners.push(unsubGoals);
 
-    // 5. Goal Contributions listener
-    const unsubContributions = onSnapshot(collection(userDocRef, 'goal_contributions'), (snapshot) => {
+    // 6. Goal Contributions listener
+    const unsubContributions = onSnapshot(collection(db, 'users', userId, 'goal_contributions'), (snapshot) => {
       const contribs = snapshot.docs.map(d => normalizeContribution(d.data(), d.id));
       StateManager.setState({ 
         goalContributions: contribs,
@@ -261,12 +288,12 @@ export const DbService = {
         lastSyncedAt: new Date().toISOString()
       });
     }, (err) => {
-      console.error('Firestore goal_contributions listener error:', err);
+      console.error('[Quantro Sync] Firestore goal_contributions error:', err);
     });
     activeListeners.push(unsubContributions);
 
-    // 6. Categorization Rules listener
-    const unsubRules = onSnapshot(collection(userDocRef, 'categorization_rules'), (snapshot) => {
+    // 7. Categorization Rules listener
+    const unsubRules = onSnapshot(collection(db, 'users', userId, 'categorization_rules'), (snapshot) => {
       const rules = snapshot.docs.map(d => normalizeRule(d.data(), d.id));
       StateManager.setState({ 
         categorizationRules: rules,
@@ -274,12 +301,12 @@ export const DbService = {
         lastSyncedAt: new Date().toISOString()
       });
     }, (err) => {
-      console.error('Firestore categorization_rules listener error:', err);
+      console.error('[Quantro Sync] Firestore categorization_rules error:', err);
     });
     activeListeners.push(unsubRules);
 
-    // 7. Assets listener
-    const unsubAssets = onSnapshot(collection(userDocRef, 'assets'), (snapshot) => {
+    // 8. Assets listener
+    const unsubAssets = onSnapshot(collection(db, 'users', userId, 'assets'), (snapshot) => {
       const assets = snapshot.docs.map(d => normalizeAsset(d.data(), d.id));
       StateManager.setState({ 
         assets: assets,
@@ -287,7 +314,7 @@ export const DbService = {
         lastSyncedAt: new Date().toISOString()
       });
     }, (err) => {
-      console.error('Firestore assets listener error:', err);
+      console.error('[Quantro Sync] Firestore assets error:', err);
     });
     activeListeners.push(unsubAssets);
   },
@@ -318,16 +345,14 @@ export const DbService = {
     StateManager.setState({ syncStatus: 'syncing' });
 
     try {
-      const userDocRef = doc(db, 'users', userId);
-
       const [settingsSnap, catSnap, txSnap, goalsSnap, contribSnap, rulesSnap, assetsSnap] = await Promise.all([
-        getDocs(collection(userDocRef, 'user_settings')),
-        getDocs(collection(userDocRef, 'categories')),
-        getDocs(collection(userDocRef, 'transactions')),
-        getDocs(collection(userDocRef, 'goals')),
-        getDocs(collection(userDocRef, 'goal_contributions')),
-        getDocs(collection(userDocRef, 'categorization_rules')),
-        getDocs(collection(userDocRef, 'assets')),
+        getDocs(collection(db, 'users', userId, 'user_settings')),
+        getDocs(collection(db, 'users', userId, 'categories')),
+        getDocs(collection(db, 'users', userId, 'transactions')),
+        getDocs(collection(db, 'users', userId, 'goals')),
+        getDocs(collection(db, 'users', userId, 'goal_contributions')),
+        getDocs(collection(db, 'users', userId, 'categorization_rules')),
+        getDocs(collection(db, 'users', userId, 'assets')),
       ]);
 
       const updates = {
@@ -350,6 +375,8 @@ export const DbService = {
 
       StateManager.setState(updates);
 
+      console.log(`[Quantro Sync] syncNow completed: ${updates.transactions.length} txs, ${updates.goals.length} goals, ${(updates.categories || []).length} categories`);
+
       return {
         success: true,
         count: {
@@ -361,7 +388,7 @@ export const DbService = {
         syncedAt: updates.lastSyncedAt
       };
     } catch (err) {
-      console.error('Manual syncNow error:', err);
+      console.error('[Quantro Sync] Manual syncNow error:', err);
       StateManager.setState({ syncStatus: 'error', syncError: err.message });
       throw err;
     }
