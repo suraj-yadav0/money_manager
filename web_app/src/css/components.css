@@ -462,15 +462,26 @@
   border-radius: 50%;
   width: 36px;
   height: 36px;
-  display: flex;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: var(--transition-fast);
-  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.modal-close-btn .material-icons {
+  font-size: 20px;
+  line-height: 1;
+  color: inherit;
 }
 
 .modal-close-btn:hover {
   background: var(--bg-surface-hover);
   color: var(--text-primary);
+  border-color: var(--glass-border-hover);
 }

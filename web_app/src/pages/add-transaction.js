@@ -53,7 +53,9 @@ export const AddTransactionModal = {
               <span class="material-icons" style="color: var(--primary);">${isEdit ? 'edit_note' : 'add_circle'}</span>
               <span>${isEdit ? 'Edit Transaction' : 'Record Transaction'}</span>
             </div>
-            <button class="modal-close-btn" id="tx-modal-close-btn">&times;</button>
+            <button class="modal-close-btn" id="tx-modal-close-btn" aria-label="Close">
+              <span class="material-icons" style="font-size: 20px; line-height: 1;">close</span>
+            </button>
           </div>
 
           <!-- Type Toggle (Expense / Income) -->
@@ -99,7 +101,7 @@ export const AddTransactionModal = {
                        data-cat-id="${cat.id !== undefined ? cat.id : cat.sync_id}"
                        style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: var(--radius-md); background: ${isSelected ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255,255,255,0.03)'}; border: 1px solid ${isSelected ? 'var(--primary)' : 'var(--glass-border)'}; cursor: pointer; transition: var(--transition-fast);">
                     <span class="material-icons" style="font-size: 18px; color: ${isSelected ? 'var(--primary)' : 'var(--text-muted)'};">${IconHelper.getMaterialIcon(cat.icon)}</span>
-                    <span style="font-size: 12px; font-weight: 600; color: ${isSelected ? '#FFF' : 'var(--text-secondary)'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${cat.name}</span>
+                    <span style="font-size: 12px; font-weight: 600; color: ${isSelected ? 'var(--text-primary)' : 'var(--text-secondary)'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${cat.name}</span>
                   </div>
                 `;
               }).join('')}
@@ -294,7 +296,7 @@ export const AddTransactionModal = {
       const icon = pill.querySelector('.material-icons');
       if (icon) icon.style.color = isSelected ? 'var(--primary)' : 'var(--text-muted)';
       const text = pill.querySelector('span:last-child');
-      if (text) text.style.color = isSelected ? '#FFF' : 'var(--text-secondary)';
+      if (text) text.style.color = isSelected ? 'var(--text-primary)' : 'var(--text-secondary)';
     });
   },
 

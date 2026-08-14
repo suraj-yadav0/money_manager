@@ -72,7 +72,7 @@ export const CalendarPage = {
                   <span class="material-icons" style="font-size: 20px;">arrow_upward</span>
                 </div>
               </div>
-              <div class="kpi-value" style="color: #FFF;">${Formatters.currency(monthExpense)}</div>
+              <div class="kpi-value" style="color: var(--text-primary);">${Formatters.currency(monthExpense)}</div>
             </div>
 
             <div class="kpi-card">
@@ -181,7 +181,7 @@ export const CalendarPage = {
         <div class="cal-day-cell" data-day="${day}" 
              style="height: 54px; padding: 6px; border-radius: var(--radius-md); background: ${bgStyle}; border: ${borderStyle}; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; transition: var(--transition-fast);">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 13px; font-weight: ${isSelected ? '800' : '600'}; color: ${isSelected ? '#FFF' : 'var(--text-primary)'};">${day}</span>
+            <span style="font-size: 13px; font-weight: ${isSelected ? '800' : '600'}; color: ${isSelected ? 'var(--primary)' : 'var(--text-primary)'};">${day}</span>
             ${data && data.count > 0 ? `
               <span style="width: 6px; height: 6px; border-radius: 50%; background: ${hasIncome ? 'var(--success)' : 'var(--error)'};"></span>
             ` : ''}

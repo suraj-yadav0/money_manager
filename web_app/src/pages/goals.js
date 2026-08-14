@@ -254,7 +254,9 @@ export const GoalsPage = {
             <span class="material-icons" style="color: var(--primary);">savings</span>
             <span>New Savings Goal</span>
           </div>
-          <button class="modal-close-btn" id="modal-close-create-goal">&times;</button>
+          <button class="modal-close-btn" id="modal-close-create-goal" aria-label="Close">
+            <span class="material-icons" style="font-size: 20px; line-height: 1;">close</span>
+          </button>
         </div>
 
         <div class="form-group">
@@ -317,7 +319,9 @@ export const GoalsPage = {
             <span class="material-icons" style="color: var(--primary);">add_circle</span>
             <span>Fund: ${goal.name}</span>
           </div>
-          <button class="modal-close-btn" id="modal-close-contrib">&times;</button>
+          <button class="modal-close-btn" id="modal-close-contrib" aria-label="Close">
+            <span class="material-icons" style="font-size: 20px; line-height: 1;">close</span>
+          </button>
         </div>
 
         <div class="form-group">
@@ -391,7 +395,9 @@ export const GoalsPage = {
             <span class="material-icons" style="color: var(--primary);">history</span>
             <span>Deposits: ${goal.name}</span>
           </div>
-          <button class="modal-close-btn" id="modal-close-history">&times;</button>
+          <button class="modal-close-btn" id="modal-close-history" aria-label="Close">
+            <span class="material-icons" style="font-size: 20px; line-height: 1;">close</span>
+          </button>
         </div>
 
         <div style="max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px;">

@@ -38,7 +38,9 @@ export const SettingsPage = {
             <span class="material-icons" style="color: var(--primary);">settings</span>
             <span>Platform Settings</span>
           </div>
-          <button class="modal-close-btn" id="settings-close-btn">&times;</button>
+          <button class="modal-close-btn" id="settings-close-btn" aria-label="Close">
+            <span class="material-icons" style="font-size: 20px; line-height: 1;">close</span>
+          </button>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 22px; max-height: 65vh; overflow-y: auto; padding-right: 4px;">

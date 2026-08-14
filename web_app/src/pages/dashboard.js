@@ -49,7 +49,7 @@ export const DashboardPage = {
                   <span class="material-icons" style="font-size: 20px;">account_balance_wallet</span>
                 </div>
               </div>
-              <div class="kpi-value" style="color: ${stats.balance >= 0 ? '#FFF' : 'var(--error)'};">
+              <div class="kpi-value" style="color: ${stats.balance >= 0 ? 'var(--text-primary)' : 'var(--error)'};">
                 ${Formatters.currency(stats.balance)}
               </div>
               <div class="kpi-footer">
@@ -87,7 +87,7 @@ export const DashboardPage = {
                   <span class="material-icons" style="font-size: 20px;">arrow_upward</span>
                 </div>
               </div>
-              <div class="kpi-value" style="color: #FFF;">
+              <div class="kpi-value" style="color: var(--text-primary);">
                 ${Formatters.currency(stats.totalExpenses)}
               </div>
               <div class="kpi-footer">
@@ -105,7 +105,7 @@ export const DashboardPage = {
                   <span class="material-icons" style="font-size: 20px;">auto_graph</span>
                 </div>
               </div>
-              <div class="kpi-value" style="color: #FFF;">
+              <div class="kpi-value" style="color: var(--text-primary);">
                 ${Formatters.currency(stats.projectedBalance)}
               </div>
               <div class="kpi-footer">

@@ -47,7 +47,7 @@ export const NetWorthPage = {
                   <span class="material-icons" style="font-size: 20px;">account_balance</span>
                 </div>
               </div>
-              <div class="kpi-value" style="color: ${netWorth >= 0 ? '#FFF' : 'var(--error)'};">
+              <div class="kpi-value" style="color: ${netWorth >= 0 ? 'var(--text-primary)' : 'var(--error)'};">
                 ${Formatters.currency(netWorth)}
               </div>
               <div class="kpi-footer">
@@ -198,7 +198,9 @@ export const NetWorthPage = {
             <span class="material-icons" style="color: var(--primary);">account_balance</span>
             <span>New Asset / Liability</span>
           </div>
-          <button class="modal-close-btn" id="modal-close-asset">&times;</button>
+          <button class="modal-close-btn" id="modal-close-asset" aria-label="Close">
+            <span class="material-icons" style="font-size: 20px; line-height: 1;">close</span>
+          </button>
         </div>
 
         <div class="form-group">

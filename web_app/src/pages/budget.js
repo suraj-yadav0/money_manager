@@ -83,7 +83,7 @@ export const BudgetPage = {
                   <span class="material-icons" style="font-size: 20px;">today</span>
                 </div>
               </div>
-              <div class="kpi-value" style="color: #FFF;">
+              <div class="kpi-value" style="color: var(--text-primary);">
                 ${Formatters.currency(stats.dailyAllowance)}
               </div>
               <div class="kpi-footer">
@@ -326,7 +326,9 @@ export const BudgetPage = {
             <span class="material-icons" style="color: var(--primary);">tune</span>
             <span>Category Budget Caps</span>
           </div>
-          <button class="modal-close-btn" id="modal-close-budgets">&times;</button>
+          <button class="modal-close-btn" id="modal-close-budgets" aria-label="Close">
+            <span class="material-icons" style="font-size: 20px; line-height: 1;">close</span>
+          </button>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 14px; max-height: 55vh; overflow-y: auto; padding-right: 4px;">
