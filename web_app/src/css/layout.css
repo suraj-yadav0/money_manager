@@ -82,25 +82,19 @@
 .header-nav {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   background: var(--bg-surface-subtle);
-  padding: 4px;
+  padding: 4px 6px;
   border-radius: var(--radius-full);
   border: 1px solid var(--glass-border);
-  overflow-x: auto;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-
-.header-nav::-webkit-scrollbar {
-  display: none;
+  overflow: visible;
 }
 
 .nav-link-btn {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 8px 16px;
+  gap: 6px;
+  padding: 6px 12px;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
@@ -115,7 +109,7 @@
 }
 
 .nav-link-btn .material-icons {
-  font-size: 18px;
+  font-size: 17px;
   color: var(--text-muted);
   transition: var(--transition-fast);
 }
@@ -261,8 +255,8 @@
    RESPONSIVE BREAKPOINTS (Desktop, Laptop, Tablet, Mobile)
    ========================================================================== */
 
-/* Laptop / Medium Desktop (< 1200px) */
-@media (max-width: 1200px) {
+/* Laptop / Medium Desktop (< 1260px) */
+@media (max-width: 1260px) {
   .header-nav {
     display: none; /* Switch to sub-nav bar for clean header layout */
   }

@@ -47,6 +47,36 @@ function parseTimestamp(val) {
 }
 
 // Normalization Helpers
+// Deduplication helper for categories
+export function deduplicateCategories(cats) {
+  if (!Array.isArray(cats)) return [];
+  const map = new Map();
+  for (const raw of cats) {
+    const name = (raw.name || '').trim();
+    const type = (raw.type || 'expense').toLowerCase();
+    const key = `${name.toLowerCase()}_${type}`;
+    
+    if (!map.has(key)) {
+      map.set(key, raw);
+    } else {
+      const existing = map.get(key);
+      const existingBudget = Number(existing.monthly_budget || existing.monthlyBudget || 0);
+      const newBudget = Number(raw.monthly_budget || raw.monthlyBudget || 0);
+      const higherBudget = Math.max(existingBudget, newBudget);
+      const isNewer = new Date(raw.updated_at || 0) > new Date(existing.updated_at || 0);
+
+      map.set(key, {
+        ...(isNewer ? raw : existing),
+        id: existing.id || raw.id,
+        sync_id: existing.sync_id || raw.sync_id,
+        monthly_budget: higherBudget,
+        monthlyBudget: higherBudget,
+      });
+    }
+  }
+  return Array.from(map.values());
+}
+
 function normalizeCategory(raw, docId) {
   const syncId = raw.sync_id || docId;
   let id = raw.id;
@@ -234,12 +264,24 @@ export const DbService = {
     // 3. Categories listener
     const unsubCategories = onSnapshot(collection(db, 'users', userId, 'categories'), (snapshot) => {
       if (!snapshot.empty) {
-        const cats = snapshot.docs.map(d => normalizeCategory(d.data(), d.id));
+        const rawCats = snapshot.docs.map(d => normalizeCategory(d.data(), d.id));
+        const cats = deduplicateCategories(rawCats);
+        
         StateManager.setState({ 
           categories: cats,
           syncStatus: 'synced',
           lastSyncedAt: new Date().toISOString()
         });
+
+        // Clean up duplicate documents from Firestore if any exist
+        if (snapshot.docs.length > cats.length) {
+          const canonicalSyncIds = new Set(cats.map(c => c.sync_id));
+          snapshot.docs.forEach(docSnap => {
+            if (!canonicalSyncIds.has(docSnap.id)) {
+              deleteDoc(doc(db, 'users', userId, 'categories', docSnap.id)).catch(() => {});
+            }
+          });
+        }
       } else {
         // If categories are empty in cloud, seed standard categories
         this.seedDefaultCategories(userId);
@@ -365,7 +407,7 @@ export const DbService = {
         updates.userSettings = normalizeSettings(settingsSnap.docs[0].data(), settingsSnap.docs[0].id);
       }
       if (!catSnap.empty) {
-        updates.categories = catSnap.docs.map(d => normalizeCategory(d.data(), d.id));
+        updates.categories = deduplicateCategories(catSnap.docs.map(d => normalizeCategory(d.data(), d.id)));
       }
       updates.transactions = txSnap.docs.map(d => normalizeTransaction(d.data(), d.id));
       updates.goals = goalsSnap.docs.map(d => normalizeGoal(d.data(), d.id));

@@ -212,7 +212,18 @@ export const BudgetPage = {
     let totalBudget = 0;
     let totalSpent = 0;
 
-    for (const cat of state.categories) {
+    // Deduplicate categories by name + type
+    const uniqueCategories = [];
+    const seen = new Set();
+    for (const c of (state.categories || [])) {
+      const key = `${(c.name || '').trim().toLowerCase()}_${(c.type || 'expense').toLowerCase()}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueCategories.push(c);
+      }
+    }
+
+    for (const cat of uniqueCategories) {
       const budget = Number(cat.monthly_budget || cat.monthlyBudget || 0);
       if (budget > 0) {
         const spent = categorySpending[cat.id] || categorySpending[cat.sync_id] || categorySpending[cat.name] || 0;
@@ -315,7 +326,16 @@ export const BudgetPage = {
   },
 
   showAdjustBudgetsModal(state) {
-    const expenseCats = state.categories.filter(c => c.type === 'expense');
+    const rawExpenseCats = state.categories.filter(c => c.type === 'expense');
+    const expenseCats = [];
+    const seen = new Set();
+    for (const c of rawExpenseCats) {
+      const nameKey = (c.name || '').trim().toLowerCase();
+      if (!seen.has(nameKey)) {
+        seen.add(nameKey);
+        expenseCats.push(c);
+      }
+    }
 
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay active';

@@ -192,10 +192,10 @@ export const NetWorthPage = {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay active';
     overlay.innerHTML = `
-      <div class="modern-modal-dialog animate-scale-up" style="max-width: 440px;">
-        <div class="modal-header">
+      <div class="modern-modal-dialog animate-scale-up" style="max-width: 500px; padding: 34px 30px;">
+        <div class="modal-header" style="margin-bottom: 24px; padding-bottom: 16px;">
           <div class="modal-title">
-            <span class="material-icons" style="color: var(--primary);">account_balance</span>
+            <span class="material-icons" style="color: var(--primary); font-size: 24px;">account_balance</span>
             <span>New Asset / Liability</span>
           </div>
           <button class="modal-close-btn" id="modal-close-asset" aria-label="Close">
@@ -203,41 +203,46 @@ export const NetWorthPage = {
           </button>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Name / Description</label>
-          <input type="text" class="form-control" id="asset-name-field" placeholder="e.g. HDFC Bank, Mutual Funds, Home Loan">
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label class="form-label" style="margin-bottom: 8px;">Name / Asset Description</label>
+          <input type="text" class="form-control" id="asset-name-field" placeholder="e.g. HDFC Salary Account, Nifty Index Fund, Home Loan" autofocus>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Classification Type</label>
-          <select class="form-control" id="asset-is-liability-field">
-            <option value="false">Asset (Positive Capital)</option>
-            <option value="true">Liability / Debt (Negative Capital)</option>
-          </select>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+          <div class="form-group">
+            <label class="form-label" style="margin-bottom: 8px;">Classification</label>
+            <select class="form-control" id="asset-is-liability-field">
+              <option value="false">Asset (Positive Capital)</option>
+              <option value="true">Liability / Debt</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" style="margin-bottom: 8px;">Category</label>
+            <select class="form-control" id="asset-type-field">
+              <option value="savings">Cash / Bank Account</option>
+              <option value="investment">Investments & Stocks</option>
+              <option value="real_estate">Real Estate</option>
+              <option value="crypto">Cryptocurrency</option>
+              <option value="vehicle">Vehicle</option>
+              <option value="loan">Personal / Home Loan</option>
+              <option value="credit_card">Credit Card Debt</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Valuation / Amount (₹)</label>
-          <input type="number" class="form-control" id="asset-val-field" placeholder="50000">
+        <div class="form-group" style="margin-bottom: 24px;">
+          <label class="form-label" style="margin-bottom: 8px;">Current Valuation / Principal (₹)</label>
+          <div style="position: relative; display: flex; align-items: center;">
+            <span style="position: absolute; left: 16px; font-size: 20px; font-weight: 800; color: var(--text-muted);">₹</span>
+            <input type="number" step="any" class="form-control" id="asset-val-field" placeholder="50000" style="padding-left: 38px; font-size: 18px; font-weight: 700;">
+          </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Category Classification</label>
-          <select class="form-control" id="asset-type-field">
-            <option value="savings">Cash / Bank Account</option>
-            <option value="investment">Investments & Stocks</option>
-            <option value="real_estate">Real Estate</option>
-            <option value="crypto">Cryptocurrency</option>
-            <option value="vehicle">Vehicle</option>
-            <option value="loan">Personal / Home Loan</option>
-            <option value="credit_card">Credit Card Debt</option>
-            <option value="other">Other Asset / Liability</option>
-          </select>
-        </div>
-
-        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--glass-border);">
-          <button class="btn-secondary" id="modal-cancel-asset" style="width: auto;">Cancel</button>
-          <button class="btn-primary" id="modal-submit-asset" style="width: auto;">Save Entry</button>
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--glass-border);">
+          <button class="btn-secondary" id="modal-cancel-asset" style="width: auto; padding: 10px 20px;">Cancel</button>
+          <button class="btn-primary" id="modal-submit-asset" style="width: auto; padding: 10px 22px;">Save Record</button>
         </div>
       </div>
     `;
@@ -247,6 +252,7 @@ export const NetWorthPage = {
 
     document.getElementById('modal-close-asset')?.addEventListener('click', closeModal);
     document.getElementById('modal-cancel-asset')?.addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
 
     document.getElementById('modal-submit-asset')?.addEventListener('click', async () => {
       const name = document.getElementById('asset-name-field').value.trim();
