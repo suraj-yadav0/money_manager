@@ -3,7 +3,7 @@ import { StateManager } from '../state.js';
 import { DbService } from '../db.js';
 import { DateRangeHelper } from '../utils/date-range.js';
 import { Formatters } from '../utils/formatters.js';
-import { IconHelper } from '../utils/icons.js';
+import { IconHelper, findCategory } from '../utils/icons.js';
 
 export const BudgetPage = {
   render(state) {
@@ -150,8 +150,12 @@ export const BudgetPage = {
 
     const categorySpending = {};
     for (const tx of expenses) {
-      const catId = tx.categoryId;
-      categorySpending[catId] = (categorySpending[catId] || 0) + tx.amount;
+      const cat = findCategory(state.categories, tx.categoryId || tx.category_id);
+      const key = cat ? (cat.id || cat.sync_id || cat.name) : (tx.categoryId || 'other');
+      categorySpending[key] = (categorySpending[key] || 0) + tx.amount;
+      if (cat && cat.name) {
+        categorySpending[cat.name] = (categorySpending[cat.name] || 0) + tx.amount;
+      }
     }
 
     const categoryStats = [];
@@ -159,21 +163,21 @@ export const BudgetPage = {
     let totalSpent = 0;
 
     for (const cat of state.categories) {
-      if (cat.monthly_budget && cat.monthly_budget > 0) {
-        // match by ID (either numeric or Firestore sync_id)
-        const spent = categorySpending[cat.id] || categorySpending[cat.sync_id] || 0;
+      const budget = Number(cat.monthly_budget || cat.monthlyBudget || 0);
+      if (budget > 0) {
+        const spent = categorySpending[cat.id] || categorySpending[cat.sync_id] || categorySpending[cat.name] || 0;
         
-        categoryStats.add({
+        categoryStats.push({
           id: cat.id,
           sync_id: cat.sync_id,
           name: cat.name,
           icon: cat.icon,
-          budget: cat.monthly_budget,
+          budget: budget,
           spent,
-          percentUsed: (spent / cat.monthly_budget) * 100
+          percentUsed: (spent / budget) * 100
         });
 
-        totalBudget += cat.monthly_budget;
+        totalBudget += budget;
         totalSpent += spent;
       }
     }
@@ -209,7 +213,7 @@ export const BudgetPage = {
 
     const categorySpending = {};
     for (const tx of pastExpenses) {
-      const cat = state.categories.find(c => c.id === tx.categoryId || c.sync_id === tx.categoryId);
+      const cat = findCategory(state.categories, tx.categoryId || tx.category_id);
       if (cat) {
         categorySpending[cat.name] = (categorySpending[cat.name] || 0) + tx.amount;
       }

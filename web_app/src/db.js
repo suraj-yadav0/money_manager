@@ -3,7 +3,6 @@ import {
   collection, 
   doc, 
   setDoc, 
-  addDoc, 
   updateDoc, 
   deleteDoc, 
   onSnapshot, 
@@ -13,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase-config.js';
 import { StateManager } from './state.js';
+import { DEFAULT_CATEGORIES } from './utils/icons.js';
 
 // Helper to generate UUIDs locally (for new documents/IDs)
 function generateUUID() {
@@ -25,129 +25,383 @@ function generateUUID() {
 // Active subscription cleanups
 let activeListeners = [];
 
+// Normalization Helpers
+function normalizeCategory(raw, docId) {
+  const syncId = raw.sync_id || docId;
+  let id = raw.id;
+  
+  // If id is not set in Firestore, map against standard default categories
+  if (id === undefined || id === null) {
+    const defIndex = DEFAULT_CATEGORIES.findIndex(c => c.name.toLowerCase() === (raw.name || '').toLowerCase());
+    if (defIndex !== -1) {
+      id = defIndex + 1;
+    }
+  }
+
+  return {
+    ...raw,
+    id: id !== undefined ? id : syncId,
+    sync_id: syncId,
+    name: raw.name || 'Category',
+    icon: raw.icon || 'category',
+    type: raw.type || 'expense',
+    monthly_budget: Number(raw.monthly_budget || raw.monthlyBudget || 0),
+    monthlyBudget: Number(raw.monthly_budget || raw.monthlyBudget || 0),
+    is_default: raw.is_default !== undefined ? raw.is_default : Boolean(raw.isDefault),
+    isDefault: raw.is_default !== undefined ? raw.is_default : Boolean(raw.isDefault),
+    updated_at: raw.updated_at || raw.updatedAt || new Date().toISOString()
+  };
+}
+
+function normalizeTransaction(raw, docId) {
+  const syncId = raw.sync_id || docId;
+  const categoryId = raw.category_id !== undefined ? raw.category_id : raw.categoryId;
+  const goalId = raw.goal_id !== undefined ? raw.goal_id : raw.goalId;
+  const paymentMode = raw.payment_mode || raw.paymentMode || 'Cash';
+  const isRecurring = raw.is_recurring !== undefined ? Boolean(raw.is_recurring) : Boolean(raw.isRecurring);
+
+  return {
+    ...raw,
+    sync_id: syncId,
+    amount: Number(raw.amount || 0),
+    type: raw.type || 'expense',
+    categoryId,
+    category_id: categoryId,
+    goalId,
+    goal_id: goalId,
+    timestamp: raw.timestamp || new Date().toISOString(),
+    note: raw.note || '',
+    paymentMode,
+    payment_mode: paymentMode,
+    receiptImagePath: raw.receipt_image_path || raw.receiptImagePath || null,
+    receipt_image_path: raw.receipt_image_path || raw.receiptImagePath || null,
+    isRecurring,
+    is_recurring: isRecurring,
+    is_synced: true,
+    created_at: raw.created_at || raw.createdAt || new Date().toISOString(),
+    updated_at: raw.updated_at || raw.updatedAt || new Date().toISOString()
+  };
+}
+
+function normalizeGoal(raw, docId) {
+  const syncId = raw.sync_id || docId;
+  const targetAmount = Number(raw.target_amount !== undefined ? raw.target_amount : (raw.targetAmount || 0));
+  const savedAmount = Number(raw.saved_amount !== undefined ? raw.saved_amount : (raw.savedAmount || 0));
+  const isActive = raw.is_active !== undefined ? Boolean(raw.is_active) : (raw.isActive !== false);
+  const isCompleted = raw.is_completed !== undefined ? Boolean(raw.is_completed) : Boolean(raw.isCompleted || (savedAmount >= targetAmount && targetAmount > 0));
+
+  return {
+    ...raw,
+    sync_id: syncId,
+    name: raw.name || 'Savings Goal',
+    targetAmount,
+    target_amount: targetAmount,
+    savedAmount,
+    saved_amount: savedAmount,
+    deadline: raw.deadline || new Date(Date.now() + 90 * 86400000).toISOString(),
+    isActive,
+    is_active: isActive,
+    isCompleted,
+    is_completed: isCompleted,
+    created_at: raw.created_at || raw.createdAt || new Date().toISOString(),
+    updated_at: raw.updated_at || raw.updatedAt || new Date().toISOString()
+  };
+}
+
+function normalizeContribution(raw, docId) {
+  const syncId = raw.sync_id || docId;
+  const goalId = raw.goal_id !== undefined ? raw.goal_id : raw.goalId;
+
+  return {
+    ...raw,
+    sync_id: syncId,
+    goalId,
+    goal_id: goalId,
+    amount: Number(raw.amount || 0),
+    note: raw.note || '',
+    created_at: raw.created_at || raw.createdAt || new Date().toISOString(),
+    updated_at: raw.updated_at || raw.updatedAt || new Date().toISOString()
+  };
+}
+
+function normalizeRule(raw, docId) {
+  const syncId = raw.sync_id || docId;
+  const categoryId = raw.category_id !== undefined ? raw.category_id : raw.categoryId;
+
+  return {
+    ...raw,
+    sync_id: syncId,
+    keyword: (raw.keyword || '').toLowerCase(),
+    categoryId,
+    category_id: categoryId,
+    weight: Number(raw.weight || 1),
+    updated_at: raw.updated_at || raw.updatedAt || new Date().toISOString()
+  };
+}
+
+function normalizeAsset(raw, docId) {
+  const syncId = raw.sync_id || docId;
+  const isLiability = raw.is_liability !== undefined ? Boolean(raw.is_liability) : Boolean(raw.isLiability);
+
+  return {
+    ...raw,
+    sync_id: syncId,
+    name: raw.name || 'Asset',
+    type: raw.type || 'savings',
+    value: Number(raw.value || 0),
+    isLiability,
+    is_liability: isLiability,
+    note: raw.note || '',
+    created_at: raw.created_at || raw.createdAt || new Date().toISOString(),
+    updated_at: raw.updated_at || raw.updatedAt || new Date().toISOString()
+  };
+}
+
+function normalizeSettings(raw, docId) {
+  const syncId = raw.sync_id || docId;
+  const monthlyIncome = Number(raw.monthly_income !== undefined ? raw.monthly_income : (raw.monthlyIncome || 0));
+  const isOnboarded = raw.is_onboarded !== undefined ? Boolean(raw.is_onboarded) : (raw.isOnboarded !== undefined ? Boolean(raw.isOnboarded) : true);
+
+  return {
+    ...raw,
+    sync_id: syncId,
+    monthlyIncome,
+    monthly_income: monthlyIncome,
+    currency: raw.currency || 'INR',
+    isOnboarded,
+    is_onboarded: isOnboarded,
+    showIncomeChart: Boolean(raw.show_income_chart || raw.showIncomeChart),
+    show_income_chart: Boolean(raw.show_income_chart || raw.showIncomeChart),
+    created_at: raw.created_at || raw.createdAt || new Date().toISOString(),
+    updated_at: raw.updated_at || raw.updatedAt || new Date().toISOString()
+  };
+}
+
 export const DbService = {
   // Start real-time sync listeners for all collections for a logged-in user
   startSync(userId) {
+    if (!userId) return;
     this.stopSync();
 
+    StateManager.setState({ syncStatus: 'syncing' });
     const userDocRef = doc(db, 'users', userId);
 
-    const setupListener = (subCollectionName, stateKey) => {
-      const q = collection(userDocRef, subCollectionName);
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        const data = [];
-        snapshot.forEach((doc) => {
-          const raw = doc.data();
-          const normalized = { ...raw, sync_id: doc.id };
-          
-          // Map snake_case from Flutter Firestore to camelCase for Web App
-          if (raw.category_id !== undefined) normalized.categoryId = raw.category_id;
-          if (raw.goal_id !== undefined) normalized.goalId = raw.goal_id;
-          if (raw.payment_mode !== undefined) normalized.paymentMode = raw.payment_mode;
-          if (raw.receipt_image_path !== undefined) normalized.receiptImagePath = raw.receipt_image_path;
-          if (raw.is_recurring !== undefined) normalized.isRecurring = raw.is_recurring;
-          
-          if (raw.monthly_income !== undefined) normalized.monthlyIncome = raw.monthly_income;
-          if (raw.is_onboarded !== undefined) normalized.isOnboarded = raw.is_onboarded;
-          if (raw.biometric_enabled !== undefined) normalized.biometricEnabled = raw.biometric_enabled;
-          if (raw.show_income_chart !== undefined) normalized.showIncomeChart = raw.show_income_chart;
-          
-          if (raw.target_amount !== undefined) normalized.targetAmount = raw.target_amount;
-          if (raw.saved_amount !== undefined) normalized.savedAmount = raw.saved_amount;
-          
-          if (raw.is_liability !== undefined) normalized.isLiability = raw.is_liability;
-
-          data.push(normalized);
+    // 1. Settings listener
+    const unsubSettings = onSnapshot(collection(userDocRef, 'user_settings'), (snapshot) => {
+      if (!snapshot.empty) {
+        const firstDoc = snapshot.docs[0];
+        const normalized = normalizeSettings(firstDoc.data(), firstDoc.id);
+        StateManager.setState({ 
+          userSettings: normalized,
+          syncStatus: 'synced',
+          lastSyncedAt: new Date().toISOString()
         });
-        
-        // Map user_settings since it's a single object in state
-        if (stateKey === 'userSettings') {
-          if (data.length > 0) {
-            StateManager.setState({ userSettings: data[0] });
-          } else {
-            // If settings are completely empty, seed them
-            this.seedUserSettings(userId);
-          }
-        } else {
-          StateManager.setState({ [stateKey]: data });
-        }
-      }, (error) => {
-        console.error(`Firestore listener error on ${subCollectionName}:`, error);
-      });
-      activeListeners.push(unsubscribe);
-    };
+      } else {
+        // First time cloud user -> seed cloud settings as onboarded
+        this.seedUserSettings(userId);
+      }
+    }, (err) => {
+      console.error('Firestore user_settings listener error:', err);
+      StateManager.setState({ syncStatus: 'error', syncError: err.message });
+    });
+    activeListeners.push(unsubSettings);
 
-    // Setup active listeners for all 7 subcollections
-    setupListener('user_settings', 'userSettings');
-    setupListener('transactions', 'transactions');
-    setupListener('categories', 'categories');
-    setupListener('goals', 'goals');
-    setupListener('goal_contributions', 'goalContributions');
-    setupListener('categorization_rules', 'categorizationRules');
-    setupListener('assets', 'assets');
+    // 2. Categories listener
+    const unsubCategories = onSnapshot(collection(userDocRef, 'categories'), (snapshot) => {
+      if (!snapshot.empty) {
+        const cats = snapshot.docs.map(d => normalizeCategory(d.data(), d.id));
+        StateManager.setState({ 
+          categories: cats,
+          syncStatus: 'synced',
+          lastSyncedAt: new Date().toISOString()
+        });
+      } else {
+        // If categories are empty in cloud, seed standard categories
+        this.seedDefaultCategories(userId);
+      }
+    }, (err) => {
+      console.error('Firestore categories listener error:', err);
+      StateManager.setState({ syncStatus: 'error', syncError: err.message });
+    });
+    activeListeners.push(unsubCategories);
+
+    // 3. Transactions listener
+    const unsubTransactions = onSnapshot(collection(userDocRef, 'transactions'), (snapshot) => {
+      const txs = snapshot.docs.map(d => normalizeTransaction(d.data(), d.id));
+      StateManager.setState({ 
+        transactions: txs,
+        syncStatus: 'synced',
+        lastSyncedAt: new Date().toISOString()
+      });
+    }, (err) => {
+      console.error('Firestore transactions listener error:', err);
+      StateManager.setState({ syncStatus: 'error', syncError: err.message });
+    });
+    activeListeners.push(unsubTransactions);
+
+    // 4. Goals listener
+    const unsubGoals = onSnapshot(collection(userDocRef, 'goals'), (snapshot) => {
+      const goals = snapshot.docs.map(d => normalizeGoal(d.data(), d.id));
+      StateManager.setState({ 
+        goals: goals,
+        syncStatus: 'synced',
+        lastSyncedAt: new Date().toISOString()
+      });
+    }, (err) => {
+      console.error('Firestore goals listener error:', err);
+    });
+    activeListeners.push(unsubGoals);
+
+    // 5. Goal Contributions listener
+    const unsubContributions = onSnapshot(collection(userDocRef, 'goal_contributions'), (snapshot) => {
+      const contribs = snapshot.docs.map(d => normalizeContribution(d.data(), d.id));
+      StateManager.setState({ 
+        goalContributions: contribs,
+        syncStatus: 'synced',
+        lastSyncedAt: new Date().toISOString()
+      });
+    }, (err) => {
+      console.error('Firestore goal_contributions listener error:', err);
+    });
+    activeListeners.push(unsubContributions);
+
+    // 6. Categorization Rules listener
+    const unsubRules = onSnapshot(collection(userDocRef, 'categorization_rules'), (snapshot) => {
+      const rules = snapshot.docs.map(d => normalizeRule(d.data(), d.id));
+      StateManager.setState({ 
+        categorizationRules: rules,
+        syncStatus: 'synced',
+        lastSyncedAt: new Date().toISOString()
+      });
+    }, (err) => {
+      console.error('Firestore categorization_rules listener error:', err);
+    });
+    activeListeners.push(unsubRules);
+
+    // 7. Assets listener
+    const unsubAssets = onSnapshot(collection(userDocRef, 'assets'), (snapshot) => {
+      const assets = snapshot.docs.map(d => normalizeAsset(d.data(), d.id));
+      StateManager.setState({ 
+        assets: assets,
+        syncStatus: 'synced',
+        lastSyncedAt: new Date().toISOString()
+      });
+    }, (err) => {
+      console.error('Firestore assets listener error:', err);
+    });
+    activeListeners.push(unsubAssets);
   },
 
   // Stop all active real-time listeners (e.g. on sign out)
   stopSync() {
     for (const unsubscribe of activeListeners) {
-      unsubscribe();
+      try {
+        unsubscribe();
+      } catch (e) {
+        console.error('Error unsubscribing listener:', e);
+      }
     }
     activeListeners = [];
+    StateManager.setState({ syncStatus: 'idle' });
   },
 
-  // Seed default settings in Firestore
-  async seedUserSettings(userId) {
+  // Manual forced sync trigger with summary result
+  async syncNow(userId) {
+    if (!userId) {
+      if (StateManager.state.user) {
+        userId = StateManager.state.user.uid;
+      } else {
+        throw new Error('No user logged in to sync.');
+      }
+    }
+
+    StateManager.setState({ syncStatus: 'syncing' });
+
+    try {
+      const userDocRef = doc(db, 'users', userId);
+
+      const [settingsSnap, catSnap, txSnap, goalsSnap, contribSnap, rulesSnap, assetsSnap] = await Promise.all([
+        getDocs(collection(userDocRef, 'user_settings')),
+        getDocs(collection(userDocRef, 'categories')),
+        getDocs(collection(userDocRef, 'transactions')),
+        getDocs(collection(userDocRef, 'goals')),
+        getDocs(collection(userDocRef, 'goal_contributions')),
+        getDocs(collection(userDocRef, 'categorization_rules')),
+        getDocs(collection(userDocRef, 'assets')),
+      ]);
+
+      const updates = {
+        syncStatus: 'synced',
+        lastSyncedAt: new Date().toISOString(),
+        syncError: null
+      };
+
+      if (!settingsSnap.empty) {
+        updates.userSettings = normalizeSettings(settingsSnap.docs[0].data(), settingsSnap.docs[0].id);
+      }
+      if (!catSnap.empty) {
+        updates.categories = catSnap.docs.map(d => normalizeCategory(d.data(), d.id));
+      }
+      updates.transactions = txSnap.docs.map(d => normalizeTransaction(d.data(), d.id));
+      updates.goals = goalsSnap.docs.map(d => normalizeGoal(d.data(), d.id));
+      updates.goalContributions = contribSnap.docs.map(d => normalizeContribution(d.data(), d.id));
+      updates.categorizationRules = rulesSnap.docs.map(d => normalizeRule(d.data(), d.id));
+      updates.assets = assetsSnap.docs.map(d => normalizeAsset(d.data(), d.id));
+
+      StateManager.setState(updates);
+
+      return {
+        success: true,
+        count: {
+          transactions: updates.transactions.length,
+          categories: (updates.categories || []).length,
+          goals: updates.goals.length,
+          assets: updates.assets.length
+        },
+        syncedAt: updates.lastSyncedAt
+      };
+    } catch (err) {
+      console.error('Manual syncNow error:', err);
+      StateManager.setState({ syncStatus: 'error', syncError: err.message });
+      throw err;
+    }
+  },
+
+  // Seed default settings in Firestore for new user
+  async seedUserSettings(userId, initialIncome = 0) {
     const syncId = generateUUID();
     const payload = {
       sync_id: syncId,
       user_id: userId,
-      monthly_income: 0,
+      monthly_income: initialIncome,
       currency: 'INR',
-      is_onboarded: false,
+      is_onboarded: true, // Logged in cloud user is considered onboarded
       show_income_chart: false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
     const settingsDoc = doc(db, 'users', userId, 'user_settings', syncId);
-    await setDoc(settingsDoc, payload);
+    await setDoc(settingsDoc, payload, { merge: true });
     
-    // Also seed default categories
+    // Also seed default categories and rules
     await this.seedDefaultCategories(userId);
   },
 
   // Seed default categories matching Drift database
   async seedDefaultCategories(userId) {
-    const defaultExpenseCategories = [
-      { name: 'Food & Dining', icon: 'restaurant', type: 'expense', is_default: true },
-      { name: 'Transport', icon: 'directions_car', type: 'expense', is_default: true },
-      { name: 'Shopping', icon: 'shopping_bag', type: 'expense', is_default: true },
-      { name: 'Entertainment', icon: 'local_movies', type: 'expense', is_default: true },
-      { name: 'Bills & Utilities', icon: 'receipt_long', type: 'expense', is_default: true },
-      { name: 'Health', icon: 'local_hospital', type: 'expense', is_default: true },
-      { name: 'Education', icon: 'school', type: 'expense', is_default: true },
-      { name: 'Self Care', icon: 'spa', type: 'expense', is_default: true },
-      { name: 'Groceries', icon: 'local_grocery_store', type: 'expense', is_default: true },
-      { name: 'Gifts', icon: 'card_giftcard', type: 'expense', is_default: true },
-      { name: 'Savings', icon: 'savings', type: 'expense', is_default: true },
-      { name: 'Investments', icon: 'show_chart', type: 'expense', is_default: true },
-      { name: 'Family', icon: 'family_restroom', type: 'expense', is_default: true },
-      { name: 'Other', icon: 'more_horiz', type: 'expense', is_default: true }
-    ];
+    // Check if categories already exist
+    const existingSnap = await getDocs(collection(db, 'users', userId, 'categories'));
+    if (!existingSnap.empty) return;
 
-    const defaultIncomeCategories = [
-      { name: 'Salary', icon: 'work', type: 'income', is_default: true },
-      { name: 'Freelance', icon: 'laptop', type: 'income', is_default: true },
-      { name: 'Investment', icon: 'trending_up', type: 'income', is_default: true },
-      { name: 'Other Income', icon: 'attach_money', type: 'income', is_default: true }
-    ];
-
-    const allCats = [...defaultExpenseCategories, ...defaultIncomeCategories];
-    const batchPromises = allCats.map(cat => {
+    const batchPromises = DEFAULT_CATEGORIES.map(cat => {
       const syncId = generateUUID();
       const payload = {
-        ...cat,
         sync_id: syncId,
         user_id: userId,
+        name: cat.name,
+        icon: cat.icon,
+        type: cat.type,
+        is_default: true,
         monthly_budget: 0,
         updated_at: new Date().toISOString()
       };
@@ -155,136 +409,98 @@ export const DbService = {
     });
 
     await Promise.all(batchPromises);
-    
-    // Seed default categorization rules
     await this.seedDefaultRules(userId);
   },
 
   async seedDefaultRules(userId) {
-    // We need to fetch the newly created category document mapping
+    const existingRules = await getDocs(collection(db, 'users', userId, 'categorization_rules'));
+    if (!existingRules.empty) return;
+
     const categoriesSnap = await getDocs(collection(db, 'users', userId, 'categories'));
     const categoryMap = {};
-    categoriesSnap.forEach(doc => {
-      const data = doc.data();
-      categoryMap[data.name] = data.sync_id; // map category name to firestore document id
+    categoriesSnap.forEach(d => {
+      const data = d.data();
+      categoryMap[data.name] = data.sync_id || d.id;
     });
 
-    const defaultRules = [];
-    const addRule = (keyword, categoryName) => {
-      const catId = categoryMap[categoryName];
+    const defaultKeywords = [
+      { kw: 'zomato', cat: 'Food & Dining' },
+      { kw: 'swiggy', cat: 'Food & Dining' },
+      { kw: 'restaurant', cat: 'Food & Dining' },
+      { kw: 'cafe', cat: 'Food & Dining' },
+      { kw: 'food', cat: 'Food & Dining' },
+      { kw: 'lunch', cat: 'Food & Dining' },
+      { kw: 'dinner', cat: 'Food & Dining' },
+      { kw: 'breakfast', cat: 'Food & Dining' },
+      { kw: 'uber', cat: 'Transport' },
+      { kw: 'ola', cat: 'Transport' },
+      { kw: 'rapido', cat: 'Transport' },
+      { kw: 'petrol', cat: 'Transport' },
+      { kw: 'fuel', cat: 'Transport' },
+      { kw: 'metro', cat: 'Transport' },
+      { kw: 'amazon', cat: 'Shopping' },
+      { kw: 'flipkart', cat: 'Shopping' },
+      { kw: 'myntra', cat: 'Shopping' },
+      { kw: 'netflix', cat: 'Entertainment' },
+      { kw: 'prime', cat: 'Entertainment' },
+      { kw: 'hotstar', cat: 'Entertainment' },
+      { kw: 'movie', cat: 'Entertainment' },
+      { kw: 'spotify', cat: 'Entertainment' },
+      { kw: 'electricity', cat: 'Bills & Utilities' },
+      { kw: 'water', cat: 'Bills & Utilities' },
+      { kw: 'internet', cat: 'Bills & Utilities' },
+      { kw: 'mobile', cat: 'Bills & Utilities' },
+      { kw: 'rent', cat: 'Bills & Utilities' },
+      { kw: 'bigbasket', cat: 'Groceries' },
+      { kw: 'blinkit', cat: 'Groceries' },
+      { kw: 'zepto', cat: 'Groceries' },
+      { kw: 'instamart', cat: 'Groceries' },
+      { kw: 'grocery', cat: 'Groceries' }
+    ];
+
+    const rulePromises = [];
+    for (const item of defaultKeywords) {
+      const catId = categoryMap[item.cat];
       if (catId) {
-        defaultRules.push({
-          keyword,
-          category_id: catId, // standard ID format
-          weight: 1
-        });
+        const syncId = generateUUID();
+        const payload = {
+          sync_id: syncId,
+          user_id: userId,
+          keyword: item.kw,
+          category_id: catId,
+          weight: 1,
+          updated_at: new Date().toISOString()
+        };
+        rulePromises.push(setDoc(doc(db, 'users', userId, 'categorization_rules', syncId), payload));
       }
-    };
+    }
 
-    // Food & Dining
-    addRule('zomato', 'Food & Dining');
-    addRule('swiggy', 'Food & Dining');
-    addRule('restaurant', 'Food & Dining');
-    addRule('cafe', 'Food & Dining');
-    addRule('food', 'Food & Dining');
-    addRule('lunch', 'Food & Dining');
-    addRule('dinner', 'Food & Dining');
-    addRule('breakfast', 'Food & Dining');
-
-    // Transport
-    addRule('uber', 'Transport');
-    addRule('ola', 'Transport');
-    addRule('rapido', 'Transport');
-    addRule('petrol', 'Transport');
-    addRule('fuel', 'Transport');
-    addRule('metro', 'Transport');
-
-    // Shopping
-    addRule('amazon', 'Shopping');
-    addRule('flipkart', 'Shopping');
-    addRule('myntra', 'Shopping');
-
-    // Entertainment
-    addRule('netflix', 'Entertainment');
-    addRule('prime', 'Entertainment');
-    addRule('hotstar', 'Entertainment');
-    addRule('movie', 'Entertainment');
-    addRule('spotify', 'Entertainment');
-
-    // Bills
-    addRule('electricity', 'Bills & Utilities');
-    addRule('water', 'Bills & Utilities');
-    addRule('internet', 'Bills & Utilities');
-    addRule('mobile', 'Bills & Utilities');
-    addRule('rent', 'Bills & Utilities');
-
-    // Groceries
-    addRule('bigbasket', 'Groceries');
-    addRule('blinkit', 'Groceries');
-    addRule('zepto', 'Groceries');
-    addRule('instamart', 'Groceries');
-    addRule('grocery', 'Groceries');
-
-    const rulesPromises = defaultRules.map(rule => {
-      const syncId = generateUUID();
-      const payload = {
-        ...rule,
-        sync_id: syncId,
-        user_id: userId,
-        updated_at: new Date().toISOString()
-      };
-      return setDoc(doc(db, 'users', userId, 'categorization_rules', syncId), payload);
-    });
-
-    await Promise.all(rulesPromises);
+    await Promise.all(rulePromises);
   },
 
-  // GUEST MODE LOCAL SEEDING (Matches Local Database initialization)
+  // GUEST MODE LOCAL SEEDING
   seedGuestState() {
     const syncId = generateUUID();
     StateManager.state.userSettings = {
       sync_id: syncId,
       monthlyIncome: 0,
+      monthly_income: 0,
       currency: 'INR',
       isOnboarded: false,
+      is_onboarded: false,
       showIncomeChart: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
 
-    const defaultExpenseCategories = [
-      { name: 'Food & Dining', icon: 'restaurant', type: 'expense', is_default: true },
-      { name: 'Transport', icon: 'directions_car', type: 'expense', is_default: true },
-      { name: 'Shopping', icon: 'shopping_bag', type: 'expense', is_default: true },
-      { name: 'Entertainment', icon: 'local_movies', type: 'expense', is_default: true },
-      { name: 'Bills & Utilities', icon: 'receipt_long', type: 'expense', is_default: true },
-      { name: 'Health', icon: 'local_hospital', type: 'expense', is_default: true },
-      { name: 'Education', icon: 'school', type: 'expense', is_default: true },
-      { name: 'Self Care', icon: 'spa', type: 'expense', is_default: true },
-      { name: 'Groceries', icon: 'local_grocery_store', type: 'expense', is_default: true },
-      { name: 'Gifts', icon: 'card_giftcard', type: 'expense', is_default: true },
-      { name: 'Savings', icon: 'savings', type: 'expense', is_default: true },
-      { name: 'Investments', icon: 'show_chart', type: 'expense', is_default: true },
-      { name: 'Family', icon: 'family_restroom', type: 'expense', is_default: true },
-      { name: 'Other', icon: 'more_horiz', type: 'expense', is_default: true }
-    ];
-
-    const defaultIncomeCategories = [
-      { name: 'Salary', icon: 'work', type: 'income', is_default: true },
-      { name: 'Freelance', icon: 'laptop', type: 'income', is_default: true },
-      { name: 'Investment', icon: 'trending_up', type: 'income', is_default: true },
-      { name: 'Other Income', icon: 'attach_money', type: 'income', is_default: true }
-    ];
-
-    StateManager.state.categories = [...defaultExpenseCategories, ...defaultIncomeCategories].map((cat, index) => ({
+    StateManager.state.categories = DEFAULT_CATEGORIES.map((cat) => ({
       ...cat,
-      id: index + 1, // numeric ID to match local database references
       sync_id: generateUUID(),
       monthly_budget: 0,
+      monthlyBudget: 0,
       updated_at: new Date().toISOString()
     }));
 
-    // Local rules
     StateManager.state.categorizationRules = [];
     const addLocalRule = (keyword, catName) => {
       const cat = StateManager.state.categories.find(c => c.name === catName);
@@ -294,6 +510,7 @@ export const DbService = {
           sync_id: generateUUID(),
           keyword,
           category_id: cat.id,
+          categoryId: cat.id,
           weight: 1,
           updated_at: new Date().toISOString()
         });
@@ -321,81 +538,154 @@ export const DbService = {
   // ---------------------------------------------------------------------------
 
   async saveUserSettings(updates) {
-    const isGuest = StateManager.state.isGuestMode;
-    const settings = { ...StateManager.state.userSettings, ...updates, updatedAt: new Date().toISOString() };
+    const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
+    const current = StateManager.state.userSettings || {};
+    const settings = { 
+      ...current, 
+      ...updates, 
+      updatedAt: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
     
+    if (updates.monthlyIncome !== undefined) settings.monthly_income = updates.monthlyIncome;
+    if (updates.isOnboarded !== undefined) settings.is_onboarded = updates.isOnboarded;
+    if (updates.showIncomeChart !== undefined) settings.show_income_chart = updates.showIncomeChart;
+
     if (isGuest) {
       StateManager.state.userSettings = settings;
       StateManager.saveGuestState();
       StateManager.notify();
     } else {
-      const userId = StateManager.state.user.uid;
-      const syncId = settings.sync_id;
+      const userId = StateManager.state.user?.uid;
+      if (!userId) return;
+      const syncId = settings.sync_id || generateUUID();
+      settings.sync_id = syncId;
+      settings.user_id = userId;
+
+      StateManager.setState({ userSettings: settings });
       const docRef = doc(db, 'users', userId, 'user_settings', syncId);
       await setDoc(docRef, settings, { merge: true });
     }
   },
 
   async addTransaction(tx) {
-    const isGuest = StateManager.state.isGuestMode;
-    const syncId = generateUUID();
+    const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
+    const syncId = tx.sync_id || generateUUID();
+    
+    const catId = tx.categoryId !== undefined ? tx.categoryId : (tx.category_id !== undefined ? tx.category_id : 1);
+    const goalId = tx.goalId !== undefined ? tx.goalId : (tx.goal_id !== undefined ? tx.goal_id : null);
+    const paymentMode = tx.paymentMode || tx.payment_mode || 'Cash';
+    const isRecurring = tx.isRecurring !== undefined ? Boolean(tx.isRecurring) : Boolean(tx.is_recurring);
+
     const newTx = {
       ...tx,
       sync_id: syncId,
+      amount: Number(tx.amount || 0),
+      type: tx.type || 'expense',
+      categoryId: catId,
+      category_id: catId,
+      goalId: goalId,
+      goal_id: goalId,
+      paymentMode,
+      payment_mode: paymentMode,
+      isRecurring,
+      is_recurring: isRecurring,
+      timestamp: tx.timestamp || new Date().toISOString(),
+      note: tx.note || '',
       is_synced: !isGuest,
-      created_at: new Date().toISOString(),
+      created_at: tx.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
 
     if (isGuest) {
       newTx.id = StateManager.state.transactions.length + 1;
-      StateManager.state.transactions.push(newTx);
+      StateManager.state.transactions.unshift(newTx);
       StateManager.saveGuestState();
       StateManager.notify();
     } else {
-      const userId = StateManager.state.user.uid;
+      const userId = StateManager.state.user?.uid;
+      if (!userId) return;
       newTx.user_id = userId;
+      
+      // Optimistic update in state
+      const existingIdx = StateManager.state.transactions.findIndex(t => t.sync_id === syncId);
+      if (existingIdx !== -1) {
+        StateManager.state.transactions[existingIdx] = newTx;
+      } else {
+        StateManager.state.transactions.unshift(newTx);
+      }
+      StateManager.notify();
+
       const docRef = doc(db, 'users', userId, 'transactions', syncId);
-      await setDoc(docRef, newTx);
+      await setDoc(docRef, newTx, { merge: true });
     }
   },
 
   async deleteTransaction(syncId, localId) {
-    const isGuest = StateManager.state.isGuestMode;
+    const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
     if (isGuest) {
-      StateManager.state.transactions = StateManager.state.transactions.filter(t => t.id !== localId);
+      StateManager.state.transactions = StateManager.state.transactions.filter(t => t.id !== localId && t.sync_id !== syncId);
       StateManager.saveGuestState();
       StateManager.notify();
     } else {
-      const userId = StateManager.state.user.uid;
-      await deleteDoc(doc(db, 'users', userId, 'transactions', syncId));
+      const userId = StateManager.state.user?.uid;
+      if (!userId) return;
+      
+      // Optimistic local removal
+      StateManager.state.transactions = StateManager.state.transactions.filter(t => t.sync_id !== syncId);
+      StateManager.notify();
+
+      if (syncId) {
+        await deleteDoc(doc(db, 'users', userId, 'transactions', syncId));
+      }
     }
   },
 
   async updateCategoryBudget(syncId, localId, monthlyBudget) {
-    const isGuest = StateManager.state.isGuestMode;
+    const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
     if (isGuest) {
-      const cat = StateManager.state.categories.find(c => c.id === localId);
+      const cat = StateManager.state.categories.find(c => c.id === localId || c.sync_id === syncId);
       if (cat) {
         cat.monthly_budget = monthlyBudget;
+        cat.monthlyBudget = monthlyBudget;
         cat.updated_at = new Date().toISOString();
       }
       StateManager.saveGuestState();
       StateManager.notify();
     } else {
-      const userId = StateManager.state.user.uid;
-      const docRef = doc(db, 'users', userId, 'categories', syncId);
-      await updateDoc(docRef, { monthly_budget: monthlyBudget, updated_at: new Date().toISOString() });
+      const userId = StateManager.state.user?.uid;
+      if (!userId) return;
+
+      const cat = StateManager.state.categories.find(c => c.sync_id === syncId || c.id === localId);
+      if (cat) {
+        cat.monthly_budget = monthlyBudget;
+        cat.monthlyBudget = monthlyBudget;
+        cat.updated_at = new Date().toISOString();
+        StateManager.notify();
+      }
+
+      if (syncId) {
+        const docRef = doc(db, 'users', userId, 'categories', syncId);
+        await updateDoc(docRef, { 
+          monthly_budget: monthlyBudget, 
+          updated_at: new Date().toISOString() 
+        });
+      }
     }
   },
 
   async addAsset(asset) {
-    const isGuest = StateManager.state.isGuestMode;
-    const syncId = generateUUID();
+    const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
+    const syncId = asset.sync_id || generateUUID();
+    const isLiability = asset.isLiability !== undefined ? Boolean(asset.isLiability) : Boolean(asset.is_liability);
+
     const newAsset = {
       ...asset,
       sync_id: syncId,
-      created_at: new Date().toISOString(),
+      value: Number(asset.value || 0),
+      isLiability,
+      is_liability: isLiability,
+      created_at: asset.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
 
@@ -405,34 +695,59 @@ export const DbService = {
       StateManager.saveGuestState();
       StateManager.notify();
     } else {
-      const userId = StateManager.state.user.uid;
+      const userId = StateManager.state.user?.uid;
+      if (!userId) return;
       newAsset.user_id = userId;
-      await setDoc(doc(db, 'users', userId, 'assets', syncId), newAsset);
+
+      const existingIdx = StateManager.state.assets.findIndex(a => a.sync_id === syncId);
+      if (existingIdx !== -1) {
+        StateManager.state.assets[existingIdx] = newAsset;
+      } else {
+        StateManager.state.assets.push(newAsset);
+      }
+      StateManager.notify();
+
+      await setDoc(doc(db, 'users', userId, 'assets', syncId), newAsset, { merge: true });
     }
   },
 
   async deleteAsset(syncId, localId) {
-    const isGuest = StateManager.state.isGuestMode;
+    const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
     if (isGuest) {
-      StateManager.state.assets = StateManager.state.assets.filter(a => a.id !== localId);
+      StateManager.state.assets = StateManager.state.assets.filter(a => a.id !== localId && a.sync_id !== syncId);
       StateManager.saveGuestState();
       StateManager.notify();
     } else {
-      const userId = StateManager.state.user.uid;
-      await deleteDoc(doc(db, 'users', userId, 'assets', syncId));
+      const userId = StateManager.state.user?.uid;
+      if (!userId) return;
+
+      StateManager.state.assets = StateManager.state.assets.filter(a => a.sync_id !== syncId);
+      StateManager.notify();
+
+      if (syncId) {
+        await deleteDoc(doc(db, 'users', userId, 'assets', syncId));
+      }
     }
   },
 
   async addGoal(goal) {
-    const isGuest = StateManager.state.isGuestMode;
-    const syncId = generateUUID();
+    const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
+    const syncId = goal.sync_id || generateUUID();
+    const targetAmount = Number(goal.targetAmount !== undefined ? goal.targetAmount : (goal.target_amount || 0));
+    const savedAmount = Number(goal.savedAmount !== undefined ? goal.savedAmount : (goal.saved_amount || 0));
+
     const newGoal = {
       ...goal,
       sync_id: syncId,
-      saved_amount: 0,
-      is_active: true,
-      is_completed: false,
-      created_at: new Date().toISOString(),
+      targetAmount,
+      target_amount: targetAmount,
+      savedAmount,
+      saved_amount: savedAmount,
+      is_active: goal.is_active !== undefined ? goal.is_active : (goal.isActive !== false),
+      isActive: goal.is_active !== undefined ? goal.is_active : (goal.isActive !== false),
+      is_completed: savedAmount >= targetAmount && targetAmount > 0,
+      isCompleted: savedAmount >= targetAmount && targetAmount > 0,
+      created_at: goal.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
 
@@ -442,44 +757,65 @@ export const DbService = {
       StateManager.saveGuestState();
       StateManager.notify();
     } else {
-      const userId = StateManager.state.user.uid;
+      const userId = StateManager.state.user?.uid;
+      if (!userId) return;
       newGoal.user_id = userId;
-      await setDoc(doc(db, 'users', userId, 'goals', syncId), newGoal);
+
+      const existingIdx = StateManager.state.goals.findIndex(g => g.sync_id === syncId);
+      if (existingIdx !== -1) {
+        StateManager.state.goals[existingIdx] = newGoal;
+      } else {
+        StateManager.state.goals.push(newGoal);
+      }
+      StateManager.notify();
+
+      await setDoc(doc(db, 'users', userId, 'goals', syncId), newGoal, { merge: true });
     }
   },
 
   async deleteGoal(syncId, localId) {
-    const isGuest = StateManager.state.isGuestMode;
+    const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
     if (isGuest) {
-      StateManager.state.goals = StateManager.state.goals.filter(g => g.id !== localId);
-      StateManager.state.goalContributions = StateManager.state.goalContributions.filter(c => c.goal_id !== localId);
+      StateManager.state.goals = StateManager.state.goals.filter(g => g.id !== localId && g.sync_id !== syncId);
+      StateManager.state.goalContributions = StateManager.state.goalContributions.filter(c => c.goal_id !== localId && c.goal_id !== syncId);
       StateManager.saveGuestState();
       StateManager.notify();
     } else {
-      const userId = StateManager.state.user.uid;
-      // Delete goal
-      await deleteDoc(doc(db, 'users', userId, 'goals', syncId));
-      // Delete goal contributions (typically handled in transactions/functions, or manually in client)
-      const contributionsRef = collection(db, 'users', userId, 'goal_contributions');
-      const q = query(contributionsRef, where('goal_id', '==', localId));
-      const querySnapshot = await getDocs(q);
-      const deletePromises = [];
-      querySnapshot.forEach(doc => {
-        deletePromises.push(deleteDoc(doc.ref));
-      });
-      await Promise.all(deletePromises);
+      const userId = StateManager.state.user?.uid;
+      if (!userId) return;
+
+      StateManager.state.goals = StateManager.state.goals.filter(g => g.sync_id !== syncId);
+      StateManager.state.goalContributions = StateManager.state.goalContributions.filter(c => c.goal_id !== syncId && c.goalId !== syncId);
+      StateManager.notify();
+
+      if (syncId) {
+        await deleteDoc(doc(db, 'users', userId, 'goals', syncId));
+        
+        // Delete linked contributions
+        try {
+          const contributionsRef = collection(db, 'users', userId, 'goal_contributions');
+          const q = query(contributionsRef, where('goal_id', '==', syncId));
+          const querySnapshot = await getDocs(q);
+          const deletePromises = [];
+          querySnapshot.forEach(d => deletePromises.push(deleteDoc(d.ref)));
+          await Promise.all(deletePromises);
+        } catch (e) {
+          console.error('Error cleaning up linked contributions:', e);
+        }
+      }
     }
   },
 
   async addGoalContribution(goalSyncId, goalLocalId, amount, note) {
-    const isGuest = StateManager.state.isGuestMode;
+    const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
     const syncId = generateUUID();
-    
-    // Add contribution
+    const parsedAmount = Number(amount || 0);
+
     const newContribution = {
       sync_id: syncId,
-      goal_id: goalLocalId,
-      amount: amount,
+      goal_id: goalSyncId || goalLocalId,
+      goalId: goalSyncId || goalLocalId,
+      amount: parsedAmount,
       note: note || '',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -489,32 +825,41 @@ export const DbService = {
       newContribution.id = StateManager.state.goalContributions.length + 1;
       StateManager.state.goalContributions.push(newContribution);
       
-      // Update Goal locally
-      const goal = StateManager.state.goals.find(g => g.id === goalLocalId);
+      const goal = StateManager.state.goals.find(g => g.id === goalLocalId || g.sync_id === goalSyncId);
       if (goal) {
-        goal.saved_amount += amount;
+        goal.saved_amount = (goal.saved_amount || 0) + parsedAmount;
+        goal.savedAmount = goal.saved_amount;
         goal.is_completed = goal.saved_amount >= goal.target_amount;
+        goal.isCompleted = goal.is_completed;
         goal.updated_at = new Date().toISOString();
       }
       
       StateManager.saveGuestState();
       StateManager.notify();
     } else {
-      const userId = StateManager.state.user.uid;
+      const userId = StateManager.state.user?.uid;
+      if (!userId) return;
       newContribution.user_id = userId;
-      
-      // Insert contribution document
+
+      StateManager.state.goalContributions.push(newContribution);
+      const goal = StateManager.state.goals.find(g => g.sync_id === goalSyncId);
+      if (goal) {
+        const newSaved = (goal.saved_amount || 0) + parsedAmount;
+        goal.saved_amount = newSaved;
+        goal.savedAmount = newSaved;
+        goal.is_completed = newSaved >= goal.target_amount;
+        goal.isCompleted = goal.is_completed;
+        goal.updated_at = new Date().toISOString();
+      }
+      StateManager.notify();
+
       await setDoc(doc(db, 'users', userId, 'goal_contributions', syncId), newContribution);
       
-      // Fetch latest Goal and update
-      const goalDocRef = doc(db, 'users', userId, 'goals', goalSyncId);
-      // Retrieve the current saved_amount to increment
-      const goalSnap = StateManager.state.goals.find(g => g.sync_id === goalSyncId);
-      if (goalSnap) {
-        const newSaved = goalSnap.saved_amount + amount;
+      if (goalSyncId && goal) {
+        const goalDocRef = doc(db, 'users', userId, 'goals', goalSyncId);
         await updateDoc(goalDocRef, {
-          saved_amount: newSaved,
-          is_completed: newSaved >= goalSnap.target_amount,
+          saved_amount: goal.saved_amount,
+          is_completed: goal.is_completed,
           updated_at: new Date().toISOString()
         });
       }
@@ -522,35 +867,46 @@ export const DbService = {
   },
 
   async deleteGoalContribution(contributionSyncId, contributionLocalId, goalSyncId, goalLocalId) {
-    const isGuest = StateManager.state.isGuestMode;
+    const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
     
     if (isGuest) {
-      const contribution = StateManager.state.goalContributions.find(c => c.id === contributionLocalId);
+      const contribution = StateManager.state.goalContributions.find(c => c.id === contributionLocalId || c.sync_id === contributionSyncId);
       if (contribution) {
-        // Decrement goal savings amount
-        const goal = StateManager.state.goals.find(g => g.id === goalLocalId);
+        const goal = StateManager.state.goals.find(g => g.id === goalLocalId || g.sync_id === goalSyncId);
         if (goal) {
-          goal.saved_amount = Math.max(0, goal.saved_amount - contribution.amount);
+          goal.saved_amount = Math.max(0, (goal.saved_amount || 0) - contribution.amount);
+          goal.savedAmount = goal.saved_amount;
           goal.is_completed = goal.saved_amount >= goal.target_amount;
+          goal.isCompleted = goal.is_completed;
         }
-        StateManager.state.goalContributions = StateManager.state.goalContributions.filter(c => c.id !== contributionLocalId);
+        StateManager.state.goalContributions = StateManager.state.goalContributions.filter(c => c.id !== contributionLocalId && c.sync_id !== contributionSyncId);
       }
       StateManager.saveGuestState();
       StateManager.notify();
     } else {
-      const userId = StateManager.state.user.uid;
+      const userId = StateManager.state.user?.uid;
+      if (!userId) return;
+
       const contributionObj = StateManager.state.goalContributions.find(c => c.sync_id === contributionSyncId);
       if (contributionObj) {
-        // Delete document
-        await deleteDoc(doc(db, 'users', userId, 'goal_contributions', contributionSyncId));
+        StateManager.state.goalContributions = StateManager.state.goalContributions.filter(c => c.sync_id !== contributionSyncId);
         
-        // Update goal saved amount
         const goalObj = StateManager.state.goals.find(g => g.sync_id === goalSyncId);
         if (goalObj) {
-          const newSaved = Math.max(0, goalObj.saved_amount - contributionObj.amount);
+          const newSaved = Math.max(0, (goalObj.saved_amount || 0) - contributionObj.amount);
+          goalObj.saved_amount = newSaved;
+          goalObj.savedAmount = newSaved;
+          goalObj.is_completed = newSaved >= goalObj.target_amount;
+          goalObj.isCompleted = goalObj.is_completed;
+        }
+        StateManager.notify();
+
+        await deleteDoc(doc(db, 'users', userId, 'goal_contributions', contributionSyncId));
+        
+        if (goalSyncId && goalObj) {
           await updateDoc(doc(db, 'users', userId, 'goals', goalSyncId), {
-            saved_amount: newSaved,
-            is_completed: newSaved >= goalObj.target_amount,
+            saved_amount: goalObj.saved_amount,
+            is_completed: goalObj.is_completed,
             updated_at: new Date().toISOString()
           });
         }
@@ -559,30 +915,43 @@ export const DbService = {
   },
 
   async archiveGoal(syncId, localId) {
-    const isGuest = StateManager.state.isGuestMode;
+    const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
     if (isGuest) {
-      const goal = StateManager.state.goals.find(g => g.id === localId);
+      const goal = StateManager.state.goals.find(g => g.id === localId || g.sync_id === syncId);
       if (goal) {
         goal.is_active = false;
+        goal.isActive = false;
         goal.updated_at = new Date().toISOString();
       }
       StateManager.saveGuestState();
       StateManager.notify();
     } else {
-      const userId = StateManager.state.user.uid;
-      await updateDoc(doc(db, 'users', userId, 'goals', syncId), {
-        is_active: false,
-        updated_at: new Date().toISOString()
-      });
+      const userId = StateManager.state.user?.uid;
+      if (!userId) return;
+
+      const goal = StateManager.state.goals.find(g => g.sync_id === syncId);
+      if (goal) {
+        goal.is_active = false;
+        goal.isActive = false;
+        StateManager.notify();
+      }
+
+      if (syncId) {
+        await updateDoc(doc(db, 'users', userId, 'goals', syncId), {
+          is_active: false,
+          updated_at: new Date().toISOString()
+        });
+      }
     }
   },
 
   async addRule(keyword, categoryId) {
-    const isGuest = StateManager.state.isGuestMode;
+    const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
     const syncId = generateUUID();
     const newRule = {
-      keyword,
+      keyword: (keyword || '').toLowerCase(),
       category_id: categoryId,
+      categoryId: categoryId,
       weight: 1,
       sync_id: syncId,
       updated_at: new Date().toISOString()
@@ -594,16 +963,21 @@ export const DbService = {
       StateManager.saveGuestState();
       StateManager.notify();
     } else {
-      const userId = StateManager.state.user.uid;
+      const userId = StateManager.state.user?.uid;
+      if (!userId) return;
       newRule.user_id = userId;
+
+      StateManager.state.categorizationRules.push(newRule);
+      StateManager.notify();
+
       await setDoc(doc(db, 'users', userId, 'categorization_rules', syncId), newRule);
     }
   },
 
   async updateRuleWeight(syncId, localId, newWeight) {
-    const isGuest = StateManager.state.isGuestMode;
+    const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
     if (isGuest) {
-      const rule = StateManager.state.categorizationRules.find(r => r.id === localId);
+      const rule = StateManager.state.categorizationRules.find(r => r.id === localId || r.sync_id === syncId);
       if (rule) {
         rule.weight = newWeight;
         rule.updated_at = new Date().toISOString();
@@ -611,119 +985,91 @@ export const DbService = {
       StateManager.saveGuestState();
       StateManager.notify();
     } else {
-      const userId = StateManager.state.user.uid;
-      await updateDoc(doc(db, 'users', userId, 'categorization_rules', syncId), {
-        weight: newWeight,
-        updated_at: new Date().toISOString()
-      });
+      const userId = StateManager.state.user?.uid;
+      if (!userId) return;
+
+      const rule = StateManager.state.categorizationRules.find(r => r.sync_id === syncId);
+      if (rule) {
+        rule.weight = newWeight;
+        StateManager.notify();
+      }
+
+      if (syncId) {
+        await updateDoc(doc(db, 'users', userId, 'categorization_rules', syncId), {
+          weight: newWeight,
+          updated_at: new Date().toISOString()
+        });
+      }
     }
   },
 
   // ---------------------------------------------------------------------------
-  // SYNC GUEST DATA TO FIRESTORE ON LOG IN
+  // SYNC GUEST DATA TO FIRESTORE ON LOG IN (Non-destructive merge)
   // ---------------------------------------------------------------------------
   async syncGuestDataToCloud(userId) {
-    const localSettings = JSON.parse(localStorage.getItem('money_manager_user_settings'));
-    if (!localSettings) return; // No guest data to sync
+    if (!userId) return;
 
-    const localTransactions = JSON.parse(localStorage.getItem('money_manager_transactions')) || [];
-    const localCategories = JSON.parse(localStorage.getItem('money_manager_categories')) || [];
-    const localGoals = JSON.parse(localStorage.getItem('money_manager_goals')) || [];
-    const localContributions = JSON.parse(localStorage.getItem('money_manager_goal_contributions')) || [];
-    const localRules = JSON.parse(localStorage.getItem('money_manager_categorization_rules')) || [];
-    const localAssets = JSON.parse(localStorage.getItem('money_manager_assets')) || [];
+    try {
+      const localTransactions = JSON.parse(localStorage.getItem('money_manager_transactions')) || [];
+      const localGoals = JSON.parse(localStorage.getItem('money_manager_goals')) || [];
+      const localAssets = JSON.parse(localStorage.getItem('money_manager_assets')) || [];
+      const localSettings = JSON.parse(localStorage.getItem('money_manager_user_settings'));
 
-    const userDocRef = doc(db, 'users', userId);
+      const userDocRef = doc(db, 'users', userId);
 
-    // 1. Settings
-    if (localSettings.isOnboarded) {
-      const syncId = localSettings.sync_id || generateUUID();
-      await setDoc(doc(userDocRef, 'user_settings', syncId), {
-        ...localSettings,
-        sync_id: syncId,
-        user_id: userId,
-        updated_at: new Date().toISOString()
-      }, { merge: true });
+      // Only push non-empty custom records that aren't already synced
+      if (localTransactions.length > 0) {
+        const txPromises = localTransactions.map(tx => {
+          const syncId = tx.sync_id || generateUUID();
+          return setDoc(doc(userDocRef, 'transactions', syncId), {
+            ...tx,
+            sync_id: syncId,
+            user_id: userId,
+            is_synced: true,
+            updated_at: new Date().toISOString()
+          }, { merge: true });
+        });
+        await Promise.all(txPromises);
+      }
+
+      if (localGoals.length > 0) {
+        const goalPromises = localGoals.map(g => {
+          const syncId = g.sync_id || generateUUID();
+          return setDoc(doc(userDocRef, 'goals', syncId), {
+            ...g,
+            sync_id: syncId,
+            user_id: userId,
+            updated_at: new Date().toISOString()
+          }, { merge: true });
+        });
+        await Promise.all(goalPromises);
+      }
+
+      if (localAssets.length > 0) {
+        const assetPromises = localAssets.map(a => {
+          const syncId = a.sync_id || generateUUID();
+          return setDoc(doc(userDocRef, 'assets', syncId), {
+            ...a,
+            sync_id: syncId,
+            user_id: userId,
+            updated_at: new Date().toISOString()
+          }, { merge: true });
+        });
+        await Promise.all(assetPromises);
+      }
+
+      // If user had custom monthly income in guest settings, save it if cloud settings is empty
+      if (localSettings && localSettings.monthlyIncome > 0) {
+        const cloudSettingsSnap = await getDocs(collection(userDocRef, 'user_settings'));
+        if (cloudSettingsSnap.empty) {
+          await this.seedUserSettings(userId, localSettings.monthlyIncome);
+        }
+      }
+
+      // Safely purge ONLY guest local storage keys without clearing in-memory state
+      StateManager.clearGuestLocalStorage();
+    } catch (err) {
+      console.error('Error in syncGuestDataToCloud:', err);
     }
-
-    // 2. Categories
-    const catPromises = localCategories.map(cat => {
-      const syncId = cat.sync_id || generateUUID();
-      return setDoc(doc(userDocRef, 'categories', syncId), {
-        ...cat,
-        sync_id: syncId,
-        user_id: userId,
-        updated_at: new Date().toISOString()
-      }, { merge: true });
-    });
-    await Promise.all(catPromises);
-
-    // 3. Transactions
-    const txPromises = localTransactions.map(tx => {
-      const syncId = tx.sync_id || generateUUID();
-      return setDoc(doc(userDocRef, 'transactions', syncId), {
-        ...tx,
-        sync_id: syncId,
-        user_id: userId,
-        is_synced: true,
-        updated_at: new Date().toISOString()
-      }, { merge: true });
-    });
-    await Promise.all(txPromises);
-
-    // 4. Goals
-    const goalPromises = localGoals.map(g => {
-      const syncId = g.sync_id || generateUUID();
-      return setDoc(doc(userDocRef, 'goals', syncId), {
-        ...g,
-        sync_id: syncId,
-        user_id: userId,
-        updated_at: new Date().toISOString()
-      }, { merge: true });
-    });
-    await Promise.all(goalPromises);
-
-    // 5. Goal Contributions
-    const contribPromises = localContributions.map(c => {
-      const syncId = c.sync_id || generateUUID();
-      return setDoc(doc(userDocRef, 'goal_contributions', syncId), {
-        ...c,
-        sync_id: syncId,
-        user_id: userId,
-        updated_at: new Date().toISOString()
-      }, { merge: true });
-    });
-    await Promise.all(contribPromises);
-
-    // 6. Rules
-    const rulePromises = localRules.map(r => {
-      const syncId = r.sync_id || generateUUID();
-      return setDoc(doc(userDocRef, 'categorization_rules', syncId), {
-        ...r,
-        sync_id: syncId,
-        user_id: userId,
-        updated_at: new Date().toISOString()
-      }, { merge: true });
-    });
-    await Promise.all(rulePromises);
-
-    // 7. Assets
-    const assetPromises = localAssets.map(a => {
-      const syncId = a.sync_id || generateUUID();
-      return setDoc(doc(userDocRef, 'assets', syncId), {
-        ...a,
-        sync_id: syncId,
-        user_id: userId,
-        updated_at: new Date().toISOString()
-      }, { merge: true });
-    });
-    await Promise.all(assetPromises);
-
-    // Clear local guest storage after success
-    this.clearGuestDataAndDisable();
-  },
-
-  clearGuestDataAndDisable() {
-    StateManager.clearGuestData();
   }
 };

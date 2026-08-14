@@ -292,19 +292,22 @@ export const AddTransactionModal = {
         await CategorizationEngine.learnFromCorrection(note, this.selectedCategoryId);
       }
 
+      const cleanCatId = /^\d+$/.test(String(this.selectedCategoryId)) ? parseInt(this.selectedCategoryId, 10) : this.selectedCategoryId;
+      const cleanGoalId = goalId ? (/^\d+$/.test(String(goalId)) ? parseInt(goalId, 10) : goalId) : null;
+
       const txPayload = {
         amount,
         type: this.selectedType,
-        categoryId: parseInt(this.selectedCategoryId, 10) || this.selectedCategoryId,
-        category_id: parseInt(this.selectedCategoryId, 10) || this.selectedCategoryId,
+        categoryId: cleanCatId,
+        category_id: cleanCatId,
         timestamp: new Date(date).toISOString(),
         note: note || '',
         paymentMode,
         payment_mode: paymentMode,
         isRecurring,
         is_recurring: isRecurring,
-        goalId: goalId ? (parseInt(goalId, 10) || goalId) : null,
-        goal_id: goalId ? (parseInt(goalId, 10) || goalId) : null,
+        goalId: cleanGoalId,
+        goal_id: cleanGoalId,
       };
 
       if (this.activeTx) {

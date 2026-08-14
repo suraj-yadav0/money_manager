@@ -10,6 +10,7 @@ import { SettingsPage } from './pages/settings.js';
 import { InsightsPage } from './pages/insights.js';
 import { CalendarPage } from './pages/calendar.js';
 import { AllTransactionsPage } from './pages/all-transactions.js';
+import { DbService } from './db.js';
 
 export const Router = {
   // Mount target container
@@ -42,31 +43,31 @@ export const Router = {
   render(state) {
     if (!this.targetElement) return;
 
-    // 1. Check Onboarding
-    const isOnboarded = state.userSettings && (state.userSettings.is_onboarded === true || state.userSettings.isOnboarded === true);
-    if (!isOnboarded) {
+    // 1. If user is logged in with Firebase:
+    if (state.user) {
+      this.renderAppShell(state);
+      return;
+    }
+
+    // 2. If user is explicitly in guest mode:
+    if (state.isGuestMode) {
+      const isOnboarded = state.userSettings && (state.userSettings.is_onboarded === true || state.userSettings.isOnboarded === true);
+      if (isOnboarded) {
+        this.renderAppShell(state);
+        return;
+      }
       this.targetElement.innerHTML = OnboardingPage.render(state);
       OnboardingPage.bindEvents();
       return;
     }
 
-    // 2. Check Authentication
-    const isLoggedIn = state.user !== null;
-    const isGuest = state.isGuestMode;
-    
-    if (!isLoggedIn && !isGuest) {
-      this.targetElement.innerHTML = AuthPage.render(state);
-      AuthPage.bindEvents();
-      return;
-    }
-
-    // 3. Render Main App Shell Structure
-    this.renderAppShell(state);
+    // 3. Unauthenticated and not guest mode: Show Auth Page (Login / Sign Up / Continue as Guest)
+    this.targetElement.innerHTML = AuthPage.render(state);
+    AuthPage.bindEvents();
   },
 
   renderAppShell(state) {
     const navIndex = state.navIndex;
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
     let pageTitle = 'Quantro';
     let contentHtml = '';
@@ -146,10 +147,23 @@ export const Router = {
         <main class="main-content">
           <header class="desktop-header">
             <div class="header-title">${pageTitle}</div>
-            <div class="header-actions">
-              <div style="font-size:14px; font-weight:600; color:var(--text-secondary); background:rgba(255,255,255,0.05); padding:8px 16px; border-radius:20px;">
-                ${state.isGuestMode ? 'Guest Mode' : state.user?.email || 'User'}
-              </div>
+            <div class="header-actions" style="display:flex; align-items:center; gap:12px;">
+              ${state.user ? `
+                <div id="header-sync-status" style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--text-secondary); background:rgba(255,255,255,0.05); padding:6px 14px; border-radius:20px; cursor:pointer; transition:var(--transition-fast);" title="Click to sync cloud data">
+                  <span class="material-icons ${state.syncStatus === 'syncing' ? 'animate-spin' : ''}" style="font-size:16px; color:${state.syncStatus === 'syncing' ? 'var(--primary)' : 'var(--success)'};">
+                    ${state.syncStatus === 'syncing' ? 'sync' : 'cloud_done'}
+                  </span>
+                  <span>${state.syncStatus === 'syncing' ? 'Syncing...' : 'Cloud Synced'}</span>
+                </div>
+                <div style="font-size:13px; font-weight:600; color:var(--text-primary); background:rgba(255,255,255,0.05); padding:6px 14px; border-radius:20px;">
+                  ${state.user.email || 'User'}
+                </div>
+              ` : `
+                <div style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--text-muted); background:rgba(255,255,255,0.05); padding:6px 12px; border-radius:20px;">
+                  <span class="material-icons" style="font-size:16px;">cloud_off</span>
+                  <span>Offline Guest</span>
+                </div>
+              `}
             </div>
           </header>
           
@@ -198,6 +212,18 @@ export const Router = {
   },
 
   bindShellEvents(state) {
+    // Header sync status click trigger
+    const syncStatusBtn = document.getElementById('header-sync-status');
+    if (syncStatusBtn && state.user) {
+      syncStatusBtn.addEventListener('click', async () => {
+        try {
+          await DbService.syncNow(state.user.uid);
+        } catch (e) {
+          console.error('Header sync error:', e);
+        }
+      });
+    }
+
     // Navigation items click
     const navItems = document.querySelectorAll('.nav-links .nav-item[data-index]');
     navItems.forEach(item => {

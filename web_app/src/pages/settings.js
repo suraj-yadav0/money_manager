@@ -8,6 +8,7 @@ import { Router } from '../router.js';
 
 export const SettingsPage = {
   isSaving: false,
+  isSyncing: false,
   hasChanges: false,
   incomeInputVal: '',
   selectedCurrency: 'INR',
@@ -23,6 +24,14 @@ export const SettingsPage = {
 
     const symbol = AppConstants.supportedCurrencies[this.selectedCurrency] || '₹';
 
+    let lastSyncLabel = 'Never';
+    if (state.lastSyncedAt) {
+      const diffSec = Math.round((Date.now() - new Date(state.lastSyncedAt).getTime()) / 1000);
+      if (diffSec < 30) lastSyncLabel = 'Just now';
+      else if (diffSec < 3600) lastSyncLabel = `${Math.floor(diffSec / 60)} min ago`;
+      else lastSyncLabel = Formatters.time(state.lastSyncedAt);
+    }
+
     return `
       <div class="modal-card animate-fade-in" style="background:#131124; max-height:90vh; display:flex; flex-direction:column; width:100%; max-width:600px; padding:32px 40px;">
         <div class="modal-header" style="border-bottom:1px solid var(--divider); padding-bottom:12px; margin-bottom:16px;">
@@ -36,17 +45,17 @@ export const SettingsPage = {
         <div style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:20px;" id="settings-list-container">
           <!-- Account & Cloud Sync card -->
           <h4 style="font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Account & Cloud Sync</h4>
-          <div class="glass-card" style="padding:16px;">
-            <div style="display:flex; align-items:center; gap:16px; margin-bottom:16px;">
+          <div class="glass-card" style="padding:18px;">
+            <div style="display:flex; align-items:center; gap:16px; margin-bottom:14px;">
               <div style="width:48px; height:48px; border-radius:50%; background: ${user ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.05)'}; display:flex; align-items:center; justify-content:center;">
-                <span class="material-icons" style="color: ${user ? 'var(--success)' : 'var(--text-muted)'};">
-                  ${user ? 'cloud_done' : 'cloud_off'}
+                <span class="material-icons ${this.isSyncing ? 'animate-spin' : ''}" style="color: ${user ? 'var(--success)' : 'var(--text-muted)'}; font-size:24px;">
+                  ${this.isSyncing ? 'sync' : user ? 'cloud_done' : 'cloud_off'}
                 </span>
               </div>
-              <div>
-                <div style="font-weight:700; font-size:15px;">${user ? (user.email || 'Cloud Account') : 'Offline Guest Mode'}</div>
+              <div style="flex:1;">
+                <div style="font-weight:700; font-size:15px; color:#FFF;">${user ? (user.email || 'Cloud Account') : 'Offline Guest Mode'}</div>
                 <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">
-                  ${user ? 'Automatic Cloud Backup is active' : 'Data is stored on this browser only'}
+                  ${user ? `Status: ${this.isSyncing ? 'Syncing...' : 'Connected to Firebase Cloud'} • Last Synced: ${lastSyncLabel}` : 'Data is stored on this browser only'}
                 </div>
               </div>
             </div>
@@ -55,14 +64,15 @@ export const SettingsPage = {
             
             <div style="display:flex; justify-content:flex-end; gap:12px;">
               ${user ? `
-                <button class="btn btn-outline" id="settings-sync-btn" style="width:auto; padding:6px 12px; font-size:12px;">
-                  <span class="material-icons" style="font-size:16px;">sync</span> Sync Now
+                <button class="btn btn-outline" id="settings-sync-btn" ${this.isSyncing ? 'disabled' : ''} style="width:auto; padding:6px 14px; font-size:12px; display:flex; align-items:center; gap:6px;">
+                  <span class="material-icons ${this.isSyncing ? 'animate-spin' : ''}" style="font-size:16px;">sync</span> 
+                  ${this.isSyncing ? 'Syncing...' : 'Sync Now'}
                 </button>
-                <button class="btn btn-danger" id="settings-signout-btn" style="width:auto; padding:6px 12px; font-size:12px; border:none; background:transparent;">
+                <button class="btn btn-danger" id="settings-signout-btn" style="width:auto; padding:6px 14px; font-size:12px; border:none; background:rgba(239,68,68,0.1); color:var(--error); display:flex; align-items:center; gap:6px;">
                   <span class="material-icons" style="font-size:16px;">logout</span> Sign Out
                 </button>
               ` : `
-                <button class="btn btn-primary" id="settings-signin-btn" style="width:auto; padding:8px 16px; font-size:12px;">
+                <button class="btn btn-primary" id="settings-signin-btn" style="width:auto; padding:8px 16px; font-size:12px; display:flex; align-items:center; gap:6px;">
                   <span class="material-icons" style="font-size:16px;">login</span> Connect Cloud Account
                 </button>
               `}
@@ -82,7 +92,7 @@ export const SettingsPage = {
             
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <div style="font-size:11px; color:var(--text-muted); line-height:1.4; max-width:70%;">
-                This will automatically update this month's Salary income transaction.
+                Updating this adjusts your monthly budget baseline and income projections.
               </div>
               ${this.hasChanges ? `
                 <button class="btn btn-primary animate-fade-in" id="settings-save-income-btn" style="width:auto; padding:8px 16px; font-size:12px;">
@@ -112,15 +122,15 @@ export const SettingsPage = {
               <span class="material-icons settings-tile-icon">download</span>
               <div class="settings-tile-content">
                 <div class="settings-tile-title">Export Transactions</div>
-                <div class="settings-tile-subtitle">Download local data file</div>
+                <div class="settings-tile-subtitle">Download local JSON data backup</div>
               </div>
               <span class="material-icons settings-tile-action">chevron_right</span>
             </div>
             <div class="settings-tile" id="settings-clear-tile">
               <span class="material-icons settings-tile-icon" style="color:var(--error);">delete_forever</span>
               <div class="settings-tile-content">
-                <div class="settings-tile-title" style="color:var(--error);">Clear All Data</div>
-                <div class="settings-tile-subtitle">Permanently wipe transactions and settings</div>
+                <div class="settings-tile-title" style="color:var(--error);">Reset Local Data</div>
+                <div class="settings-tile-subtitle">Wipe offline cached entries</div>
               </div>
               <span class="material-icons settings-tile-action">chevron_right</span>
             </div>
@@ -134,8 +144,8 @@ export const SettingsPage = {
             </div>
             <div>
               <div style="font-weight:700; font-size:16px;">Quantro Finance</div>
-              <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">Version 1.0.0 (Vite Replica)</div>
-              <div style="font-size:10px; color:var(--text-muted); margin-top:4px;">Built with Vanilla JS, HTML5, & CSS3</div>
+              <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">Version 1.0.0 (Cloud Synced)</div>
+              <div style="font-size:10px; color:var(--text-muted); margin-top:4px;">Built with Firebase & Vanilla JS</div>
             </div>
           </div>
         </div>
@@ -145,7 +155,7 @@ export const SettingsPage = {
 
   bindEvents(state) {
     // Close button
-    document.getElementById('settings-close-btn').addEventListener('click', () => {
+    document.getElementById('settings-close-btn')?.addEventListener('click', () => {
       Router.closeOverlay();
       this.incomeInputVal = ''; // reset buffer
       this.hasChanges = false;
@@ -153,12 +163,14 @@ export const SettingsPage = {
 
     // Income field input change
     const incomeField = document.getElementById('settings-income-field');
-    incomeField.addEventListener('input', (e) => {
-      this.incomeInputVal = parseFloat(e.target.value) || 0;
-      const original = state.userSettings ? state.userSettings.monthlyIncome : 0;
-      this.hasChanges = this.incomeInputVal !== original;
-      StateManager.setState({}); // Re-render settings screen to show/hide save button
-    });
+    if (incomeField) {
+      incomeField.addEventListener('input', (e) => {
+        this.incomeInputVal = parseFloat(e.target.value) || 0;
+        const original = state.userSettings ? (state.userSettings.monthlyIncome || state.userSettings.monthly_income || 0) : 0;
+        this.hasChanges = this.incomeInputVal !== original;
+        StateManager.setState({}); // Re-render settings screen to show/hide save button
+      });
+    }
 
     // Save income changes button
     const saveIncomeBtn = document.getElementById('settings-save-income-btn');
@@ -166,44 +178,35 @@ export const SettingsPage = {
       saveIncomeBtn.addEventListener('click', async () => {
         const val = parseFloat(this.incomeInputVal) || 0;
         await DbService.saveUserSettings({
-          monthlyIncome: val
+          monthlyIncome: val,
+          isOnboarded: true
         });
 
-        // Mirroring settings_screen.dart: update Salary income transaction for this month
+        // Update or add Salary income transaction for this month
         const salaryCat = state.categories.find(c => c.name === 'Salary');
         if (salaryCat) {
           const now = new Date();
           const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
           const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
-          // Find salary transaction for this month
           const existingSalary = state.transactions.find(t => {
             const ts = new Date(t.timestamp);
             return t.type === 'income' &&
-                   (t.categoryId === salaryCat.id || t.categoryId === salaryCat.sync_id) &&
+                   (t.categoryId === salaryCat.id || t.categoryId === salaryCat.sync_id || t.category_id === salaryCat.id || t.category_id === salaryCat.sync_id) &&
                    ts >= startOfMonth && ts <= endOfMonth;
           });
 
           if (existingSalary) {
-            // Update existing transaction locally or Firestore
-            if (state.isGuestMode) {
-              existingSalary.amount = val;
-              existingSalary.updated_at = new Date().toISOString();
-              StateManager.saveGuestState();
-              StateManager.notify();
-            } else {
-              await DbService.addTransaction({
-                ...existingSalary,
-                amount: val,
-                updated_at: new Date().toISOString()
-              });
-            }
+            await DbService.addTransaction({
+              ...existingSalary,
+              amount: val,
+              updated_at: new Date().toISOString()
+            });
           } else {
-            // Add new salary transaction for this month
             await DbService.addTransaction({
               amount: val,
               type: 'income',
-              categoryId: salaryCat.id,
+              categoryId: salaryCat.id || salaryCat.sync_id,
               timestamp: startOfMonth.toISOString(),
               note: 'Monthly Salary',
               isRecurring: true
@@ -238,23 +241,34 @@ export const SettingsPage = {
       });
     }
 
-    // Manual sync button click
+    // Manual sync button click (Real Firestore trigger)
     const syncBtn = document.getElementById('settings-sync-btn');
-    if (syncBtn) {
-      syncBtn.addEventListener('click', () => {
-        alert('Cloud sync completed successfully!');
+    if (syncBtn && state.user) {
+      syncBtn.addEventListener('click', async () => {
+        this.isSyncing = true;
+        StateManager.setState({}); // Re-render to show spinning animation
+
+        try {
+          const res = await DbService.syncNow(state.user.uid);
+          this.isSyncing = false;
+          StateManager.notify();
+          alert(`Cloud sync complete!\n\nSynced:\n• ${res.count.transactions} Transactions\n• ${res.count.categories} Categories\n• ${res.count.goals} Goals\n• ${res.count.assets} Assets`);
+        } catch (err) {
+          this.isSyncing = false;
+          StateManager.notify();
+          alert('Sync failed: ' + (err.message || 'Network error'));
+        }
       });
     }
 
     // Currency selector tile click
-    document.getElementById('settings-currency-tile').addEventListener('click', () => {
+    document.getElementById('settings-currency-tile')?.addEventListener('click', () => {
       this.showCurrencyPickerModal(state);
     });
 
     // Export data click
-    document.getElementById('settings-export-tile').addEventListener('click', () => {
-      // Create JSON data download
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.transactions));
+    document.getElementById('settings-export-tile')?.addEventListener('click', () => {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.transactions, null, 2));
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute("href", dataStr);
       downloadAnchor.setAttribute("download", `quantro_transactions_${new Date().toISOString().slice(0, 10)}.json`);
@@ -263,14 +277,14 @@ export const SettingsPage = {
       downloadAnchor.remove();
     });
 
-    // Clear data click
-    document.getElementById('settings-clear-tile').addEventListener('click', () => {
-      if (confirm('DANGER! This will permanently delete ALL transactions, goals, and settings. Are you absolutely sure?')) {
-        if (state.isGuestMode) {
-          StateManager.clearGuestData();
-          window.location.reload(); // Hard reload to onboarding
+    // Clear local data click
+    document.getElementById('settings-clear-tile')?.addEventListener('click', () => {
+      if (confirm('Are you sure you want to reset offline cached data? (Your cloud data in Firebase will not be deleted)')) {
+        StateManager.clearGuestLocalStorage();
+        if (state.user) {
+          DbService.syncNow(state.user.uid);
         } else {
-          alert('To clear cloud data, delete the account or contact support.');
+          window.location.reload();
         }
       }
     });
@@ -307,10 +321,12 @@ export const SettingsPage = {
     document.body.appendChild(overlay);
 
     const closeModal = () => {
-      document.body.removeChild(overlay);
+      if (document.body.contains(overlay)) {
+        document.body.removeChild(overlay);
+      }
     };
 
-    document.getElementById('currency-modal-close').addEventListener('click', closeModal);
+    document.getElementById('currency-modal-close')?.addEventListener('click', closeModal);
 
     const rows = overlay.querySelectorAll('.currency-select-row');
     rows.forEach(row => {

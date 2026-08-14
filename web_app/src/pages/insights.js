@@ -1,6 +1,7 @@
 /* Insights Screen Module (AI-lite insights card list generated from actual transactions) */
 import { StateManager } from '../state.js';
 import { Formatters } from '../utils/formatters.js';
+import { findCategory } from '../utils/icons.js';
 import { Router } from '../router.js';
 
 export const InsightsPage = {
@@ -111,7 +112,7 @@ export const InsightsPage = {
     if (expenses.length > 0 && totalExpenses > 0) {
       const categoryTotals = {};
       for (const tx of expenses) {
-        const cat = state.categories.find(c => c.id === tx.categoryId || c.sync_id === tx.categoryId);
+        const cat = findCategory(state.categories, tx.categoryId || tx.category_id);
         const catName = cat ? cat.name : 'Other';
         categoryTotals[catName] = (categoryTotals[catName] || 0) + tx.amount;
       }

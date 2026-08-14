@@ -2,6 +2,7 @@
 import { StateManager } from '../state.js';
 import { DbService } from '../db.js';
 import { Formatters } from '../utils/formatters.js';
+import { findCategory } from '../utils/icons.js';
 
 export const GoalsPage = {
   activeGoalFilter: 'active', // 'active', 'completed', 'archived'
@@ -308,17 +309,21 @@ export const GoalsPage = {
       
       // Also register this savings as an EXPENSE linked to a Goal (matches Flutter's AddTransactionScreen.dart target action)
       const now = new Date().toISOString();
-      const savingsCategory = StateManager.state.categories.find(c => c.name === 'Savings');
+      const savingsCategory = findCategory(StateManager.state.categories, 'Savings');
+      const catId = savingsCategory ? (savingsCategory.id || savingsCategory.sync_id) : 11;
+      const cleanGoalId = goal.sync_id || goal.id;
       
       await DbService.addTransaction({
         amount: amount,
         type: 'expense',
-        categoryId: savingsCategory ? savingsCategory.id : 1,
-        goalId: goal.id,
-        goal_id: goal.id,
+        categoryId: catId,
+        category_id: catId,
+        goalId: cleanGoalId,
+        goal_id: cleanGoalId,
         timestamp: now,
         note: `Goal Contribution: ${goal.name}${note ? ' - ' + note : ''}`,
-        paymentMode: 'Bank Transfer'
+        paymentMode: 'Bank Transfer',
+        payment_mode: 'Bank Transfer'
       });
 
       closeModal();

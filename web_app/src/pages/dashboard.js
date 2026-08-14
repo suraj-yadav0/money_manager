@@ -3,7 +3,7 @@ import { Chart, registerables } from 'chart.js';
 import { StateManager } from '../state.js';
 import { DateRangeHelper } from '../utils/date-range.js';
 import { Formatters } from '../utils/formatters.js';
-import { IconHelper } from '../utils/icons.js';
+import { IconHelper, findCategory } from '../utils/icons.js';
 import { Router } from '../router.js';
 
 // Register all Chart.js modules
@@ -135,7 +135,7 @@ export const DashboardPage = {
   },
 
   renderTransactionRow(tx, categories) {
-    const cat = categories.find(c => c.id === tx.categoryId || c.sync_id === tx.categoryId);
+    const cat = findCategory(categories, tx.categoryId || tx.category_id);
     const icon = IconHelper.getMaterialIcon(cat ? cat.icon : 'category');
     const isIncome = tx.type === 'income';
     const formattedAmount = (isIncome ? '+' : '-') + Formatters.currency(tx.amount);
@@ -182,7 +182,7 @@ export const DashboardPage = {
         totalExpenses += tx.amount;
         
         // Populate category totals for charts
-        const cat = state.categories.find(c => c.id === tx.categoryId || c.sync_id === tx.categoryId);
+        const cat = findCategory(state.categories, tx.categoryId || tx.category_id);
         const name = cat ? cat.name : 'Other';
         categoryMap[name] = (categoryMap[name] || 0) + tx.amount;
       }

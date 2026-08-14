@@ -1,6 +1,6 @@
-/* Keyword-based auto categorization engine matching categorization_engine.dart */
 import { StateManager } from '../state.js';
 import { DbService } from '../db.js';
+import { findCategory } from './icons.js';
 
 export const CategorizationEngine = {
   // Suggest category based on note text keyword matching
@@ -23,8 +23,8 @@ export const CategorizationEngine = {
     // Find category ID with highest weight
     const bestCatId = matchEntries.reduce((best, current) => current[1] > best[1] ? current : best)[0];
     
-    // Find category in state list (supporting either numeric ID or Firestore UUID)
-    return categories.find(c => c.id == bestCatId || c.sync_id == bestCatId) || null;
+    // Find category in state list (supporting either numeric ID, Firestore UUID, or standard name)
+    return findCategory(categories, bestCatId);
   },
 
   // Learn from user's manual category correction

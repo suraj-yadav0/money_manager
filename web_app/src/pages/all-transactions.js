@@ -1,7 +1,7 @@
 /* All Transactions See-All Overlay Screen Module (list, filters, and search note text inputs) */
 import { StateManager } from '../state.js';
 import { Formatters } from '../utils/formatters.js';
-import { IconHelper } from '../utils/icons.js';
+import { IconHelper, findCategory } from '../utils/icons.js';
 import { Router } from '../router.js';
 
 export const AllTransactionsPage = {
@@ -52,7 +52,7 @@ export const AllTransactionsPage = {
   },
 
   renderTransactionRow(tx, categories) {
-    const cat = categories.find(c => c.id === tx.categoryId || c.sync_id === tx.categoryId);
+    const cat = findCategory(categories, tx.categoryId || tx.category_id);
     const icon = IconHelper.getMaterialIcon(cat ? cat.icon : 'category');
     const isIncome = tx.type === 'income';
     const formattedAmount = (isIncome ? '+' : '-') + Formatters.currency(tx.amount);
@@ -91,7 +91,7 @@ export const AllTransactionsPage = {
         if (this.searchQuery && this.searchQuery.trim() !== '') {
           const query = this.searchQuery.toLowerCase();
           const noteMatch = t.note && t.note.toLowerCase().includes(query);
-          const cat = state.categories.find(c => c.id === t.categoryId || c.sync_id === t.categoryId);
+          const cat = findCategory(state.categories, t.categoryId || t.category_id);
           const catMatch = cat && cat.name.toLowerCase().includes(query);
           return noteMatch || catMatch;
         }

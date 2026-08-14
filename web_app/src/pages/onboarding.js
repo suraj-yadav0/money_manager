@@ -19,18 +19,24 @@ export const OnboardingPage = {
 
   renderWelcome() {
     return `
-      <div class="onboarding-container animate-fade-in">
-        <div></div>
-        <div style="text-align: center;">
-          <div class="onboarding-logo">
-            <span class="material-icons" style="font-size: 60px;">account_balance_wallet</span>
-          </div>
-          <h1 class="onboarding-title">Welcome to<br>Money Manager</h1>
-          <p class="onboarding-desc">Take control of your finances.<br>Know where your money goes.</p>
+      <div class="onboarding-container animate-fade-in" style="min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; padding: 40px 20px;">
+        <div style="display: flex; justify-content: flex-end;">
+          <button class="btn btn-outline" id="welcome-signin-link" style="width: auto; padding: 6px 14px; font-size: 13px; border-color: rgba(255,255,255,0.15);">
+            <span class="material-icons" style="font-size: 16px; margin-right: 4px;">login</span> Sign In
+          </button>
         </div>
-        <div class="flex-col">
-          <button class="btn btn-primary" id="welcome-start-btn">Get Started</button>
-          <button class="btn btn-outline" id="welcome-guest-btn">Continue as Guest</button>
+        
+        <div style="text-align: center;">
+          <div class="onboarding-logo" style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary) 0%, #FF8C42 100%); border-radius: 24px; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; box-shadow: 0 12px 30px rgba(255, 95, 31, 0.35);">
+            <span class="material-icons" style="font-size: 48px; color: #FFF;">account_balance_wallet</span>
+          </div>
+          <h1 class="onboarding-title" style="font-size: 32px; font-weight: 800; margin-bottom: 12px;">Welcome to<br>Money Manager</h1>
+          <p class="onboarding-desc" style="color: var(--text-secondary); font-size: 15px; line-height: 1.5;">Take full control of your finances.<br>Know exactly where your money goes.</p>
+        </div>
+
+        <div class="flex-col" style="gap: 12px;">
+          <button class="btn btn-primary" id="welcome-start-btn" style="font-weight: 700; font-size: 15px; padding: 14px;">Get Started</button>
+          <button class="btn btn-outline" id="welcome-guest-btn" style="font-weight: 600; font-size: 14px; padding: 12px;">Continue in Offline Mode</button>
         </div>
       </div>
     `;
@@ -38,27 +44,27 @@ export const OnboardingPage = {
 
   renderIncome() {
     return `
-      <div class="onboarding-container animate-fade-in">
+      <div class="onboarding-container animate-fade-in" style="min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; padding: 40px 20px;">
         <div style="display: flex; align-items: center; justify-content: space-between;">
           <button class="btn-icon" id="income-back-btn">
             <span class="material-icons">arrow_back</span>
           </button>
-          <div style="font-weight: 600; font-size: 14px;">Step 2 of 3</div>
+          <div style="font-weight: 600; font-size: 14px; color: var(--text-muted);">Step 2 of 3</div>
           <div style="width: 44px;"></div>
         </div>
         
-        <div style="margin: 40px 0;">
-          <h2 style="font-size: 28px; margin-bottom: 8px;">What's your monthly income?</h2>
-          <p style="color: var(--text-secondary); margin-bottom: 32px;">This helps us predict your month-end balance.</p>
+        <div style="margin: 40px 0; text-align: center;">
+          <h2 style="font-size: 26px; font-weight: 700; margin-bottom: 8px;">What's your monthly income?</h2>
+          <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 36px;">This helps predict your month-end balance and budget.</p>
           
           <div style="position: relative; display: flex; align-items: center; justify-content: center;">
             <span style="font-size: 32px; font-weight: 700; color: var(--primary); margin-right: 8px;">₹</span>
-            <input type="number" class="onboarding-income-input" id="income-field" placeholder="50000" value="${this.incomeInputVal}">
+            <input type="number" class="onboarding-income-input" id="income-field" placeholder="50000" value="${this.incomeInputVal}" style="font-size: 36px; font-weight: 700; width: 220px; text-align: center; border-bottom: 2px solid var(--primary); background: transparent; color: #FFF;">
           </div>
           <div id="income-error-msg" style="color: var(--error); text-align: center; font-size: 13px; margin-top: 16px; display: none;">Please enter a valid amount.</div>
         </div>
         
-        <button class="btn btn-primary" id="income-next-btn">Continue</button>
+        <button class="btn btn-primary" id="income-next-btn" style="font-weight: 700; font-size: 15px; padding: 14px;">Continue</button>
       </div>
     `;
   },
@@ -68,15 +74,15 @@ export const OnboardingPage = {
     const dailyBudget = income / Formatters.daysInCurrentMonth();
 
     return `
-      <div class="onboarding-container animate-fade-in">
+      <div class="onboarding-container animate-fade-in" style="min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; padding: 40px 20px;">
         <div></div>
         <div style="text-align: center;">
-          <div style="width: 100px; height: 100px; background: rgba(255, 95, 31, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
-            <span class="material-icons" style="font-size: 50px; color: var(--primary);">done</span>
+          <div style="width: 90px; height: 90px; background: rgba(255, 95, 31, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; border: 1px solid rgba(255, 95, 31, 0.3);">
+            <span class="material-icons" style="font-size: 46px; color: var(--primary);">done</span>
           </div>
-          <h2 style="font-size: 28px; margin-bottom: 16px;">You're all set!</h2>
+          <h2 style="font-size: 28px; font-weight: 700; margin-bottom: 16px;">You're all set!</h2>
           
-          <div class="glass-card" style="text-align: left; margin-bottom: 24px;">
+          <div class="glass-card" style="text-align: left; margin-bottom: 24px; padding: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
               <span style="color: var(--text-secondary); font-size: 14px;">Monthly Income</span>
               <span style="font-weight: 700; font-size: 18px; color: var(--primary);">${Formatters.currency(income)}</span>
@@ -89,15 +95,25 @@ export const OnboardingPage = {
           </div>
         </div>
         
-        <div class="flex-col">
-          <button class="btn btn-primary" id="ready-start-btn">Start Tracking</button>
-          <button class="btn btn-outline" id="ready-edit-btn">Edit Income</button>
+        <div class="flex-col" style="gap: 12px;">
+          <button class="btn btn-primary" id="ready-start-btn" style="font-weight: 700; font-size: 15px; padding: 14px;">Start Tracking</button>
+          <button class="btn btn-outline" id="ready-edit-btn" style="font-weight: 600; font-size: 14px; padding: 12px;">Edit Income</button>
         </div>
       </div>
     `;
   },
 
   bindEvents() {
+    // Step 0: Sign in link
+    const signinLink = document.getElementById('welcome-signin-link');
+    if (signinLink) {
+      signinLink.addEventListener('click', () => {
+        StateManager.disableGuestMode();
+        this.step = 0;
+        this.incomeInputVal = '';
+      });
+    }
+
     // Step 0: Welcome events
     const startBtn = document.getElementById('welcome-start-btn');
     if (startBtn) {
@@ -127,9 +143,14 @@ export const OnboardingPage = {
     const incomeField = document.getElementById('income-field');
     const nextBtn = document.getElementById('income-next-btn');
     if (nextBtn && incomeField) {
-      // Keep track of input value
       incomeField.addEventListener('input', (e) => {
         this.incomeInputVal = e.target.value;
+      });
+
+      incomeField.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          nextBtn.click();
+        }
       });
 
       nextBtn.addEventListener('click', () => {
@@ -149,20 +170,25 @@ export const OnboardingPage = {
     if (readyStartBtn) {
       readyStartBtn.addEventListener('click', async () => {
         const income = parseFloat(this.incomeInputVal) || 0;
-        
-        // 1. Enable guest mode (offline-first, matches OnboardingScreen.dart logic if not logged in)
-        StateManager.enableGuestMode();
-        
-        // 2. Initialize default structures (default categories, rules, user settings)
-        DbService.seedGuestState();
-        
-        // 3. Save actual onboarded settings
-        await DbService.saveUserSettings({
-          monthlyIncome: income,
-          isOnboarded: true
-        });
+        const user = StateManager.state.user;
 
-        // 4. Create Salary Income transaction for 1st of the current month
+        if (user) {
+          // User is already logged in with Firebase
+          await DbService.saveUserSettings({
+            monthlyIncome: income,
+            isOnboarded: true
+          });
+        } else {
+          // Guest mode
+          StateManager.enableGuestMode();
+          DbService.seedGuestState();
+          await DbService.saveUserSettings({
+            monthlyIncome: income,
+            isOnboarded: true
+          });
+        }
+
+        // Create Salary Income transaction for 1st of the current month
         const salaryCat = StateManager.state.categories.find(c => c.name === 'Salary');
         if (salaryCat) {
           const now = new Date();
@@ -170,18 +196,15 @@ export const OnboardingPage = {
           await DbService.addTransaction({
             amount: income,
             type: 'income',
-            categoryId: salaryCat.id,
+            categoryId: salaryCat.id || salaryCat.sync_id,
             timestamp: firstOfMonth,
             note: 'Monthly Salary',
             isRecurring: true
           });
         }
         
-        // Return to app shell (trigger refresh)
         this.step = 0;
         this.incomeInputVal = '';
-        
-        // Since state change triggers router, it will automatically switch to AuthScreen or AppShell
         StateManager.notify();
       });
     }
