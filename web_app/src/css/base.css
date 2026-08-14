@@ -90,11 +90,18 @@ a:hover {
   color: var(--primary-light);
 }
 
-button, input, select, textarea {
+button, input, select, textarea, a, .nav-link-btn, .filter-chip, .sync-pill, .tx-row, .cal-day-cell, .category-select-pill {
   font-family: inherit;
   font-size: inherit;
   color: inherit;
   outline: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, a, .nav-link-btn, .filter-chip, .sync-pill, .tx-row, .cal-day-cell, .category-select-pill {
+  cursor: pointer;
+  user-select: none;
 }
 
 /* Custom Sleek Scrollbar */

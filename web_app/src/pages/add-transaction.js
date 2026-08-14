@@ -171,6 +171,9 @@ export const AddTransactionModal = {
     // Close buttons
     document.getElementById('tx-modal-close-btn')?.addEventListener('click', () => this.close());
     document.getElementById('tx-cancel-btn')?.addEventListener('click', () => this.close());
+    overlay?.addEventListener('click', (e) => {
+      if (e.target === overlay) this.close();
+    });
 
     // Type Toggle
     document.getElementById('tx-type-expense')?.addEventListener('click', () => {

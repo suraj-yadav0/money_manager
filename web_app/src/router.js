@@ -262,8 +262,8 @@ export const Router = {
       StateManager.setState({ navIndex: 0 });
     });
 
-    // Nav Link tabs
-    const navButtons = document.querySelectorAll('.header-nav .nav-link-btn');
+    // Nav Link tabs (Desktop & Mobile/Tablet)
+    const navButtons = document.querySelectorAll('.nav-link-btn[data-nav]');
     navButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         const index = parseInt(btn.getAttribute('data-nav'), 10);
