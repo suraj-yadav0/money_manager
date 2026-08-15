@@ -250,13 +250,13 @@ export const DashboardPage = {
             </div>
 
             <!-- Financial Intelligence Advice Card -->
-            <div class="fintech-card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(56, 189, 248, 0.04) 100%); border-color: rgba(16, 185, 129, 0.2);">
-              <div style="display: flex; gap: 12px; align-items: flex-start;">
-                <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(16, 185, 129, 0.15); display: flex; align-items: center; justify-content: center; color: var(--primary); flex-shrink: 0;">
-                  <span class="material-icons" style="font-size: 20px;">lightbulb</span>
+            <div class="fintech-card">
+              <div style="display: flex; gap: 14px; align-items: flex-start;">
+                <div class="tx-icon-box" style="width: 36px; height: 36px; border-radius: 8px;">
+                  <span class="material-icons" style="font-size: 18px;">lightbulb</span>
                 </div>
                 <div>
-                  <div style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Smart Wealth Insight</div>
+                  <div style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 3px;">Smart Wealth Insight</div>
                   <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
                     ${stats.savingsRate >= 20 
                       ? `Excellent savings discipline! You are currently retaining ${stats.savingsRate}% of your capital this period.`

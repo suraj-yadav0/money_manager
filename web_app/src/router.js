@@ -215,15 +215,19 @@ export const Router = {
         <footer class="site-footer">
           <div class="site-container">
             <div class="footer-inner">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <div style="width: 20px; height: 20px; border-radius: 6px; background: var(--primary); display: flex; align-items: center; justify-content: center;">
-                  <span class="material-icons" style="font-size: 12px; color: #FFF;">account_balance_wallet</span>
+              <div class="footer-brand">
+                <div class="footer-logo">
+                  <span class="material-icons">account_balance_wallet</span>
                 </div>
-                <span style="font-weight: 700; color: var(--text-primary);">Quantro Finance</span>
-                <span>• Privacy-first Cloud Synced Wealth Platform</span>
+                <div>
+                  <div class="footer-brand-title">Quantro Finance</div>
+                  <div class="footer-brand-sub">Cloud-synced personal finance & wealth matrix</div>
+                </div>
               </div>
-              <div>
-                <span>Encrypted with Cloud Firestore • Real-time Cross-Platform Sync</span>
+              <div class="footer-meta">
+                <span>End-to-End Encrypted</span>
+                <span class="footer-meta-dot">•</span>
+                <span>Real-time Cross-Platform Sync</span>
               </div>
             </div>
           </div>
