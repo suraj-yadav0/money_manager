@@ -3,7 +3,7 @@ import { Chart, registerables } from 'chart.js';
 import { StateManager } from '../state.js';
 import { DateRangeHelper } from '../utils/date-range.js';
 import { Formatters } from '../utils/formatters.js';
-import { IconHelper, findCategory } from '../utils/icons.js';
+import { IconHelper, findCategory, isInvestmentCategory } from '../utils/icons.js';
 import { Router } from '../router.js';
 import { reconcileGoalSavedAmounts, reconcileInvestmentAssets } from '../db.js';
 
@@ -255,15 +255,24 @@ export const DashboardPage = {
             <!-- Financial Intelligence Advice Card -->
             <div class="fintech-card">
               <div style="display: flex; gap: 14px; align-items: flex-start;">
-                <div class="tx-icon-box" style="width: 36px; height: 36px; border-radius: 8px;">
-                  <span class="material-icons" style="font-size: 18px;">lightbulb</span>
+                <div class="tx-icon-box" style="width: 36px; height: 36px; border-radius: 8px; background: rgba(0, 229, 153, 0.12); color: var(--success);">
+                  <span class="material-icons" style="font-size: 18px;">trending_up</span>
                 </div>
                 <div>
-                  <div style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 3px;">Smart Wealth Insight</div>
+                  <div style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 3px;">Smart Wealth Intelligence</div>
                   <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
-                    ${stats.savingsRate >= 20 
-                      ? `Excellent savings discipline! You are currently retaining ${stats.savingsRate}% of your capital this period.`
-                      : `Your burn rate is ₹${Math.round(stats.dailyBurnRate)}/day. Consider reducing non-essential expenses in your top spending category.`}
+                    ${(() => {
+                      const totalInvested = (state.transactions || [])
+                        .filter(t => t.type === 'expense' && isInvestmentCategory(state.categories, t.categoryId || t.category_id))
+                        .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+                      if (totalInvested > 0) {
+                        return `🚀 <b>Wealth Compounding:</b> You channeled ${Formatters.currency(totalInvested)} into investments. This directly expands your Net Worth and compounds future wealth!`;
+                      } else if (stats.savingsRate >= 20) {
+                        return `Excellent savings discipline! You are currently retaining ${stats.savingsRate}% of your capital this period.`;
+                      } else {
+                        return `Your daily consumption burn rate is ${Formatters.currency(Math.round(stats.dailyBurnRate))}/day. Setting category budget limits will help retain more capital for investments.`;
+                      }
+                    })()}
                   </div>
                 </div>
               </div>

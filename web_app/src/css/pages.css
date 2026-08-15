@@ -366,6 +366,112 @@
   color: var(--text-primary);
 }
 
+/* Health Score & Allocation Bar in Insights */
+.health-score-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 20px;
+}
+
+@media (max-width: 860px) {
+  .health-score-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.score-main-box {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.score-circle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.score-badge-huge {
+  font-size: 42px;
+  font-weight: 900;
+  font-family: var(--font-heading);
+  line-height: 1;
+  color: var(--primary);
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.score-breakdown-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.allocation-bar {
+  display: flex;
+  height: 14px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  margin: 12px 0 16px;
+  gap: 2px;
+}
+
+.alloc-seg {
+  height: 100%;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.alloc-seg.needs {
+  background: var(--primary);
+}
+
+.alloc-seg.wants {
+  background: #f59e0b;
+}
+
+.alloc-seg.wealth {
+  background: var(--success);
+}
+
+.alloc-legend-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 540px) {
+  .alloc-legend-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+.alloc-legend-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.alloc-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 6px;
+}
+
 /* ==========================================================================
    AUTHENTICATION & LANDING PAGE
    ========================================================================== */
