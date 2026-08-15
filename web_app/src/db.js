@@ -686,6 +686,11 @@ export const DbService = {
         newTx.id = tx.id;
       }
 
+      // Check existing transaction for goal progress sync
+      const oldTx = StateManager.state.transactions.find(t => 
+        (syncId && t.sync_id === syncId) || (tx.id !== undefined && t.id === tx.id)
+      );
+
       if (isGuest) {
         const existingIdx = StateManager.state.transactions.findIndex(t => 
           (syncId && t.sync_id === syncId) || (tx.id !== undefined && t.id === tx.id)
@@ -696,6 +701,7 @@ export const DbService = {
           newTx.id = StateManager.state.transactions.length + 1;
           StateManager.state.transactions.unshift(newTx);
         }
+        await this.syncGoalProgressForTransaction(oldTx, newTx);
         StateManager.saveGuestState();
         StateManager.notify();
       } else {
@@ -715,6 +721,8 @@ export const DbService = {
         } else {
           StateManager.state.transactions.unshift(newTx);
         }
+
+        await this.syncGoalProgressForTransaction(oldTx, newTx);
         StateManager.notify();
 
         const docRef = doc(db, 'users', userId, 'transactions', syncId);
@@ -725,10 +733,104 @@ export const DbService = {
     }
   },
 
+  async syncGoalProgressForTransaction(oldTx, newTx) {
+    try {
+      const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
+      const userId = StateManager.state.user?.uid;
+
+      const findGoal = (gId) => {
+        if (!gId) return null;
+        return StateManager.state.goals.find(g => 
+          (g.sync_id && String(g.sync_id) === String(gId)) || 
+          (g.id !== undefined && String(g.id) === String(gId))
+        );
+      };
+
+      const oldGoalId = oldTx ? (oldTx.goal_id !== undefined ? oldTx.goal_id : oldTx.goalId) : null;
+      const newGoalId = newTx ? (newTx.goal_id !== undefined ? newTx.goal_id : newTx.goalId) : null;
+      const oldAmount = oldTx ? Number(oldTx.amount || 0) : 0;
+      const newAmount = newTx ? Number(newTx.amount || 0) : 0;
+
+      const goalsToUpdate = new Set();
+
+      // Case 1: Deduct from old goal if goal changed or transaction removed
+      if (oldGoalId && (String(oldGoalId) !== String(newGoalId) || !newTx)) {
+        const oldGoal = findGoal(oldGoalId);
+        if (oldGoal) {
+          const newSaved = Math.max(0, Number(oldGoal.saved_amount || oldGoal.savedAmount || 0) - oldAmount);
+          oldGoal.saved_amount = newSaved;
+          oldGoal.savedAmount = newSaved;
+          const target = Number(oldGoal.target_amount || oldGoal.targetAmount || 0);
+          oldGoal.is_completed = newSaved >= target && target > 0;
+          oldGoal.isCompleted = oldGoal.is_completed;
+          oldGoal.updated_at = new Date().toISOString();
+          goalsToUpdate.add(oldGoal);
+        }
+      }
+
+      // Case 2: Amount changed on same goal
+      if (oldGoalId && newGoalId && String(oldGoalId) === String(newGoalId) && oldAmount !== newAmount) {
+        const goal = findGoal(newGoalId);
+        if (goal) {
+          const delta = newAmount - oldAmount;
+          const newSaved = Math.max(0, Number(goal.saved_amount || goal.savedAmount || 0) + delta);
+          goal.saved_amount = newSaved;
+          goal.savedAmount = newSaved;
+          const target = Number(goal.target_amount || goal.targetAmount || 0);
+          goal.is_completed = newSaved >= target && target > 0;
+          goal.isCompleted = goal.is_completed;
+          goal.updated_at = new Date().toISOString();
+          goalsToUpdate.add(goal);
+        }
+      }
+
+      // Case 3: Added to a new goal
+      if (newGoalId && (String(oldGoalId) !== String(newGoalId) || !oldTx)) {
+        const newGoal = findGoal(newGoalId);
+        if (newGoal) {
+          const newSaved = Number(newGoal.saved_amount || newGoal.savedAmount || 0) + newAmount;
+          newGoal.saved_amount = newSaved;
+          newGoal.savedAmount = newSaved;
+          const target = Number(newGoal.target_amount || newGoal.targetAmount || 0);
+          newGoal.is_completed = newSaved >= target && target > 0;
+          newGoal.isCompleted = newGoal.is_completed;
+          newGoal.updated_at = new Date().toISOString();
+          goalsToUpdate.add(newGoal);
+        }
+      }
+
+      if (goalsToUpdate.size > 0) {
+        if (isGuest) {
+          StateManager.saveGuestState();
+        } else if (userId) {
+          for (const g of goalsToUpdate) {
+            if (g.sync_id) {
+              const goalDocRef = doc(db, 'users', userId, 'goals', g.sync_id);
+              await setDoc(goalDocRef, cleanFirestorePayload({
+                saved_amount: g.saved_amount,
+                savedAmount: g.saved_amount,
+                is_completed: g.is_completed,
+                isCompleted: g.is_completed,
+                updated_at: g.updated_at
+              }), { merge: true });
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error syncing goal progress for transaction:', err);
+    }
+  },
+
   async deleteTransaction(syncId, localId) {
     const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
+    const oldTx = StateManager.state.transactions.find(t => 
+      (syncId && t.sync_id === syncId) || (localId && String(t.id) === String(localId))
+    );
+
     if (isGuest) {
       StateManager.state.transactions = StateManager.state.transactions.filter(t => t.id !== localId && t.sync_id !== syncId);
+      await this.syncGoalProgressForTransaction(oldTx, null);
       StateManager.saveGuestState();
       StateManager.notify();
     } else {
@@ -737,6 +839,7 @@ export const DbService = {
       
       // Optimistic local removal
       StateManager.state.transactions = StateManager.state.transactions.filter(t => t.sync_id !== syncId);
+      await this.syncGoalProgressForTransaction(oldTx, null);
       StateManager.notify();
 
       if (syncId) {
@@ -1177,3 +1280,46 @@ export const DbService = {
     }
   }
 };
+
+// Automatic Goal Progress Reconciliation Function
+export function reconcileGoalSavedAmounts(state = StateManager.state) {
+  if (!state || !Array.isArray(state.goals) || state.goals.length === 0) return;
+
+  state.goals.forEach(goal => {
+    const goalId = goal.id;
+    const goalSyncId = goal.sync_id;
+
+    // 1. Linked transactions total
+    const txSum = (state.transactions || [])
+      .filter(t => {
+        const gId = t.goal_id !== undefined ? t.goal_id : t.goalId;
+        return gId && (
+          (goalSyncId && String(gId) === String(goalSyncId)) ||
+          (goalId !== undefined && String(gId) === String(goalId))
+        );
+      })
+      .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+    // 2. Direct contributions total
+    const contribSum = (state.goalContributions || [])
+      .filter(c => {
+        const gId = c.goal_id !== undefined ? c.goal_id : c.goalId;
+        return gId && (
+          (goalSyncId && String(gId) === String(goalSyncId)) ||
+          (goalId !== undefined && String(gId) === String(goalId))
+        );
+      })
+      .reduce((sum, c) => sum + Number(c.amount || 0), 0);
+
+    const baseSaved = Number(goal.saved_amount !== undefined ? goal.saved_amount : (goal.savedAmount || 0));
+    const target = Number(goal.target_amount !== undefined ? goal.target_amount : (goal.targetAmount || 0));
+    const computedSaved = Math.max(baseSaved, txSum, contribSum, txSum + contribSum);
+
+    if (computedSaved !== baseSaved) {
+      goal.saved_amount = computedSaved;
+      goal.savedAmount = computedSaved;
+      goal.is_completed = computedSaved >= target && target > 0;
+      goal.isCompleted = goal.is_completed;
+    }
+  });
+}

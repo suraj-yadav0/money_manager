@@ -1,6 +1,6 @@
 /* Modern Savings Goals & Milestones Module */
 import { StateManager } from '../state.js';
-import { DbService } from '../db.js';
+import { DbService, reconcileGoalSavedAmounts } from '../db.js';
 import { Formatters } from '../utils/formatters.js';
 import { findCategory } from '../utils/icons.js';
 
@@ -8,6 +8,7 @@ export const GoalsPage = {
   activeGoalFilter: 'active', // 'active', 'completed', 'archived'
 
   render(state) {
+    reconcileGoalSavedAmounts(state);
     const goals = this.getFilteredGoals(state);
     
     // Stats
@@ -461,15 +462,48 @@ export const GoalsPage = {
     });
   },
 
-  showContributionHistoryModal(goal, allContributions) {
-    const goalContribs = allContributions
-      .filter(c => c.goal_id === goal.id || c.goal_id === goal.sync_id || c.goalId === goal.id || c.goalId === goal.sync_id)
-      .sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt));
+  showContributionHistoryModal(goal, allContributions = StateManager.state.goalContributions) {
+    const state = StateManager.state;
+    
+    // 1. Direct contributions
+    const directContribs = (allContributions || [])
+      .filter(c => {
+        const gId = c.goal_id !== undefined ? c.goal_id : c.goalId;
+        return (goal.sync_id && String(gId) === String(goal.sync_id)) || (goal.id !== undefined && String(gId) === String(goal.id));
+      })
+      .map(c => ({
+        id: c.sync_id || c.id,
+        amount: Number(c.amount || 0),
+        note: c.note || 'Direct Capital Deposit',
+        date: c.created_at || c.createdAt || new Date().toISOString(),
+        type: 'Direct Deposit'
+      }));
+
+    // 2. Linked transactions
+    const linkedTxs = (state.transactions || [])
+      .filter(t => {
+        const gId = t.goal_id !== undefined ? t.goal_id : t.goalId;
+        return gId && (
+          (goal.sync_id && String(gId) === String(goal.sync_id)) ||
+          (goal.id !== undefined && String(gId) === String(goal.id))
+        );
+      })
+      .map(t => ({
+        id: t.sync_id || t.id,
+        amount: Number(t.amount || 0),
+        note: t.note || 'Linked Transaction',
+        date: t.timestamp || t.created_at || new Date().toISOString(),
+        type: t.paymentMode || t.payment_mode || 'Transaction'
+      }));
+
+    // Unified list sorted descending by date
+    const combinedEntries = [...directContribs, ...linkedTxs]
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
 
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay active';
     overlay.innerHTML = `
-      <div class="modern-modal-dialog animate-scale-up" style="max-width: 460px;">
+      <div class="modern-modal-dialog animate-scale-up" style="max-width: 480px;">
         <div class="modal-header">
           <div class="modal-title">
             <span class="material-icons" style="color: var(--primary);">history</span>
@@ -481,15 +515,16 @@ export const GoalsPage = {
         </div>
 
         <div style="max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px;">
-          ${goalContribs.length === 0 ? `
-            <div style="text-align: center; padding: 32px 0; color: var(--text-muted); font-size: 13px;">No deposits recorded for this goal yet.</div>
-          ` : goalContribs.map(c => `
+          ${combinedEntries.length === 0 ? `
+            <div style="text-align: center; padding: 32px 0; color: var(--text-muted); font-size: 13px;">No deposits or linked transactions recorded for this goal yet.</div>
+          ` : combinedEntries.map(c => `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: var(--radius-md);">
               <div>
                 <div style="font-weight: 700; font-size: 15px; color: var(--success);">+${Formatters.currency(c.amount)}</div>
-                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">${c.note || 'Savings Deposit'}</div>
+                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">${c.note}</div>
+                <span class="tx-tag" style="margin-top: 4px; display: inline-block;">${c.type}</span>
               </div>
-              <div style="font-size: 11px; color: var(--text-muted);">${Formatters.dateTime(c.created_at || c.createdAt)}</div>
+              <div style="font-size: 11px; color: var(--text-muted); text-align: right;">${Formatters.dateTime(c.date)}</div>
             </div>
           `).join('')}
         </div>
