@@ -17,9 +17,9 @@ body {
   color: var(--text-primary);
   background-color: var(--bg-main);
   background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    radial-gradient(ellipse at 50% 0%, rgba(16, 185, 129, 0.08) 0%, transparent 60%);
+    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.04) 0%, transparent 60%);
   background-size: 36px 36px, 36px 36px, 100% 100%;
   background-position: center top;
   background-attachment: fixed;
@@ -33,9 +33,9 @@ body {
 
 [data-theme="light"] body {
   background-image: 
-    linear-gradient(to right, rgba(15, 23, 42, 0.045) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.045) 1px, transparent 1px),
-    radial-gradient(ellipse at 50% 0%, rgba(5, 150, 105, 0.06) 0%, transparent 60%);
+    linear-gradient(to right, rgba(15, 23, 42, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.035) 1px, transparent 1px),
+    radial-gradient(ellipse at 50% 0%, rgba(15, 23, 42, 0.03) 0%, transparent 60%);
 }
 
 /* Atmospheric subtle backdrop */

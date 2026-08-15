@@ -136,23 +136,27 @@
   font-weight: 600;
   padding: 3px 8px;
   border-radius: 6px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
 }
 
 .kpi-badge.positive {
-  background: var(--success-bg);
-  color: var(--success);
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: var(--text-primary);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--glass-border-hover);
 }
 
 .kpi-badge.negative {
-  background: var(--error-bg);
-  color: var(--error);
-  border: 1px solid rgba(244, 63, 94, 0.2);
+  color: var(--text-secondary);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--glass-border);
 }
 
 .kpi-badge.neutral {
-  background: var(--bg-surface-hover);
   color: var(--text-secondary);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--glass-border);
 }
 
 /* Modern Buttons */
@@ -162,22 +166,22 @@
   justify-content: center;
   gap: 8px;
   background: var(--primary);
-  color: #FFF;
-  font-weight: 600;
+  color: var(--text-inverse);
+  font-weight: 700;
   font-size: 13.5px;
   padding: 9px 18px;
   border-radius: var(--radius-sm);
   border: none;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
   transition: transform var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
   white-space: nowrap;
   letter-spacing: -0.01em;
 }
 
 .btn-primary:hover {
-  background: var(--primary-dark);
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+  background: var(--primary-light);
+  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.15);
   transform: translateY(-1px);
 }
 

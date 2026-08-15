@@ -112,14 +112,11 @@ export const AllTransactionsPage = {
     const icon = IconHelper.getMaterialIcon(cat ? cat.icon : 'category');
     const isIncome = tx.type === 'income';
     const formattedAmount = (isIncome ? '+' : '-') + Formatters.currency(tx.amount);
-    
-    let iconBg = isIncome ? 'rgba(16, 185, 129, 0.12)' : 'rgba(244, 63, 94, 0.12)';
-    let iconColor = isIncome ? 'var(--success)' : 'var(--error)';
 
     return `
       <div class="tx-row ledger-tx-row" data-sync-id="${tx.sync_id || ''}" data-id="${tx.id || ''}">
         <div class="tx-left">
-          <div class="tx-icon-box" style="background: ${iconBg}; color: ${iconColor};">
+          <div class="tx-icon-box">
             <span class="material-icons">${icon}</span>
           </div>
           <div class="tx-info">
@@ -128,8 +125,8 @@ export const AllTransactionsPage = {
               <span class="tx-tag">${cat ? cat.name : 'Other'}</span>
               <span>•</span>
               <span>${tx.paymentMode || tx.payment_mode || 'Cash'}</span>
-              ${tx.isRecurring || tx.is_recurring ? `<span class="tx-tag" style="background: rgba(99, 102, 241, 0.15); color: var(--indigo);">Recurring</span>` : ''}
-              ${tx.goalId || tx.goal_id ? `<span class="tx-tag" style="background: rgba(56, 189, 248, 0.15); color: var(--secondary);">Goal Linked</span>` : ''}
+              ${tx.isRecurring || tx.is_recurring ? `<span class="tx-tag">Recurring</span>` : ''}
+              ${tx.goalId || tx.goal_id ? `<span class="tx-tag">Goal Linked</span>` : ''}
             </div>
           </div>
         </div>
@@ -138,7 +135,7 @@ export const AllTransactionsPage = {
             <div class="tx-amount ${isIncome ? 'income' : 'expense'}">${formattedAmount}</div>
             <div class="tx-date">${Formatters.dateTime(tx.timestamp)}</div>
           </div>
-          <button class="btn-icon btn-icon-sm delete-tx-btn" data-sync-id="${tx.sync_id || ''}" data-id="${tx.id || ''}" title="Delete transaction" style="color: var(--error); background: rgba(244, 63, 94, 0.1); border-color: transparent;">
+          <button class="btn-icon btn-icon-sm delete-tx-btn" data-sync-id="${tx.sync_id || ''}" data-id="${tx.id || ''}" title="Delete transaction">
             <span class="material-icons" style="font-size: 16px;">delete_outline</span>
           </button>
         </div>

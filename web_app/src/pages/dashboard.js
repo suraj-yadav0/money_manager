@@ -45,16 +45,16 @@ export const DashboardPage = {
             <div class="kpi-card">
               <div class="kpi-top">
                 <span class="kpi-label">Net Balance</span>
-                <div class="kpi-icon-box" style="background: ${stats.balance >= 0 ? 'var(--success-bg)' : 'var(--error-bg)'}; color: ${stats.balance >= 0 ? 'var(--success)' : 'var(--error)'};">
+                <div class="kpi-icon-box">
                   <span class="material-icons" style="font-size: 20px;">account_balance_wallet</span>
                 </div>
               </div>
-              <div class="kpi-value" style="color: ${stats.balance >= 0 ? 'var(--text-primary)' : 'var(--error)'};">
+              <div class="kpi-value">
                 ${Formatters.currency(stats.balance)}
               </div>
               <div class="kpi-footer">
-                <span class="kpi-badge ${stats.balance >= 0 ? 'positive' : 'negative'}">
-                  <span class="material-icons" style="font-size: 14px;">${stats.balance >= 0 ? 'trending_up' : 'trending_down'}</span>
+                <span class="kpi-badge positive">
+                  <span class="material-icons" style="font-size: 14px;">trending_up</span>
                   ${stats.savingsRate}% saved
                 </span>
                 <span>In selected period</span>
@@ -65,11 +65,11 @@ export const DashboardPage = {
             <div class="kpi-card">
               <div class="kpi-top">
                 <span class="kpi-label">Total Inflow</span>
-                <div class="kpi-icon-box" style="background: rgba(16, 185, 129, 0.1); color: var(--primary);">
+                <div class="kpi-icon-box">
                   <span class="material-icons" style="font-size: 20px;">arrow_downward</span>
                 </div>
               </div>
-              <div class="kpi-value" style="color: var(--text-primary);">
+              <div class="kpi-value">
                 ${Formatters.currency(stats.totalIncome)}
               </div>
               <div class="kpi-footer">
@@ -83,15 +83,15 @@ export const DashboardPage = {
             <div class="kpi-card">
               <div class="kpi-top">
                 <span class="kpi-label">Total Outflow</span>
-                <div class="kpi-icon-box" style="background: rgba(244, 63, 94, 0.12); color: var(--error);">
+                <div class="kpi-icon-box">
                   <span class="material-icons" style="font-size: 20px;">arrow_upward</span>
                 </div>
               </div>
-              <div class="kpi-value" style="color: var(--text-primary);">
+              <div class="kpi-value">
                 ${Formatters.currency(stats.totalExpenses)}
               </div>
               <div class="kpi-footer">
-                <span class="kpi-badge ${stats.burnRateStatus}">
+                <span class="kpi-badge neutral">
                   Burn: ${Formatters.currency(stats.dailyBurnRate)}/day
                 </span>
               </div>
@@ -101,15 +101,15 @@ export const DashboardPage = {
             <div class="kpi-card">
               <div class="kpi-top">
                 <span class="kpi-label">Month-End Projection</span>
-                <div class="kpi-icon-box" style="background: rgba(99, 102, 241, 0.12); color: var(--indigo);">
+                <div class="kpi-icon-box">
                   <span class="material-icons" style="font-size: 20px;">auto_graph</span>
                 </div>
               </div>
-              <div class="kpi-value" style="color: var(--text-primary);">
+              <div class="kpi-value">
                 ${Formatters.currency(stats.projectedBalance)}
               </div>
               <div class="kpi-footer">
-                <span class="kpi-badge ${stats.forecastStatus === 'safe' ? 'positive' : stats.forecastStatus === 'caution' ? 'neutral' : 'negative'}">
+                <span class="kpi-badge neutral">
                   ${stats.forecastStatus === 'safe' ? 'Healthy Trajectory' : stats.forecastStatus === 'caution' ? 'Moderate Margin' : 'Deficit Risk'}
                 </span>
               </div>
@@ -286,14 +286,11 @@ export const DashboardPage = {
     const icon = IconHelper.getMaterialIcon(cat ? cat.icon : 'category');
     const isIncome = tx.type === 'income';
     const formattedAmount = (isIncome ? '+' : '-') + Formatters.currency(tx.amount);
-    
-    let iconBg = isIncome ? 'rgba(16, 185, 129, 0.12)' : 'rgba(244, 63, 94, 0.12)';
-    let iconColor = isIncome ? 'var(--success)' : 'var(--error)';
 
     return `
       <div class="tx-row" data-sync-id="${tx.sync_id || ''}" data-id="${tx.id || ''}">
         <div class="tx-left">
-          <div class="tx-icon-box" style="background: ${iconBg}; color: ${iconColor};">
+          <div class="tx-icon-box">
             <span class="material-icons">${icon}</span>
           </div>
           <div class="tx-info">
@@ -509,13 +506,13 @@ export const DashboardPage = {
         });
       }
 
-      const gradientEmerald = cashFlowCtx.getContext('2d').createLinearGradient(0, 0, 0, 260);
-      gradientEmerald.addColorStop(0, isLight ? 'rgba(5, 150, 105, 0.15)' : 'rgba(16, 185, 129, 0.18)');
-      gradientEmerald.addColorStop(1, isLight ? 'rgba(5, 150, 105, 0.0)' : 'rgba(16, 185, 129, 0.0)');
+      const gradientInflows = cashFlowCtx.getContext('2d').createLinearGradient(0, 0, 0, 260);
+      gradientInflows.addColorStop(0, isLight ? 'rgba(15, 23, 42, 0.1)' : 'rgba(255, 255, 255, 0.12)');
+      gradientInflows.addColorStop(1, 'transparent');
 
-      const gradientRose = cashFlowCtx.getContext('2d').createLinearGradient(0, 0, 0, 260);
-      gradientRose.addColorStop(0, isLight ? 'rgba(225, 29, 72, 0.12)' : 'rgba(244, 63, 94, 0.15)');
-      gradientRose.addColorStop(1, isLight ? 'rgba(225, 29, 72, 0.0)' : 'rgba(244, 63, 94, 0.0)');
+      const gradientOutflows = cashFlowCtx.getContext('2d').createLinearGradient(0, 0, 0, 260);
+      gradientOutflows.addColorStop(0, isLight ? 'rgba(100, 116, 139, 0.08)' : 'rgba(148, 163, 184, 0.08)');
+      gradientOutflows.addColorStop(1, 'transparent');
 
       cashFlowChartInstance = new Chart(cashFlowCtx, {
         type: 'line',
@@ -525,24 +522,24 @@ export const DashboardPage = {
             {
               label: 'Inflows',
               data: incomeData,
-              borderColor: isLight ? '#059669' : '#10B981',
-              backgroundColor: gradientEmerald,
+              borderColor: isLight ? '#0F172A' : '#FFFFFF',
+              backgroundColor: gradientInflows,
               borderWidth: 2,
               tension: 0.35,
               fill: true,
               pointRadius: labels.length > 20 ? 0 : 3.5,
-              pointBackgroundColor: isLight ? '#059669' : '#10B981',
+              pointBackgroundColor: isLight ? '#0F172A' : '#FFFFFF',
             },
             {
               label: 'Outflows',
               data: expenseData,
-              borderColor: isLight ? '#E11D48' : '#F43F5E',
-              backgroundColor: gradientRose,
+              borderColor: isLight ? '#64748B' : '#94A3B8',
+              backgroundColor: gradientOutflows,
               borderWidth: 2,
               tension: 0.35,
               fill: true,
               pointRadius: labels.length > 20 ? 0 : 3.5,
-              pointBackgroundColor: isLight ? '#E11D48' : '#F43F5E',
+              pointBackgroundColor: isLight ? '#64748B' : '#94A3B8',
             }
           ]
         },
@@ -561,8 +558,8 @@ export const DashboardPage = {
               borderColor: tooltipBorder,
               borderWidth: 1,
               padding: 12,
-              cornerRadius: 10,
-              boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+              cornerRadius: 8,
+              boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
               callbacks: {
                 label: (ctx) => ` ${ctx.dataset.label}: ${Formatters.currency(ctx.parsed.y)}`
               }
@@ -597,8 +594,8 @@ export const DashboardPage = {
         const labels = topCats.map(c => c.name);
         const data = topCats.map(c => c.amount);
         const colors = isLight 
-          ? ['#059669', '#0284C7', '#4F46E5', '#D97706', '#E11D48', '#0D9488']
-          : ['#10B981', '#38BDF8', '#818CF8', '#F59E0B', '#F43F5E', '#14B8A6'];
+          ? ['#0F172A', '#334155', '#475569', '#64748B', '#94A3B8', '#CBD5E1', '#E2E8F0']
+          : ['#FFFFFF', '#E2E8F0', '#CBD5E1', '#94A3B8', '#64748B', '#475569', '#334155'];
 
         categoryChartInstance = new Chart(categoryCtx, {
           type: 'doughnut',
