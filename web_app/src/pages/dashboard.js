@@ -134,7 +134,7 @@ export const DashboardPage = {
                   Cumulative Inflows vs Outflows
                 </div>
               </div>
-              <div style="position: relative; height: 280px; width: 100%;">
+              <div style="position: relative; height: 280px; width: 100%; max-width: 100%; min-width: 0; overflow: hidden;">
                 <canvas id="cashflow-chart-canvas"></canvas>
               </div>
             </div>
@@ -183,7 +183,7 @@ export const DashboardPage = {
               </div>
 
               ${stats.totalExpenses > 0 ? `
-                <div style="position: relative; height: 200px; width: 100%; margin-bottom: 20px;">
+                <div style="position: relative; height: 200px; width: 100%; max-width: 100%; min-width: 0; overflow: hidden; margin-bottom: 20px;">
                   <canvas id="category-donut-canvas"></canvas>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 12px;">

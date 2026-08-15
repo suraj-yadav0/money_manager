@@ -19,6 +19,10 @@
   border-radius: var(--radius-md);
   transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
   cursor: pointer;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .tx-row:hover {
@@ -30,8 +34,9 @@
 .tx-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   min-width: 0;
+  flex: 1;
 }
 
 .tx-icon-box {
@@ -55,6 +60,7 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  flex: 1;
 }
 
 .tx-title {
@@ -64,6 +70,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
   letter-spacing: -0.01em;
 }
 
@@ -74,6 +81,7 @@
   font-size: 13px;
   color: var(--text-muted);
   margin-top: 3px;
+  min-width: 0;
 }
 
 .tx-tag {
@@ -83,12 +91,13 @@
   font-size: 11px;
   font-weight: 600;
   color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .tx-right {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 14px;
   text-align: right;
   flex-shrink: 0;
 }
@@ -99,6 +108,7 @@
   font-family: var(--font-heading);
   letter-spacing: -0.02em;
   color: var(--text-primary);
+  white-space: nowrap;
 }
 
 .tx-amount.income {
@@ -470,56 +480,87 @@
 
 @media (max-width: 640px) {
   .tx-row {
-    padding: 12px 14px;
-    gap: 10px;
+    padding: 12px 10px;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
   }
 
   .tx-left {
-    gap: 12px;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
   }
 
   .tx-icon-box {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
   }
 
   .tx-icon-box .material-icons {
-    font-size: 20px;
+    font-size: 18px;
+  }
+
+  .tx-info {
+    flex: 1;
+    min-width: 0;
   }
 
   .tx-title {
-    font-size: 14px;
+    font-size: 13.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
 
   .tx-meta {
     font-size: 11px;
-    gap: 6px;
+    gap: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .tx-tag {
+    padding: 1px 6px;
+    font-size: 10px;
   }
 
   .tx-amount {
-    font-size: 15px;
+    font-size: 14px;
+    white-space: nowrap;
   }
 
   .tx-date {
-    font-size: 11px;
+    font-size: 10.5px;
+    white-space: nowrap;
   }
 
   .tx-right {
-    gap: 12px;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .delete-tx-btn {
+    width: 28px !important;
+    height: 28px !important;
   }
 
   .insight-card {
-    padding: 18px 16px;
-    gap: 14px;
+    padding: 16px 14px;
+    gap: 12px;
   }
 
   .insight-icon-box {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
   }
 
   .cal-day-cell {
-    min-height: 46px !important;
+    min-height: 44px !important;
     padding: 3px 2px !important;
     border-radius: 4px !important;
   }
