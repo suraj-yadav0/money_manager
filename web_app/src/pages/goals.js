@@ -42,11 +42,11 @@ export const GoalsPage = {
             <div class="kpi-card">
               <div class="kpi-top">
                 <span class="kpi-label">Total Capital Saved</span>
-                <div class="kpi-icon-box" style="background: rgba(16, 185, 129, 0.12); color: var(--primary);">
-                  <span class="material-icons" style="font-size: 20px;">savings</span>
+                <div class="kpi-icon-box">
+                  <span class="material-icons">savings</span>
                 </div>
               </div>
-              <div class="kpi-value" style="color: var(--primary);">${Formatters.currency(totalSaved)}</div>
+              <div class="kpi-value">${Formatters.currency(totalSaved)}</div>
               <div class="kpi-footer">
                 <span class="kpi-badge positive">${overallProgress}% Overall Target</span>
               </div>
@@ -55,8 +55,8 @@ export const GoalsPage = {
             <div class="kpi-card">
               <div class="kpi-top">
                 <span class="kpi-label">Cumulative Target</span>
-                <div class="kpi-icon-box" style="background: rgba(56, 189, 248, 0.12); color: var(--secondary);">
-                  <span class="material-icons" style="font-size: 20px;">flag</span>
+                <div class="kpi-icon-box">
+                  <span class="material-icons">flag</span>
                 </div>
               </div>
               <div class="kpi-value">${Formatters.currency(totalTarget)}</div>
@@ -68,8 +68,8 @@ export const GoalsPage = {
             <div class="kpi-card">
               <div class="kpi-top">
                 <span class="kpi-label">Remaining to Goal</span>
-                <div class="kpi-icon-box" style="background: rgba(99, 102, 241, 0.12); color: var(--indigo);">
-                  <span class="material-icons" style="font-size: 20px;">trending_up</span>
+                <div class="kpi-icon-box">
+                  <span class="material-icons">trending_up</span>
                 </div>
               </div>
               <div class="kpi-value">${Formatters.currency(Math.max(0, totalTarget - totalSaved))}</div>
@@ -81,8 +81,8 @@ export const GoalsPage = {
             <div class="kpi-card">
               <div class="kpi-top">
                 <span class="kpi-label">Active Milestones</span>
-                <div class="kpi-icon-box" style="background: rgba(245, 158, 11, 0.12); color: var(--warning);">
-                  <span class="material-icons" style="font-size: 20px;">stars</span>
+                <div class="kpi-icon-box">
+                  <span class="material-icons">stars</span>
                 </div>
               </div>
               <div class="kpi-value">${state.goals.filter(g => g.is_active !== false && !g.is_completed).length}</div>

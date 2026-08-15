@@ -29,7 +29,7 @@ export const CalendarPage = {
     });
 
     return `
-      <div class="animate-fade-in" style="display: flex; flex-direction: column; gap: 28px;">
+      <div class="animate-fade-in" style="display: flex; flex-direction: column; gap: 20px;">
         
         <!-- Hero Header -->
         <section class="hero-section" style="padding-bottom: 0;">
@@ -40,15 +40,15 @@ export const CalendarPage = {
             </div>
 
             <!-- Month Navigator -->
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <button class="btn-icon" id="cal-prev-month">
-                <span class="material-icons">chevron_left</span>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--bg-surface-elevated); padding: 4px 8px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border);">
+              <button class="btn-icon btn-icon-sm" id="cal-prev-month">
+                <span class="material-icons" style="font-size: 18px;">chevron_left</span>
               </button>
-              <div style="font-weight: 800; font-size: 17px; min-width: 160px; text-align: center; color: var(--text-primary); font-family: var(--font-heading);">
+              <div style="font-weight: 700; font-size: 14px; min-width: 130px; text-align: center; color: var(--text-primary); font-family: var(--font-heading);">
                 ${monthName}
               </div>
-              <button class="btn-icon" id="cal-next-month">
-                <span class="material-icons">chevron_right</span>
+              <button class="btn-icon btn-icon-sm" id="cal-next-month">
+                <span class="material-icons" style="font-size: 18px;">chevron_right</span>
               </button>
             </div>
           </div>
@@ -58,28 +58,28 @@ export const CalendarPage = {
             <div class="kpi-card">
               <div class="kpi-top">
                 <span class="kpi-label">Month Inflow</span>
-                <div class="kpi-icon-box" style="background: rgba(16, 185, 129, 0.12); color: var(--primary);">
-                  <span class="material-icons" style="font-size: 20px;">arrow_downward</span>
+                <div class="kpi-icon-box">
+                  <span class="material-icons">arrow_downward</span>
                 </div>
               </div>
-              <div class="kpi-value" style="color: var(--primary);">${Formatters.currency(monthIncome)}</div>
+              <div class="kpi-value">${Formatters.currency(monthIncome)}</div>
             </div>
 
             <div class="kpi-card">
               <div class="kpi-top">
                 <span class="kpi-label">Month Outflow</span>
-                <div class="kpi-icon-box" style="background: rgba(244, 63, 94, 0.12); color: var(--error);">
-                  <span class="material-icons" style="font-size: 20px;">arrow_upward</span>
+                <div class="kpi-icon-box">
+                  <span class="material-icons">arrow_upward</span>
                 </div>
               </div>
-              <div class="kpi-value" style="color: var(--text-primary);">${Formatters.currency(monthExpense)}</div>
+              <div class="kpi-value">${Formatters.currency(monthExpense)}</div>
             </div>
 
             <div class="kpi-card">
               <div class="kpi-top">
-                <span class="kpi-label">Active Days with Spend</span>
-                <div class="kpi-icon-box" style="background: rgba(56, 189, 248, 0.12); color: var(--secondary);">
-                  <span class="material-icons" style="font-size: 20px;">calendar_month</span>
+                <span class="kpi-label">Active Days</span>
+                <div class="kpi-icon-box">
+                  <span class="material-icons">calendar_month</span>
                 </div>
               </div>
               <div class="kpi-value">${new Set(monthTx.map(t => new Date(t.timestamp).getDate())).size} days</div>
@@ -87,12 +87,12 @@ export const CalendarPage = {
 
             <div class="kpi-card">
               <div class="kpi-top">
-                <span class="kpi-label">Net Monthly Flow</span>
-                <div class="kpi-icon-box" style="background: rgba(99, 102, 241, 0.12); color: var(--indigo);">
-                  <span class="material-icons" style="font-size: 20px;">account_balance</span>
+                <span class="kpi-label">Net Monthly</span>
+                <div class="kpi-icon-box">
+                  <span class="material-icons">account_balance</span>
                 </div>
               </div>
-              <div class="kpi-value" style="color: ${monthIncome >= monthExpense ? 'var(--primary)' : 'var(--error)'};">
+              <div class="kpi-value">
                 ${Formatters.currency(monthIncome - monthExpense)}
               </div>
             </div>
@@ -105,12 +105,12 @@ export const CalendarPage = {
           <!-- Calendar Matrix Card -->
           <div class="fintech-card">
             <!-- Day of Week Header -->
-            <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">
               <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
             </div>
 
             <!-- Calendar Cells -->
-            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;" id="calendar-days-grid">
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;" id="calendar-days-grid">
               ${this.renderCalendarCells(state, year, month)}
             </div>
           </div>
@@ -128,7 +128,7 @@ export const CalendarPage = {
             </div>
 
             ${dayTransactions.length === 0 ? `
-              <div style="text-align: center; padding: 48px 0; color: var(--text-muted); font-size: 13px;">
+              <div style="text-align: center; padding: 36px 0; color: var(--text-muted); font-size: 13px;">
                 No transactions recorded on this day.
               </div>
             ` : `
@@ -164,7 +164,7 @@ export const CalendarPage = {
 
     // Empty lead cells
     for (let i = 0; i < firstDayIndex; i++) {
-      cellsHtml += `<div style="height: 52px; border-radius: var(--radius-sm); opacity: 0.2;"></div>`;
+      cellsHtml += `<div style="height: 48px; border-radius: var(--radius-xs); opacity: 0.15;"></div>`;
     }
 
     // Days in Month
@@ -175,18 +175,18 @@ export const CalendarPage = {
       const hasIncome = data && data.income > 0;
 
       let borderStyle = isSelected ? '1px solid var(--primary)' : '1px solid var(--glass-border)';
-      let bgStyle = isSelected ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.02)';
+      let bgStyle = isSelected ? 'var(--bg-surface-elevated)' : 'var(--bg-surface-subtle)';
 
       cellsHtml += `
         <div class="cal-day-cell" data-day="${day}" 
-             style="height: 54px; padding: 6px; border-radius: var(--radius-md); background: ${bgStyle}; border: ${borderStyle}; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; transition: var(--transition-fast);">
+             style="min-height: 48px; padding: 4px; border-radius: var(--radius-xs); background: ${bgStyle}; border: ${borderStyle}; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; transition: var(--transition-fast);">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 13px; font-weight: ${isSelected ? '800' : '600'}; color: ${isSelected ? 'var(--primary)' : 'var(--text-primary)'};">${day}</span>
+            <span style="font-size: 12px; font-weight: ${isSelected ? '800' : '600'}; color: ${isSelected ? 'var(--primary)' : 'var(--text-primary)'};">${day}</span>
             ${data && data.count > 0 ? `
-              <span style="width: 6px; height: 6px; border-radius: 50%; background: ${hasIncome ? 'var(--success)' : 'var(--error)'};"></span>
+              <span style="width: 5px; height: 5px; border-radius: 50%; background: var(--text-primary);"></span>
             ` : ''}
           </div>
-          <div style="font-size: 10px; font-weight: 700; color: ${hasIncome ? 'var(--success)' : 'var(--error)'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+          <div style="font-size: 9px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
             ${data ? (hasIncome ? `+${Formatters.compactCurrency(data.income)}` : `-${Formatters.compactCurrency(data.expense)}`) : ''}
           </div>
         </div>
@@ -201,14 +201,11 @@ export const CalendarPage = {
     const icon = IconHelper.getMaterialIcon(cat ? cat.icon : 'category');
     const isIncome = tx.type === 'income';
     const formattedAmount = (isIncome ? '+' : '-') + Formatters.currency(tx.amount);
-    
-    let iconBg = isIncome ? 'rgba(16, 185, 129, 0.12)' : 'rgba(244, 63, 94, 0.12)';
-    let iconColor = isIncome ? 'var(--success)' : 'var(--error)';
 
     return `
       <div class="tx-row" data-sync-id="${tx.sync_id || ''}" data-id="${tx.id || ''}">
         <div class="tx-left">
-          <div class="tx-icon-box" style="background: ${iconBg}; color: ${iconColor};">
+          <div class="tx-icon-box">
             <span class="material-icons">${icon}</span>
           </div>
           <div class="tx-info">

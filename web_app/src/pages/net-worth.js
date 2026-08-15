@@ -23,7 +23,7 @@ export const NetWorthPage = {
     const debtRatio = totalAssets > 0 ? Math.round((totalLiabilities / totalAssets) * 100) : 0;
 
     return `
-      <div class="animate-fade-in" style="display: flex; flex-direction: column; gap: 28px;">
+      <div class="animate-fade-in" style="display: flex; flex-direction: column; gap: 20px;">
         
         <!-- Hero Header -->
         <section class="hero-section" style="padding-bottom: 0;">
@@ -33,7 +33,7 @@ export const NetWorthPage = {
               <p class="hero-subtitle">Holistic balance sheet evaluation, capital assets, investment portfolios, and liability exposure.</p>
             </div>
             
-            <button class="btn-primary" id="add-asset-btn">
+            <button class="btn-primary" id="add-asset-btn" style="align-self: flex-start;">
               <span class="material-icons" style="font-size: 18px;">add</span> Add Asset / Debt
             </button>
           </div>
@@ -43,15 +43,13 @@ export const NetWorthPage = {
             <div class="kpi-card">
               <div class="kpi-top">
                 <span class="kpi-label">Consolidated Net Worth</span>
-                <div class="kpi-icon-box" style="background: rgba(16, 185, 129, 0.12); color: var(--primary);">
-                  <span class="material-icons" style="font-size: 20px;">account_balance</span>
+                <div class="kpi-icon-box">
+                  <span class="material-icons">account_balance</span>
                 </div>
               </div>
-              <div class="kpi-value" style="color: ${netWorth >= 0 ? 'var(--text-primary)' : 'var(--error)'};">
-                ${Formatters.currency(netWorth)}
-              </div>
+              <div class="kpi-value">${Formatters.currency(netWorth)}</div>
               <div class="kpi-footer">
-                <span class="kpi-badge ${netWorth >= 0 ? 'positive' : 'negative'}">
+                <span class="kpi-badge positive">
                   ${debtRatio}% Debt Ratio
                 </span>
               </div>
@@ -60,39 +58,39 @@ export const NetWorthPage = {
             <div class="kpi-card">
               <div class="kpi-top">
                 <span class="kpi-label">Gross Capital Assets</span>
-                <div class="kpi-icon-box" style="background: rgba(56, 189, 248, 0.12); color: var(--secondary);">
-                  <span class="material-icons" style="font-size: 20px;">trending_up</span>
+                <div class="kpi-icon-box">
+                  <span class="material-icons">trending_up</span>
                 </div>
               </div>
-              <div class="kpi-value" style="color: var(--secondary);">${Formatters.currency(totalAssets)}</div>
+              <div class="kpi-value">${Formatters.currency(totalAssets)}</div>
               <div class="kpi-footer">
-                <span>${assets.filter(a => !(a.is_liability || a.isLiability)).length} Asset Holdings</span>
+                <span>${assets.filter(a => !(a.is_liability || a.isLiability)).length} Holdings</span>
               </div>
             </div>
 
             <div class="kpi-card">
               <div class="kpi-top">
-                <span class="kpi-label">Total Liabilities & Debt</span>
-                <div class="kpi-icon-box" style="background: rgba(244, 63, 94, 0.12); color: var(--error);">
-                  <span class="material-icons" style="font-size: 20px;">trending_down</span>
+                <span class="kpi-label">Total Liabilities</span>
+                <div class="kpi-icon-box">
+                  <span class="material-icons">trending_down</span>
                 </div>
               </div>
-              <div class="kpi-value" style="color: var(--error);">${Formatters.currency(totalLiabilities)}</div>
+              <div class="kpi-value">${Formatters.currency(totalLiabilities)}</div>
               <div class="kpi-footer">
-                <span>${assets.filter(a => a.is_liability || a.isLiability).length} Active Liabilities</span>
+                <span>${assets.filter(a => a.is_liability || a.isLiability).length} Active</span>
               </div>
             </div>
 
             <div class="kpi-card">
               <div class="kpi-top">
-                <span class="kpi-label">Financial Solvency</span>
-                <div class="kpi-icon-box" style="background: rgba(99, 102, 241, 0.12); color: var(--indigo);">
-                  <span class="material-icons" style="font-size: 20px;">verified</span>
+                <span class="kpi-label">Solvency Status</span>
+                <div class="kpi-icon-box">
+                  <span class="material-icons">verified</span>
                 </div>
               </div>
-              <div class="kpi-value" style="font-size: 22px;">${debtRatio < 30 ? 'Pristine' : debtRatio < 60 ? 'Moderate' : 'Leveraged'}</div>
+              <div class="kpi-value">${debtRatio < 30 ? 'Pristine' : debtRatio < 60 ? 'Moderate' : 'Leveraged'}</div>
               <div class="kpi-footer">
-                <span>Leverage profile tier</span>
+                <span>Leverage tier</span>
               </div>
             </div>
           </div>
@@ -105,25 +103,25 @@ export const NetWorthPage = {
           <div class="fintech-card">
             <div class="card-header">
               <div class="card-title">
-                <span class="material-icons" style="color: var(--secondary);">account_balance_wallet</span>
+                <span class="material-icons">account_balance_wallet</span>
                 <span>Assets & Holdings (${Formatters.currency(totalAssets)})</span>
               </div>
             </div>
 
             <div class="assets-grid">
               ${assets.filter(a => !(a.is_liability || a.isLiability)).length === 0 ? `
-                <div style="grid-column: 1 / -1; text-align: center; padding: 32px 0; color: var(--text-muted); font-size: 13px;">
+                <div style="grid-column: 1 / -1; text-align: center; padding: 28px 0; color: var(--text-muted); font-size: 13px;">
                   No asset records added yet. Add bank accounts, investments, or properties.
                 </div>
               ` : assets.filter(a => !(a.is_liability || a.isLiability)).map(a => `
                 <div class="asset-card">
                   <div>
-                    <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">${a.name}</div>
+                    <div style="font-weight: 700; font-size: 14.5px; color: var(--text-primary);">${a.name}</div>
                     <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-top: 2px;">${a.type || 'Savings'}</div>
                   </div>
-                  <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="font-weight: 800; font-size: 15px; color: var(--secondary);">${Formatters.currency(a.value)}</div>
-                    <button class="btn-icon btn-icon-sm delete-asset-btn" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" style="color: var(--error); border: none;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="font-weight: 700; font-size: 14.5px; color: var(--text-primary);">${Formatters.currency(a.value)}</div>
+                    <button class="btn-icon btn-icon-sm delete-asset-btn" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" title="Delete asset">
                       <span class="material-icons" style="font-size: 16px;">delete_outline</span>
                     </button>
                   </div>
@@ -136,25 +134,25 @@ export const NetWorthPage = {
           <div class="fintech-card">
             <div class="card-header">
               <div class="card-title">
-                <span class="material-icons" style="color: var(--error);">credit_card</span>
+                <span class="material-icons">credit_card</span>
                 <span>Liabilities & Debts (${Formatters.currency(totalLiabilities)})</span>
               </div>
             </div>
 
             <div class="assets-grid">
               ${assets.filter(a => a.is_liability || a.isLiability).length === 0 ? `
-                <div style="grid-column: 1 / -1; text-align: center; padding: 32px 0; color: var(--text-muted); font-size: 13px;">
+                <div style="grid-column: 1 / -1; text-align: center; padding: 28px 0; color: var(--text-muted); font-size: 13px;">
                   Zero liabilities recorded. You have a 100% debt-free profile!
                 </div>
               ` : assets.filter(a => a.is_liability || a.isLiability).map(a => `
                 <div class="asset-card">
                   <div>
-                    <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">${a.name}</div>
+                    <div style="font-weight: 700; font-size: 14.5px; color: var(--text-primary);">${a.name}</div>
                     <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-top: 2px;">${a.type || 'Debt'}</div>
                   </div>
-                  <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="font-weight: 800; font-size: 15px; color: var(--error);">${Formatters.currency(a.value)}</div>
-                    <button class="btn-icon btn-icon-sm delete-asset-btn" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" style="color: var(--error); border: none;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="font-weight: 700; font-size: 14.5px; color: var(--text-secondary);">${Formatters.currency(a.value)}</div>
+                    <button class="btn-icon btn-icon-sm delete-asset-btn" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" title="Delete liability">
                       <span class="material-icons" style="font-size: 16px;">delete_outline</span>
                     </button>
                   </div>

@@ -290,28 +290,40 @@
 /* Mobile Screen (< 640px) */
 @media (max-width: 640px) {
   .site-container {
-    padding: 0 16px;
+    padding: 0 20px;
+  }
+
+  .mobile-subnav-inner {
+    padding: 0 20px;
   }
 
   .header-inner {
-    height: 68px;
-    gap: 10px;
+    height: 60px;
+    gap: 8px;
   }
 
   .brand-name {
-    font-size: 18px;
+    font-size: 17px;
+    font-weight: 700;
   }
 
   .brand-icon {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .brand-icon .material-icons {
+    font-size: 18px;
+  }
+
+  .brand-tag {
+    display: none; /* Hide PRO badge on tiny mobile screens for optimal spacing */
   }
 
   /* Compact Sync Pill on Mobile */
   .sync-pill {
-    padding: 6px 10px;
-    gap: 6px;
-    font-size: 11px;
+    padding: 6px 8px;
+    gap: 0;
   }
   
   .sync-pill span:last-child {
@@ -320,49 +332,114 @@
 
   /* Action Buttons on Mobile */
   .header-actions {
-    gap: 8px;
+    gap: 6px;
   }
 
   .btn-primary#header-add-tx-btn {
-    padding: 8px 14px;
-    font-size: 13px;
+    padding: 7px 12px;
+    font-size: 12.5px;
+    gap: 4px;
   }
 
   .btn-icon {
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
   }
 
-  /* KPI Grid Stacking on Mobile */
+  .btn-icon .material-icons {
+    font-size: 18px;
+  }
+
+  /* Compact 2x2 KPI Grid on Mobile (High Density, No Endless Scrolling) */
   .kpi-grid {
-    grid-template-columns: 1fr;
-    gap: 14px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .kpi-card {
+    padding: 14px 12px;
+    border-radius: var(--radius-md);
+  }
+
+  .kpi-top {
+    margin-bottom: 4px;
+  }
+
+  .kpi-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .kpi-icon-box {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+  }
+
+  .kpi-icon-box .material-icons {
+    font-size: 16px;
   }
 
   .kpi-value {
-    font-size: 28px;
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin: 4px 0 6px;
+    letter-spacing: -0.02em;
+  }
+
+  .kpi-footer {
+    font-size: 11px;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .kpi-badge {
+    font-size: 10.5px;
+    padding: 2px 6px;
   }
 
   .hero-section {
-    padding: 24px 0 16px;
+    padding: 20px 0 14px;
   }
 
   .hero-welcome-title {
-    font-size: 24px;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+  }
+
+  .hero-subtitle {
+    font-size: 13px;
+    line-height: 1.5;
+    margin-top: 4px;
+    color: var(--text-secondary);
   }
 
   .hero-header {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
   }
 
   .filter-group {
     width: 100%;
     overflow-x: auto;
     scrollbar-width: none;
+    padding: 3px;
   }
 
   .fintech-card {
-    padding: 22px 18px;
+    padding: 20px 16px;
+    border-radius: var(--radius-lg);
+  }
+
+  .dashboard-split-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
 
   .modal-overlay {
