@@ -30,38 +30,36 @@ export const AllTransactionsPage = {
               <p class="hero-subtitle">Comprehensive financial activity, search, filtering, and audit history.</p>
             </div>
 
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <button class="btn-secondary" id="export-ledger-btn">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <button class="btn-secondary" id="export-ledger-btn" style="flex: 1; min-width: 120px; justify-content: center; padding: 8px 14px; font-size: 13px;">
                 <span class="material-icons" style="font-size: 16px;">download</span> Export JSON
               </button>
-              <button class="btn-primary" id="ledger-add-tx-btn">
+              <button class="btn-primary" id="ledger-add-tx-btn" style="flex: 1; min-width: 140px; justify-content: center; padding: 8px 14px; font-size: 13px;">
                 <span class="material-icons" style="font-size: 18px;">add</span> Add Transaction
               </button>
             </div>
           </div>
 
-          <!-- Ledger Summary Bar -->
-          <div class="fintech-card" style="padding: 16px 24px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
-            <div style="display: flex; gap: 24px; align-items: center;">
-              <div>
-                <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em;">Entries</div>
-                <div style="font-size: 18px; font-weight: 800; color: var(--text-primary);" id="ledger-entries-count">${list.length} records</div>
-              </div>
-              <div style="height: 28px; width: 1px; background: var(--glass-border);"></div>
-              <div>
-                <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em;">Inflow</div>
-                <div style="font-size: 18px; font-weight: 800; color: var(--success);" id="ledger-inflow-total">+${Formatters.currency(ledgerIncome)}</div>
-              </div>
-              <div style="height: 28px; width: 1px; background: var(--glass-border);"></div>
-              <div>
-                <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em;">Outflow</div>
-                <div style="font-size: 18px; font-weight: 800; color: var(--text-primary);" id="ledger-outflow-total">${Formatters.currency(ledgerExpense)}</div>
-              </div>
+          <!-- Ledger Summary Grid -->
+          <div class="ledger-summary-grid">
+            <div class="ledger-stat-card">
+              <span class="ledger-stat-label">Total Entries</span>
+              <div class="ledger-stat-value" id="ledger-entries-count">${list.length} records</div>
             </div>
 
-            <div>
-              <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em; text-align: right;">Net Cash Flow</div>
-              <div style="font-size: 18px; font-weight: 800; color: ${netFlow >= 0 ? 'var(--success)' : 'var(--error)'};" id="ledger-net-flow">
+            <div class="ledger-stat-card">
+              <span class="ledger-stat-label">Total Inflow</span>
+              <div class="ledger-stat-value" style="color: var(--success);" id="ledger-inflow-total">+${Formatters.currency(ledgerIncome)}</div>
+            </div>
+
+            <div class="ledger-stat-card">
+              <span class="ledger-stat-label">Total Outflow</span>
+              <div class="ledger-stat-value" style="color: var(--text-primary);" id="ledger-outflow-total">${Formatters.currency(ledgerExpense)}</div>
+            </div>
+
+            <div class="ledger-stat-card">
+              <span class="ledger-stat-label">Net Cash Flow</span>
+              <div class="ledger-stat-value" style="color: ${netFlow >= 0 ? 'var(--success)' : 'var(--error)'};" id="ledger-net-flow">
                 ${(netFlow >= 0 ? '+' : '') + Formatters.currency(netFlow)}
               </div>
             </div>
@@ -71,7 +69,7 @@ export const AllTransactionsPage = {
         <!-- Search Bar and Filter Tabs -->
         <div style="display: flex; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
           <!-- Search Input with Clear Button -->
-          <div style="flex: 1 1 320px; max-width: 480px;">
+          <div style="flex: 1 1 280px; max-width: 480px; width: 100%;">
             <div class="search-bar-wrapper" style="position: relative;">
               <span class="material-icons search-icon">search</span>
               <input type="text" class="search-input" id="ledger-search-input" placeholder="Search by note, merchant, or category..." value="${this.searchQuery}" style="padding-right: 38px;">
@@ -82,11 +80,11 @@ export const AllTransactionsPage = {
           </div>
 
           <!-- Type Filter Chips -->
-          <div class="filter-group">
-            <button class="filter-chip ${this.activeTypeFilter === 'all' ? 'active' : ''}" data-type="all">All</button>
-            <button class="filter-chip ${this.activeTypeFilter === 'income' ? 'active' : ''}" data-type="income">Income</button>
-            <button class="filter-chip ${this.activeTypeFilter === 'expense' ? 'active' : ''}" data-type="expense">Expenses</button>
-            <button class="filter-chip ${this.activeTypeFilter === 'recurring' ? 'active' : ''}" data-type="recurring">Recurring</button>
+          <div class="filter-group" style="display: flex; width: 100%; max-width: 440px; padding: 4px; gap: 4px;">
+            <button class="filter-chip ${this.activeTypeFilter === 'all' ? 'active' : ''}" data-type="all" style="flex: 1; justify-content: center; text-align: center; padding: 6px 10px; font-size: 12.5px;">All</button>
+            <button class="filter-chip ${this.activeTypeFilter === 'income' ? 'active' : ''}" data-type="income" style="flex: 1; justify-content: center; text-align: center; padding: 6px 10px; font-size: 12.5px;">Income</button>
+            <button class="filter-chip ${this.activeTypeFilter === 'expense' ? 'active' : ''}" data-type="expense" style="flex: 1; justify-content: center; text-align: center; padding: 6px 10px; font-size: 12.5px;">Expenses</button>
+            <button class="filter-chip ${this.activeTypeFilter === 'recurring' ? 'active' : ''}" data-type="recurring" style="flex: 1; justify-content: center; text-align: center; padding: 6px 10px; font-size: 12.5px;">Recurring</button>
           </div>
         </div>
 
@@ -134,11 +132,11 @@ export const AllTransactionsPage = {
           </div>
         </div>
         <div class="tx-right">
-          <div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center;">
             <div class="tx-amount ${isIncome ? 'income' : 'expense'}">${formattedAmount}</div>
             <div class="tx-date">${Formatters.dateTime(tx.timestamp)}</div>
           </div>
-          <button class="btn-icon btn-icon-sm delete-tx-btn" data-sync-id="${tx.sync_id || ''}" data-id="${tx.id || ''}" title="Delete transaction">
+          <button class="btn-icon btn-icon-sm delete-tx-btn" data-sync-id="${tx.sync_id || ''}" data-id="${tx.id || ''}" title="Delete transaction" style="flex-shrink: 0;">
             <span class="material-icons" style="font-size: 16px;">delete_outline</span>
           </button>
         </div>
