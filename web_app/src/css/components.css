@@ -328,13 +328,54 @@
 
 .filter-chip:hover {
   color: var(--text-primary);
+  background: var(--bg-surface-hover);
 }
 
 .filter-chip.active {
-  color: var(--text-primary);
+  background: var(--primary);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Modern Segmented Switch Control */
+.segmented-switch {
+  display: flex;
   background: var(--bg-surface-elevated);
-  border: 1px solid var(--glass-border-hover);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  gap: 4px;
+  width: 100%;
+}
+
+.segmented-switch-btn {
+  flex: 1;
+  padding: 9px 16px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+}
+
+.segmented-switch-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-surface-hover);
+}
+
+.segmented-switch-btn.active {
+  background: var(--primary);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-sm);
+  border-color: var(--primary);
 }
 
 /* Search Bar */

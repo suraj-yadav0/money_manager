@@ -206,14 +206,14 @@ export const NetWorthPage = {
           <input type="text" class="form-control" id="asset-name-field" placeholder="e.g. HDFC Salary Account, Nifty Index Fund, Home Loan" autofocus>
         </div>
 
-        <!-- Classification Toggle (Segmented Chips) -->
+        <!-- Classification Toggle (Pill Capsule) -->
         <div class="form-group" style="margin-bottom: 20px;">
           <label class="form-label" style="margin-bottom: 8px;">Classification</label>
-          <div class="filter-group" style="width: 100%; display: flex; gap: 8px;">
-            <button type="button" class="filter-chip active" id="asset-class-asset-btn" style="flex: 1; text-align: center;">
+          <div class="filter-group" style="width: 100%; display: flex; padding: 4px;">
+            <button type="button" class="filter-chip active" id="asset-class-asset-btn" style="flex: 1; text-align: center; padding: 8px 12px; font-size: 13px; font-weight: 600;">
               Asset (Positive Capital)
             </button>
-            <button type="button" class="filter-chip" id="asset-class-liability-btn" style="flex: 1; text-align: center;">
+            <button type="button" class="filter-chip" id="asset-class-liability-btn" style="flex: 1; text-align: center; padding: 8px 12px; font-size: 13px; font-weight: 600;">
               Liability / Debt
             </button>
           </div>

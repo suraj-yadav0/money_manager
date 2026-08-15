@@ -62,11 +62,11 @@ export const AddTransactionModal = {
           </div>
 
           <!-- Type Toggle (Expense / Income) -->
-          <div class="filter-group" style="margin-bottom: 20px; width: 100%;">
-            <button class="filter-chip ${this.selectedType === 'expense' ? 'active' : ''}" id="tx-type-expense" style="flex: 1; text-align: center;">
+          <div class="filter-group" style="margin-bottom: 20px; width: 100%; display: flex; padding: 4px;">
+            <button class="filter-chip ${this.selectedType === 'expense' ? 'active' : ''}" id="tx-type-expense" style="flex: 1; text-align: center; padding: 8px 12px; font-size: 13px; font-weight: 600;">
               Expense
             </button>
-            <button class="filter-chip ${this.selectedType === 'income' ? 'active' : ''}" id="tx-type-income" style="flex: 1; text-align: center;">
+            <button class="filter-chip ${this.selectedType === 'income' ? 'active' : ''}" id="tx-type-income" style="flex: 1; text-align: center; padding: 8px 12px; font-size: 13px; font-weight: 600;">
               Income
             </button>
           </div>
