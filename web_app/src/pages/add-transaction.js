@@ -8,6 +8,7 @@ export const AddTransactionModal = {
   activeTx: null,
   selectedType: 'expense',
   selectedCategoryId: null,
+  paymentMode: 'Cash',
   autoSuggested: false,
 
   show(tx = null) {
@@ -17,8 +18,10 @@ export const AddTransactionModal = {
     if (tx) {
       this.selectedType = tx.type;
       this.selectedCategoryId = tx.categoryId || tx.category_id;
+      this.paymentMode = tx.paymentMode || tx.payment_mode || 'Cash';
     } else {
       this.selectedType = 'expense';
+      this.paymentMode = 'Cash';
       const defaultExpense = StateManager.state.categories.find(c => c.type === 'expense');
       this.selectedCategoryId = defaultExpense ? (defaultExpense.id || defaultExpense.sync_id) : null;
     }
@@ -72,10 +75,10 @@ export const AddTransactionModal = {
           <div class="form-group" style="margin-bottom: 20px;">
             <label class="form-label">Transaction Amount</label>
             <div style="position: relative; display: flex; align-items: center;">
-              <span style="position: absolute; left: 18px; font-size: 24px; font-weight: 800; color: ${this.selectedType === 'income' ? 'var(--success)' : 'var(--error)'};">₹</span>
+              <span style="position: absolute; left: 18px; font-size: 24px; font-weight: 700; color: var(--text-primary);">₹</span>
               <input type="number" step="any" class="form-control" id="tx-amount-input" 
                      placeholder="0.00" value="${amountVal}" 
-                     style="padding-left: 44px; font-size: 26px; font-weight: 800; font-family: var(--font-heading);" autofocus>
+                     style="padding-left: 44px; font-size: 26px; font-weight: 700; font-family: var(--font-heading);" autofocus>
             </div>
           </div>
 
@@ -99,8 +102,8 @@ export const AddTransactionModal = {
                 return `
                   <div class="category-select-pill" 
                        data-cat-id="${cat.id !== undefined ? cat.id : cat.sync_id}"
-                       style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: var(--radius-md); background: ${isSelected ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255,255,255,0.03)'}; border: 1px solid ${isSelected ? 'var(--primary)' : 'var(--glass-border)'}; cursor: pointer; transition: var(--transition-fast);">
-                    <span class="material-icons" style="font-size: 18px; color: ${isSelected ? 'var(--primary)' : 'var(--text-muted)'};">${IconHelper.getMaterialIcon(cat.icon)}</span>
+                       style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: var(--radius-md); background: ${isSelected ? 'var(--bg-surface-elevated)' : 'var(--bg-surface-subtle)'}; border: 1px solid ${isSelected ? 'var(--primary)' : 'var(--glass-border)'}; cursor: pointer; transition: var(--transition-fast);">
+                    <span class="material-icons" style="font-size: 18px; color: ${isSelected ? 'var(--text-primary)' : 'var(--text-muted)'};">${IconHelper.getMaterialIcon(cat.icon)}</span>
                     <span style="font-size: 12px; font-weight: 600; color: ${isSelected ? 'var(--text-primary)' : 'var(--text-secondary)'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${cat.name}</span>
                   </div>
                 `;
@@ -108,34 +111,38 @@ export const AddTransactionModal = {
             </div>
           </div>
 
-          <!-- Date & Payment Mode Grid -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-            <div class="form-group">
-              <label class="form-label">Date</label>
-              <input type="date" class="form-control" id="tx-date-input" value="${dateVal}">
-            </div>
+          <!-- Date Input -->
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" class="form-control" id="tx-date-input" value="${dateVal}">
+          </div>
 
-            <div class="form-group">
-              <label class="form-label">Payment Mode</label>
-              <select class="form-control" id="tx-payment-mode-select">
-                <option value="Cash" ${this.activeTx?.paymentMode === 'Cash' ? 'selected' : ''}>Cash</option>
-                <option value="UPI" ${this.activeTx?.paymentMode === 'UPI' ? 'selected' : ''}>UPI</option>
-                <option value="Credit Card" ${this.activeTx?.paymentMode === 'Credit Card' ? 'selected' : ''}>Credit Card</option>
-                <option value="Debit Card" ${this.activeTx?.paymentMode === 'Debit Card' ? 'selected' : ''}>Debit Card</option>
-                <option value="Net Banking" ${this.activeTx?.paymentMode === 'Net Banking' ? 'selected' : ''}>Net Banking</option>
-              </select>
+          <!-- Payment Mode Pill Selector (Clean, 100% Reliable across Dark/Light) -->
+          <div class="form-group">
+            <label class="form-label">Payment Mode</label>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;" id="tx-payment-mode-group">
+              ${['Cash', 'UPI', 'Credit Card', 'Debit Card', 'Net Banking'].map(mode => {
+                const isSelected = (this.paymentMode || 'Cash') === mode;
+                return `
+                  <button type="button" class="filter-chip payment-mode-pill ${isSelected ? 'active' : ''}" 
+                          data-mode="${mode}" 
+                          style="padding: 7px 14px; font-size: 12px; cursor: pointer; border-radius: var(--radius-sm);">
+                    ${mode}
+                  </button>
+                `;
+              }).join('')}
             </div>
           </div>
 
           <!-- Additional Options (Goal link & Recurring) -->
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding: 10px 14px; background: rgba(255,255,255,0.02); border-radius: var(--radius-md); border: 1px solid var(--glass-border);">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding: 10px 14px; background: var(--bg-surface-subtle); border-radius: var(--radius-md); border: 1px solid var(--glass-border);">
             <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); cursor: pointer;">
               <input type="checkbox" id="tx-recurring-check" ${this.activeTx?.isRecurring ? 'checked' : ''}>
               <span>Recurring Monthly Transaction</span>
             </label>
 
             ${goals.length > 0 ? `
-              <select class="form-control" id="tx-goal-link-select" style="width: auto; padding: 4px 8px; font-size: 12px;">
+              <select class="form-control" id="tx-goal-link-select" style="width: auto; padding: 6px 32px 6px 10px; font-size: 12px;">
                 <option value="">No Goal Linked</option>
                 ${goals.map(g => `<option value="${g.id || g.sync_id}" ${String(this.activeTx?.goalId) === String(g.id || g.sync_id) ? 'selected' : ''}>${g.name}</option>`).join('')}
               </select>
@@ -231,12 +238,21 @@ export const AddTransactionModal = {
       });
     });
 
+    // Payment Mode Pill Clicks
+    const modePills = document.querySelectorAll('.payment-mode-pill');
+    modePills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        this.paymentMode = pill.getAttribute('data-mode') || 'Cash';
+        modePills.forEach(p => p.classList.toggle('active', p === pill));
+      });
+    });
+
     // Save Button
     document.getElementById('tx-save-btn')?.addEventListener('click', async () => {
       const amount = parseFloat(document.getElementById('tx-amount-input')?.value);
       const note = document.getElementById('tx-note-input')?.value.trim() || '';
       const date = document.getElementById('tx-date-input')?.value || new Date().toISOString();
-      const paymentMode = document.getElementById('tx-payment-mode-select')?.value || 'Cash';
+      const paymentMode = this.paymentMode || 'Cash';
       const isRecurring = document.getElementById('tx-recurring-check')?.checked || false;
       const goalId = document.getElementById('tx-goal-link-select')?.value || null;
 

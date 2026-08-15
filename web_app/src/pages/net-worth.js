@@ -206,34 +206,47 @@ export const NetWorthPage = {
           <input type="text" class="form-control" id="asset-name-field" placeholder="e.g. HDFC Salary Account, Nifty Index Fund, Home Loan" autofocus>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
-          <div class="form-group">
-            <label class="form-label" style="margin-bottom: 8px;">Classification</label>
-            <select class="form-control" id="asset-is-liability-field">
-              <option value="false">Asset (Positive Capital)</option>
-              <option value="true">Liability / Debt</option>
-            </select>
+        <!-- Classification Toggle (Segmented Chips) -->
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label class="form-label" style="margin-bottom: 8px;">Classification</label>
+          <div class="filter-group" style="width: 100%; display: flex; gap: 8px;">
+            <button type="button" class="filter-chip active" id="asset-class-asset-btn" style="flex: 1; text-align: center;">
+              Asset (Positive Capital)
+            </button>
+            <button type="button" class="filter-chip" id="asset-class-liability-btn" style="flex: 1; text-align: center;">
+              Liability / Debt
+            </button>
           </div>
+        </div>
 
-          <div class="form-group">
-            <label class="form-label" style="margin-bottom: 8px;">Category</label>
-            <select class="form-control" id="asset-type-field">
-              <option value="savings">Cash / Bank Account</option>
-              <option value="investment">Investments & Stocks</option>
-              <option value="real_estate">Real Estate</option>
-              <option value="crypto">Cryptocurrency</option>
-              <option value="vehicle">Vehicle</option>
-              <option value="loan">Personal / Home Loan</option>
-              <option value="credit_card">Credit Card Debt</option>
-              <option value="other">Other</option>
-            </select>
+        <!-- Category Selector (Interactive Pills Grid) -->
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label class="form-label" style="margin-bottom: 8px;">Category / Instrument</label>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;" id="asset-type-grid">
+            ${[
+              { id: 'savings', name: 'Cash / Bank', icon: 'account_balance' },
+              { id: 'investment', name: 'Investments', icon: 'trending_up' },
+              { id: 'real_estate', name: 'Real Estate', icon: 'domain' },
+              { id: 'crypto', name: 'Crypto', icon: 'currency_bitcoin' },
+              { id: 'vehicle', name: 'Vehicle', icon: 'directions_car' },
+              { id: 'loan', name: 'Personal Loan', icon: 'request_quote' },
+              { id: 'credit_card', name: 'Credit Card', icon: 'credit_card' },
+              { id: 'other', name: 'Other Asset', icon: 'category' }
+            ].map(item => `
+              <div class="category-select-pill asset-type-pill ${item.id === 'savings' ? 'active' : ''}" 
+                   data-type="${item.id}"
+                   style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: var(--radius-md); background: ${item.id === 'savings' ? 'var(--bg-surface-elevated)' : 'var(--bg-surface-subtle)'}; border: 1px solid ${item.id === 'savings' ? 'var(--primary)' : 'var(--glass-border)'}; cursor: pointer; transition: var(--transition-fast);">
+                <span class="material-icons" style="font-size: 18px; color: ${item.id === 'savings' ? 'var(--text-primary)' : 'var(--text-muted)'};">${item.icon}</span>
+                <span style="font-size: 12px; font-weight: 600; color: ${item.id === 'savings' ? 'var(--text-primary)' : 'var(--text-secondary)'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name}</span>
+              </div>
+            `).join('')}
           </div>
         </div>
 
         <div class="form-group" style="margin-bottom: 24px;">
           <label class="form-label" style="margin-bottom: 8px;">Current Valuation / Principal (₹)</label>
           <div style="position: relative; display: flex; align-items: center;">
-            <span style="position: absolute; left: 16px; font-size: 20px; font-weight: 800; color: var(--text-muted);">₹</span>
+            <span style="position: absolute; left: 16px; font-size: 20px; font-weight: 700; color: var(--text-muted);">₹</span>
             <input type="number" step="any" class="form-control" id="asset-val-field" placeholder="50000" style="padding-left: 38px; font-size: 18px; font-weight: 700;">
           </div>
         </div>
@@ -246,6 +259,41 @@ export const NetWorthPage = {
     `;
 
     document.body.appendChild(overlay);
+    let isLiability = false;
+    let selectedType = 'savings';
+
+    const assetBtn = document.getElementById('asset-class-asset-btn');
+    const liabilityBtn = document.getElementById('asset-class-liability-btn');
+
+    assetBtn?.addEventListener('click', () => {
+      isLiability = false;
+      assetBtn.classList.add('active');
+      liabilityBtn?.classList.remove('active');
+    });
+
+    liabilityBtn?.addEventListener('click', () => {
+      isLiability = true;
+      liabilityBtn.classList.add('active');
+      assetBtn?.classList.remove('active');
+    });
+
+    // Category Type Pill selection
+    const typePills = overlay.querySelectorAll('.asset-type-pill');
+    typePills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        selectedType = pill.getAttribute('data-type');
+        typePills.forEach(p => {
+          const active = p === pill;
+          p.style.background = active ? 'var(--bg-surface-elevated)' : 'var(--bg-surface-subtle)';
+          p.style.borderColor = active ? 'var(--primary)' : 'var(--glass-border)';
+          const icon = p.querySelector('.material-icons');
+          if (icon) icon.style.color = active ? 'var(--text-primary)' : 'var(--text-muted)';
+          const text = p.querySelector('span:last-child');
+          if (text) text.style.color = active ? 'var(--text-primary)' : 'var(--text-secondary)';
+        });
+      });
+    });
+
     const closeModal = () => { if (document.body.contains(overlay)) document.body.removeChild(overlay); };
 
     document.getElementById('modal-close-asset')?.addEventListener('click', closeModal);
@@ -255,8 +303,6 @@ export const NetWorthPage = {
     document.getElementById('modal-submit-asset')?.addEventListener('click', async () => {
       const name = document.getElementById('asset-name-field').value.trim();
       const val = parseFloat(document.getElementById('asset-val-field').value);
-      const isLiability = document.getElementById('asset-is-liability-field').value === 'true';
-      const type = document.getElementById('asset-type-field').value;
 
       if (!name || isNaN(val) || val <= 0) {
         alert('Please enter a valid asset name and valuation.');
@@ -268,7 +314,7 @@ export const NetWorthPage = {
         value: val,
         isLiability,
         is_liability: isLiability,
-        type
+        type: selectedType
       });
 
       closeModal();
