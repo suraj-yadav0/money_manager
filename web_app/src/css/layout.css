@@ -126,7 +126,8 @@
 .nav-link-btn.active {
   color: var(--text-primary);
   background: var(--bg-surface-elevated);
-  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--glass-border-hover);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .nav-link-btn.active .material-icons {

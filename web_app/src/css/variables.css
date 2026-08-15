@@ -1,51 +1,51 @@
-/* Comprehensive Design System & Color Tokens supporting Dark & Light Modes */
+/* Modern Design Tokens & Refined Color System (Dark & Light) */
 
 :root {
-  /* Default: Dark Mode (Midnight Obsidian & Electric Mint) */
-  --bg-main: #090B10;
-  --bg-surface: #11141E;
-  --bg-surface-elevated: #161A26;
-  --bg-surface-subtle: rgba(255, 255, 255, 0.03);
-  --bg-surface-hover: rgba(255, 255, 255, 0.06);
-  --bg-header: rgba(9, 11, 16, 0.82);
+  /* Default: Dark Mode (Obsidian Graphite & Refined Emerald) */
+  --bg-main: #0B0D13;
+  --bg-surface: #131722;
+  --bg-surface-elevated: #191E2C;
+  --bg-surface-subtle: rgba(255, 255, 255, 0.035);
+  --bg-surface-hover: rgba(255, 255, 255, 0.065);
+  --bg-header: rgba(11, 13, 19, 0.85);
 
-  /* Glassmorphism & Borders */
-  --glass-bg: rgba(17, 20, 30, 0.78);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-border-hover: rgba(255, 255, 255, 0.16);
-  --glass-border-focus: rgba(0, 229, 153, 0.4);
-  --glass-blur: blur(24px);
-  --modal-backdrop: rgba(4, 6, 10, 0.85);
+  /* Glassmorphism & Micro-Borders */
+  --glass-bg: rgba(19, 23, 34, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.07);
+  --glass-border-hover: rgba(255, 255, 255, 0.14);
+  --glass-border-focus: rgba(16, 185, 129, 0.4);
+  --glass-blur: blur(20px);
+  --modal-backdrop: rgba(5, 7, 11, 0.82);
 
-  /* Primary Fintech Accents: Electric Mint */
-  --primary: #00E599;
-  --primary-light: #5CFFC6;
-  --primary-dark: #00B377;
-  --primary-glow: rgba(0, 229, 153, 0.28);
-  --primary-gradient: linear-gradient(135deg, #00E599 0%, #00B377 100%);
-  --primary-gradient-hover: linear-gradient(135deg, #5CFFC6 0%, #00E599 100%);
+  /* Refined Primary Accent: Emerald */
+  --primary: #10B981;
+  --primary-light: #34D399;
+  --primary-dark: #059669;
+  --primary-glow: rgba(16, 185, 129, 0.15);
+  --primary-gradient: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  --primary-gradient-hover: linear-gradient(135deg, #34D399 0%, #10B981 100%);
 
-  /* Secondary Accents: Electric Cyan & Indigo */
-  --secondary: #38BDF8;
-  --secondary-glow: rgba(56, 189, 248, 0.25);
-  --indigo: #6366F1;
-  --indigo-glow: rgba(99, 102, 241, 0.25);
+  /* Secondary Accents: Slate Indigo & Sky */
+  --secondary: #60A5FA;
+  --secondary-glow: rgba(96, 165, 250, 0.15);
+  --indigo: #818CF8;
+  --indigo-glow: rgba(129, 140, 248, 0.15);
 
   /* Status Colors */
-  --success: #00E599;
-  --success-bg: rgba(0, 229, 153, 0.12);
-  --error: #FF3366;
-  --error-bg: rgba(255, 51, 102, 0.12);
+  --success: #10B981;
+  --success-bg: rgba(16, 185, 129, 0.1);
+  --error: #F43F5E;
+  --error-bg: rgba(244, 63, 94, 0.1);
   --warning: #F59E0B;
-  --warning-bg: rgba(245, 158, 11, 0.12);
+  --warning-bg: rgba(245, 158, 11, 0.1);
   --info: #38BDF8;
-  --info-bg: rgba(56, 189, 248, 0.12);
+  --info-bg: rgba(56, 189, 248, 0.1);
 
   /* Typography */
-  --text-primary: #FFFFFF;
+  --text-primary: #F8FAFC;
   --text-secondary: #94A3B8;
   --text-muted: #64748B;
-  --text-inverse: #090B10;
+  --text-inverse: #0B0D13;
 
   /* Font Families */
   --font-body: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -54,18 +54,17 @@
 
   /* Geometry & Spacing */
   --radius-xs: 6px;
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --radius-xl: 28px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
   --radius-full: 9999px;
 
   /* Shadows */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 8px 24px -4px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 20px 48px -12px rgba(0, 0, 0, 0.6);
-  --shadow-glow: 0 0 35px var(--primary-glow);
-  --card-top-glow: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.12) 50%, transparent 100%);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 16px -2px rgba(0, 0, 0, 0.4), 0 2px 6px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 12px 36px -6px rgba(0, 0, 0, 0.5), 0 4px 12px -2px rgba(0, 0, 0, 0.3);
+  --card-top-glow: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.08) 50%, transparent 100%);
 
   /* Transitions */
   --transition-fast: 0.15s cubic-bezier(0.16, 1, 0.3, 1);
@@ -76,49 +75,49 @@
   --container-max: 1360px;
 }
 
-/* Light Theme Variables */
+/* Studio Light Theme Tokens */
 [data-theme="light"] {
   --bg-main: #F8FAFC;
   --bg-surface: #FFFFFF;
   --bg-surface-elevated: #F1F5F9;
-  --bg-surface-subtle: rgba(0, 0, 0, 0.02);
-  --bg-surface-hover: rgba(0, 0, 0, 0.04);
-  --bg-header: rgba(248, 250, 252, 0.85);
+  --bg-surface-subtle: rgba(15, 23, 42, 0.03);
+  --bg-surface-hover: rgba(15, 23, 42, 0.05);
+  --bg-header: rgba(248, 250, 252, 0.88);
 
-  --glass-bg: rgba(255, 255, 255, 0.9);
-  --glass-border: rgba(226, 232, 240, 0.9);
-  --glass-border-hover: rgba(203, 213, 225, 1);
+  --glass-bg: rgba(255, 255, 255, 0.92);
+  --glass-border: #E2E8F0;
+  --glass-border-hover: #CBD5E1;
   --glass-border-focus: rgba(5, 150, 105, 0.4);
-  --modal-backdrop: rgba(15, 23, 42, 0.6);
+  --modal-backdrop: rgba(15, 23, 42, 0.55);
 
   --primary: #059669;
   --primary-light: #10B981;
   --primary-dark: #047857;
-  --primary-glow: rgba(5, 150, 105, 0.2);
+  --primary-glow: rgba(5, 150, 105, 0.15);
   --primary-gradient: linear-gradient(135deg, #059669 0%, #047857 100%);
   --primary-gradient-hover: linear-gradient(135deg, #10B981 0%, #059669 100%);
 
   --secondary: #0284C7;
-  --secondary-glow: rgba(2, 132, 199, 0.2);
+  --secondary-glow: rgba(2, 132, 199, 0.15);
   --indigo: #4F46E5;
-  --indigo-glow: rgba(79, 70, 229, 0.2);
+  --indigo-glow: rgba(79, 70, 229, 0.15);
 
   --success: #059669;
-  --success-bg: rgba(5, 150, 105, 0.1);
+  --success-bg: rgba(5, 150, 105, 0.08);
   --error: #E11D48;
-  --error-bg: rgba(225, 29, 72, 0.1);
+  --error-bg: rgba(225, 29, 72, 0.08);
   --warning: #D97706;
-  --warning-bg: rgba(217, 119, 6, 0.1);
+  --warning-bg: rgba(217, 119, 6, 0.08);
   --info: #0284C7;
-  --info-bg: rgba(2, 132, 199, 0.1);
+  --info-bg: rgba(2, 132, 199, 0.08);
 
   --text-primary: #0F172A;
   --text-secondary: #475569;
   --text-muted: #94A3B8;
   --text-inverse: #FFFFFF;
 
-  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04);
-  --shadow-md: 0 6px 20px -3px rgba(15, 23, 42, 0.07);
-  --shadow-lg: 0 20px 40px -10px rgba(15, 23, 42, 0.1);
-  --card-top-glow: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.06) 50%, transparent 100%);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+  --shadow-md: 0 4px 16px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+  --shadow-lg: 0 12px 32px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+  --card-top-glow: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.04) 50%, transparent 100%);
 }

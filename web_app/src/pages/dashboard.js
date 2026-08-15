@@ -65,11 +65,11 @@ export const DashboardPage = {
             <div class="kpi-card">
               <div class="kpi-top">
                 <span class="kpi-label">Total Inflow</span>
-                <div class="kpi-icon-box" style="background: rgba(56, 189, 248, 0.12); color: var(--secondary);">
+                <div class="kpi-icon-box" style="background: rgba(16, 185, 129, 0.1); color: var(--primary);">
                   <span class="material-icons" style="font-size: 20px;">arrow_downward</span>
                 </div>
               </div>
-              <div class="kpi-value" style="color: var(--secondary);">
+              <div class="kpi-value" style="color: var(--text-primary);">
                 ${Formatters.currency(stats.totalIncome)}
               </div>
               <div class="kpi-footer">
@@ -510,12 +510,12 @@ export const DashboardPage = {
       }
 
       const gradientEmerald = cashFlowCtx.getContext('2d').createLinearGradient(0, 0, 0, 260);
-      gradientEmerald.addColorStop(0, isLight ? 'rgba(5, 150, 105, 0.25)' : 'rgba(0, 229, 153, 0.35)');
-      gradientEmerald.addColorStop(1, isLight ? 'rgba(5, 150, 105, 0.0)' : 'rgba(0, 229, 153, 0.0)');
+      gradientEmerald.addColorStop(0, isLight ? 'rgba(5, 150, 105, 0.15)' : 'rgba(16, 185, 129, 0.18)');
+      gradientEmerald.addColorStop(1, isLight ? 'rgba(5, 150, 105, 0.0)' : 'rgba(16, 185, 129, 0.0)');
 
       const gradientRose = cashFlowCtx.getContext('2d').createLinearGradient(0, 0, 0, 260);
-      gradientRose.addColorStop(0, isLight ? 'rgba(225, 29, 72, 0.2)' : 'rgba(255, 51, 102, 0.25)');
-      gradientRose.addColorStop(1, isLight ? 'rgba(225, 29, 72, 0.0)' : 'rgba(255, 51, 102, 0.0)');
+      gradientRose.addColorStop(0, isLight ? 'rgba(225, 29, 72, 0.12)' : 'rgba(244, 63, 94, 0.15)');
+      gradientRose.addColorStop(1, isLight ? 'rgba(225, 29, 72, 0.0)' : 'rgba(244, 63, 94, 0.0)');
 
       cashFlowChartInstance = new Chart(cashFlowCtx, {
         type: 'line',
@@ -525,24 +525,24 @@ export const DashboardPage = {
             {
               label: 'Inflows',
               data: incomeData,
-              borderColor: isLight ? '#059669' : '#00E599',
+              borderColor: isLight ? '#059669' : '#10B981',
               backgroundColor: gradientEmerald,
-              borderWidth: 2.5,
+              borderWidth: 2,
               tension: 0.35,
               fill: true,
-              pointRadius: labels.length > 20 ? 0 : 4,
-              pointBackgroundColor: isLight ? '#059669' : '#00E599',
+              pointRadius: labels.length > 20 ? 0 : 3.5,
+              pointBackgroundColor: isLight ? '#059669' : '#10B981',
             },
             {
               label: 'Outflows',
               data: expenseData,
-              borderColor: isLight ? '#E11D48' : '#FF3366',
+              borderColor: isLight ? '#E11D48' : '#F43F5E',
               backgroundColor: gradientRose,
               borderWidth: 2,
               tension: 0.35,
               fill: true,
-              pointRadius: labels.length > 20 ? 0 : 4,
-              pointBackgroundColor: isLight ? '#E11D48' : '#FF3366',
+              pointRadius: labels.length > 20 ? 0 : 3.5,
+              pointBackgroundColor: isLight ? '#E11D48' : '#F43F5E',
             }
           ]
         },
@@ -597,8 +597,8 @@ export const DashboardPage = {
         const labels = topCats.map(c => c.name);
         const data = topCats.map(c => c.amount);
         const colors = isLight 
-          ? ['#059669', '#0284C7', '#4F46E5', '#D97706', '#E11D48', '#7C3AED']
-          : ['#00E599', '#38BDF8', '#6366F1', '#F59E0B', '#FF3366', '#A855F7'];
+          ? ['#059669', '#0284C7', '#4F46E5', '#D97706', '#E11D48', '#0D9488']
+          : ['#10B981', '#38BDF8', '#818CF8', '#F59E0B', '#F43F5E', '#14B8A6'];
 
         categoryChartInstance = new Chart(categoryCtx, {
           type: 'doughnut',

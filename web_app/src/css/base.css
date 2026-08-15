@@ -17,49 +17,30 @@ body {
   color: var(--text-primary);
   background-color: var(--bg-main);
   background-image: 
-    radial-gradient(at 15% 10%, var(--primary-glow) 0px, transparent 45%),
-    radial-gradient(at 85% 15%, var(--secondary-glow) 0px, transparent 45%),
-    radial-gradient(at 50% 90%, var(--indigo-glow) 0px, transparent 45%);
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    radial-gradient(ellipse at 50% 0%, rgba(16, 185, 129, 0.08) 0%, transparent 60%);
+  background-size: 36px 36px, 36px 36px, 100% 100%;
+  background-position: center top;
   background-attachment: fixed;
   min-height: 100vh;
   line-height: 1.6;
   overflow-x: hidden;
   font-size: 15px;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11', 'ss01', 'tnum';
   transition: background-color var(--transition-smooth), color var(--transition-smooth);
 }
 
-/* Ambient Atmospheric Lights */
+[data-theme="light"] body {
+  background-image: 
+    linear-gradient(to right, rgba(15, 23, 42, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.045) 1px, transparent 1px),
+    radial-gradient(ellipse at 50% 0%, rgba(5, 150, 105, 0.06) 0%, transparent 60%);
+}
+
+/* Atmospheric subtle backdrop */
 .ambient-glow {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.ambient-circle-1 {
-  position: absolute;
-  top: -200px;
-  right: 10%;
-  width: 700px;
-  height: 700px;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
-  filter: blur(80px);
-}
-
-.ambient-circle-2 {
-  position: absolute;
-  bottom: 5%;
-  left: 5%;
-  width: 800px;
-  height: 800px;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--secondary-glow) 0%, transparent 70%);
-  filter: blur(100px);
+  display: none;
 }
 
 /* Typography Hierarchy */
