@@ -266,7 +266,27 @@ export const GoalsPage = {
 
         <div class="form-group">
           <label class="form-label">Target Capital (₹)</label>
-          <input type="number" class="form-control" id="goal-target-field" placeholder="100000">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" class="btn-icon" id="goal-target-minus" title="Decrease by ₹500" style="width: 42px; height: 42px;">
+              <span class="material-icons">remove</span>
+            </button>
+            <div style="position: relative; display: flex; align-items: center; flex: 1;">
+              <span style="position: absolute; left: 16px; font-size: 18px; font-weight: 700; color: var(--text-muted);">₹</span>
+              <input type="number" step="500" min="500" class="form-control" id="goal-target-field" placeholder="100000" style="padding-left: 36px; font-size: 18px; font-weight: 700; text-align: right;">
+            </div>
+            <button type="button" class="btn-icon" id="goal-target-plus" title="Increase by ₹500" style="width: 42px; height: 42px;">
+              <span class="material-icons">add</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Target Presets -->
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;">
+          ${[10000, 25000, 50000, 100000, 250000, 500000].map(val => `
+            <button type="button" class="filter-chip goal-target-preset-chip" data-val="${val}" style="padding: 6px 10px; font-size: 11.5px; border-radius: var(--radius-sm); background: var(--bg-surface-elevated); border: 1px solid var(--glass-border);">
+              ₹${val.toLocaleString()}
+            </button>
+          `).join('')}
         </div>
 
         <div class="form-group">
@@ -282,6 +302,24 @@ export const GoalsPage = {
     `;
 
     document.body.appendChild(overlay);
+    const targetInput = overlay.querySelector('#goal-target-field');
+
+    overlay.querySelector('#goal-target-minus')?.addEventListener('click', () => {
+      const cur = parseFloat(targetInput.value) || 0;
+      targetInput.value = Math.max(0, cur - 500);
+    });
+
+    overlay.querySelector('#goal-target-plus')?.addEventListener('click', () => {
+      const cur = parseFloat(targetInput.value) || 0;
+      targetInput.value = cur + 500;
+    });
+
+    overlay.querySelectorAll('.goal-target-preset-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        targetInput.value = chip.getAttribute('data-val');
+      });
+    });
+
     const closeModal = () => { if (document.body.contains(overlay)) document.body.removeChild(overlay); };
 
     document.getElementById('modal-close-goal')?.addEventListener('click', closeModal);
@@ -313,7 +351,7 @@ export const GoalsPage = {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay active';
     overlay.innerHTML = `
-      <div class="modern-modal-dialog animate-scale-up" style="max-width: 420px;">
+      <div class="modern-modal-dialog animate-scale-up" style="max-width: 440px;">
         <div class="modal-header">
           <div class="modal-title">
             <span class="material-icons" style="color: var(--primary);">add_circle</span>
@@ -326,7 +364,27 @@ export const GoalsPage = {
 
         <div class="form-group">
           <label class="form-label">Contribution Amount (₹)</label>
-          <input type="number" class="form-control" id="contrib-amount-field" placeholder="5000" autofocus>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" class="btn-icon" id="contrib-amount-minus" title="Decrease by ₹500" style="width: 42px; height: 42px;">
+              <span class="material-icons">remove</span>
+            </button>
+            <div style="position: relative; display: flex; align-items: center; flex: 1;">
+              <span style="position: absolute; left: 16px; font-size: 18px; font-weight: 700; color: var(--text-muted);">₹</span>
+              <input type="number" step="500" min="500" class="form-control" id="contrib-amount-field" placeholder="5000" value="5000" style="padding-left: 36px; font-size: 18px; font-weight: 700; text-align: right;" autofocus>
+            </div>
+            <button type="button" class="btn-icon" id="contrib-amount-plus" title="Increase by ₹500" style="width: 42px; height: 42px;">
+              <span class="material-icons">add</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Contribution Presets -->
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px;">
+          ${[500, 1000, 2500, 5000, 10000].map(val => `
+            <button type="button" class="filter-chip contrib-preset-chip" data-val="${val}" style="padding: 6px 10px; font-size: 11.5px; border-radius: var(--radius-sm); background: var(--bg-surface-elevated); border: 1px solid var(--glass-border);">
+              +₹${val.toLocaleString()}
+            </button>
+          `).join('')}
         </div>
 
         <div class="form-group">
@@ -342,6 +400,24 @@ export const GoalsPage = {
     `;
 
     document.body.appendChild(overlay);
+    const contribInput = overlay.querySelector('#contrib-amount-field');
+
+    overlay.querySelector('#contrib-amount-minus')?.addEventListener('click', () => {
+      const cur = parseFloat(contribInput.value) || 0;
+      contribInput.value = Math.max(0, cur - 500);
+    });
+
+    overlay.querySelector('#contrib-amount-plus')?.addEventListener('click', () => {
+      const cur = parseFloat(contribInput.value) || 0;
+      contribInput.value = cur + 500;
+    });
+
+    overlay.querySelectorAll('.contrib-preset-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        contribInput.value = chip.getAttribute('data-val');
+      });
+    });
+
     const closeModal = () => { if (document.body.contains(overlay)) document.body.removeChild(overlay); };
 
     document.getElementById('modal-close-contrib')?.addEventListener('click', closeModal);

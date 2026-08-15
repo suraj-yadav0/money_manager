@@ -312,16 +312,93 @@ export const BudgetPage = {
         const syncId = btn.getAttribute('data-cat-sync-id');
         const localId = btn.getAttribute('data-cat-local-id');
         const name = btn.getAttribute('data-cat-name');
-        const current = btn.getAttribute('data-current-budget');
-        
-        const input = prompt(`Enter new monthly budget cap for ${name}:`, current || '0');
-        if (input !== null) {
-          const val = parseFloat(input);
-          if (!isNaN(val) && val >= 0) {
-            DbService.updateCategoryBudget(syncId, localId, val);
-          }
-        }
+        const current = parseFloat(btn.getAttribute('data-current-budget')) || 0;
+        this.showSingleBudgetModal(syncId, localId, name, current);
       });
+    });
+  },
+
+  showSingleBudgetModal(syncId, localId, name, currentBudget) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay active';
+    overlay.innerHTML = `
+      <div class="modern-modal-dialog animate-scale-up" style="max-width: 440px; padding: 28px 24px;">
+        <div class="modal-header" style="margin-bottom: 20px;">
+          <div class="modal-title">
+            <span class="material-icons" style="color: var(--primary);">tune</span>
+            <span>Edit ${name} Budget</span>
+          </div>
+          <button class="modal-close-btn" id="modal-close-single-budget" aria-label="Close">
+            <span class="material-icons" style="font-size: 20px; line-height: 1;">close</span>
+          </button>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label class="form-label" style="margin-bottom: 8px;">Monthly Budget Cap (₹)</label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" class="btn-icon" id="single-budget-minus" title="Decrease by ₹500" style="width: 42px; height: 42px;">
+              <span class="material-icons">remove</span>
+            </button>
+            <div style="position: relative; display: flex; align-items: center; flex: 1;">
+              <span style="position: absolute; left: 14px; font-weight: 700; font-size: 16px; color: var(--text-muted);">₹</span>
+              <input type="number" step="500" min="0" class="form-control" id="single-budget-input" 
+                     value="${currentBudget}" 
+                     style="padding-left: 32px; font-size: 18px; font-weight: 700; text-align: right;" autofocus>
+            </div>
+            <button type="button" class="btn-icon" id="single-budget-plus" title="Increase by ₹500" style="width: 42px; height: 42px;">
+              <span class="material-icons">add</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Adjustment Preset Chips -->
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 24px;">
+          ${[1000, 2500, 5000, 10000, 20000].map(val => `
+            <button type="button" class="filter-chip quick-preset-chip" data-val="${val}" style="padding: 6px 10px; font-size: 11.5px; border-radius: var(--radius-sm); background: var(--bg-surface-elevated); border: 1px solid var(--glass-border);">
+              ₹${val.toLocaleString()}
+            </button>
+          `).join('')}
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px; padding-top: 16px; border-top: 1px solid var(--glass-border);">
+          <button class="btn-secondary" id="modal-cancel-single-budget" style="width: auto;">Cancel</button>
+          <button class="btn-primary" id="modal-save-single-budget" style="width: auto;">Save Cap</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+    const input = overlay.querySelector('#single-budget-input');
+
+    overlay.querySelector('#single-budget-minus')?.addEventListener('click', () => {
+      const cur = parseFloat(input.value) || 0;
+      input.value = Math.max(0, cur - 500);
+    });
+
+    overlay.querySelector('#single-budget-plus')?.addEventListener('click', () => {
+      const cur = parseFloat(input.value) || 0;
+      input.value = cur + 500;
+    });
+
+    overlay.querySelectorAll('.quick-preset-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        input.value = chip.getAttribute('data-val');
+      });
+    });
+
+    const closeModal = () => {
+      if (document.body.contains(overlay)) document.body.removeChild(overlay);
+    };
+
+    overlay.querySelector('#modal-close-single-budget')?.addEventListener('click', closeModal);
+    overlay.querySelector('#modal-cancel-single-budget')?.addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+
+    overlay.querySelector('#modal-save-single-budget')?.addEventListener('click', async () => {
+      const val = parseFloat(input.value) || 0;
+      await DbService.updateCategoryBudget(syncId, localId, val);
+      closeModal();
+      StateManager.notify();
     });
   },
 
@@ -340,7 +417,7 @@ export const BudgetPage = {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay active';
     overlay.innerHTML = `
-      <div class="modern-modal-dialog animate-scale-up" style="max-width: 520px;">
+      <div class="modern-modal-dialog animate-scale-up" style="max-width: 540px;">
         <div class="modal-header">
           <div class="modal-title">
             <span class="material-icons" style="color: var(--primary);">tune</span>
@@ -351,22 +428,34 @@ export const BudgetPage = {
           </button>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 14px; max-height: 55vh; overflow-y: auto; padding-right: 4px;">
+        <div style="display: flex; flex-direction: column; gap: 10px; max-height: 55vh; overflow-y: auto; padding-right: 4px;">
           ${expenseCats.map(cat => {
             const budgetVal = Number(cat.monthly_budget || cat.monthlyBudget || 0);
             return `
-              <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.03); padding: 12px 16px; border-radius: var(--radius-md); border: 1px solid var(--glass-border);">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <span class="material-icons" style="color: var(--primary); font-size: 20px;">${IconHelper.getMaterialIcon(cat.icon)}</span>
-                  <span style="font-weight: 600; font-size: 14px;">${cat.name}</span>
+              <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-surface-elevated); padding: 10px 14px; border-radius: var(--radius-md); border: 1px solid var(--glass-border); gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
+                  <div class="tx-icon-box" style="width: 32px; height: 32px; border-radius: 6px;">
+                    <span class="material-icons" style="font-size: 18px;">${IconHelper.getMaterialIcon(cat.icon)}</span>
+                  </div>
+                  <span style="font-weight: 600; font-size: 13.5px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${cat.name}</span>
                 </div>
-                <div style="display: flex; align-items: center; gap: 6px; width: 140px;">
-                  <span style="font-weight: 700; color: var(--primary);">₹</span>
-                  <input type="number" class="form-control budget-modal-input" 
-                         data-cat-sync-id="${cat.sync_id || ''}" 
-                         data-cat-local-id="${cat.id || ''}"
-                         value="${budgetVal}" 
-                         style="padding: 6px 10px; font-weight: 700; text-align: right;">
+
+                <!-- Stepper Buttons & 500 Step Input -->
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <button type="button" class="btn-icon btn-icon-sm budget-step-btn" data-step="-500" title="Decrease by ₹500" style="width: 28px; height: 28px;">
+                    <span class="material-icons" style="font-size: 16px;">remove</span>
+                  </button>
+                  <div style="position: relative; display: flex; align-items: center; width: 110px;">
+                    <span style="position: absolute; left: 8px; font-weight: 700; font-size: 12px; color: var(--text-muted);">₹</span>
+                    <input type="number" step="500" min="0" class="form-control budget-modal-input" 
+                           data-cat-sync-id="${cat.sync_id || ''}" 
+                           data-cat-local-id="${cat.id || ''}"
+                           value="${budgetVal}" 
+                           style="padding: 5px 8px 5px 20px; font-weight: 700; font-size: 13px; text-align: right; width: 100%;">
+                  </div>
+                  <button type="button" class="btn-icon btn-icon-sm budget-step-btn" data-step="500" title="Increase by ₹500" style="width: 28px; height: 28px;">
+                    <span class="material-icons" style="font-size: 16px;">add</span>
+                  </button>
                 </div>
               </div>
             `;
@@ -382,12 +471,26 @@ export const BudgetPage = {
 
     document.body.appendChild(overlay);
 
+    // Stepper buttons listener
+    overlay.querySelectorAll('.budget-step-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const step = parseInt(btn.getAttribute('data-step'), 10);
+        const row = btn.closest('div');
+        const input = row?.querySelector('.budget-modal-input');
+        if (input) {
+          const current = parseFloat(input.value) || 0;
+          input.value = Math.max(0, current + step);
+        }
+      });
+    });
+
     const closeModal = () => {
       if (document.body.contains(overlay)) document.body.removeChild(overlay);
     };
 
     document.getElementById('modal-close-budgets')?.addEventListener('click', closeModal);
     document.getElementById('modal-cancel-budgets')?.addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
 
     document.getElementById('modal-save-budgets')?.addEventListener('click', async () => {
       const inputs = overlay.querySelectorAll('.budget-modal-input');

@@ -245,10 +245,27 @@ export const NetWorthPage = {
 
         <div class="form-group" style="margin-bottom: 24px;">
           <label class="form-label" style="margin-bottom: 8px;">Current Valuation / Principal (₹)</label>
-          <div style="position: relative; display: flex; align-items: center;">
-            <span style="position: absolute; left: 16px; font-size: 20px; font-weight: 700; color: var(--text-muted);">₹</span>
-            <input type="number" step="any" class="form-control" id="asset-val-field" placeholder="50000" style="padding-left: 38px; font-size: 18px; font-weight: 700;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" class="btn-icon" id="asset-val-minus" title="Decrease by ₹500" style="width: 42px; height: 42px;">
+              <span class="material-icons">remove</span>
+            </button>
+            <div style="position: relative; display: flex; align-items: center; flex: 1;">
+              <span style="position: absolute; left: 16px; font-size: 18px; font-weight: 700; color: var(--text-muted);">₹</span>
+              <input type="number" step="500" min="0" class="form-control" id="asset-val-field" placeholder="50000" style="padding-left: 36px; font-size: 18px; font-weight: 700; text-align: right;">
+            </div>
+            <button type="button" class="btn-icon" id="asset-val-plus" title="Increase by ₹500" style="width: 42px; height: 42px;">
+              <span class="material-icons">add</span>
+            </button>
           </div>
+        </div>
+
+        <!-- Quick Valuation Preset Chips -->
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px;">
+          ${[5000, 10000, 25000, 50000, 100000, 500000].map(val => `
+            <button type="button" class="filter-chip asset-val-preset-chip" data-val="${val}" style="padding: 6px 10px; font-size: 11.5px; border-radius: var(--radius-sm); background: var(--bg-surface-elevated); border: 1px solid var(--glass-border);">
+              ₹${val.toLocaleString()}
+            </button>
+          `).join('')}
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--glass-border);">
@@ -261,6 +278,24 @@ export const NetWorthPage = {
     document.body.appendChild(overlay);
     let isLiability = false;
     let selectedType = 'savings';
+
+    const valInput = overlay.querySelector('#asset-val-field');
+
+    overlay.querySelector('#asset-val-minus')?.addEventListener('click', () => {
+      const cur = parseFloat(valInput.value) || 0;
+      valInput.value = Math.max(0, cur - 500);
+    });
+
+    overlay.querySelector('#asset-val-plus')?.addEventListener('click', () => {
+      const cur = parseFloat(valInput.value) || 0;
+      valInput.value = cur + 500;
+    });
+
+    overlay.querySelectorAll('.asset-val-preset-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        valInput.value = chip.getAttribute('data-val');
+      });
+    });
 
     const assetBtn = document.getElementById('asset-class-asset-btn');
     const liabilityBtn = document.getElementById('asset-class-liability-btn');
