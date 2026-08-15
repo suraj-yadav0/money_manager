@@ -12,7 +12,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase-config.js';
 import { StateManager } from './state.js';
-import { DEFAULT_CATEGORIES } from './utils/icons.js';
+import { DEFAULT_CATEGORIES, findCategory, isInvestmentCategory } from './utils/icons.js';
 
 // Helper to generate UUIDs locally (for new documents/IDs)
 function generateUUID() {
@@ -91,6 +91,28 @@ export function deduplicateCategories(cats) {
     }
   }
   return Array.from(map.values());
+}
+
+// Deduplication helper for assets (ensures auto-generated investment holdings are never multiplied)
+export function deduplicateAssets(assets, userId) {
+  if (!Array.isArray(assets) || assets.length <= 1) return assets || [];
+
+  const autoInvestAssets = assets.filter(a => !(a.is_liability || a.isLiability) && (a.name === 'Investments Portfolio' || a.name === 'Investments'));
+  if (autoInvestAssets.length > 1) {
+    const [primary, ...duplicates] = autoInvestAssets;
+    const dupSyncIds = new Set(duplicates.map(d => d.sync_id).filter(Boolean));
+    
+    // Purge duplicate docs from Firestore in background
+    if (userId) {
+      for (const d of duplicates) {
+        if (d.sync_id) {
+          deleteDoc(doc(db, 'users', userId, 'assets', d.sync_id)).catch(() => {});
+        }
+      }
+    }
+    return assets.filter(a => !dupSyncIds.has(a.sync_id));
+  }
+  return assets;
 }
 
 function normalizeCategory(raw, docId) {
@@ -365,7 +387,8 @@ export const DbService = {
 
     // 8. Assets listener
     const unsubAssets = onSnapshot(collection(db, 'users', userId, 'assets'), (snapshot) => {
-      const assets = snapshot.docs.map(d => normalizeAsset(d.data(), d.id));
+      const rawAssets = snapshot.docs.map(d => normalizeAsset(d.data(), d.id));
+      const assets = deduplicateAssets(rawAssets, userId);
       StateManager.setState({ 
         assets: assets,
         syncStatus: 'synced',
@@ -429,7 +452,8 @@ export const DbService = {
       updates.goals = goalsSnap.docs.map(d => normalizeGoal(d.data(), d.id));
       updates.goalContributions = contribSnap.docs.map(d => normalizeContribution(d.data(), d.id));
       updates.categorizationRules = rulesSnap.docs.map(d => normalizeRule(d.data(), d.id));
-      updates.assets = assetsSnap.docs.map(d => normalizeAsset(d.data(), d.id));
+      const rawAssets = assetsSnap.docs.map(d => normalizeAsset(d.data(), d.id));
+      updates.assets = deduplicateAssets(rawAssets, userId);
 
       StateManager.setState(updates);
 
@@ -702,6 +726,7 @@ export const DbService = {
           StateManager.state.transactions.unshift(newTx);
         }
         await this.syncGoalProgressForTransaction(oldTx, newTx);
+        await this.syncInvestmentAssetForTransaction(oldTx, newTx);
         StateManager.saveGuestState();
         StateManager.notify();
       } else {
@@ -723,6 +748,7 @@ export const DbService = {
         }
 
         await this.syncGoalProgressForTransaction(oldTx, newTx);
+        await this.syncInvestmentAssetForTransaction(oldTx, newTx);
         StateManager.notify();
 
         const docRef = doc(db, 'users', userId, 'transactions', syncId);
@@ -730,6 +756,71 @@ export const DbService = {
       }
     } catch (err) {
       console.error('Error in addTransaction:', err);
+    }
+  },
+
+  async syncInvestmentAssetForTransaction(oldTx, newTx) {
+    try {
+      const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
+      const userId = StateManager.state.user?.uid;
+      const categories = StateManager.state.categories;
+
+      // Sum total expense logged under Investment category
+      const totalInvestmentExpense = (StateManager.state.transactions || [])
+        .filter(t => t.type === 'expense' && isInvestmentCategory(categories, t.categoryId || t.category_id))
+        .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+      // Clean up any duplicates first
+      StateManager.state.assets = deduplicateAssets(StateManager.state.assets || [], userId);
+
+      let primaryAsset = (StateManager.state.assets || []).find(a => 
+        !(a.is_liability || a.isLiability) && (
+          a.name === 'Investments Portfolio' || 
+          a.type === 'investment'
+        )
+      );
+
+      if (primaryAsset) {
+        primaryAsset.value = totalInvestmentExpense;
+        primaryAsset.updated_at = new Date().toISOString();
+
+        if (isGuest) {
+          StateManager.saveGuestState();
+        } else if (userId && primaryAsset.sync_id) {
+          const docRef = doc(db, 'users', userId, 'assets', primaryAsset.sync_id);
+          await setDoc(docRef, cleanFirestorePayload({
+            value: totalInvestmentExpense,
+            updated_at: primaryAsset.updated_at
+          }), { merge: true });
+        }
+      } else if (totalInvestmentExpense > 0) {
+        const newAssetSyncId = generateUUID();
+        const createdAsset = {
+          sync_id: newAssetSyncId,
+          name: 'Investments Portfolio',
+          type: 'investment',
+          value: totalInvestmentExpense,
+          isLiability: false,
+          is_liability: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+
+        if (!StateManager.state.assets) StateManager.state.assets = [];
+
+        if (isGuest) {
+          createdAsset.id = StateManager.state.assets.length + 1;
+          StateManager.state.assets.push(createdAsset);
+          StateManager.saveGuestState();
+        } else if (userId) {
+          createdAsset.user_id = userId;
+          StateManager.state.assets.push(createdAsset);
+          const docRef = doc(db, 'users', userId, 'assets', newAssetSyncId);
+          await setDoc(docRef, cleanFirestorePayload(createdAsset), { merge: true });
+        }
+      }
+    } catch (err) {
+      console.error('Error syncing investment asset for transaction:', err);
     }
   },
 
@@ -831,6 +922,7 @@ export const DbService = {
     if (isGuest) {
       StateManager.state.transactions = StateManager.state.transactions.filter(t => t.id !== localId && t.sync_id !== syncId);
       await this.syncGoalProgressForTransaction(oldTx, null);
+      await this.syncInvestmentAssetForTransaction(oldTx, null);
       StateManager.saveGuestState();
       StateManager.notify();
     } else {
@@ -840,6 +932,7 @@ export const DbService = {
       // Optimistic local removal
       StateManager.state.transactions = StateManager.state.transactions.filter(t => t.sync_id !== syncId);
       await this.syncGoalProgressForTransaction(oldTx, null);
+      await this.syncInvestmentAssetForTransaction(oldTx, null);
       StateManager.notify();
 
       if (syncId) {
@@ -1322,4 +1415,33 @@ export function reconcileGoalSavedAmounts(state = StateManager.state) {
       goal.isCompleted = goal.is_completed;
     }
   });
+}
+
+// Automatic Investment Assets Reconciliation Function
+export function reconcileInvestmentAssets(state = StateManager.state) {
+  if (!state) return;
+
+  const categories = state.categories;
+  const userId = state.user?.uid;
+
+  // 1. Deduplicate any duplicate auto-created "Investments Portfolio" assets and purge from Firestore
+  if (Array.isArray(state.assets)) {
+    state.assets = deduplicateAssets(state.assets, userId);
+  }
+
+  // 2. Calculate cumulative sum of all expense transactions under Investment category
+  const investmentExpenseTotal = (state.transactions || [])
+    .filter(t => t.type === 'expense' && isInvestmentCategory(categories, t.categoryId || t.category_id))
+    .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+  const primaryInvestAsset = (state.assets || []).find(a => 
+    !(a.is_liability || a.isLiability) && (
+      a.name === 'Investments Portfolio' || 
+      a.type === 'investment'
+    )
+  );
+
+  if (primaryInvestAsset && investmentExpenseTotal > 0 && primaryInvestAsset.name === 'Investments Portfolio') {
+    primaryInvestAsset.value = investmentExpenseTotal;
+  }
 }

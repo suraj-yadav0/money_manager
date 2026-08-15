@@ -5,7 +5,7 @@ import { DateRangeHelper } from '../utils/date-range.js';
 import { Formatters } from '../utils/formatters.js';
 import { IconHelper, findCategory } from '../utils/icons.js';
 import { Router } from '../router.js';
-import { reconcileGoalSavedAmounts } from '../db.js';
+import { reconcileGoalSavedAmounts, reconcileInvestmentAssets } from '../db.js';
 
 // Register Chart.js
 Chart.register(...registerables);
@@ -16,6 +16,7 @@ let categoryChartInstance = null;
 export const DashboardPage = {
   render(state) {
     reconcileGoalSavedAmounts(state);
+    reconcileInvestmentAssets(state);
     const stats = this.calculateStats(state);
     const recentTx = this.getRecentTransactions(state);
     const topCategories = this.getTopCategories(state, stats.totalExpenses);

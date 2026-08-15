@@ -101,3 +101,10 @@ export function findCategory(categories, categoryId) {
 
   return { name: 'Other', icon: 'more_horiz', type: 'expense' };
 }
+
+export function isInvestmentCategory(categories, categoryId) {
+  const cat = findCategory(categories, categoryId);
+  if (!cat) return false;
+  const name = (cat.name || '').toLowerCase();
+  return name === 'investments' || name === 'investment' || cat.icon === 'show_chart' || cat.icon === 'trending_up';
+}

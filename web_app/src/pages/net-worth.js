@@ -1,10 +1,11 @@
 /* Modern Net Worth & Asset Intelligence Module */
 import { StateManager } from '../state.js';
-import { DbService } from '../db.js';
+import { DbService, reconcileInvestmentAssets } from '../db.js';
 import { Formatters } from '../utils/formatters.js';
 
 export const NetWorthPage = {
   render(state) {
+    reconcileInvestmentAssets(state);
     const assets = state.assets || [];
     
     let totalAssets = 0;
