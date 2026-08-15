@@ -45,23 +45,23 @@ export const AllTransactionsPage = {
             <div style="display: flex; gap: 24px; align-items: center;">
               <div>
                 <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em;">Entries</div>
-                <div style="font-size: 18px; font-weight: 800; color: var(--text-primary);">${list.length} records</div>
+                <div style="font-size: 18px; font-weight: 800; color: var(--text-primary);" id="ledger-entries-count">${list.length} records</div>
               </div>
               <div style="height: 28px; width: 1px; background: var(--glass-border);"></div>
               <div>
                 <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em;">Inflow</div>
-                <div style="font-size: 18px; font-weight: 800; color: var(--success);">+${Formatters.currency(ledgerIncome)}</div>
+                <div style="font-size: 18px; font-weight: 800; color: var(--success);" id="ledger-inflow-total">+${Formatters.currency(ledgerIncome)}</div>
               </div>
               <div style="height: 28px; width: 1px; background: var(--glass-border);"></div>
               <div>
                 <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em;">Outflow</div>
-                <div style="font-size: 18px; font-weight: 800; color: var(--text-primary);">${Formatters.currency(ledgerExpense)}</div>
+                <div style="font-size: 18px; font-weight: 800; color: var(--text-primary);" id="ledger-outflow-total">${Formatters.currency(ledgerExpense)}</div>
               </div>
             </div>
 
             <div>
               <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em; text-align: right;">Net Cash Flow</div>
-              <div style="font-size: 18px; font-weight: 800; color: ${netFlow >= 0 ? 'var(--success)' : 'var(--error)'};">
+              <div style="font-size: 18px; font-weight: 800; color: ${netFlow >= 0 ? 'var(--success)' : 'var(--error)'};" id="ledger-net-flow">
                 ${(netFlow >= 0 ? '+' : '') + Formatters.currency(netFlow)}
               </div>
             </div>
@@ -70,11 +70,14 @@ export const AllTransactionsPage = {
 
         <!-- Search Bar and Filter Tabs -->
         <div style="display: flex; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
-          <!-- Search Input -->
+          <!-- Search Input with Clear Button -->
           <div style="flex: 1 1 320px; max-width: 480px;">
-            <div class="search-bar-wrapper">
+            <div class="search-bar-wrapper" style="position: relative;">
               <span class="material-icons search-icon">search</span>
-              <input type="text" class="search-input" id="ledger-search-input" placeholder="Search by note, merchant, or category..." value="${this.searchQuery}">
+              <input type="text" class="search-input" id="ledger-search-input" placeholder="Search by note, merchant, or category..." value="${this.searchQuery}" style="padding-right: 38px;">
+              <button type="button" class="btn-icon" id="ledger-search-clear-btn" style="position: absolute; right: 8px; width: 28px; height: 28px; display: ${this.searchQuery ? 'flex' : 'none'}; cursor: pointer; border: none; background: transparent;" title="Clear search">
+                <span class="material-icons" style="font-size: 16px; color: var(--text-muted);">close</span>
+              </button>
             </div>
           </div>
 
@@ -88,7 +91,7 @@ export const AllTransactionsPage = {
         </div>
 
         <!-- Transactions Ledger List -->
-        <div class="fintech-card" style="padding: 16px 20px;">
+        <div class="fintech-card" style="padding: 16px 20px;" id="ledger-card-body">
           ${list.length === 0 ? `
             <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
               <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
@@ -166,13 +169,84 @@ export const AllTransactionsPage = {
       .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   },
 
+  updateLedgerView(state) {
+    const list = this.getFilteredTransactions(state);
+    
+    // Calculate ledger totals
+    let ledgerIncome = 0;
+    let ledgerExpense = 0;
+    list.forEach(tx => {
+      if (tx.type === 'income') ledgerIncome += tx.amount;
+      else ledgerExpense += tx.amount;
+    });
+    const netFlow = ledgerIncome - ledgerExpense;
+
+    // Update summary counts & totals in place
+    const entriesEl = document.getElementById('ledger-entries-count');
+    if (entriesEl) entriesEl.textContent = `${list.length} records`;
+
+    const inflowEl = document.getElementById('ledger-inflow-total');
+    if (inflowEl) inflowEl.textContent = `+${Formatters.currency(ledgerIncome)}`;
+
+    const outflowEl = document.getElementById('ledger-outflow-total');
+    if (outflowEl) outflowEl.textContent = `${Formatters.currency(ledgerExpense)}`;
+
+    const netFlowEl = document.getElementById('ledger-net-flow');
+    if (netFlowEl) {
+      netFlowEl.textContent = `${(netFlow >= 0 ? '+' : '') + Formatters.currency(netFlow)}`;
+      netFlowEl.style.color = netFlow >= 0 ? 'var(--success)' : 'var(--error)';
+    }
+
+    // Update filter chip active classes
+    document.querySelectorAll('.filter-chip[data-type]').forEach(chip => {
+      chip.classList.toggle('active', chip.getAttribute('data-type') === this.activeTypeFilter);
+    });
+
+    // Update transactions list container
+    const listCardBody = document.getElementById('ledger-card-body');
+    if (listCardBody) {
+      if (list.length === 0) {
+        listCardBody.innerHTML = `
+          <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+              <span class="material-icons" style="font-size: 28px; opacity: 0.5;">search_off</span>
+            </div>
+            <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">No matching transactions found</div>
+            <div style="font-size: 13px;">Try adjusting your search criteria or filter tags.</div>
+          </div>
+        `;
+      } else {
+        listCardBody.innerHTML = `
+          <div class="tx-list">
+            ${list.map(tx => this.renderTransactionRow(tx, state.categories)).join('')}
+          </div>
+        `;
+      }
+      this.bindRowEvents(state);
+    }
+  },
+
   bindEvents(state) {
-    // Search input typing
     const searchInput = document.getElementById('ledger-search-input');
+    const clearBtn = document.getElementById('ledger-search-clear-btn');
+
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
         this.searchQuery = e.target.value;
-        StateManager.notify();
+        if (clearBtn) clearBtn.style.display = this.searchQuery ? 'flex' : 'none';
+        this.updateLedgerView(state);
+      });
+    }
+
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        this.searchQuery = '';
+        if (searchInput) {
+          searchInput.value = '';
+          searchInput.focus();
+        }
+        clearBtn.style.display = 'none';
+        this.updateLedgerView(state);
       });
     }
 
@@ -181,7 +255,7 @@ export const AllTransactionsPage = {
     typeChips.forEach(chip => {
       chip.addEventListener('click', () => {
         this.activeTypeFilter = chip.getAttribute('data-type');
-        StateManager.notify();
+        this.updateLedgerView(state);
       });
     });
 
@@ -203,11 +277,15 @@ export const AllTransactionsPage = {
       downloadAnchor.remove();
     });
 
+    this.bindRowEvents(state);
+  },
+
+  bindRowEvents(state) {
     // Transaction click to edit
     const rows = document.querySelectorAll('.ledger-tx-row');
     rows.forEach(row => {
       row.addEventListener('click', (e) => {
-        if (e.target.closest('.delete-tx-btn')) return; // handled separately
+        if (e.target.closest('.delete-tx-btn')) return;
 
         const syncId = row.getAttribute('data-sync-id');
         const localId = row.getAttribute('data-id');
