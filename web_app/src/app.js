@@ -12,7 +12,7 @@ import { Router } from './router.js';
 
 // Setup theme switcher baseline (default: dark theme)
 function initializeTheme() {
-  const savedTheme = localStorage.getItem('money_manager_theme') || 'dark';
+  const savedTheme = localStorage.getItem('money_manager_theme') || localStorage.getItem('quantro_theme') || 'dark';
   document.documentElement.setAttribute('data-theme', savedTheme);
 }
 

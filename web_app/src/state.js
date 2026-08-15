@@ -29,7 +29,7 @@ class AppStateManager {
       assets: [],
 
       // Theme State ('dark' | 'light')
-      theme: localStorage.getItem('quantro_theme') || 'dark',
+      theme: localStorage.getItem('money_manager_theme') || localStorage.getItem('quantro_theme') || 'dark',
 
       // Cloud Sync Metadata
       syncStatus: 'idle',        // 'idle' | 'syncing' | 'synced' | 'error'
@@ -46,6 +46,7 @@ class AppStateManager {
   // Set Theme
   setTheme(theme) {
     this.state.theme = theme;
+    localStorage.setItem('money_manager_theme', theme);
     localStorage.setItem('quantro_theme', theme);
     document.documentElement.setAttribute('data-theme', theme);
     this.notify();
@@ -53,7 +54,8 @@ class AppStateManager {
 
   // Toggle Theme
   toggleTheme() {
-    const nextTheme = this.state.theme === 'dark' ? 'light' : 'dark';
+    const current = document.documentElement.getAttribute('data-theme') || this.state.theme || 'dark';
+    const nextTheme = current === 'dark' ? 'light' : 'dark';
     this.setTheme(nextTheme);
   }
 

@@ -459,7 +459,8 @@ export const DashboardPage = {
     if (cashFlowCtx) {
       if (cashFlowChartInstance) cashFlowChartInstance.destroy();
 
-      const isLight = state.theme === 'light';
+      const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
+      const isLight = activeTheme === 'light';
       const textColor = isLight ? '#475569' : '#94A3B8';
       const gridColor = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
       const tooltipBg = isLight ? '#FFFFFF' : '#11141E';
@@ -588,7 +589,8 @@ export const DashboardPage = {
     if (categoryCtx) {
       if (categoryChartInstance) categoryChartInstance.destroy();
 
-      const isLight = state.theme === 'light';
+      const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
+      const isLight = activeTheme === 'light';
       const topCats = this.getTopCategories(state, 100);
       if (topCats.length > 0) {
         const labels = topCats.map(c => c.name);
