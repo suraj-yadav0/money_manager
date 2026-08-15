@@ -292,55 +292,74 @@ export const AddTransactionModal = {
 
     // Save Button
     document.getElementById('tx-save-btn')?.addEventListener('click', async () => {
-      const amount = parseFloat(document.getElementById('tx-amount-input')?.value);
-      const note = document.getElementById('tx-note-input')?.value.trim() || '';
-      const date = document.getElementById('tx-date-input')?.value || new Date().toISOString();
-      const paymentMode = this.paymentMode || 'Cash';
-      const isRecurring = document.getElementById('tx-recurring-check')?.checked || false;
-      const goalId = document.getElementById('tx-goal-link-select')?.value || null;
-
-      if (isNaN(amount) || amount <= 0) {
-        alert('Please enter a valid transaction amount.');
-        return;
+      const saveBtn = document.getElementById('tx-save-btn');
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
       }
 
-      const cleanCatId = /^\d+$/.test(String(this.selectedCategoryId)) ? parseInt(this.selectedCategoryId, 10) : this.selectedCategoryId;
-      const cleanGoalId = goalId ? (/^\d+$/.test(String(goalId)) ? parseInt(goalId, 10) : goalId) : null;
+      try {
+        const amount = parseFloat(document.getElementById('tx-amount-input')?.value);
+        const note = document.getElementById('tx-note-input')?.value.trim() || '';
+        const date = document.getElementById('tx-date-input')?.value || new Date().toISOString();
+        const paymentMode = this.paymentMode || 'Cash';
+        const isRecurring = document.getElementById('tx-recurring-check')?.checked || false;
+        const goalId = document.getElementById('tx-goal-link-select')?.value || null;
 
-      const txPayload = {
-        amount,
-        type: this.selectedType,
-        categoryId: cleanCatId,
-        category_id: cleanCatId,
-        timestamp: new Date(date).toISOString(),
-        note,
-        paymentMode,
-        payment_mode: paymentMode,
-        isRecurring,
-        is_recurring: isRecurring,
-        goalId: cleanGoalId,
-        goal_id: cleanGoalId,
-      };
+        if (isNaN(amount) || amount <= 0) {
+          alert('Please enter a valid transaction amount.');
+          if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = this.activeTx ? 'Update Record' : 'Record Transaction';
+          }
+          return;
+        }
 
-      if (this.activeTx) {
-        await DbService.addTransaction({
-          ...txPayload,
-          sync_id: this.activeTx.sync_id,
-          id: this.activeTx.id
-        });
-      } else {
-        await DbService.addTransaction(txPayload);
+        const cleanCatId = /^\d+$/.test(String(this.selectedCategoryId)) ? parseInt(this.selectedCategoryId, 10) : (this.selectedCategoryId || 1);
+        const cleanGoalId = goalId ? (/^\d+$/.test(String(goalId)) ? parseInt(goalId, 10) : goalId) : null;
+
+        const txPayload = {
+          amount,
+          type: this.selectedType,
+          categoryId: cleanCatId,
+          category_id: cleanCatId,
+          timestamp: new Date(date).toISOString(),
+          note,
+          paymentMode,
+          payment_mode: paymentMode,
+          isRecurring,
+          is_recurring: isRecurring,
+          goalId: cleanGoalId,
+          goal_id: cleanGoalId,
+        };
+
+        if (this.activeTx) {
+          await DbService.addTransaction({
+            ...txPayload,
+            sync_id: this.activeTx.sync_id,
+            id: this.activeTx.id
+          });
+        } else {
+          await DbService.addTransaction(txPayload);
+        }
+      } catch (err) {
+        console.error('Error saving transaction:', err);
+      } finally {
+        this.close();
       }
-
-      this.close();
     });
 
     // Delete Button
     document.getElementById('tx-delete-btn')?.addEventListener('click', async () => {
       if (!this.activeTx) return;
       if (confirm('Are you sure you want to delete this transaction?')) {
-        await DbService.deleteTransaction(this.activeTx.sync_id, this.activeTx.id);
-        this.close();
+        try {
+          await DbService.deleteTransaction(this.activeTx.sync_id, this.activeTx.id);
+        } catch (err) {
+          console.error('Error deleting transaction:', err);
+        } finally {
+          this.close();
+        }
       }
     });
   },

@@ -22,6 +22,22 @@ function generateUUID() {
   });
 }
 
+// Universal Firestore Payload Sanitizer to strip undefined values
+export function cleanFirestorePayload(obj) {
+  if (!obj || typeof obj !== 'object') return obj;
+  const cleaned = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      if (value !== null && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
+        cleaned[key] = cleanFirestorePayload(value);
+      } else {
+        cleaned[key] = value;
+      }
+    }
+  }
+  return cleaned;
+}
+
 // Active subscription cleanups
 let activeListeners = [];
 
@@ -638,55 +654,74 @@ export const DbService = {
   },
 
   async addTransaction(tx) {
-    const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
-    const syncId = tx.sync_id || generateUUID();
-    
-    const catId = tx.categoryId !== undefined ? tx.categoryId : (tx.category_id !== undefined ? tx.category_id : 1);
-    const goalId = tx.goalId !== undefined ? tx.goalId : (tx.goal_id !== undefined ? tx.goal_id : null);
-    const paymentMode = tx.paymentMode || tx.payment_mode || 'Cash';
-    const isRecurring = tx.isRecurring !== undefined ? Boolean(tx.isRecurring) : Boolean(tx.is_recurring);
-
-    const newTx = {
-      ...tx,
-      sync_id: syncId,
-      amount: Number(tx.amount || 0),
-      type: tx.type || 'expense',
-      categoryId: catId,
-      category_id: catId,
-      goalId: goalId,
-      goal_id: goalId,
-      paymentMode,
-      payment_mode: paymentMode,
-      isRecurring,
-      is_recurring: isRecurring,
-      timestamp: tx.timestamp || new Date().toISOString(),
-      note: tx.note || '',
-      is_synced: !isGuest,
-      created_at: tx.created_at || new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-
-    if (isGuest) {
-      newTx.id = StateManager.state.transactions.length + 1;
-      StateManager.state.transactions.unshift(newTx);
-      StateManager.saveGuestState();
-      StateManager.notify();
-    } else {
-      const userId = StateManager.state.user?.uid;
-      if (!userId) return;
-      newTx.user_id = userId;
+    try {
+      const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
+      const syncId = tx.sync_id || generateUUID();
       
-      // Optimistic update in state
-      const existingIdx = StateManager.state.transactions.findIndex(t => t.sync_id === syncId);
-      if (existingIdx !== -1) {
-        StateManager.state.transactions[existingIdx] = newTx;
-      } else {
-        StateManager.state.transactions.unshift(newTx);
-      }
-      StateManager.notify();
+      const catId = tx.categoryId !== undefined ? tx.categoryId : (tx.category_id !== undefined ? tx.category_id : 1);
+      const goalId = tx.goalId !== undefined ? tx.goalId : (tx.goal_id !== undefined ? tx.goal_id : null);
+      const paymentMode = tx.paymentMode || tx.payment_mode || 'Cash';
+      const isRecurring = tx.isRecurring !== undefined ? Boolean(tx.isRecurring) : Boolean(tx.is_recurring);
 
-      const docRef = doc(db, 'users', userId, 'transactions', syncId);
-      await setDoc(docRef, newTx, { merge: true });
+      const newTx = {
+        sync_id: syncId,
+        amount: Number(tx.amount || 0),
+        type: tx.type || 'expense',
+        categoryId: catId,
+        category_id: catId,
+        goalId: goalId || null,
+        goal_id: goalId || null,
+        paymentMode,
+        payment_mode: paymentMode,
+        isRecurring,
+        is_recurring: isRecurring,
+        timestamp: tx.timestamp || new Date().toISOString(),
+        note: tx.note || '',
+        is_synced: !isGuest,
+        created_at: tx.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      if (tx.id !== undefined && tx.id !== null) {
+        newTx.id = tx.id;
+      }
+
+      if (isGuest) {
+        const existingIdx = StateManager.state.transactions.findIndex(t => 
+          (syncId && t.sync_id === syncId) || (tx.id !== undefined && t.id === tx.id)
+        );
+        if (existingIdx !== -1) {
+          StateManager.state.transactions[existingIdx] = { ...StateManager.state.transactions[existingIdx], ...newTx };
+        } else {
+          newTx.id = StateManager.state.transactions.length + 1;
+          StateManager.state.transactions.unshift(newTx);
+        }
+        StateManager.saveGuestState();
+        StateManager.notify();
+      } else {
+        const userId = StateManager.state.user?.uid;
+        if (!userId) {
+          StateManager.notify();
+          return;
+        }
+        newTx.user_id = userId;
+        
+        // Optimistic update in state
+        const existingIdx = StateManager.state.transactions.findIndex(t => 
+          (syncId && t.sync_id === syncId) || (tx.id !== undefined && t.id === tx.id)
+        );
+        if (existingIdx !== -1) {
+          StateManager.state.transactions[existingIdx] = { ...StateManager.state.transactions[existingIdx], ...newTx };
+        } else {
+          StateManager.state.transactions.unshift(newTx);
+        }
+        StateManager.notify();
+
+        const docRef = doc(db, 'users', userId, 'transactions', syncId);
+        await setDoc(docRef, cleanFirestorePayload(newTx), { merge: true });
+      }
+    } catch (err) {
+      console.error('Error in addTransaction:', err);
     }
   },
 
