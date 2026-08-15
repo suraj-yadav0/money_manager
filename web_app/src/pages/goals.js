@@ -284,7 +284,7 @@ export const GoalsPage = {
         <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;">
           ${[10000, 25000, 50000, 100000, 250000, 500000].map(val => `
             <button type="button" class="filter-chip goal-target-preset-chip" data-val="${val}" style="padding: 6px 10px; font-size: 11.5px; border-radius: var(--radius-sm); background: var(--bg-surface-elevated); border: 1px solid var(--glass-border);">
-              ₹${val.toLocaleString()}
+              +₹${val.toLocaleString()}
             </button>
           `).join('')}
         </div>
@@ -316,7 +316,9 @@ export const GoalsPage = {
 
     overlay.querySelectorAll('.goal-target-preset-chip').forEach(chip => {
       chip.addEventListener('click', () => {
-        targetInput.value = chip.getAttribute('data-val');
+        const delta = parseFloat(chip.getAttribute('data-val')) || 0;
+        const cur = parseFloat(targetInput.value) || 0;
+        targetInput.value = cur + delta;
       });
     });
 
@@ -414,7 +416,9 @@ export const GoalsPage = {
 
     overlay.querySelectorAll('.contrib-preset-chip').forEach(chip => {
       chip.addEventListener('click', () => {
-        contribInput.value = chip.getAttribute('data-val');
+        const delta = parseFloat(chip.getAttribute('data-val')) || 0;
+        const cur = parseFloat(contribInput.value) || 0;
+        contribInput.value = cur + delta;
       });
     });
 

@@ -351,11 +351,11 @@ export const BudgetPage = {
           </div>
         </div>
 
-        <!-- Quick Adjustment Preset Chips -->
+        <!-- Quick Adjustment Increment Chips -->
         <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 24px;">
-          ${[1000, 2500, 5000, 10000, 20000].map(val => `
+          ${[500, 1000, 2500, 5000, 10000, 20000].map(val => `
             <button type="button" class="filter-chip quick-preset-chip" data-val="${val}" style="padding: 6px 10px; font-size: 11.5px; border-radius: var(--radius-sm); background: var(--bg-surface-elevated); border: 1px solid var(--glass-border);">
-              ₹${val.toLocaleString()}
+              +₹${val.toLocaleString()}
             </button>
           `).join('')}
         </div>
@@ -382,7 +382,9 @@ export const BudgetPage = {
 
     overlay.querySelectorAll('.quick-preset-chip').forEach(chip => {
       chip.addEventListener('click', () => {
-        input.value = chip.getAttribute('data-val');
+        const delta = parseFloat(chip.getAttribute('data-val')) || 0;
+        const cur = parseFloat(input.value) || 0;
+        input.value = cur + delta;
       });
     });
 

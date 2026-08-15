@@ -74,11 +74,27 @@ export const AddTransactionModal = {
           <!-- Amount Input with Currency -->
           <div class="form-group" style="margin-bottom: 20px;">
             <label class="form-label">Transaction Amount</label>
-            <div style="position: relative; display: flex; align-items: center;">
-              <span style="position: absolute; left: 18px; font-size: 24px; font-weight: 700; color: var(--text-primary);">₹</span>
-              <input type="number" step="any" class="form-control" id="tx-amount-input" 
-                     placeholder="0.00" value="${amountVal}" 
-                     style="padding-left: 44px; font-size: 26px; font-weight: 700; font-family: var(--font-heading);" autofocus>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button type="button" class="btn-icon" id="tx-amount-minus" title="Decrease by ₹500" style="width: 44px; height: 44px;">
+                <span class="material-icons">remove</span>
+              </button>
+              <div style="position: relative; display: flex; align-items: center; flex: 1;">
+                <span style="position: absolute; left: 16px; font-size: 24px; font-weight: 700; color: var(--text-primary);">₹</span>
+                <input type="number" step="any" min="0" class="form-control" id="tx-amount-input" 
+                       placeholder="0.00" value="${amountVal}" 
+                       style="padding-left: 40px; font-size: 24px; font-weight: 700; font-family: var(--font-heading); text-align: right;" autofocus>
+              </div>
+              <button type="button" class="btn-icon" id="tx-amount-plus" title="Increase by ₹500" style="width: 44px; height: 44px;">
+                <span class="material-icons">add</span>
+              </button>
+            </div>
+            <!-- Quick Addition Increment Chips -->
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">
+              ${[100, 500, 1000, 2000, 5000].map(val => `
+                <button type="button" class="filter-chip tx-amount-preset-chip" data-val="${val}" style="padding: 4px 10px; font-size: 11.5px; border-radius: var(--radius-sm); background: var(--bg-surface-elevated); border: 1px solid var(--glass-border);">
+                  +₹${val.toLocaleString()}
+                </button>
+              `).join('')}
             </div>
           </div>
 
@@ -226,6 +242,33 @@ export const AddTransactionModal = {
         }
       });
     }
+
+    // Amount Steppers & Preset Addition Chips
+    const amountInput = document.getElementById('tx-amount-input');
+    document.getElementById('tx-amount-minus')?.addEventListener('click', () => {
+      if (amountInput) {
+        const cur = parseFloat(amountInput.value) || 0;
+        amountInput.value = Math.max(0, cur - 500);
+      }
+    });
+
+    document.getElementById('tx-amount-plus')?.addEventListener('click', () => {
+      if (amountInput) {
+        const cur = parseFloat(amountInput.value) || 0;
+        amountInput.value = cur + 500;
+      }
+    });
+
+    document.querySelectorAll('.tx-amount-preset-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        if (amountInput) {
+          const delta = parseFloat(chip.getAttribute('data-val')) || 0;
+          const cur = parseFloat(amountInput.value) || 0;
+          const total = cur + delta;
+          amountInput.value = total % 1 === 0 ? total : total.toFixed(2);
+        }
+      });
+    });
 
     // Category Pill Clicks
     const catPills = document.querySelectorAll('.category-select-pill');

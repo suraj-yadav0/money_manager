@@ -259,11 +259,11 @@ export const NetWorthPage = {
           </div>
         </div>
 
-        <!-- Quick Valuation Preset Chips -->
+        <!-- Quick Valuation Increment Chips -->
         <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px;">
           ${[5000, 10000, 25000, 50000, 100000, 500000].map(val => `
             <button type="button" class="filter-chip asset-val-preset-chip" data-val="${val}" style="padding: 6px 10px; font-size: 11.5px; border-radius: var(--radius-sm); background: var(--bg-surface-elevated); border: 1px solid var(--glass-border);">
-              ₹${val.toLocaleString()}
+              +₹${val.toLocaleString()}
             </button>
           `).join('')}
         </div>
@@ -293,7 +293,9 @@ export const NetWorthPage = {
 
     overlay.querySelectorAll('.asset-val-preset-chip').forEach(chip => {
       chip.addEventListener('click', () => {
-        valInput.value = chip.getAttribute('data-val');
+        const delta = parseFloat(chip.getAttribute('data-val')) || 0;
+        const cur = parseFloat(valInput.value) || 0;
+        valInput.value = cur + delta;
       });
     });
 
