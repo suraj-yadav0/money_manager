@@ -42,6 +42,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   Goal? _selectedGoal;
   String? _selectedPaymentMode = 'Cash'; // Default to Cash
   DateTime _selectedDate = DateTime.now();
+  bool _isRecurring = false;
   bool _isLoading = false;
   bool _isSuggestingCategory = false;
   String? _receiptImagePath;
@@ -61,6 +62,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       _noteController.text = tx.note ?? '';
       _type = TransactionType.values.firstWhere((e) => e.name == tx.type);
       _selectedCategory = cat;
+      _isRecurring = tx.isRecurring;
       _selectedGoal = widget.transactionToEdit!.transaction.goalId != null
           ? Goal(
               id: widget.transactionToEdit!.transaction.goalId!,
@@ -299,6 +301,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   _noteController.text.isNotEmpty ? _noteController.text : null,
                 ),
                 paymentMode: Value(_selectedPaymentMode),
+                isRecurring: Value(_isRecurring),
                 receiptImagePath: Value(_receiptImagePath),
               ),
             );
@@ -317,6 +320,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   _noteController.text.isNotEmpty ? _noteController.text : null,
                 ),
                 paymentMode: Value(_selectedPaymentMode),
+                isRecurring: Value(_isRecurring),
                 receiptImagePath: Value(_receiptImagePath),
               ),
             );
@@ -345,6 +349,34 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           // Refresh goal data
           ref.invalidate(activeGoalsProvider);
           ref.invalidate(activeGoalProvider);
+        }
+
+        // Update investment asset in Net Worth if category is Investment
+        if (_type == TransactionType.expense && _selectedCategory != null) {
+          final catName = _selectedCategory!.name.toLowerCase();
+          if (catName == 'investments' || catName == 'investment') {
+            final existingAsset = await (db.select(db.assets)
+                  ..where((a) => a.isLiability.equals(false) & (a.type.equals('investment') | a.name.contains('Investment'))))
+                .getSingleOrNull();
+            if (existingAsset != null) {
+              await (db.update(db.assets)..where((a) => a.id.equals(existingAsset.id)))
+                  .write(AssetsCompanion(
+                value: Value(existingAsset.value + amount),
+                updatedAt: Value(DateTime.now()),
+                isSynced: const Value(false),
+              ));
+            } else {
+              await db.into(db.assets).insert(
+                    AssetsCompanion.insert(
+                      name: 'Investments Portfolio',
+                      type: 'investment',
+                      value: amount,
+                      isLiability: false,
+                      isSynced: const Value(false),
+                    ),
+                  );
+            }
+          }
         }
       }
 
@@ -762,6 +794,29 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       ),
                     ],
                   ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Recurring Monthly Transaction Switch
+              GlassCard(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  secondary: Icon(
+                    Icons.repeat,
+                    color: _isRecurring ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                  ),
+                  title: Text(
+                    'Recurring Transaction',
+                    style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(
+                    'Repeats monthly on this day',
+                    style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                  ),
+                  value: _isRecurring,
+                  onChanged: (val) => setState(() => _isRecurring = val),
                 ),
               ),
               const SizedBox(height: 24),

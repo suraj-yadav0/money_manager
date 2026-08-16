@@ -6,6 +6,7 @@ import '../../../core/presentation/glass_widgets.dart';
 import '../../../core/database/database.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/providers/auth_providers.dart';
 import '../providers/goals_provider.dart';
 import '../widgets/add_contribution_sheet.dart';
 import '../widgets/edit_goal_sheet.dart';
@@ -217,6 +218,7 @@ class _GoalsListView extends ConsumerWidget {
       final goalService = ref.read(goalServiceProvider);
       await goalService.deleteGoal(goal.id);
       ref.invalidate(activeGoalsProvider);
+      ref.read(syncNotifierProvider.notifier).triggerSync();
 
       if (context.mounted) {
         ScaffoldMessenger.of(
@@ -779,6 +781,7 @@ class _CreateGoalSheetState extends ConsumerState<_CreateGoalSheet> {
       );
 
       widget.ref.invalidate(activeGoalsProvider);
+      widget.ref.read(syncNotifierProvider.notifier).triggerSync();
 
       if (mounted) {
         Navigator.of(context).pop();
