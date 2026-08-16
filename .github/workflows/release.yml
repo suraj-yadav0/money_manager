@@ -1,27 +1,29 @@
-name: Test & Build Release
+name: Publish Android APK on Release
 
 on:
-  push:
-    branches:
-      - main
+  release:
+    types: [published]
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
 
 permissions:
   contents: write
 
 jobs:
-  # 1. Run Automated Tests
-  test:
-    name: Run Tests
+  build-apk:
+    name: Build & Attach Android APK
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Java Development Kit (JDK)
+      - name: Set up Java (JDK 17)
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
+          cache: 'gradle'
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -35,174 +37,17 @@ jobs:
       - name: Run Code Generation
         run: flutter pub run build_runner build --delete-conflicting-outputs
 
-      - name: Run Tests
-        run: flutter test
-
-  # 2. Build Android Target
-  build-android:
-    name: Build Android
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set up Java Development Kit (JDK)
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          cache: true
-
-      - name: Install Dependencies
-        run: flutter pub get
-
-      - name: Run Code Generation
-        run: flutter pub run build_runner build --delete-conflicting-outputs
-
-      - name: Build APK
+      - name: Build Android Release APK
         run: flutter build apk --release
 
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
-
-  # 3. Build Windows Target
-  build-windows:
-    name: Build Windows
-    needs: test
-    runs-on: windows-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          cache: true
-
-      - name: Install Dependencies
-        run: flutter pub get
-
-      - name: Run Code Generation
-        run: flutter pub run build_runner build --delete-conflicting-outputs
-
-      - name: Build Windows
-        run: flutter build windows --release
-
-      - name: Package Windows Bundle (ZIP)
-        shell: pwsh
+      - name: Prepare Release Asset
         run: |
-          Compress-Archive -Path build\windows\runner\Release\* -DestinationPath build\windows\runner\money_manager_windows.zip
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-release.apk dist/money_manager.apk
 
-      - name: Upload Windows Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-bin
-          path: build/windows/runner/money_manager_windows.zip
-
-  # 4. Build Linux Target
-  build-linux:
-    name: Build Linux
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Install Linux Build Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev zip
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          cache: true
-
-      - name: Install Dependencies
-        run: flutter pub get
-
-      - name: Run Code Generation
-        run: flutter pub run build_runner build --delete-conflicting-outputs
-
-      - name: Build Linux
-        run: flutter build linux --release
-
-      - name: Package Linux Bundle (ZIP)
-        run: |
-          cd build/linux/x64/release/bundle
-          zip -r ../../../../money_manager_linux.zip *
-
-      - name: Upload Linux Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-bin
-          path: money_manager_linux.zip
-
-  # 5. Create & Publish GitHub Release
-  publish-release:
-    name: Publish Release
-    needs: [build-android, build-windows, build-linux]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Download Android Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: android-apk
-          path: release-artifacts
-
-      - name: Download Windows Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: windows-bin
-          path: release-artifacts
-
-      - name: Download Linux Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: linux-bin
-          path: release-artifacts
-
-      - name: Rename Android APK for Release
-        run: mv release-artifacts/app-release.apk release-artifacts/money_manager_android.apk
-
-      - name: Parse Version & Build Tag
-        id: get_tag
-        run: |
-          VERSION_LINE=$(grep 'version:' pubspec.yaml)
-          VERSION=$(echo "$VERSION_LINE" | awk '{print $2}')
-          # Replace '+' with '-' to make a clean SemVer-like version for tagging
-          CLEAN_VERSION=$(echo "$VERSION" | tr '+' '-')
-          # Append run number to ensure tag is always unique per commit push
-          TAG_NAME="v$CLEAN_VERSION-build.${{ github.run_number }}"
-          RELEASE_NAME="Release v$VERSION (Build ${{ github.run_number }})"
-          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
-          echo "release_name=$RELEASE_NAME" >> $GITHUB_OUTPUT
-
-      - name: Create GitHub Release
+      - name: Upload APK to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.get_tag.outputs.tag_name }}
-          name: ${{ steps.get_tag.outputs.release_name }}
-          files: |
-            release-artifacts/money_manager_android.apk
-            release-artifacts/money_manager_windows.zip
-            release-artifacts/money_manager_linux.zip
-          draft: false
-          prerelease: false
-          generate_release_notes: true
+          files: dist/money_manager.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
