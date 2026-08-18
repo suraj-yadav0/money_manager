@@ -353,19 +353,45 @@ class SmsReaderService {
         );
 
     // 2. Update Bank Account Balance
-    final targetAccountId = accountId ?? smsTx.suggestedAccountId;
+    int? targetAccountId = accountId ?? smsTx.suggestedAccountId;
+
+    // If no account was matched yet, auto-create one if bank details exist
+    if (targetAccountId == null && (smsTx.bankName != null || smsTx.accountNumberLast4 != null)) {
+      final bankName = smsTx.bankName ?? 'Bank';
+      final isCredit = (smsTx.paymentMode?.toLowerCase().contains('credit') ?? false) ||
+          (smsTx.body.toLowerCase().contains('credit card'));
+      
+      final createdAccId = await db.into(db.bankAccounts).insert(
+            BankAccountsCompanion.insert(
+              name: '$bankName ${smsTx.accountNumberLast4 != null ? "••${smsTx.accountNumberLast4}" : "Account"}',
+              bankName: bankName,
+              accountNumberLast4: Value(smsTx.accountNumberLast4),
+              accountType: Value(isCredit ? 'credit_card' : 'savings'),
+              balance: Value(smsTx.balance ?? (smsTx.type == 'income' ? finalAmount : 0.0)),
+              isDefault: const Value(false),
+            ),
+          );
+      targetAccountId = createdAccId;
+    }
+
     if (targetAccountId != null) {
       final account = await (db.select(db.bankAccounts)
-            ..where((a) => a.id.equals(targetAccountId)))
+            ..where((a) => a.id.equals(targetAccountId!)))
           .getSingleOrNull();
 
       if (account != null) {
-        final newBalance = smsTx.type == 'income'
-            ? account.balance + finalAmount
-            : account.balance - finalAmount;
+        // If the bank SMS contained the definitive post-transaction balance, use it directly
+        final double newBalance;
+        if (smsTx.balance != null && smsTx.balance! > 0) {
+          newBalance = smsTx.balance!;
+        } else {
+          newBalance = smsTx.type == 'income'
+              ? account.balance + finalAmount
+              : account.balance - finalAmount;
+        }
 
         await (db.update(db.bankAccounts)
-              ..where((a) => a.id.equals(targetAccountId)))
+              ..where((a) => a.id.equals(targetAccountId!)))
             .write(
           BankAccountsCompanion(
             balance: Value(newBalance),

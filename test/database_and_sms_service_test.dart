@@ -229,5 +229,39 @@ void main() {
       expect(revertedSms.status, 'pending');
       expect(revertedSms.transactionId, isNull);
     });
+
+    test('Accepting an SMS with available balance updates bank account to authoritative balance', () async {
+      final catId = await getOrCreateCategory('Shopping', 'shopping_bag', 'expense');
+
+      final accId = await db.into(db.bankAccounts).insert(
+            BankAccountsCompanion.insert(
+              name: 'HDFC Bank ••1234',
+              bankName: 'HDFC Bank',
+              accountNumberLast4: const Value('1234'),
+              balance: const Value(0.0),
+            ),
+          );
+
+      final smsTx = await smsReaderService.simulateIncomingSms(
+        body: 'Rs 10000.00 debited from HDFC Bank A/c 1234 on 18-Aug-26. Avail Bal: Rs 18000.00.',
+        sender: 'VM-HDFCBK',
+      );
+
+      expect(smsTx, isNotNull);
+      expect(smsTx!.amount, 10000.0);
+      expect(smsTx.balance, 18000.0);
+
+      final txId = await smsReaderService.acceptTransaction(
+        smsTransactionId: smsTx.id,
+        categoryId: catId,
+        accountId: accId,
+      );
+
+      final account = await (db.select(db.bankAccounts)..where((a) => a.id.equals(accId))).getSingle();
+      expect(account.balance, 18000.0);
+
+      final tx = await (db.select(db.transactions)..where((t) => t.id.equals(txId))).getSingle();
+      expect(tx.amount, 10000.0);
+    });
   });
 }
