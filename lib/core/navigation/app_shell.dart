@@ -8,6 +8,7 @@ import '../../features/networth/screens/net_worth_screen.dart';
 import '../../features/goals/screens/goals_screen.dart';
 import '../../features/transactions/screens/add_transaction_screen.dart';
 import '../../features/transactions/services/recurring_service.dart';
+import '../../features/sms/providers/sms_providers.dart';
 import '../presentation/glass_widgets.dart';
 import '../providers/auth_providers.dart';
 import '../theme/app_theme.dart';
@@ -34,11 +35,23 @@ class _AppShellState extends ConsumerState<AppShell> {
   @override
   void initState() {
     super.initState();
-    // Process recurring transactions & trigger background sync on app startup
+    // Process recurring transactions, SMS scan & trigger background sync on app startup
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _processRecurringTransactions();
+      _scanSmsInbox();
       _triggerCloudSync();
     });
+  }
+
+  Future<void> _scanSmsInbox() async {
+    try {
+      final hasPerm = await ref.read(smsReaderServiceProvider).hasPermission();
+      if (hasPerm) {
+        await ref.read(smsScanNotifierProvider.notifier).scanInbox();
+      }
+    } catch (e) {
+      debugPrint('Error running startup SMS scan: $e');
+    }
   }
 
   Future<void> _triggerCloudSync() async {

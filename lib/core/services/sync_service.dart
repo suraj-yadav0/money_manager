@@ -333,6 +333,14 @@ class SyncService {
       return DateTime.now();
     }
 
+    // Helper to safely parse ints from int, num, or String
+    int parseInt(dynamic value, [int defaultValue = 0]) {
+      if (value is int) return value;
+      if (value is num) return value.toInt();
+      if (value is String) return int.tryParse(value) ?? defaultValue;
+      return defaultValue;
+    }
+
     // 1. Pull Remote Transactions
     try {
       final snapshot = await userDocRef.collection('transactions').get();
@@ -357,8 +365,13 @@ class SyncService {
                   syncId: Value(syncId),
                   amount: (raw['amount'] as num).toDouble(),
                   type: raw['type'] as String,
-                  categoryId: raw['category_id'] as int? ?? 1,
-                  goalId: Value(raw['goal_id'] as int?),
+                  categoryId: parseInt(raw['category_id'], 1),
+                  goalId: raw['goal_id'] != null
+                      ? Value(parseInt(raw['goal_id']))
+                      : const Value.absent(),
+                  accountId: raw['account_id'] != null
+                      ? Value(parseInt(raw['account_id']))
+                      : const Value.absent(),
                   timestamp: timestamp,
                   note: Value(raw['note'] as String?),
                   paymentMode: Value(raw['payment_mode'] as String?),
@@ -481,17 +494,52 @@ class SyncService {
         final raw = doc.data();
         final syncId = (raw['sync_id'] as String?) ?? doc.id;
 
-        final existing = await (_db.select(_db.categories)
+        final existingBySyncId = await (_db.select(_db.categories)
               ..where((c) => c.syncId.equals(syncId)))
             .getSingleOrNull();
 
-        if (existing == null) {
+        final catName = raw['name'] as String;
+        final existingByName = existingBySyncId != null
+            ? null
+            : await (_db.select(_db.categories)
+                  ..where((c) => c.name.equals(catName)))
+                .getSingleOrNull();
+
+        if (existingBySyncId != null) {
+          await (_db.update(_db.categories)
+                ..where((c) => c.id.equals(existingBySyncId.id)))
+              .write(
+            CategoriesCompanion(
+              icon: Value(raw['icon'] as String),
+              monthlyBudget:
+                  Value((raw['monthly_budget'] as num?)?.toDouble()),
+              type: Value(raw['type'] as String? ?? 'expense'),
+              isDefault: Value(raw['is_default'] as bool? ?? false),
+              isSynced: const Value(true),
+            ),
+          );
+        } else if (existingByName != null) {
+          await (_db.update(_db.categories)
+                ..where((c) => c.id.equals(existingByName.id)))
+              .write(
+            CategoriesCompanion(
+              syncId: Value(syncId),
+              icon: Value(raw['icon'] as String),
+              monthlyBudget:
+                  Value((raw['monthly_budget'] as num?)?.toDouble()),
+              type: Value(raw['type'] as String? ?? 'expense'),
+              isDefault: Value(raw['is_default'] as bool? ?? false),
+              isSynced: const Value(true),
+            ),
+          );
+        } else {
           await _db.into(_db.categories).insert(
                 CategoriesCompanion.insert(
                   syncId: Value(syncId),
-                  name: raw['name'] as String,
+                  name: catName,
                   icon: raw['icon'] as String,
-                  monthlyBudget: Value((raw['monthly_budget'] as num?)?.toDouble()),
+                  monthlyBudget:
+                      Value((raw['monthly_budget'] as num?)?.toDouble()),
                   type: Value(raw['type'] as String? ?? 'expense'),
                   isDefault: Value(raw['is_default'] as bool? ?? false),
                   isSynced: const Value(true),
@@ -520,7 +568,7 @@ class SyncService {
           await _db.into(_db.goalContributions).insert(
                 GoalContributionsCompanion.insert(
                   syncId: Value(syncId),
-                  goalId: raw['goal_id'] as int,
+                  goalId: parseInt(raw['goal_id']),
                   amount: (raw['amount'] as num).toDouble(),
                   note: Value(raw['note'] as String?),
                   isSynced: const Value(true),
@@ -550,8 +598,8 @@ class SyncService {
                 CategorizationRulesCompanion.insert(
                   syncId: Value(syncId),
                   keyword: raw['keyword'] as String,
-                  categoryId: raw['category_id'] as int,
-                  weight: Value(raw['weight'] as int? ?? 1),
+                  categoryId: parseInt(raw['category_id']),
+                  weight: Value(parseInt(raw['weight'], 1)),
                   isSynced: const Value(true),
                 ),
               );

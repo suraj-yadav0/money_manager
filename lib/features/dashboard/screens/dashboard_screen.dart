@@ -16,6 +16,8 @@ import '../widgets/date_filter_bar.dart';
 import '../../transactions/screens/all_transactions_screen.dart';
 import '../../settings/screens/settings_screen.dart';
 import '../../insights/screens/insights_screen.dart';
+import '../../sms/widgets/sms_detected_banner.dart';
+import '../../sms/screens/sms_card_deck_screen.dart';
 import 'calendar_view_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -85,6 +87,9 @@ class DashboardScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // SMS Auto-detected Transaction Banner (if any pending)
+              const SmsDetectedBanner(),
+
               // Date Filters
               const DateFilterBar(),
               const SizedBox(height: 16),

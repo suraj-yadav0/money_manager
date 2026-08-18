@@ -17,6 +17,7 @@ import '../../../core/presentation/glass_widgets.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../dashboard/providers/dashboard_providers.dart';
 import '../../goals/providers/goals_provider.dart';
+import '../../accounts/providers/account_providers.dart';
 import '../services/categorization_engine.dart';
 
 // Re-export GoalsCompanion for goal updates
@@ -40,6 +41,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   TransactionType _type = TransactionType.expense;
   Category? _selectedCategory;
   Goal? _selectedGoal;
+  BankAccount? _selectedAccount;
   String? _selectedPaymentMode = 'Cash'; // Default to Cash
   DateTime _selectedDate = DateTime.now();
   bool _isRecurring = false;
@@ -296,6 +298,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 type: Value(_type.name),
                 categoryId: Value(categoryId),
                 goalId: Value(_selectedGoal?.id),
+                accountId: Value(_selectedAccount?.id),
                 timestamp: Value(_selectedDate),
                 note: Value(
                   _noteController.text.isNotEmpty ? _noteController.text : null,
@@ -315,6 +318,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 type: _type.name,
                 categoryId: categoryId,
                 goalId: Value(_selectedGoal?.id),
+                accountId: Value(_selectedAccount?.id),
                 timestamp: _selectedDate,
                 note: Value(
                   _noteController.text.isNotEmpty ? _noteController.text : null,
@@ -324,6 +328,21 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 receiptImagePath: Value(_receiptImagePath),
               ),
             );
+
+        // Update bank account balance if account selected
+        if (_selectedAccount != null) {
+          final newBal = _type.isExpense
+              ? _selectedAccount!.balance - amount
+              : _selectedAccount!.balance + amount;
+          await (db.update(db.bankAccounts)
+                ..where((a) => a.id.equals(_selectedAccount!.id)))
+              .write(
+            BankAccountsCompanion(
+              balance: Value(newBal),
+              updatedAt: Value(DateTime.now()),
+            ),
+          );
+        }
 
         // Update goal's savedAmount if linked to a goal
         // Note: We directly update the goal instead of creating a separate contribution
@@ -355,9 +374,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         if (_type == TransactionType.expense && _selectedCategory != null) {
           final catName = _selectedCategory!.name.toLowerCase();
           if (catName == 'investments' || catName == 'investment') {
-            final existingAsset = await (db.select(db.assets)
-                  ..where((a) => a.isLiability.equals(false) & (a.type.equals('investment') | a.name.contains('Investment'))))
-                .getSingleOrNull();
+            final allAssets = await db.select(db.assets).get();
+            final existingAsset = allAssets
+                .where((a) =>
+                    !a.isLiability &&
+                    (a.type == 'investment' ||
+                        a.name.toLowerCase().contains('investment')))
+                .firstOrNull;
             if (existingAsset != null) {
               await (db.update(db.assets)..where((a) => a.id.equals(existingAsset.id)))
                   .write(AssetsCompanion(
@@ -371,7 +394,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       name: 'Investments Portfolio',
                       type: 'investment',
                       value: amount,
-                      isLiability: false,
+                      isLiability: const Value(false),
                       isSynced: const Value(false),
                     ),
                   );
@@ -754,6 +777,50 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 const SizedBox(height: 24),
               ],
 
+              // Bank Account Selection
+              Row(
+                children: [
+                  Text('Bank Account / Card', style: theme.textTheme.labelLarge),
+                  const SizedBox(width: 8),
+                  Icon(Icons.account_balance_outlined, size: 16, color: colorScheme.primary),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ref.watch(bankAccountsStreamProvider).when(
+                    loading: () => const SizedBox(
+                      height: 36,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    error: (_, __) => const SizedBox.shrink(),
+                    data: (accounts) => Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: accounts.map((acc) {
+                        final isSelected = _selectedAccount?.id == acc.id;
+                        return ChoiceChip(
+                          avatar: Icon(
+                            acc.accountType == 'credit_card'
+                                ? Icons.credit_card
+                                : Icons.account_balance,
+                            size: 16,
+                          ),
+                          label: Text(
+                            acc.accountNumberLast4 != null
+                                ? '${acc.name} (••${acc.accountNumberLast4})'
+                                : acc.name,
+                          ),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            setState(() {
+                              _selectedAccount = selected ? acc : null;
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+              const SizedBox(height: 24),
+
               // Date Selection
               Text('Date', style: theme.textTheme.labelLarge),
               const SizedBox(height: 8),
@@ -799,7 +866,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               const SizedBox(height: 20),
 
               // Recurring Monthly Transaction Switch
-              GlassCard(
+              GlassContainer(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: SwitchListTile(
                   contentPadding: EdgeInsets.zero,

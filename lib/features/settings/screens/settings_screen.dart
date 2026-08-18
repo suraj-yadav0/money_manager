@@ -11,7 +11,12 @@ import '../../../core/providers/auth_providers.dart';
 import '../../../core/services/sync_service.dart';
 import '../../../core/utils/constants.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../dashboard/providers/dashboard_providers.dart';
+import '../../accounts/screens/bank_accounts_screen.dart';
+import '../../sms/screens/sms_card_deck_screen.dart';
+import '../../sms/widgets/sms_simulator_dialog.dart';
+import '../../sms/providers/sms_providers.dart';
 
 /// Settings screen for user preferences and monthly income
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -228,6 +233,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             _buildSectionHeader(context, 'Account & Cloud Sync', Icons.cloud_sync_outlined),
             const SizedBox(height: 12),
             _buildAccountCloudSyncCard(context),
+
+            const SizedBox(height: 24),
+
+            // Bank Accounts & SMS Auto-Detection Section
+            _buildSectionHeader(context, 'Bank Accounts & SMS Auto-Detection', Icons.auto_awesome),
+            const SizedBox(height: 12),
+            _buildSmsAndBankAccountsCard(context),
 
             const SizedBox(height: 24),
 
@@ -529,6 +541,141 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSmsAndBankAccountsCard(BuildContext context) {
+    final pendingCount = ref.watch(pendingSmsCountProvider);
+    final scanState = ref.watch(smsScanNotifierProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Card(
+      child: Column(
+        children: [
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.account_balance_rounded, color: Colors.blue),
+            ),
+            title: const Text('Manage Bank Accounts & Cards'),
+            subtitle: const Text('Configure accounts, credit cards and starting balances'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const BankAccountsScreen()),
+              );
+            },
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.narutoOrange.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.style_rounded, color: AppTheme.narutoOrange),
+            ),
+            title: const Text('Review SMS Transactions'),
+            subtitle: Text(
+              pendingCount > 0
+                  ? '$pendingCount pending swipe cards to review'
+                  : 'All detected SMS transactions reviewed',
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (pendingCount > 0) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppTheme.narutoOrange,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '$pendingCount NEW',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                ],
+                const Icon(Icons.chevron_right),
+              ],
+            ),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SmsCardDeckScreen()),
+              );
+            },
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: scanState.isScanning
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.green),
+                    )
+                  : const Icon(Icons.sms_outlined, color: Colors.green),
+            ),
+            title: const Text('Scan SMS Inbox Now'),
+            subtitle: const Text('Scan recent bank SMS messages from Android inbox'),
+            trailing: const Icon(Icons.sync),
+            onTap: scanState.isScanning
+                ? null
+                : () async {
+                    final res = await ref
+                        .read(smsScanNotifierProvider.notifier)
+                        .scanInbox(forceFullScan: true);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(res.message),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  },
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.purple.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.science_outlined, color: Colors.purple),
+            ),
+            title: const Text('SMS Simulator & Test Lab'),
+            subtitle: const Text('Inject sample bank SMS or custom text into review deck'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => const SmsSimulatorDialog(),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
