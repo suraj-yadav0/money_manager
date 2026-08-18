@@ -24,12 +24,27 @@ class SyncResult {
 }
 
 /// Service managing full bi-directional synchronization between local Drift DB and remote Cloud Firestore
-/// Covers ALL 7 tables: Transactions, Goals, Assets, UserSettings, Categories, GoalContributions, CategorizationRules
+/// Covers ALL tables: Transactions, Goals, Assets, UserSettings, Categories, GoalContributions, CategorizationRules, BankAccounts
 class SyncService {
   final AppDatabase _db;
   final Uuid _uuid = const Uuid();
 
   SyncService(this._db);
+
+  /// Deletes a document from Cloud Firestore when deleted locally
+  Future<void> deleteRemoteDoc(String collectionName, String? syncId) async {
+    if (syncId == null || syncId.isEmpty) return;
+    try {
+      final db = FirebaseConfig.db;
+      final auth = FirebaseConfig.auth;
+      final user = auth?.currentUser;
+      if (db != null && user != null) {
+        await db.collection('users').doc(user.uid).collection(collectionName).doc(syncId).delete();
+      }
+    } catch (e) {
+      debugPrint('Error deleting remote doc $collectionName/$syncId: $e');
+    }
+  }
 
   /// Triggers full synchronization (Upload local unsynced records, then Download remote cloud records)
   Future<SyncResult> syncAll() async {
@@ -70,7 +85,7 @@ class SyncService {
     }
   }
 
-  /// Pushes unsynced local Drift records to Cloud Firestore across all 7 tables
+  /// Pushes unsynced local Drift records to Cloud Firestore
   Future<int> _pushLocalData(String userId) async {
     final db = FirebaseConfig.db;
     if (db == null) return 0;
@@ -78,7 +93,43 @@ class SyncService {
 
     final userDocRef = db.collection('users').doc(userId);
 
-    // 1. Transactions
+    // 1. Bank Accounts
+    final unsyncedAccounts = await (_db.select(_db.bankAccounts)
+          ..where((a) => a.isSynced.equals(false)))
+        .get();
+
+    for (final acc in unsyncedAccounts) {
+      final syncId = acc.syncId ?? _uuid.v4();
+      if (acc.syncId == null) {
+        await (_db.update(_db.bankAccounts)..where((a) => a.id.equals(acc.id)))
+            .write(BankAccountsCompanion(syncId: Value(syncId)));
+      }
+
+      final payload = {
+        'sync_id': syncId,
+        'user_id': userId,
+        'name': acc.name,
+        'bank_name': acc.bankName,
+        'account_number_last4': acc.accountNumberLast4,
+        'account_type': acc.accountType,
+        'balance': acc.balance,
+        'color_hex': acc.colorHex,
+        'is_default': acc.isDefault,
+        'created_at': acc.createdAt.toIso8601String(),
+        'updated_at': (acc.updatedAt ?? DateTime.now()).toIso8601String(),
+      };
+
+      await userDocRef
+          .collection('bank_accounts')
+          .doc(syncId)
+          .set(payload, SetOptions(merge: true));
+
+      await (_db.update(_db.bankAccounts)..where((a) => a.id.equals(acc.id)))
+          .write(const BankAccountsCompanion(isSynced: Value(true)));
+      totalUploaded++;
+    }
+
+    // 2. Transactions
     final unsyncedTx = await (_db.select(_db.transactions)
           ..where((t) => t.isSynced.equals(false)))
         .get();
@@ -90,13 +141,18 @@ class SyncService {
             .write(TransactionsCompanion(syncId: Value(syncId)));
       }
 
+      // Fetch category name and syncId for web compatibility
+      final cat = await (_db.select(_db.categories)..where((c) => c.id.equals(tx.categoryId))).getSingleOrNull();
+
       final payload = {
         'sync_id': syncId,
         'user_id': userId,
         'amount': tx.amount,
         'type': tx.type,
         'category_id': tx.categoryId,
+        'category_name': cat?.name,
         'goal_id': tx.goalId,
+        'account_id': tx.accountId,
         'timestamp': tx.timestamp.toIso8601String(),
         'note': tx.note,
         'payment_mode': tx.paymentMode,
@@ -116,7 +172,7 @@ class SyncService {
       totalUploaded++;
     }
 
-    // 2. Goals
+    // 3. Goals
     final unsyncedGoals = await (_db.select(_db.goals)
           ..where((t) => t.isSynced.equals(false)))
         .get();
@@ -151,7 +207,7 @@ class SyncService {
       totalUploaded++;
     }
 
-    // 3. Assets
+    // 4. Assets
     final unsyncedAssets = await (_db.select(_db.assets)
           ..where((t) => t.isSynced.equals(false)))
         .get();
@@ -185,7 +241,7 @@ class SyncService {
       totalUploaded++;
     }
 
-    // 4. User Settings
+    // 5. User Settings
     final unsyncedSettings = await (_db.select(_db.userSettings)
           ..where((s) => s.isSynced.equals(false)))
         .get();
@@ -219,7 +275,7 @@ class SyncService {
       totalUploaded++;
     }
 
-    // 5. Categories
+    // 6. Categories
     final unsyncedCat = await (_db.select(_db.categories)
           ..where((c) => c.isSynced.equals(false)))
         .get();
@@ -252,7 +308,7 @@ class SyncService {
       totalUploaded++;
     }
 
-    // 6. Goal Contributions
+    // 7. Goal Contributions
     final unsyncedGc = await (_db.select(_db.goalContributions)
           ..where((gc) => gc.isSynced.equals(false)))
         .get();
@@ -284,7 +340,7 @@ class SyncService {
       totalUploaded++;
     }
 
-    // 7. Categorization Rules
+    // 8. Categorization Rules
     final unsyncedRules = await (_db.select(_db.categorizationRules)
           ..where((r) => r.isSynced.equals(false)))
         .get();
@@ -318,7 +374,7 @@ class SyncService {
     return totalUploaded;
   }
 
-  /// Pulls remote Cloud Firestore records and merges into local Drift DB across all 7 tables
+  /// Pulls remote Cloud Firestore records and merges into local Drift DB with bi-directional deletion reconciliation
   Future<int> _pullRemoteData(String userId) async {
     final db = FirebaseConfig.db;
     if (db == null) return 0;
@@ -326,14 +382,16 @@ class SyncService {
 
     final userDocRef = db.collection('users').doc(userId);
 
-    // Helper to safely parse dates from string or Firestore Timestamp
+    // Helpers
     DateTime parseDate(dynamic value) {
       if (value is Timestamp) return value.toDate();
-      if (value is String) return DateTime.parse(value);
+      if (value is String) {
+        final d = DateTime.tryParse(value);
+        if (d != null) return d;
+      }
       return DateTime.now();
     }
 
-    // Helper to safely parse ints from int, num, or String
     int parseInt(dynamic value, [int defaultValue = 0]) {
       if (value is int) return value;
       if (value is num) return value.toInt();
@@ -341,192 +399,74 @@ class SyncService {
       return defaultValue;
     }
 
-    // 1. Pull Remote Transactions
-    try {
-      final snapshot = await userDocRef.collection('transactions').get();
+    // Resolve Category ID robustly from int, string id, or name
+    Future<int> resolveCategoryId(dynamic rawCatId, dynamic rawCatName) async {
+      if (rawCatId != null) {
+        final numId = parseInt(rawCatId, -1);
+        if (numId > 0) {
+          final existing = await (_db.select(_db.categories)..where((c) => c.id.equals(numId))).getSingleOrNull();
+          if (existing != null) return existing.id;
+        }
 
-      for (final doc in snapshot.docs) {
-        final raw = doc.data();
-        final syncId = (raw['sync_id'] as String?) ?? doc.id;
-
-        final existing = await (_db.select(_db.transactions)
-              ..where((t) => t.syncId.equals(syncId)))
-            .getSingleOrNull();
-
-        if (existing == null) {
-          final timestamp = parseDate(raw['timestamp']);
-          final createdAt = parseDate(raw['created_at']);
-          final updatedAt = raw['updated_at'] != null
-              ? parseDate(raw['updated_at'])
-              : DateTime.now();
-
-          await _db.into(_db.transactions).insert(
-                TransactionsCompanion.insert(
-                  syncId: Value(syncId),
-                  amount: (raw['amount'] as num).toDouble(),
-                  type: raw['type'] as String,
-                  categoryId: parseInt(raw['category_id'], 1),
-                  goalId: raw['goal_id'] != null
-                      ? Value(parseInt(raw['goal_id']))
-                      : const Value.absent(),
-                  accountId: raw['account_id'] != null
-                      ? Value(parseInt(raw['account_id']))
-                      : const Value.absent(),
-                  timestamp: timestamp,
-                  note: Value(raw['note'] as String?),
-                  paymentMode: Value(raw['payment_mode'] as String?),
-                  receiptImagePath: Value(raw['receipt_image_path'] as String?),
-                  isRecurring: Value(raw['is_recurring'] as bool? ?? false),
-                  isSynced: const Value(true),
-                  createdAt: Value(createdAt),
-                  updatedAt: Value(updatedAt),
-                ),
-              );
-          totalDownloaded++;
+        if (rawCatId is String) {
+          final bySyncId = await (_db.select(_db.categories)..where((c) => c.syncId.equals(rawCatId))).getSingleOrNull();
+          if (bySyncId != null) return bySyncId.id;
         }
       }
-    } catch (e) {
-      debugPrint('Error pulling transactions: $e');
-    }
 
-    // 2. Pull Remote Goals
-    try {
-      final snapshot = await userDocRef.collection('goals').get();
-
-      for (final doc in snapshot.docs) {
-        final raw = doc.data();
-        final syncId = (raw['sync_id'] as String?) ?? doc.id;
-
-        final existing = await (_db.select(_db.goals)
-              ..where((g) => g.syncId.equals(syncId)))
-            .getSingleOrNull();
-
-        if (existing == null) {
-          final deadline = parseDate(raw['deadline']);
-
-          await _db.into(_db.goals).insert(
-                GoalsCompanion.insert(
-                  syncId: Value(syncId),
-                  name: raw['name'] as String,
-                  targetAmount: (raw['target_amount'] as num).toDouble(),
-                  deadline: deadline,
-                  savedAmount: Value((raw['saved_amount'] as num? ?? 0).toDouble()),
-                  isActive: Value(raw['is_active'] as bool? ?? true),
-                  isCompleted: Value(raw['is_completed'] as bool? ?? false),
-                  isSynced: const Value(true),
-                ),
-              );
-          totalDownloaded++;
-        }
+      if (rawCatName is String && rawCatName.trim().isNotEmpty) {
+        final byName = await (_db.select(_db.categories)..where((c) => c.name.equals(rawCatName.trim()))).getSingleOrNull();
+        if (byName != null) return byName.id;
       }
-    } catch (e) {
-      debugPrint('Error pulling goals: $e');
+
+      final defaultCat = await (_db.select(_db.categories)..limit(1)).getSingleOrNull();
+      return defaultCat?.id ?? 1;
     }
 
-    // 3. Pull Remote Assets
-    try {
-      final snapshot = await userDocRef.collection('assets').get();
-
-      for (final doc in snapshot.docs) {
-        final raw = doc.data();
-        final syncId = (raw['sync_id'] as String?) ?? doc.id;
-
-        final existing = await (_db.select(_db.assets)
-              ..where((a) => a.syncId.equals(syncId)))
-            .getSingleOrNull();
-
-        if (existing == null) {
-          await _db.into(_db.assets).insert(
-                AssetsCompanion.insert(
-                  syncId: Value(syncId),
-                  name: raw['name'] as String,
-                  type: raw['type'] as String,
-                  value: (raw['value'] as num).toDouble(),
-                  isLiability: Value(raw['is_liability'] as bool? ?? false),
-                  note: Value(raw['note'] as String?),
-                  isSynced: const Value(true),
-                ),
-              );
-          totalDownloaded++;
-        }
+    // Resolve Goal ID robustly
+    Future<int?> resolveGoalId(dynamic rawGoalId) async {
+      if (rawGoalId == null) return null;
+      final numId = parseInt(rawGoalId, -1);
+      if (numId > 0) {
+        final g = await (_db.select(_db.goals)..where((g) => g.id.equals(numId))).getSingleOrNull();
+        if (g != null) return g.id;
       }
-    } catch (e) {
-      debugPrint('Error pulling assets: $e');
-    }
-
-    // 4. Pull Remote User Settings
-    try {
-      final snapshot = await userDocRef.collection('user_settings').get();
-
-      for (final doc in snapshot.docs) {
-        final raw = doc.data();
-        final syncId = (raw['sync_id'] as String?) ?? doc.id;
-
-        final existing = await (_db.select(_db.userSettings)
-              ..where((s) => s.syncId.equals(syncId)))
-            .getSingleOrNull();
-
-        if (existing == null) {
-          await _db.into(_db.userSettings).insertOnConflictUpdate(
-                UserSettingsCompanion.insert(
-                  id: const Value(1),
-                  syncId: Value(syncId),
-                  monthlyIncome: Value((raw['monthly_income'] as num? ?? 0).toDouble()),
-                  currency: Value(raw['currency'] as String? ?? 'INR'),
-                  isOnboarded: Value(raw['is_onboarded'] as bool? ?? false),
-                  biometricEnabled: Value(raw['biometric_enabled'] as bool? ?? false),
-                  showIncomeChart: Value(raw['show_income_chart'] as bool? ?? false),
-                  isSynced: const Value(true),
-                ),
-              );
-          totalDownloaded++;
-        }
+      if (rawGoalId is String) {
+        final g = await (_db.select(_db.goals)..where((g) => g.syncId.equals(rawGoalId))).getSingleOrNull();
+        if (g != null) return g.id;
       }
-    } catch (e) {
-      debugPrint('Error pulling user_settings: $e');
+      return null;
     }
 
-    // 5. Pull Remote Categories
+    // 1. Pull Categories First
     try {
       final snapshot = await userDocRef.collection('categories').get();
-
       for (final doc in snapshot.docs) {
         final raw = doc.data();
         final syncId = (raw['sync_id'] as String?) ?? doc.id;
+        final catName = (raw['name'] as String?)?.trim() ?? 'Category';
 
-        final existingBySyncId = await (_db.select(_db.categories)
-              ..where((c) => c.syncId.equals(syncId)))
-            .getSingleOrNull();
-
-        final catName = raw['name'] as String;
+        final existingBySyncId = await (_db.select(_db.categories)..where((c) => c.syncId.equals(syncId))).getSingleOrNull();
         final existingByName = existingBySyncId != null
             ? null
-            : await (_db.select(_db.categories)
-                  ..where((c) => c.name.equals(catName)))
-                .getSingleOrNull();
+            : await (_db.select(_db.categories)..where((c) => c.name.equals(catName))).getSingleOrNull();
 
         if (existingBySyncId != null) {
-          await (_db.update(_db.categories)
-                ..where((c) => c.id.equals(existingBySyncId.id)))
-              .write(
+          await (_db.update(_db.categories)..where((c) => c.id.equals(existingBySyncId.id))).write(
             CategoriesCompanion(
-              icon: Value(raw['icon'] as String),
-              monthlyBudget:
-                  Value((raw['monthly_budget'] as num?)?.toDouble()),
+              icon: Value(raw['icon'] as String? ?? 'category'),
+              monthlyBudget: Value((raw['monthly_budget'] as num?)?.toDouble()),
               type: Value(raw['type'] as String? ?? 'expense'),
               isDefault: Value(raw['is_default'] as bool? ?? false),
               isSynced: const Value(true),
             ),
           );
         } else if (existingByName != null) {
-          await (_db.update(_db.categories)
-                ..where((c) => c.id.equals(existingByName.id)))
-              .write(
+          await (_db.update(_db.categories)..where((c) => c.id.equals(existingByName.id))).write(
             CategoriesCompanion(
               syncId: Value(syncId),
-              icon: Value(raw['icon'] as String),
-              monthlyBudget:
-                  Value((raw['monthly_budget'] as num?)?.toDouble()),
+              icon: Value(raw['icon'] as String? ?? 'category'),
+              monthlyBudget: Value((raw['monthly_budget'] as num?)?.toDouble()),
               type: Value(raw['type'] as String? ?? 'expense'),
               isDefault: Value(raw['is_default'] as bool? ?? false),
               isSynced: const Value(true),
@@ -537,9 +477,8 @@ class SyncService {
                 CategoriesCompanion.insert(
                   syncId: Value(syncId),
                   name: catName,
-                  icon: raw['icon'] as String,
-                  monthlyBudget:
-                      Value((raw['monthly_budget'] as num?)?.toDouble()),
+                  icon: raw['icon'] as String? ?? 'category',
+                  monthlyBudget: Value((raw['monthly_budget'] as num?)?.toDouble()),
                   type: Value(raw['type'] as String? ?? 'expense'),
                   isDefault: Value(raw['is_default'] as bool? ?? false),
                   isSynced: const Value(true),
@@ -552,23 +491,285 @@ class SyncService {
       debugPrint('Error pulling categories: $e');
     }
 
-    // 6. Pull Remote Goal Contributions
+    // 2. Pull Remote Bank Accounts
     try {
-      final snapshot = await userDocRef.collection('goal_contributions').get();
+      final snapshot = await userDocRef.collection('bank_accounts').get();
+      final remoteSyncIds = snapshot.docs.map((d) => (d.data()['sync_id'] as String?) ?? d.id).toSet();
+
+      // Deletion reconciliation for accounts
+      final localSyncedAccs = await (_db.select(_db.bankAccounts)
+            ..where((a) => a.isSynced.equals(true) & a.syncId.isNotNull()))
+          .get();
+      for (final localAcc in localSyncedAccs) {
+        if (!remoteSyncIds.contains(localAcc.syncId)) {
+          await (_db.delete(_db.bankAccounts)..where((a) => a.id.equals(localAcc.id))).go();
+        }
+      }
 
       for (final doc in snapshot.docs) {
         final raw = doc.data();
         final syncId = (raw['sync_id'] as String?) ?? doc.id;
+        final updatedAt = raw['updated_at'] != null ? parseDate(raw['updated_at']) : DateTime.now();
 
-        final existing = await (_db.select(_db.goalContributions)
-              ..where((gc) => gc.syncId.equals(syncId)))
-            .getSingleOrNull();
+        final existing = await (_db.select(_db.bankAccounts)..where((a) => a.syncId.equals(syncId))).getSingleOrNull();
+
+        if (existing == null) {
+          await _db.into(_db.bankAccounts).insert(
+                BankAccountsCompanion.insert(
+                  syncId: Value(syncId),
+                  name: raw['name'] as String? ?? 'Account',
+                  bankName: raw['bank_name'] as String? ?? 'Bank',
+                  accountNumberLast4: Value(raw['account_number_last4'] as String?),
+                  accountType: Value(raw['account_type'] as String? ?? 'savings'),
+                  balance: Value((raw['balance'] as num? ?? 0).toDouble()),
+                  colorHex: Value(raw['color_hex'] as String?),
+                  isDefault: Value(raw['is_default'] as bool? ?? false),
+                  isSynced: const Value(true),
+                  createdAt: Value(parseDate(raw['created_at'])),
+                  updatedAt: Value(updatedAt),
+                ),
+              );
+          totalDownloaded++;
+        } else if (updatedAt.isAfter(existing.updatedAt ?? DateTime(2000))) {
+          await (_db.update(_db.bankAccounts)..where((a) => a.id.equals(existing.id))).write(
+            BankAccountsCompanion(
+              name: Value(raw['name'] as String? ?? existing.name),
+              bankName: Value(raw['bank_name'] as String? ?? existing.bankName),
+              accountNumberLast4: Value(raw['account_number_last4'] as String?),
+              accountType: Value(raw['account_type'] as String? ?? existing.accountType),
+              balance: Value((raw['balance'] as num? ?? existing.balance).toDouble()),
+              colorHex: Value(raw['color_hex'] as String? ?? existing.colorHex),
+              isDefault: Value(raw['is_default'] as bool? ?? existing.isDefault),
+              isSynced: const Value(true),
+              updatedAt: Value(updatedAt),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error pulling bank_accounts: $e');
+    }
+
+    // 3. Pull Remote Transactions with bi-directional deletion reconciliation
+    try {
+      final snapshot = await userDocRef.collection('transactions').get();
+      final remoteSyncIds = snapshot.docs.map((d) => (d.data()['sync_id'] as String?) ?? d.id).toSet();
+
+      // Deletion reconciliation for transactions
+      final localSyncedTx = await (_db.select(_db.transactions)
+            ..where((t) => t.isSynced.equals(true) & t.syncId.isNotNull()))
+          .get();
+      for (final localTx in localSyncedTx) {
+        if (!remoteSyncIds.contains(localTx.syncId)) {
+          await (_db.delete(_db.transactions)..where((t) => t.id.equals(localTx.id))).go();
+        }
+      }
+
+      for (final doc in snapshot.docs) {
+        final raw = doc.data();
+        final syncId = (raw['sync_id'] as String?) ?? doc.id;
+        final timestamp = parseDate(raw['timestamp']);
+        final createdAt = parseDate(raw['created_at']);
+        final updatedAt = raw['updated_at'] != null ? parseDate(raw['updated_at']) : DateTime.now();
+
+        final catId = await resolveCategoryId(raw['category_id'], raw['category_name']);
+        final goalId = await resolveGoalId(raw['goal_id']);
+
+        final existing = await (_db.select(_db.transactions)..where((t) => t.syncId.equals(syncId))).getSingleOrNull();
+
+        if (existing == null) {
+          await _db.into(_db.transactions).insert(
+                TransactionsCompanion.insert(
+                  syncId: Value(syncId),
+                  amount: (raw['amount'] as num).toDouble(),
+                  type: raw['type'] as String,
+                  categoryId: catId,
+                  goalId: Value(goalId),
+                  accountId: raw['account_id'] != null ? Value(parseInt(raw['account_id'])) : const Value.absent(),
+                  timestamp: timestamp,
+                  note: Value(raw['note'] as String?),
+                  paymentMode: Value(raw['payment_mode'] as String?),
+                  receiptImagePath: Value(raw['receipt_image_path'] as String?),
+                  isRecurring: Value(raw['is_recurring'] as bool? ?? false),
+                  isSynced: const Value(true),
+                  createdAt: Value(createdAt),
+                  updatedAt: Value(updatedAt),
+                ),
+              );
+          totalDownloaded++;
+        } else if (updatedAt.isAfter(existing.updatedAt ?? DateTime(2000))) {
+          await (_db.update(_db.transactions)..where((t) => t.id.equals(existing.id))).write(
+            TransactionsCompanion(
+              amount: Value((raw['amount'] as num).toDouble()),
+              type: Value(raw['type'] as String),
+              categoryId: Value(catId),
+              goalId: Value(goalId),
+              timestamp: Value(timestamp),
+              note: Value(raw['note'] as String?),
+              paymentMode: Value(raw['payment_mode'] as String?),
+              receiptImagePath: Value(raw['receipt_image_path'] as String?),
+              isRecurring: Value(raw['is_recurring'] as bool? ?? false),
+              isSynced: const Value(true),
+              updatedAt: Value(updatedAt),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error pulling transactions: $e');
+    }
+
+    // 4. Pull Remote Goals with deletion reconciliation
+    try {
+      final snapshot = await userDocRef.collection('goals').get();
+      final remoteSyncIds = snapshot.docs.map((d) => (d.data()['sync_id'] as String?) ?? d.id).toSet();
+
+      final localSyncedGoals = await (_db.select(_db.goals)
+            ..where((g) => g.isSynced.equals(true) & g.syncId.isNotNull()))
+          .get();
+      for (final localGoal in localSyncedGoals) {
+        if (!remoteSyncIds.contains(localGoal.syncId)) {
+          await (_db.delete(_db.goals)..where((g) => g.id.equals(localGoal.id))).go();
+        }
+      }
+
+      for (final doc in snapshot.docs) {
+        final raw = doc.data();
+        final syncId = (raw['sync_id'] as String?) ?? doc.id;
+        final deadline = parseDate(raw['deadline']);
+        final updatedAt = raw['updated_at'] != null ? parseDate(raw['updated_at']) : DateTime.now();
+
+        final existing = await (_db.select(_db.goals)..where((g) => g.syncId.equals(syncId))).getSingleOrNull();
+
+        if (existing == null) {
+          await _db.into(_db.goals).insert(
+                GoalsCompanion.insert(
+                  syncId: Value(syncId),
+                  name: raw['name'] as String? ?? 'Savings Goal',
+                  targetAmount: (raw['target_amount'] as num).toDouble(),
+                  deadline: deadline,
+                  savedAmount: Value((raw['saved_amount'] as num? ?? 0).toDouble()),
+                  isActive: Value(raw['is_active'] as bool? ?? true),
+                  isCompleted: Value(raw['is_completed'] as bool? ?? false),
+                  isSynced: const Value(true),
+                  createdAt: Value(parseDate(raw['created_at'])),
+                  updatedAt: Value(updatedAt),
+                ),
+              );
+          totalDownloaded++;
+        } else if (updatedAt.isAfter(existing.updatedAt ?? DateTime(2000))) {
+          await (_db.update(_db.goals)..where((g) => g.id.equals(existing.id))).write(
+            GoalsCompanion(
+              name: Value(raw['name'] as String? ?? existing.name),
+              targetAmount: Value((raw['target_amount'] as num).toDouble()),
+              deadline: Value(deadline),
+              savedAmount: Value((raw['saved_amount'] as num? ?? existing.savedAmount).toDouble()),
+              isActive: Value(raw['is_active'] as bool? ?? existing.isActive),
+              isCompleted: Value(raw['is_completed'] as bool? ?? existing.isCompleted),
+              isSynced: const Value(true),
+              updatedAt: Value(updatedAt),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error pulling goals: $e');
+    }
+
+    // 5. Pull Remote Assets with deletion reconciliation
+    try {
+      final snapshot = await userDocRef.collection('assets').get();
+      final remoteSyncIds = snapshot.docs.map((d) => (d.data()['sync_id'] as String?) ?? d.id).toSet();
+
+      final localSyncedAssets = await (_db.select(_db.assets)
+            ..where((a) => a.isSynced.equals(true) & a.syncId.isNotNull()))
+          .get();
+      for (final localAsset in localSyncedAssets) {
+        if (!remoteSyncIds.contains(localAsset.syncId)) {
+          await (_db.delete(_db.assets)..where((a) => a.id.equals(localAsset.id))).go();
+        }
+      }
+
+      for (final doc in snapshot.docs) {
+        final raw = doc.data();
+        final syncId = (raw['sync_id'] as String?) ?? doc.id;
+        final updatedAt = raw['updated_at'] != null ? parseDate(raw['updated_at']) : DateTime.now();
+
+        final existing = await (_db.select(_db.assets)..where((a) => a.syncId.equals(syncId))).getSingleOrNull();
+
+        if (existing == null) {
+          await _db.into(_db.assets).insert(
+                AssetsCompanion.insert(
+                  syncId: Value(syncId),
+                  name: raw['name'] as String? ?? 'Asset',
+                  type: raw['type'] as String? ?? 'savings',
+                  value: (raw['value'] as num).toDouble(),
+                  isLiability: Value(raw['is_liability'] as bool? ?? false),
+                  note: Value(raw['note'] as String?),
+                  isSynced: const Value(true),
+                  createdAt: Value(parseDate(raw['created_at'])),
+                  updatedAt: Value(updatedAt),
+                ),
+              );
+          totalDownloaded++;
+        } else if (updatedAt.isAfter(existing.updatedAt ?? DateTime(2000))) {
+          await (_db.update(_db.assets)..where((a) => a.id.equals(existing.id))).write(
+            AssetsCompanion(
+              name: Value(raw['name'] as String? ?? existing.name),
+              type: Value(raw['type'] as String? ?? existing.type),
+              value: Value((raw['value'] as num).toDouble()),
+              isLiability: Value(raw['is_liability'] as bool? ?? existing.isLiability),
+              note: Value(raw['note'] as String?),
+              isSynced: const Value(true),
+              updatedAt: Value(updatedAt),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error pulling assets: $e');
+    }
+
+    // 6. Pull Remote User Settings
+    try {
+      final snapshot = await userDocRef.collection('user_settings').get();
+      for (final doc in snapshot.docs) {
+        final raw = doc.data();
+        final syncId = (raw['sync_id'] as String?) ?? doc.id;
+
+        await _db.into(_db.userSettings).insertOnConflictUpdate(
+              UserSettingsCompanion.insert(
+                id: const Value(1),
+                syncId: Value(syncId),
+                monthlyIncome: Value((raw['monthly_income'] as num? ?? 0).toDouble()),
+                currency: Value(raw['currency'] as String? ?? 'INR'),
+                isOnboarded: Value(raw['is_onboarded'] as bool? ?? false),
+                biometricEnabled: Value(raw['biometric_enabled'] as bool? ?? false),
+                showIncomeChart: Value(raw['show_income_chart'] as bool? ?? false),
+                isSynced: const Value(true),
+              ),
+            );
+        totalDownloaded++;
+      }
+    } catch (e) {
+      debugPrint('Error pulling user_settings: $e');
+    }
+
+    // 7. Pull Remote Goal Contributions
+    try {
+      final snapshot = await userDocRef.collection('goal_contributions').get();
+      for (final doc in snapshot.docs) {
+        final raw = doc.data();
+        final syncId = (raw['sync_id'] as String?) ?? doc.id;
+        final goalId = await resolveGoalId(raw['goal_id']) ?? 1;
+
+        final existing = await (_db.select(_db.goalContributions)..where((gc) => gc.syncId.equals(syncId))).getSingleOrNull();
 
         if (existing == null) {
           await _db.into(_db.goalContributions).insert(
                 GoalContributionsCompanion.insert(
                   syncId: Value(syncId),
-                  goalId: parseInt(raw['goal_id']),
+                  goalId: goalId,
                   amount: (raw['amount'] as num).toDouble(),
                   note: Value(raw['note'] as String?),
                   isSynced: const Value(true),
@@ -581,24 +782,22 @@ class SyncService {
       debugPrint('Error pulling goal_contributions: $e');
     }
 
-    // 7. Pull Remote Categorization Rules
+    // 8. Pull Remote Categorization Rules
     try {
       final snapshot = await userDocRef.collection('categorization_rules').get();
-
       for (final doc in snapshot.docs) {
         final raw = doc.data();
         final syncId = (raw['sync_id'] as String?) ?? doc.id;
+        final catId = await resolveCategoryId(raw['category_id'], null);
 
-        final existing = await (_db.select(_db.categorizationRules)
-              ..where((r) => r.syncId.equals(syncId)))
-            .getSingleOrNull();
+        final existing = await (_db.select(_db.categorizationRules)..where((r) => r.syncId.equals(syncId))).getSingleOrNull();
 
         if (existing == null) {
           await _db.into(_db.categorizationRules).insert(
                 CategorizationRulesCompanion.insert(
                   syncId: Value(syncId),
-                  keyword: raw['keyword'] as String,
-                  categoryId: parseInt(raw['category_id']),
+                  keyword: raw['keyword'] as String? ?? '',
+                  categoryId: catId,
                   weight: Value(parseInt(raw['weight'], 1)),
                   isSynced: const Value(true),
                 ),

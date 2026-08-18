@@ -10,7 +10,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../providers/sms_providers.dart';
 import '../widgets/sms_swipe_card.dart';
-import '../widgets/sms_simulator_dialog.dart';
 
 class SmsCardDeckScreen extends ConsumerStatefulWidget {
   const SmsCardDeckScreen({super.key});
@@ -33,7 +32,6 @@ class _SmsCardDeckScreenState extends ConsumerState<SmsCardDeckScreen>
   double? _overrideAmount;
 
   late AnimationController _animController;
-  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
@@ -76,24 +74,32 @@ class _SmsCardDeckScreenState extends ConsumerState<SmsCardDeckScreen>
       _isDragging = false;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Added transaction: ${card.smsTransaction.merchant ?? "SMS"} (${Formatters.currency(card.smsTransaction.amount)})',
+    if (mounted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Added transaction: ${card.smsTransaction.merchant ?? "SMS"} (${Formatters.currency(card.smsTransaction.amount)})',
+          ),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+          action: SnackBarAction(
+            label: 'UNDO',
+            onPressed: () => _undoLastSwipe(),
+          ),
         ),
-        duration: const Duration(seconds: 2),
-        action: SnackBarAction(
-          label: 'UNDO',
-          onPressed: () => _undoLastSwipe(),
-        ),
-      ),
-    );
+      );
+    }
   }
 
   void _swipeLeft(SmsTransactionDetail card) {
     HapticFeedback.lightImpact();
     final cardId = card.smsTransaction.id;
     _historyStack.add(cardId);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    }
 
     ref.read(smsScanNotifierProvider.notifier).rejectCard(cardId);
 
@@ -106,6 +112,9 @@ class _SmsCardDeckScreenState extends ConsumerState<SmsCardDeckScreen>
 
   void _undoLastSwipe() {
     if (_historyStack.isEmpty) return;
+    if (mounted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    }
     final lastId = _historyStack.removeLast();
     ref.read(smsScanNotifierProvider.notifier).undoCard(lastId);
     HapticFeedback.selectionClick();
@@ -172,7 +181,6 @@ class _SmsCardDeckScreenState extends ConsumerState<SmsCardDeckScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
 
     final pendingAsync = ref.watch(pendingSmsTransactionsProvider);
     final scanState = ref.watch(smsScanNotifierProvider);
@@ -181,18 +189,6 @@ class _SmsCardDeckScreenState extends ConsumerState<SmsCardDeckScreen>
       appBar: GlassAppBar(
         title: 'Review SMS Transactions',
         actions: [
-          IconButton(
-            icon: const Icon(Icons.science_outlined),
-            tooltip: 'Simulate Test SMS',
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (_) => const SmsSimulatorDialog(),
-              );
-            },
-          ),
           IconButton(
             icon: scanState.isScanning
                 ? const SizedBox(
@@ -209,8 +205,13 @@ class _SmsCardDeckScreenState extends ConsumerState<SmsCardDeckScreen>
                         .read(smsScanNotifierProvider.notifier)
                         .scanInbox(forceFullScan: true);
                     if (context.mounted) {
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(res.message)),
+                        SnackBar(
+                          content: Text(res.message),
+                          behavior: SnackBarBehavior.floating,
+                          duration: const Duration(seconds: 2),
+                        ),
                       );
                     }
                   },
@@ -524,42 +525,25 @@ class _SmsCardDeckScreenState extends ConsumerState<SmsCardDeckScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              'No new pending SMS transactions to review.\nWe will auto-detect incoming bank and UPI alerts.',
+              'No new pending SMS transactions to review.\nWe auto-detect incoming bank and UPI alerts from your SMS inbox.',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 28),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.sync),
-                  label: const Text('Scan Inbox'),
-                  onPressed: () {
-                    ref
-                        .read(smsScanNotifierProvider.notifier)
-                        .scanInbox(forceFullScan: true);
-                  },
-                ),
-                const SizedBox(width: 12),
-                FilledButton.icon(
-                  icon: const Icon(Icons.science),
-                  label: const Text('Simulate SMS'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.narutoOrange,
-                  ),
-                  onPressed: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (_) => const SmsSimulatorDialog(),
-                    );
-                  },
-                ),
-              ],
+            FilledButton.icon(
+              icon: const Icon(Icons.sync),
+              label: const Text('Scan Inbox Now'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.narutoOrange,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              ),
+              onPressed: () {
+                ref
+                    .read(smsScanNotifierProvider.notifier)
+                    .scanInbox(forceFullScan: true);
+              },
             ),
           ],
         ),

@@ -15,7 +15,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../dashboard/providers/dashboard_providers.dart';
 import '../../accounts/screens/bank_accounts_screen.dart';
 import '../../sms/screens/sms_card_deck_screen.dart';
-import '../../sms/widgets/sms_simulator_dialog.dart';
 import '../../sms/providers/sms_providers.dart';
 
 /// Settings screen for user preferences and monthly income
@@ -652,28 +651,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       );
                     }
                   },
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.purple.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.science_outlined, color: Colors.purple),
-            ),
-            title: const Text('SMS Simulator & Test Lab'),
-            subtitle: const Text('Inject sample bank SMS or custom text into review deck'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (_) => const SmsSimulatorDialog(),
-              );
-            },
           ),
         ],
       ),

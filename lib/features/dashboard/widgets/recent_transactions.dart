@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:drift/drift.dart' show Value;
+import '../../../core/database/database.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/providers/app_state_provider.dart';
+import '../../../core/providers/auth_providers.dart';
 import '../../transactions/screens/add_transaction_screen.dart';
 import '../providers/dashboard_providers.dart';
 
@@ -232,18 +235,49 @@ class RecentTransactions extends ConsumerWidget {
     TransactionWithCategory item,
   ) async {
     final db = ref.read(databaseProvider);
+
+    // Rollback bank account balance if linked
+    if (item.transaction.accountId != null) {
+      final acc = await (db.select(db.bankAccounts)
+            ..where((a) => a.id.equals(item.transaction.accountId!)))
+          .getSingleOrNull();
+      if (acc != null) {
+        final isExpense = item.transaction.type == 'expense';
+        final restoredBal = isExpense
+            ? acc.balance + item.transaction.amount
+            : acc.balance - item.transaction.amount;
+        await (db.update(db.bankAccounts)
+              ..where((a) => a.id.equals(acc.id)))
+            .write(BankAccountsCompanion(
+          balance: Value(restoredBal),
+          updatedAt: Value(DateTime.now()),
+        ));
+      }
+    }
+
+    // Delete locally
     await (db.delete(
       db.transactions,
     )..where((t) => t.id.equals(item.transaction.id))).go();
+
+    // Delete remotely from Cloud Firestore
+    if (item.transaction.syncId != null) {
+      ref.read(syncServiceProvider).deleteRemoteDoc('transactions', item.transaction.syncId);
+    }
 
     // Refresh dashboard
     ref.invalidate(dashboardStatsProvider);
     ref.invalidate(recentTransactionsProvider);
 
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Transaction deleted')));
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Transaction deleted'),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
+        ),
+      );
     }
   }
 }
