@@ -16,7 +16,7 @@ export const AllTransactionsPage = {
   activeDateFilter: null, // string or null
   searchQuery: '',
 
-  getCategoryBreakdown(transactions, categories, activeType) {
+  getCategoryBreakdown(transactions, categories, activeType, isLight) {
     const categoryMap = {};
     let totalTarget = 0;
 
@@ -36,10 +36,9 @@ export const AllTransactionsPage = {
       }
     });
 
-    const palette = [
-      '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
-      '#EC4899', '#06B6D4', '#14B8A6', '#F97316', '#6366F1'
-    ];
+    const colorsDark = ['#FFFFFF', '#E2E8F0', '#CBD5E1', '#94A3B8', '#64748B', '#475569', '#334155'];
+    const colorsLight = ['#0F172A', '#334155', '#475569', '#64748B', '#94A3B8', '#CBD5E1', '#E2E8F0'];
+    const palette = isLight ? colorsLight : colorsDark;
 
     const sorted = Object.values(categoryMap).sort((a, b) => b.amount - a.amount);
     const items = sorted.map((c, idx) => ({
@@ -67,7 +66,7 @@ export const AllTransactionsPage = {
     });
 
     const dayEntries = Object.entries(daysMap);
-    const recentEntries = dayEntries.slice(-14);
+    const recentEntries = dayEntries.slice(-8);
 
     return {
       labels: recentEntries.map(([d]) => d),
@@ -114,8 +113,11 @@ export const AllTransactionsPage = {
   },
 
   render(state) {
+    const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
+    const isLight = activeTheme === 'light';
+
     const list = this.getFilteredTransactions(state);
-    const categoryBreakdown = this.getCategoryBreakdown(state.transactions, state.categories, this.activeTypeFilter);
+    const categoryBreakdown = this.getCategoryBreakdown(state.transactions, state.categories, this.activeTypeFilter, isLight);
 
     // Calculate totals on current filtered set
     let ledgerIncome = 0;
@@ -203,11 +205,11 @@ export const AllTransactionsPage = {
             <div class="ledger-donut-split">
               <div style="position: relative; height: 180px; width: 100%; display: flex; align-items: center; justify-content: center;">
                 <canvas id="ledger-category-donut-canvas"></canvas>
-                <div style="position: absolute; text-align: center; pointer-events: none; max-width: 110px; overflow: hidden;">
-                  <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" id="ledger-donut-label">
+                <div class="nw-donut-center" style="max-width: 120px;">
+                  <div class="nw-donut-center-label" id="ledger-donut-label">
                     ${activeCatObj ? activeCatObj.name : (this.activeTypeFilter === 'income' ? 'Total Inflow' : 'Total Spend')}
                   </div>
-                  <div style="font-size: 14px; font-weight: 800; color: var(--text-primary); margin-top: 2px;" id="ledger-donut-val">
+                  <div class="nw-donut-center-val" id="ledger-donut-val">
                     ${Formatters.compactCurrency(activeCatObj ? activeCatObj.amount : categoryBreakdown.total)}
                   </div>
                 </div>
@@ -220,12 +222,12 @@ export const AllTransactionsPage = {
                     No category data recorded yet.
                   </div>
                 ` : categoryBreakdown.items.map(cat => `
-                  <div class="ledger-cat-row ${this.activeCategoryFilter?.toLowerCase() === cat.name.toLowerCase() ? 'active' : ''}" data-cat-name="${cat.name}" title="Filter by ${cat.name}">
-                    <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
-                      <span class="nw-color-dot" style="background: ${cat.color};"></span>
-                      <span style="font-size: 12.5px; font-weight: 600; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${cat.name}</span>
+                  <div class="ledger-cat-row ${this.activeCategoryFilter?.toLowerCase() === cat.name.toLowerCase() ? 'active' : ''}" data-cat-name="${cat.name}" title="Filter by ${cat.name}" style="min-width: 0;">
+                    <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;">
+                      <span class="nw-color-dot" style="background: ${cat.color}; flex-shrink: 0;"></span>
+                      <span style="font-size: 12px; font-weight: 600; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 140px;">${cat.name}</span>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                    <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-left: 8px;">
                       <span style="font-size: 12px; font-weight: 700; color: var(--text-primary);">${Formatters.currency(cat.amount)}</span>
                       <span style="font-size: 10.5px; color: var(--text-muted);">(${cat.percent}%)</span>
                     </div>
@@ -270,7 +272,7 @@ export const AllTransactionsPage = {
           </button>
           ${categoryBreakdown.items.map(cat => `
             <button class="ledger-cat-pill ${this.activeCategoryFilter?.toLowerCase() === cat.name.toLowerCase() ? 'active' : ''}" data-cat="${cat.name}">
-              <span class="material-icons" style="font-size: 14px; color: ${cat.color};">${IconHelper.getMaterialIcon(cat.icon)}</span>
+              <span class="material-icons" style="font-size: 14px; opacity: 0.75;">${IconHelper.getMaterialIcon(cat.icon)}</span>
               <span>${cat.name}</span>
               <span class="ledger-cat-pill-count">${Formatters.compactCurrency(cat.amount)}</span>
             </button>
@@ -367,7 +369,7 @@ export const AllTransactionsPage = {
         ledgerCategoryChartInstance = null;
       }
 
-      const breakdown = this.getCategoryBreakdown(state.transactions, state.categories, this.activeTypeFilter);
+      const breakdown = this.getCategoryBreakdown(state.transactions, state.categories, this.activeTypeFilter, isLight);
       if (breakdown.items.length > 0) {
         ledgerCategoryChartInstance = new Chart(catCanvas, {
           type: 'doughnut',
@@ -388,6 +390,34 @@ export const AllTransactionsPage = {
               if (event.native && event.native.target) {
                 event.native.target.style.cursor = activeElements.length ? 'pointer' : 'default';
               }
+              const donutLabel = document.getElementById('ledger-donut-label');
+              const donutVal = document.getElementById('ledger-donut-val');
+              const rows = document.querySelectorAll('.ledger-cat-row');
+
+              if (activeElements && activeElements.length > 0) {
+                const idx = activeElements[0].index;
+                const cat = breakdown.items[idx];
+                if (cat) {
+                  if (donutLabel) donutLabel.textContent = `${cat.name} (${cat.percent}%)`;
+                  if (donutVal) donutVal.textContent = Formatters.compactCurrency(cat.amount);
+                  rows.forEach((row, rIdx) => {
+                    const isMatch = rIdx === idx;
+                    row.style.background = isMatch ? 'var(--bg-surface-hover)' : '';
+                    row.style.borderColor = isMatch ? 'var(--text-primary)' : '';
+                  });
+                  return;
+                }
+              }
+
+              const activeCat = this.activeCategoryFilter 
+                ? breakdown.items.find(c => c.name.toLowerCase() === this.activeCategoryFilter.toLowerCase())
+                : null;
+              if (donutLabel) donutLabel.textContent = activeCat ? activeCat.name : (this.activeTypeFilter === 'income' ? 'Total Inflow' : 'Total Spend');
+              if (donutVal) donutVal.textContent = Formatters.compactCurrency(activeCat ? activeCat.amount : breakdown.total);
+              rows.forEach(row => {
+                row.style.background = '';
+                row.style.borderColor = '';
+              });
             },
             onClick: (event, elements) => {
               if (!elements || !elements.length) return;
@@ -404,20 +434,23 @@ export const AllTransactionsPage = {
             },
             plugins: {
               legend: { display: false },
-              tooltip: {
-                backgroundColor: tooltipBg,
-                titleColor: tooltipTitle,
-                bodyColor: textColor,
-                borderColor: tooltipBorder,
-                borderWidth: 1,
-                padding: 10,
-                cornerRadius: 8,
-                callbacks: {
-                  label: (ctx) => ` ${ctx.label}: ${Formatters.currency(ctx.parsed)}`
-                }
-              }
+              tooltip: { enabled: false }
             }
           }
+        });
+
+        catCanvas.addEventListener('mouseleave', () => {
+          const donutLabel = document.getElementById('ledger-donut-label');
+          const donutVal = document.getElementById('ledger-donut-val');
+          const activeCat = this.activeCategoryFilter 
+            ? breakdown.items.find(c => c.name.toLowerCase() === this.activeCategoryFilter.toLowerCase())
+            : null;
+          if (donutLabel) donutLabel.textContent = activeCat ? activeCat.name : (this.activeTypeFilter === 'income' ? 'Total Inflow' : 'Total Spend');
+          if (donutVal) donutVal.textContent = Formatters.compactCurrency(activeCat ? activeCat.amount : breakdown.total);
+          document.querySelectorAll('.ledger-cat-row').forEach(row => {
+            row.style.background = '';
+            row.style.borderColor = '';
+          });
         });
       }
     }
@@ -433,7 +466,7 @@ export const AllTransactionsPage = {
       const timeline = this.getTimelineData(state.transactions);
       if (timeline.labels.length > 0) {
         const barColor = isLight ? '#0F172A' : '#FFFFFF';
-        const barHoverColor = isLight ? '#334155' : '#E2E8F0';
+        const barHoverColor = isLight ? '#334155' : '#CBD5E1';
 
         ledgerTimelineChartInstance = new Chart(timelineCanvas, {
           type: 'bar',
@@ -445,12 +478,15 @@ export const AllTransactionsPage = {
               backgroundColor: barColor,
               hoverBackgroundColor: barHoverColor,
               borderRadius: 4,
-              maxBarThickness: 18
+              maxBarThickness: 24
             }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            layout: {
+              padding: { top: 6, right: 8, bottom: 4, left: 4 }
+            },
             onHover: (event, activeElements) => {
               if (event.native && event.native.target) {
                 event.native.target.style.cursor = activeElements.length ? 'pointer' : 'default';
@@ -475,8 +511,8 @@ export const AllTransactionsPage = {
                 bodyColor: textColor,
                 borderColor: tooltipBorder,
                 borderWidth: 1,
-                padding: 10,
-                cornerRadius: 8,
+                padding: 8,
+                cornerRadius: 6,
                 callbacks: {
                   label: (ctx) => ` Spent: ${Formatters.currency(ctx.parsed.y)}`
                 }
@@ -485,13 +521,22 @@ export const AllTransactionsPage = {
             scales: {
               x: {
                 grid: { display: false },
-                ticks: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 10.5 } }
+                ticks: {
+                  color: textColor,
+                  font: { family: 'Plus Jakarta Sans', size: 10 },
+                  maxRotation: 0,
+                  minRotation: 0,
+                  autoSkip: true,
+                  maxTicksLimit: 7
+                }
               },
               y: {
                 grid: { color: gridColor },
+                border: { dash: [3, 3] },
                 ticks: {
                   color: textColor,
-                  font: { family: 'Plus Jakarta Sans', size: 10.5 },
+                  font: { family: 'Plus Jakarta Sans', size: 10 },
+                  maxTicksLimit: 4,
                   callback: (val) => Formatters.compactCurrency(val)
                 }
               }
@@ -539,8 +584,11 @@ export const AllTransactionsPage = {
   },
 
   updateLedgerView(state) {
+    const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
+    const isLight = activeTheme === 'light';
+
     const list = this.getFilteredTransactions(state);
-    const categoryBreakdown = this.getCategoryBreakdown(state.transactions, state.categories, this.activeTypeFilter);
+    const categoryBreakdown = this.getCategoryBreakdown(state.transactions, state.categories, this.activeTypeFilter, isLight);
 
     // Calculate totals on current filtered set
     let ledgerIncome = 0;
