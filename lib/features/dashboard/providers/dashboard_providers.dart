@@ -158,6 +158,8 @@ class DashboardStats {
     this.goalAllocations = 0,
   });
 
+  int get savingsRate => totalIncome > 0 ? (((totalIncome - totalExpenses) / totalIncome) * 100).clamp(0, 100).round() : 0;
+
   factory DashboardStats.empty() => DashboardStats(
     totalIncome: 0,
     totalExpenses: 0,

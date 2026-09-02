@@ -546,7 +546,28 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 8),
+
+              // Quick Amount Preset Chips
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [100, 500, 1000, 2000, 5000].map((preset) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ActionChip(
+                        label: Text('+$currencySymbol$preset'),
+                        onPressed: () {
+                          final current = double.tryParse(_amountController.text.replaceAll(',', '')) ?? 0;
+                          final updated = current + preset;
+                          _amountController.text = updated % 1 == 0 ? updated.toInt().toString() : updated.toStringAsFixed(2);
+                        },
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 20),
 
               // Note Input (triggers auto-categorization)
               Text('Note (optional)', style: theme.textTheme.labelLarge),
