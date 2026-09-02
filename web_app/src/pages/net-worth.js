@@ -3,6 +3,7 @@ import { Chart, registerables } from 'chart.js';
 import { StateManager } from '../state.js';
 import { DbService, reconcileInvestmentAssets } from '../db.js';
 import { Formatters } from '../utils/formatters.js';
+import { IconHelper, findCategory } from '../utils/icons.js';
 
 Chart.register(...registerables);
 
@@ -209,10 +210,27 @@ export const NetWorthPage = {
       other: 0
     };
 
+    const categoryHoldings = {
+      savings: [],
+      investment: [],
+      real_estate: [],
+      crypto: [],
+      vehicle: [],
+      other: []
+    };
+
     (state.bankAccounts || []).forEach(acc => {
       const isCredit = acc.account_type === 'credit_card' || acc.accountType === 'credit_card';
       if (!isCredit) {
-        categoryTotals.savings += Number(acc.balance || 0);
+        const bal = Number(acc.balance || 0);
+        categoryTotals.savings += bal;
+        categoryHoldings.savings.push({
+          isBank: true,
+          data: acc,
+          name: acc.name,
+          subtitle: acc.account_type || 'Liquid Cash / Bank',
+          value: bal
+        });
       }
     });
 
@@ -221,11 +239,15 @@ export const NetWorthPage = {
       if (!isLiab) {
         const val = Number(a.value || 0);
         const type = a.type || 'other';
-        if (categoryTotals[type] !== undefined) {
-          categoryTotals[type] += val;
-        } else {
-          categoryTotals.other += val;
-        }
+        const targetType = categoryTotals[type] !== undefined ? type : 'other';
+        categoryTotals[targetType] += val;
+        categoryHoldings[targetType].push({
+          isBank: false,
+          data: a,
+          name: a.name,
+          subtitle: a.classification || a.category || 'Asset Holding',
+          value: val
+        });
       }
     });
 
@@ -242,7 +264,8 @@ export const NetWorthPage = {
         icon: categoryIcons[key] || 'category',
         value: val,
         percent,
-        color: palette[idx % palette.length]
+        color: palette[idx % palette.length],
+        holdings: categoryHoldings[key] || []
       };
     });
 
@@ -411,10 +434,15 @@ export const NetWorthPage = {
                 <span class="material-icons">show_chart</span>
                 <span>Net Worth Trajectory</span>
               </div>
-              <div class="filter-group" style="padding: 2px;">
-                <button class="filter-chip ${this.selectedTimeframe === '6M' ? 'active' : ''}" data-nw-timeframe="6M">6M</button>
-                <button class="filter-chip ${this.selectedTimeframe === '1Y' ? 'active' : ''}" data-nw-timeframe="1Y">1Y</button>
-                <button class="filter-chip ${this.selectedTimeframe === 'ALL' ? 'active' : ''}" data-nw-timeframe="ALL">ALL</button>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">
+                  <span class="material-icons" style="font-size: 12px; margin-right: 3px;">touch_app</span>Click to drill down
+                </span>
+                <div class="filter-group" style="padding: 2px;">
+                  <button class="filter-chip ${this.selectedTimeframe === '6M' ? 'active' : ''}" data-nw-timeframe="6M">6M</button>
+                  <button class="filter-chip ${this.selectedTimeframe === '1Y' ? 'active' : ''}" data-nw-timeframe="1Y">1Y</button>
+                  <button class="filter-chip ${this.selectedTimeframe === 'ALL' ? 'active' : ''}" data-nw-timeframe="ALL">ALL</button>
+                </div>
               </div>
             </div>
 
@@ -433,9 +461,14 @@ export const NetWorthPage = {
                 <span class="material-icons">pie_chart</span>
                 <span id="nw-allocation-title">${this.selectedAllocationView === 'solvency' ? 'Capital Solvency' : 'Asset Allocation'}</span>
               </div>
-              <div class="filter-group" style="padding: 2px;">
-                <button class="filter-chip ${this.selectedAllocationView === 'class' ? 'active' : ''}" data-nw-alloc-view="class">Asset Mix</button>
-                <button class="filter-chip ${this.selectedAllocationView === 'solvency' ? 'active' : ''}" data-nw-alloc-view="solvency">Solvency</button>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">
+                  <span class="material-icons" style="font-size: 12px; margin-right: 3px;">touch_app</span>Click to drill down
+                </span>
+                <div class="filter-group" style="padding: 2px;">
+                  <button class="filter-chip ${this.selectedAllocationView === 'class' ? 'active' : ''}" data-nw-alloc-view="class">Asset Mix</button>
+                  <button class="filter-chip ${this.selectedAllocationView === 'solvency' ? 'active' : ''}" data-nw-alloc-view="solvency">Solvency</button>
+                </div>
               </div>
             </div>
 
@@ -732,6 +765,20 @@ export const NetWorthPage = {
           mode: 'index',
           intersect: false
         },
+        onHover: (event, activeElements) => {
+          if (event.native && event.native.target) {
+            event.native.target.style.cursor = activeElements.length ? 'pointer' : 'default';
+          }
+        },
+        onClick: (event, elements) => {
+          if (!elements || !elements.length) return;
+          const idx = elements[0].index;
+          const month = trajectory.months[idx];
+          const fullLabel = trajectory.fullLabels[idx] || trajectory.labels[idx];
+          const netWorthVal = trajectory.values[idx];
+          const stat = trajectory.monthlyStats[month?.key];
+          this.showTrajectoryDrillDown(fullLabel, month, netWorthVal, stat, state);
+        },
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -873,6 +920,9 @@ export const NetWorthPage = {
         maintainAspectRatio: false,
         cutout: '72%',
         onHover: (event, activeElements) => {
+          if (event.native && event.native.target) {
+            event.native.target.style.cursor = activeElements.length ? 'pointer' : 'default';
+          }
           const centerLabelEl = contentEl.querySelector('.nw-donut-center-label');
           const centerValEl = contentEl.querySelector('.nw-donut-center-val');
           const legendRows = contentEl.querySelectorAll('.nw-legend-row');
@@ -899,6 +949,14 @@ export const NetWorthPage = {
             row.style.borderColor = 'var(--glass-border)';
           });
         },
+        onClick: (event, elements) => {
+          if (!elements || !elements.length) return;
+          const idx = elements[0].index;
+          const item = data.items[idx];
+          if (item) {
+            this.showAllocationDrillDown(item, state);
+          }
+        },
         plugins: {
           legend: { display: false },
           tooltip: { enabled: false }
@@ -922,6 +980,13 @@ export const NetWorthPage = {
     const legendRows = contentEl.querySelectorAll('.nw-legend-row');
     legendRows.forEach((row, idx) => {
       row.style.cursor = 'pointer';
+      row.title = 'Click to drill down into this asset class';
+      row.addEventListener('click', () => {
+        const item = data.items[idx];
+        if (item) {
+          this.showAllocationDrillDown(item, state);
+        }
+      });
       row.addEventListener('mouseenter', () => {
         const item = data.items[idx];
         if (!item) return;
@@ -1459,6 +1524,272 @@ export const NetWorthPage = {
       });
 
       closeModal();
+    });
+  },
+
+  showAllocationDrillDown(item, state) {
+    const holdings = item.holdings || [];
+    const totalVal = item.value || 0;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay active';
+    overlay.innerHTML = `
+      <div class="modern-modal-dialog drilldown-dialog animate-scale-up">
+        <div class="modal-header" style="margin-bottom: 18px; padding-bottom: 14px;">
+          <div class="modal-title" style="font-size: 18px;">
+            <div class="tx-icon-box" style="width: 38px; height: 38px; border-radius: var(--radius-sm); background: var(--bg-surface-elevated); border: 1px solid var(--glass-border); color: ${item.color || 'var(--primary)'};">
+              <span class="material-icons" style="font-size: 20px;">${item.icon || 'pie_chart'}</span>
+            </div>
+            <div>
+              <div style="color: var(--text-primary); font-weight: 800;">${item.name} Breakdown</div>
+              <div style="font-size: 12px; font-weight: 500; color: var(--text-muted); margin-top: 2px;">
+                ${holdings.length} ${holdings.length === 1 ? 'holding' : 'holdings'} • ${item.percent}% of gross assets
+              </div>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="drilldown-close-btn" aria-label="Close">
+            <span class="material-icons" style="font-size: 18px;">close</span>
+          </button>
+        </div>
+
+        <div class="drilldown-summary-grid" style="grid-template-columns: repeat(2, 1fr);">
+          <div class="drilldown-stat-card">
+            <div class="drilldown-stat-label">Total Asset Value</div>
+            <div class="drilldown-stat-value" style="color: var(--text-primary);">${Formatters.currency(totalVal)}</div>
+          </div>
+          <div class="drilldown-stat-card">
+            <div class="drilldown-stat-label">Portfolio Share</div>
+            <div class="drilldown-stat-value" style="color: ${item.color || 'var(--text-primary)'};">${item.percent}%</div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <div style="font-size: 13px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 6px;">
+            <span class="material-icons" style="font-size: 16px; color: var(--primary);">account_balance</span>
+            <span>Comprising Accounts & Assets</span>
+          </div>
+          <span style="font-size: 11.5px; color: var(--text-muted);">Click edit to update balance</span>
+        </div>
+
+        <div class="drilldown-tx-list">
+          ${holdings.length === 0 ? `
+            <div style="text-align: center; padding: 40px 16px; color: var(--text-muted); font-size: 13px;">
+              No holdings found in this category.
+            </div>
+          ` : holdings.map((h, i) => `
+            <div class="drilldown-tx-row" style="cursor: default;">
+              <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                <div class="tx-icon-box" style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--bg-surface-elevated); border: 1px solid var(--glass-border); color: ${item.color || 'var(--primary)'};">
+                  <span class="material-icons" style="font-size: 18px;">${h.isBank ? 'account_balance' : (item.icon || 'inventory_2')}</span>
+                </div>
+                <div style="min-width: 0;">
+                  <div style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                    ${h.name}
+                  </div>
+                  <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
+                    ${h.subtitle}
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0; margin-left: 12px;">
+                <div style="font-size: 14.5px; font-weight: 800; color: var(--text-primary);">
+                  ${Formatters.currency(h.value)}
+                </div>
+                <button class="btn-ghost btn-sm drilldown-edit-holding-btn" data-holding-index="${i}" title="Edit holding" style="padding: 4px 8px; font-size: 11.5px;">
+                  <span class="material-icons" style="font-size: 14px;">edit</span>
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; align-items: center; margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--glass-border);">
+          <button class="btn-secondary" id="drilldown-dismiss-btn" style="width: auto; padding: 8px 18px; font-size: 12.5px;">
+            Done
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const closeModal = () => {
+      if (document.body.contains(overlay)) {
+        document.body.removeChild(overlay);
+      }
+    };
+
+    overlay.querySelector('#drilldown-close-btn')?.addEventListener('click', closeModal);
+    overlay.querySelector('#drilldown-dismiss-btn')?.addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal();
+    });
+
+    overlay.querySelectorAll('.drilldown-edit-holding-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const hIdx = parseInt(btn.getAttribute('data-holding-index'), 10);
+        const h = holdings[hIdx];
+        if (h) {
+          closeModal();
+          if (h.isBank) {
+            this.showEditBankModal(h.data);
+          } else {
+            this.showEditAssetModal(h.data);
+          }
+        }
+      });
+    });
+  },
+
+  showTrajectoryDrillDown(fullLabel, month, netWorthVal, stat, state) {
+    const inflow = stat ? stat.inflow : 0;
+    const outflow = stat ? stat.outflow : 0;
+    const delta = stat ? stat.net : 0;
+
+    let targetYear = new Date().getFullYear();
+    let targetMonth = new Date().getMonth();
+    if (month && month.key) {
+      const parts = month.key.split('-');
+      targetYear = parseInt(parts[0], 10);
+      targetMonth = parseInt(parts[1], 10) - 1;
+    }
+
+    const monthTx = (state.transactions || [])
+      .filter(t => {
+        const d = new Date(t.timestamp);
+        return d.getFullYear() === targetYear && d.getMonth() === targetMonth;
+      })
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay active';
+    overlay.innerHTML = `
+      <div class="modern-modal-dialog drilldown-dialog animate-scale-up">
+        <div class="modal-header" style="margin-bottom: 18px; padding-bottom: 14px;">
+          <div class="modal-title" style="font-size: 18px;">
+            <div class="tx-icon-box" style="width: 38px; height: 38px; border-radius: var(--radius-sm); background: var(--bg-surface-elevated); border: 1px solid var(--glass-border); color: var(--primary);">
+              <span class="material-icons" style="font-size: 20px;">insights</span>
+            </div>
+            <div>
+              <div style="color: var(--text-primary); font-weight: 800;">${fullLabel} Snapshot</div>
+              <div style="font-size: 12px; font-weight: 500; color: var(--text-muted); margin-top: 2px;">
+                Net Worth: ${Formatters.currency(netWorthVal)} • ${monthTx.length} transactions
+              </div>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="drilldown-close-btn" aria-label="Close">
+            <span class="material-icons" style="font-size: 18px;">close</span>
+          </button>
+        </div>
+
+        <div class="drilldown-summary-grid">
+          <div class="drilldown-stat-card">
+            <div class="drilldown-stat-label">Inflows</div>
+            <div class="drilldown-stat-value" style="color: var(--primary);">+${Formatters.currency(inflow)}</div>
+          </div>
+          <div class="drilldown-stat-card">
+            <div class="drilldown-stat-label">Outflows</div>
+            <div class="drilldown-stat-value" style="color: var(--error);">-${Formatters.currency(outflow)}</div>
+          </div>
+          <div class="drilldown-stat-card">
+            <div class="drilldown-stat-label">Monthly Delta</div>
+            <div class="drilldown-stat-value" style="color: ${delta >= 0 ? 'var(--primary)' : 'var(--error)'};">
+              ${delta >= 0 ? '+' : ''}${Formatters.currency(delta)}
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <div style="font-size: 13px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 6px;">
+            <span class="material-icons" style="font-size: 16px; color: var(--primary);">calendar_month</span>
+            <span>Recorded Activity in ${month?.label || fullLabel}</span>
+          </div>
+          <span style="font-size: 11.5px; color: var(--text-muted);">Sorted by date</span>
+        </div>
+
+        <div class="drilldown-tx-list">
+          ${monthTx.length === 0 ? `
+            <div style="text-align: center; padding: 40px 16px; color: var(--text-muted); font-size: 13px;">
+              No cash flow transactions recorded in this month.
+            </div>
+          ` : monthTx.map(tx => {
+            const isIncome = tx.type === 'income';
+            const cat = findCategory(state.categories, tx.categoryId || tx.category_id);
+            const iconName = cat ? cat.icon : 'category';
+            const catName = cat ? cat.name : 'General';
+            const d = new Date(tx.timestamp);
+            const dateStr = d.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
+            const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+            return `
+              <div class="drilldown-tx-row" data-sync-id="${tx.sync_id || ''}" data-id="${tx.id || ''}">
+                <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                  <div class="tx-icon-box" style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--bg-surface-elevated); border: 1px solid var(--glass-border); color: ${isIncome ? 'var(--primary)' : 'var(--text-secondary)'};">
+                    <span class="material-icons" style="font-size: 18px;">${IconHelper.getMaterialIcon(iconName)}</span>
+                  </div>
+                  <div style="min-width: 0;">
+                    <div style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                      ${tx.note || catName}
+                    </div>
+                    <div style="font-size: 11.5px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; margin-top: 2px;">
+                      <span>${dateStr} • ${timeStr}</span>
+                      ${tx.paymentMode ? `<span class="tx-tag" style="font-size: 10px; padding: 1px 6px;">${tx.paymentMode}</span>` : ''}
+                    </div>
+                  </div>
+                </div>
+                <div style="text-align: right; flex-shrink: 0; margin-left: 12px;">
+                  <div style="font-size: 14.5px; font-weight: 800; color: ${isIncome ? 'var(--primary)' : 'var(--error)'};">
+                    ${isIncome ? '+' : '-'}${Formatters.currency(tx.amount)}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--glass-border);">
+          <button class="btn-ghost" id="drilldown-ledger-btn" style="font-size: 12.5px;">
+            <span class="material-icons" style="font-size: 16px;">format_list_bulleted</span> View Ledger
+          </button>
+          <button class="btn-secondary" id="drilldown-dismiss-btn" style="width: auto; padding: 8px 18px; font-size: 12.5px;">
+            Done
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const closeModal = () => {
+      if (document.body.contains(overlay)) {
+        document.body.removeChild(overlay);
+      }
+    };
+
+    overlay.querySelector('#drilldown-close-btn')?.addEventListener('click', closeModal);
+    overlay.querySelector('#drilldown-dismiss-btn')?.addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal();
+    });
+
+    overlay.querySelector('#drilldown-ledger-btn')?.addEventListener('click', () => {
+      closeModal();
+      StateManager.setState({ navIndex: 1 });
+    });
+
+    overlay.querySelectorAll('.drilldown-tx-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const syncId = row.getAttribute('data-sync-id');
+        const localId = row.getAttribute('data-id');
+        const tx = state.transactions.find(t => (syncId && t.sync_id === syncId) || (localId && String(t.id) === String(localId)));
+        if (tx) {
+          closeModal();
+          import('./add-transaction.js').then(({ AddTransactionModal }) => {
+            AddTransactionModal.show(tx);
+          });
+        }
+      });
     });
   }
 };
