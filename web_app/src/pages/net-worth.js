@@ -445,7 +445,7 @@ export const NetWorthPage = {
                   No asset records added yet. Add bank accounts, investments, or properties.
                 </div>
               ` : assetItems.map(a => `
-                <div class="asset-card">
+                <div class="asset-card" data-is-bank="${a.isBank ? 'true' : 'false'}" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" style="cursor: pointer;">
                   <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
                     <div class="asset-card-icon-box">
                       <span class="material-icons" style="font-size: 18px; color: var(--text-primary);">${a.icon}</span>
@@ -455,12 +455,20 @@ export const NetWorthPage = {
                       <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-top: 2px;">${a.type || 'Savings'}</div>
                     </div>
                   </div>
-                  <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
-                    <div style="font-weight: 700; font-size: 14.5px; color: var(--text-primary);">${Formatters.currency(a.value)}</div>
+                  <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                    <div style="font-weight: 700; font-size: 14.5px; color: var(--text-primary); margin-right: 4px;">${Formatters.currency(a.value)}</div>
                     ${a.isBank ? `
                       <span style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); background: var(--bg-surface-elevated); padding: 3px 6px; border-radius: var(--radius-xs); border: 1px solid var(--glass-border);">Account</span>
-                    ` : `
+                    ` : ''}
+                    <button class="btn-icon btn-icon-sm edit-holding-btn" data-is-bank="${a.isBank ? 'true' : 'false'}" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" title="Edit holding">
+                      <span class="material-icons" style="font-size: 16px;">edit</span>
+                    </button>
+                    ${!a.isBank ? `
                       <button class="btn-icon btn-icon-sm delete-asset-btn" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" title="Delete asset">
+                        <span class="material-icons" style="font-size: 16px;">delete_outline</span>
+                      </button>
+                    ` : `
+                      <button class="btn-icon btn-icon-sm delete-bank-btn" data-sync-id="${a.sync_id || a.id || ''}" title="Delete account">
                         <span class="material-icons" style="font-size: 16px;">delete_outline</span>
                       </button>
                     `}
@@ -485,7 +493,7 @@ export const NetWorthPage = {
                   Zero liabilities recorded. You have a 100% debt-free profile!
                 </div>
               ` : liabilityItems.map(a => `
-                <div class="asset-card">
+                <div class="asset-card" data-is-bank="${a.isBank ? 'true' : 'false'}" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" style="cursor: pointer;">
                   <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
                     <div class="asset-card-icon-box">
                       <span class="material-icons" style="font-size: 18px; color: var(--text-secondary);">${a.icon}</span>
@@ -495,12 +503,20 @@ export const NetWorthPage = {
                       <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-top: 2px;">${a.type || 'Debt'}</div>
                     </div>
                   </div>
-                  <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
-                    <div style="font-weight: 700; font-size: 14.5px; color: var(--text-secondary);">${Formatters.currency(a.value)}</div>
+                  <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                    <div style="font-weight: 700; font-size: 14.5px; color: var(--text-secondary); margin-right: 4px;">${Formatters.currency(a.value)}</div>
                     ${a.isBank ? `
                       <span style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); background: var(--bg-surface-elevated); padding: 3px 6px; border-radius: var(--radius-xs); border: 1px solid var(--glass-border);">Card</span>
-                    ` : `
+                    ` : ''}
+                    <button class="btn-icon btn-icon-sm edit-holding-btn" data-is-bank="${a.isBank ? 'true' : 'false'}" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" title="Edit holding">
+                      <span class="material-icons" style="font-size: 16px;">edit</span>
+                    </button>
+                    ${!a.isBank ? `
                       <button class="btn-icon btn-icon-sm delete-asset-btn" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" title="Delete liability">
+                        <span class="material-icons" style="font-size: 16px;">delete_outline</span>
+                      </button>
+                    ` : `
+                      <button class="btn-icon btn-icon-sm delete-bank-btn" data-sync-id="${a.sync_id || a.id || ''}" title="Delete account">
                         <span class="material-icons" style="font-size: 16px;">delete_outline</span>
                       </button>
                     `}
@@ -529,6 +545,53 @@ export const NetWorthPage = {
         if (confirm('Delete this asset/liability entry?')) {
           await DbService.deleteAsset(syncId, localId);
         }
+      });
+    });
+
+    const deleteBankBtns = document.querySelectorAll('.delete-bank-btn');
+    deleteBankBtns.forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const syncId = btn.getAttribute('data-sync-id');
+        if (confirm('Delete this account/card entry?')) {
+          await DbService.deleteBankAccount(syncId);
+        }
+      });
+    });
+
+    const handleEditHolding = (targetEl) => {
+      const isBank = targetEl.getAttribute('data-is-bank') === 'true';
+      const syncId = targetEl.getAttribute('data-sync-id');
+      const localId = targetEl.getAttribute('data-id');
+
+      if (isBank) {
+        const bankAcc = (state.bankAccounts || []).find(a => 
+          (syncId && String(a.sync_id) === String(syncId)) || (localId && String(a.id) === String(localId))
+        );
+        if (bankAcc) {
+          this.showEditBankModal(bankAcc);
+        }
+      } else {
+        const asset = (state.assets || []).find(a => 
+          (syncId && String(a.sync_id) === String(syncId)) || (localId && String(a.id) === String(localId))
+        );
+        if (asset) {
+          this.showEditAssetModal(asset);
+        }
+      }
+    };
+
+    document.querySelectorAll('.edit-holding-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        handleEditHolding(btn);
+      });
+    });
+
+    document.querySelectorAll('.asset-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('button')) return;
+        handleEditHolding(card);
       });
     });
 
@@ -1037,6 +1100,343 @@ export const NetWorthPage = {
 
       closeModal();
       StateManager.notify();
+    });
+  },
+
+  showEditAssetModal(asset) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay active';
+    let isLiability = asset.isLiability !== undefined ? Boolean(asset.isLiability) : Boolean(asset.is_liability);
+    let selectedType = asset.type || (isLiability ? 'loan' : 'savings');
+    const initialVal = Math.abs(Number(asset.value || 0));
+
+    overlay.innerHTML = `
+      <div class="modern-modal-dialog animate-scale-up" style="max-width: 500px; padding: 34px 30px;">
+        <div class="modal-header" style="margin-bottom: 24px; padding-bottom: 16px;">
+          <div class="modal-title">
+            <span class="material-icons" style="color: var(--primary); font-size: 24px;">edit_note</span>
+            <span>Edit Asset / Holding</span>
+          </div>
+          <button class="modal-close-btn" id="modal-close-edit-asset" aria-label="Close">
+            <span class="material-icons" style="font-size: 20px; line-height: 1;">close</span>
+          </button>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label class="form-label" style="margin-bottom: 8px;">Name / Asset Description</label>
+          <input type="text" class="form-control" id="edit-asset-name-field" value="${asset.name || ''}" placeholder="Asset Name" autofocus>
+        </div>
+
+        <!-- Classification Toggle -->
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label class="form-label" style="margin-bottom: 8px;">Classification</label>
+          <div class="filter-group" style="width: 100%; display: flex; padding: 4px;">
+            <button type="button" class="filter-chip ${!isLiability ? 'active' : ''}" id="edit-asset-class-asset-btn" style="flex: 1; text-align: center; padding: 8px 12px; font-size: 13px; font-weight: 600;">
+              Asset (Positive Capital)
+            </button>
+            <button type="button" class="filter-chip ${isLiability ? 'active' : ''}" id="edit-asset-class-liability-btn" style="flex: 1; text-align: center; padding: 8px 12px; font-size: 13px; font-weight: 600;">
+              Liability / Debt
+            </button>
+          </div>
+        </div>
+
+        <!-- Category Selector -->
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label class="form-label" style="margin-bottom: 8px;">Category / Instrument</label>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;" id="edit-asset-type-grid">
+            ${[
+              { id: 'savings', name: 'Cash / Bank', icon: 'account_balance' },
+              { id: 'investment', name: 'Investments', icon: 'trending_up' },
+              { id: 'real_estate', name: 'Real Estate', icon: 'domain' },
+              { id: 'crypto', name: 'Crypto', icon: 'currency_bitcoin' },
+              { id: 'vehicle', name: 'Vehicle', icon: 'directions_car' },
+              { id: 'loan', name: 'Personal Loan', icon: 'request_quote' },
+              { id: 'credit_card', name: 'Credit Card', icon: 'credit_card' },
+              { id: 'other', name: 'Other Asset', icon: 'category' }
+            ].map(item => `
+              <div class="category-select-pill edit-asset-type-pill ${item.id === selectedType ? 'active' : ''}" 
+                   data-type="${item.id}"
+                   style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: var(--radius-md); background: ${item.id === selectedType ? 'var(--bg-surface-elevated)' : 'var(--bg-surface-subtle)'}; border: 1px solid ${item.id === selectedType ? 'var(--primary)' : 'var(--glass-border)'}; cursor: pointer; transition: var(--transition-fast);">
+                <span class="material-icons" style="font-size: 18px; color: ${item.id === selectedType ? 'var(--text-primary)' : 'var(--text-muted)'};">${item.icon}</span>
+                <span style="font-size: 12px; font-weight: 600; color: ${item.id === selectedType ? 'var(--text-primary)' : 'var(--text-secondary)'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 24px;">
+          <label class="form-label" style="margin-bottom: 8px;">Valuation / Principal (₹)</label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" class="btn-icon" id="edit-asset-val-minus" title="Decrease by ₹500" style="width: 42px; height: 42px;">
+              <span class="material-icons">remove</span>
+            </button>
+            <div style="position: relative; display: flex; align-items: center; flex: 1;">
+              <span style="position: absolute; left: 16px; font-size: 18px; font-weight: 700; color: var(--text-muted);">₹</span>
+              <input type="number" step="500" min="0" class="form-control" id="edit-asset-val-field" value="${initialVal}" placeholder="50000" style="padding-left: 36px; font-size: 18px; font-weight: 700; text-align: right;">
+            </div>
+            <button type="button" class="btn-icon" id="edit-asset-val-plus" title="Increase by ₹500" style="width: 42px; height: 42px;">
+              <span class="material-icons">add</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Preset Chips -->
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px;">
+          ${[5000, 10000, 25000, 50000, 100000, 500000].map(val => `
+            <button type="button" class="filter-chip edit-asset-val-preset-chip" data-val="${val}" style="padding: 6px 10px; font-size: 11.5px; border-radius: var(--radius-sm); background: var(--bg-surface-elevated); border: 1px solid var(--glass-border);">
+              +₹${val.toLocaleString()}
+            </button>
+          `).join('')}
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--glass-border);">
+          <button class="btn-ghost" id="edit-asset-delete-btn" style="color: var(--error); padding: 10px 14px; font-size: 13px;">
+            <span class="material-icons" style="font-size: 16px;">delete_outline</span> Delete
+          </button>
+          <div style="display: flex; gap: 12px;">
+            <button class="btn-secondary" id="edit-asset-cancel-btn" style="width: auto; padding: 10px 20px;">Cancel</button>
+            <button class="btn-primary" id="edit-asset-save-btn" style="width: auto; padding: 10px 22px;">Save Changes</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const valInput = overlay.querySelector('#edit-asset-val-field');
+
+    overlay.querySelector('#edit-asset-val-minus')?.addEventListener('click', () => {
+      const cur = parseFloat(valInput.value) || 0;
+      valInput.value = Math.max(0, cur - 500);
+    });
+
+    overlay.querySelector('#edit-asset-val-plus')?.addEventListener('click', () => {
+      const cur = parseFloat(valInput.value) || 0;
+      valInput.value = cur + 500;
+    });
+
+    overlay.querySelectorAll('.edit-asset-val-preset-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const delta = parseFloat(chip.getAttribute('data-val')) || 0;
+        const cur = parseFloat(valInput.value) || 0;
+        valInput.value = cur + delta;
+      });
+    });
+
+    const assetBtn = overlay.querySelector('#edit-asset-class-asset-btn');
+    const liabilityBtn = overlay.querySelector('#edit-asset-class-liability-btn');
+
+    assetBtn?.addEventListener('click', () => {
+      isLiability = false;
+      assetBtn.classList.add('active');
+      liabilityBtn?.classList.remove('active');
+    });
+
+    liabilityBtn?.addEventListener('click', () => {
+      isLiability = true;
+      liabilityBtn.classList.add('active');
+      assetBtn?.classList.remove('active');
+    });
+
+    const typePills = overlay.querySelectorAll('.edit-asset-type-pill');
+    typePills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        selectedType = pill.getAttribute('data-type');
+        typePills.forEach(p => {
+          const active = p === pill;
+          p.style.background = active ? 'var(--bg-surface-elevated)' : 'var(--bg-surface-subtle)';
+          p.style.borderColor = active ? 'var(--primary)' : 'var(--glass-border)';
+          const icon = p.querySelector('.material-icons');
+          if (icon) icon.style.color = active ? 'var(--text-primary)' : 'var(--text-muted)';
+          const text = p.querySelector('span:last-child');
+          if (text) text.style.color = active ? 'var(--text-primary)' : 'var(--text-secondary)';
+        });
+      });
+    });
+
+    const closeModal = () => { if (document.body.contains(overlay)) document.body.removeChild(overlay); };
+
+    overlay.querySelector('#modal-close-edit-asset')?.addEventListener('click', closeModal);
+    overlay.querySelector('#edit-asset-cancel-btn')?.addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+
+    overlay.querySelector('#edit-asset-delete-btn')?.addEventListener('click', async () => {
+      if (confirm('Delete this asset/liability record?')) {
+        await DbService.deleteAsset(asset.sync_id, asset.id);
+        closeModal();
+      }
+    });
+
+    overlay.querySelector('#edit-asset-save-btn')?.addEventListener('click', async () => {
+      const name = overlay.querySelector('#edit-asset-name-field').value.trim();
+      const val = parseFloat(overlay.querySelector('#edit-asset-val-field').value);
+
+      if (!name || isNaN(val) || val < 0) {
+        alert('Please enter a valid asset name and valuation.');
+        return;
+      }
+
+      await DbService.updateAsset(asset.sync_id, {
+        name,
+        value: val,
+        isLiability,
+        is_liability: isLiability,
+        type: selectedType
+      }, asset.id);
+
+      closeModal();
+    });
+  },
+
+  showEditBankModal(account) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay active';
+    let selectedType = account.account_type || account.accountType || 'savings';
+    const isCreditCard = selectedType === 'credit_card';
+    const initialVal = Math.abs(Number(account.balance || 0));
+
+    overlay.innerHTML = `
+      <div class="modern-modal-dialog animate-scale-up" style="max-width: 480px; padding: 34px 30px;">
+        <div class="modal-header" style="margin-bottom: 24px; padding-bottom: 16px;">
+          <div class="modal-title">
+            <span class="material-icons" style="color: var(--primary); font-size: 24px;">${isCreditCard ? 'credit_card' : 'account_balance'}</span>
+            <span>Edit Account / Card</span>
+          </div>
+          <button class="modal-close-btn" id="modal-close-edit-bank" aria-label="Close">
+            <span class="material-icons" style="font-size: 20px; line-height: 1;">close</span>
+          </button>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label class="form-label" style="margin-bottom: 8px;">Account Name / Label</label>
+          <input type="text" class="form-control" id="edit-bank-name-field" value="${account.name || ''}" placeholder="e.g. HDFC Salary, ICICI Amazon Card" autofocus>
+        </div>
+
+        <!-- Account Type Selector -->
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label class="form-label" style="margin-bottom: 8px;">Account Category</label>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;" id="edit-bank-type-grid">
+            ${[
+              { id: 'savings', name: 'Savings Account', icon: 'account_balance' },
+              { id: 'checking', name: 'Current / Checking', icon: 'payments' },
+              { id: 'credit_card', name: 'Credit Card', icon: 'credit_card' },
+              { id: 'cash', name: 'Cash Wallet', icon: 'wallet' }
+            ].map(item => `
+              <div class="category-select-pill edit-bank-type-pill ${item.id === selectedType ? 'active' : ''}" 
+                   data-type="${item.id}"
+                   style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: var(--radius-md); background: ${item.id === selectedType ? 'var(--bg-surface-elevated)' : 'var(--bg-surface-subtle)'}; border: 1px solid ${item.id === selectedType ? 'var(--primary)' : 'var(--glass-border)'}; cursor: pointer; transition: var(--transition-fast);">
+                <span class="material-icons" style="font-size: 18px; color: ${item.id === selectedType ? 'var(--text-primary)' : 'var(--text-muted)'};">${item.icon}</span>
+                <span style="font-size: 12px; font-weight: 600; color: ${item.id === selectedType ? 'var(--text-primary)' : 'var(--text-secondary)'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 24px;">
+          <label class="form-label" style="margin-bottom: 8px;">${selectedType === 'credit_card' ? 'Outstanding Balance / Debt (₹)' : 'Current Available Balance (₹)'}</label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" class="btn-icon" id="edit-bank-val-minus" title="Decrease by ₹500" style="width: 42px; height: 42px;">
+              <span class="material-icons">remove</span>
+            </button>
+            <div style="position: relative; display: flex; align-items: center; flex: 1;">
+              <span style="position: absolute; left: 16px; font-size: 18px; font-weight: 700; color: var(--text-muted);">₹</span>
+              <input type="number" step="500" class="form-control" id="edit-bank-val-field" value="${initialVal}" placeholder="10000" style="padding-left: 36px; font-size: 18px; font-weight: 700; text-align: right;">
+            </div>
+            <button type="button" class="btn-icon" id="edit-bank-val-plus" title="Increase by ₹500" style="width: 42px; height: 42px;">
+              <span class="material-icons">add</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Preset Chips -->
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px;">
+          ${[1000, 5000, 10000, 25000, 50000, 100000].map(val => `
+            <button type="button" class="filter-chip edit-bank-val-preset-chip" data-val="${val}" style="padding: 6px 10px; font-size: 11.5px; border-radius: var(--radius-sm); background: var(--bg-surface-elevated); border: 1px solid var(--glass-border);">
+              +₹${val.toLocaleString()}
+            </button>
+          `).join('')}
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--glass-border);">
+          <button class="btn-ghost" id="edit-bank-delete-btn" style="color: var(--error); padding: 10px 14px; font-size: 13px;">
+            <span class="material-icons" style="font-size: 16px;">delete_outline</span> Delete
+          </button>
+          <div style="display: flex; gap: 12px;">
+            <button class="btn-secondary" id="edit-bank-cancel-btn" style="width: auto; padding: 10px 20px;">Cancel</button>
+            <button class="btn-primary" id="edit-bank-save-btn" style="width: auto; padding: 10px 22px;">Save Changes</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const valInput = overlay.querySelector('#edit-bank-val-field');
+
+    overlay.querySelector('#edit-bank-val-minus')?.addEventListener('click', () => {
+      const cur = parseFloat(valInput.value) || 0;
+      valInput.value = Math.max(0, cur - 500);
+    });
+
+    overlay.querySelector('#edit-bank-val-plus')?.addEventListener('click', () => {
+      const cur = parseFloat(valInput.value) || 0;
+      valInput.value = cur + 500;
+    });
+
+    overlay.querySelectorAll('.edit-bank-val-preset-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const delta = parseFloat(chip.getAttribute('data-val')) || 0;
+        const cur = parseFloat(valInput.value) || 0;
+        valInput.value = cur + delta;
+      });
+    });
+
+    const typePills = overlay.querySelectorAll('.edit-bank-type-pill');
+    typePills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        selectedType = pill.getAttribute('data-type');
+        typePills.forEach(p => {
+          const active = p === pill;
+          p.style.background = active ? 'var(--bg-surface-elevated)' : 'var(--bg-surface-subtle)';
+          p.style.borderColor = active ? 'var(--primary)' : 'var(--glass-border)';
+          const icon = p.querySelector('.material-icons');
+          if (icon) icon.style.color = active ? 'var(--text-primary)' : 'var(--text-muted)';
+          const text = p.querySelector('span:last-child');
+          if (text) text.style.color = active ? 'var(--text-primary)' : 'var(--text-secondary)';
+        });
+      });
+    });
+
+    const closeModal = () => { if (document.body.contains(overlay)) document.body.removeChild(overlay); };
+
+    overlay.querySelector('#modal-close-edit-bank')?.addEventListener('click', closeModal);
+    overlay.querySelector('#edit-bank-cancel-btn')?.addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+
+    overlay.querySelector('#edit-bank-delete-btn')?.addEventListener('click', async () => {
+      if (confirm('Delete this account/card record?')) {
+        await DbService.deleteBankAccount(account.sync_id || account.id);
+        closeModal();
+      }
+    });
+
+    overlay.querySelector('#edit-bank-save-btn')?.addEventListener('click', async () => {
+      const name = overlay.querySelector('#edit-bank-name-field').value.trim();
+      const rawVal = parseFloat(overlay.querySelector('#edit-bank-val-field').value);
+
+      if (!name || isNaN(rawVal) || rawVal < 0) {
+        alert('Please enter a valid account name and balance.');
+        return;
+      }
+
+      await DbService.updateBankAccount(account.sync_id || account.id, {
+        name,
+        balance: rawVal,
+        account_type: selectedType,
+        accountType: selectedType
+      });
+
+      closeModal();
     });
   }
 };

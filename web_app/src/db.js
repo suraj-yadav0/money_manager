@@ -1184,6 +1184,47 @@ export const DbService = {
     }
   },
 
+  async updateAsset(syncId, updates, localId) {
+    try {
+      const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
+      const assets = StateManager.state.assets || [];
+      const idx = assets.findIndex(a => 
+        (syncId && String(a.sync_id) === String(syncId)) || (localId && String(a.id) === String(localId))
+      );
+      if (idx === -1) return;
+
+      const isLiability = updates.isLiability !== undefined ? Boolean(updates.isLiability) : Boolean(updates.is_liability !== undefined ? updates.is_liability : assets[idx].is_liability);
+      const value = Math.abs(Number(updates.value !== undefined ? updates.value : assets[idx].value || 0));
+
+      const updated = {
+        ...assets[idx],
+        ...updates,
+        value,
+        isLiability,
+        is_liability: isLiability,
+        updated_at: new Date().toISOString()
+      };
+      assets[idx] = updated;
+
+      if (isGuest) {
+        StateManager.saveGuestState();
+        StateManager.notify();
+      } else {
+        const userId = StateManager.state.user?.uid;
+        if (!userId) return;
+        StateManager.notify();
+        const assetSyncId = updated.sync_id || syncId;
+        if (assetSyncId) {
+          const docRef = doc(db, 'users', userId, 'assets', assetSyncId);
+          await setDoc(docRef, cleanFirestorePayload(updated), { merge: true });
+        }
+      }
+      return updated;
+    } catch (err) {
+      console.error('Error in updateAsset:', err);
+    }
+  },
+
   async deleteAsset(syncId, localId) {
     const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
     if (isGuest) {
