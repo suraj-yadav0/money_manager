@@ -1186,3 +1186,110 @@
     gap: 8px;
   }
 }
+
+/* Ledger Analytics & Category Filter Styles */
+.ledger-charts-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 16px;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .ledger-charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ledger-donut-split {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 16px;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .ledger-donut-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ledger-category-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 8px;
+  scrollbar-width: thin;
+}
+
+.ledger-cat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--glass-border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+
+.ledger-cat-pill:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+  border-color: var(--glass-border-hover);
+}
+
+.ledger-cat-pill.active {
+  background: var(--bg-surface-elevated);
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 1px var(--text-primary);
+  font-weight: 700;
+}
+
+.ledger-cat-pill-count {
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+.ledger-cat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--glass-border);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.ledger-cat-row:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--glass-border-hover);
+  transform: translateY(-1px);
+}
+
+.ledger-cat-row.active {
+  background: var(--bg-surface-elevated);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.ledger-active-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+}
+
