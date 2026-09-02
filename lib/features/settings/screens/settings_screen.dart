@@ -11,7 +11,11 @@ import '../../../core/providers/auth_providers.dart';
 import '../../../core/services/sync_service.dart';
 import '../../../core/utils/constants.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../dashboard/providers/dashboard_providers.dart';
+import '../../accounts/screens/bank_accounts_screen.dart';
+import '../../sms/screens/sms_card_deck_screen.dart';
+import '../../sms/providers/sms_providers.dart';
 
 /// Settings screen for user preferences and monthly income
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -103,11 +107,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
       );
 
-      // If income changed, create/update the recurring income transaction for this month
-      if (newIncome != _originalIncome) {
-        await _updateMonthlyIncomeTransaction(db, newIncome);
-      }
-
       // Refresh providers
       ref.invalidate(dashboardStatsProvider);
       ref.invalidate(recentTransactionsProvider);
@@ -137,60 +136,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _updateMonthlyIncomeTransaction(
-    AppDatabase db,
-    double newIncome,
-  ) async {
-    final now = DateTime.now();
-    final monthStart = DateTime(now.year, now.month, 1);
-    final monthEnd = DateTime(now.year, now.month + 1, 0, 23, 59, 59, 999);
-
-    // Find the Salary income category
-    final salaryCategory = await (db.select(
-      db.categories,
-    )..where((c) => c.name.equals('Salary'))).getSingleOrNull();
-
-    if (salaryCategory == null || salaryCategory.type != 'income') return;
-
-    // Check if there's already a salary transaction this month
-    // Query all income transactions for salary category and filter in Dart
-    final salaryTransactions = await (db.select(
-      db.transactions,
-    )..where((t) => t.categoryId.equals(salaryCategory.id))).get();
-
-    final existingTransaction = salaryTransactions
-        .where(
-          (t) =>
-              t.type == 'income' &&
-              t.timestamp.isAfter(
-                monthStart.subtract(const Duration(seconds: 1)),
-              ) &&
-              t.timestamp.isBefore(monthEnd.add(const Duration(seconds: 1))),
-        )
-        .firstOrNull;
-
-    if (existingTransaction != null) {
-      // Update existing transaction
-      await (db.update(db.transactions)
-            ..where((t) => t.id.equals(existingTransaction.id)))
-          .write(TransactionsCompanion(amount: Value(newIncome)));
-    } else {
-      // Create new income transaction
-      await db
-          .into(db.transactions)
-          .insert(
-            TransactionsCompanion.insert(
-              amount: newIncome,
-              type: 'income',
-              categoryId: salaryCategory.id,
-              timestamp: monthStart,
-              note: const Value('Monthly Salary'),
-              isRecurring: const Value(true),
-            ),
-          );
     }
   }
 
@@ -228,6 +173,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             _buildSectionHeader(context, 'Account & Cloud Sync', Icons.cloud_sync_outlined),
             const SizedBox(height: 12),
             _buildAccountCloudSyncCard(context),
+
+            const SizedBox(height: 24),
+
+            // Bank Accounts & SMS Auto-Detection Section
+            _buildSectionHeader(context, 'Bank Accounts & SMS Auto-Detection', Icons.auto_awesome),
+            const SizedBox(height: 12),
+            _buildSmsAndBankAccountsCard(context),
 
             const SizedBox(height: 24),
 
@@ -281,7 +233,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            'This will update your recurring salary transaction',
+                            'Monthly income baseline for budget pacing and savings analysis',
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                             ),
@@ -529,6 +481,117 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSmsAndBankAccountsCard(BuildContext context) {
+    final pendingCount = ref.watch(pendingSmsCountProvider);
+    final scanState = ref.watch(smsScanNotifierProvider);
+
+    return Card(
+      child: Column(
+        children: [
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.account_balance_rounded, color: Colors.blue),
+            ),
+            title: const Text('Manage Bank Accounts & Cards'),
+            subtitle: const Text('Configure accounts, credit cards and starting balances'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const BankAccountsScreen()),
+              );
+            },
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.narutoOrange.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.style_rounded, color: AppTheme.narutoOrange),
+            ),
+            title: const Text('Review SMS Transactions'),
+            subtitle: Text(
+              pendingCount > 0
+                  ? '$pendingCount pending swipe cards to review'
+                  : 'All detected SMS transactions reviewed',
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (pendingCount > 0) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppTheme.narutoOrange,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '$pendingCount NEW',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                ],
+                const Icon(Icons.chevron_right),
+              ],
+            ),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SmsCardDeckScreen()),
+              );
+            },
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: scanState.isScanning
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.green),
+                    )
+                  : const Icon(Icons.sms_outlined, color: Colors.green),
+            ),
+            title: const Text('Scan SMS Inbox Now'),
+            subtitle: const Text('Scan recent bank SMS messages from Android inbox'),
+            trailing: const Icon(Icons.sync),
+            onTap: scanState.isScanning
+                ? null
+                : () async {
+                    final res = await ref
+                        .read(smsScanNotifierProvider.notifier)
+                        .scanInbox(forceFullScan: true);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(res.message),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  },
+          ),
+        ],
       ),
     );
   }

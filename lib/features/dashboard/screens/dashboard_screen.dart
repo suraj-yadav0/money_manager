@@ -6,8 +6,6 @@ import '../../../core/utils/formatters.dart';
 import '../providers/dashboard_providers.dart';
 import '../providers/chart_type_provider.dart';
 import '../widgets/balance_card.dart';
-// import '../widgets/forecast_card.dart';
-// import '../widgets/income_trend_chart.dart';
 import '../widgets/category_pie_chart.dart';
 import '../widgets/category_bar_chart.dart';
 import '../widgets/spending_line_chart.dart';
@@ -16,18 +14,56 @@ import '../widgets/date_filter_bar.dart';
 import '../../transactions/screens/all_transactions_screen.dart';
 import '../../settings/screens/settings_screen.dart';
 import '../../insights/screens/insights_screen.dart';
+import '../../sms/widgets/sms_detected_banner.dart';
+import '../../sms/widgets/sms_startup_popup.dart';
+import '../../sms/providers/sms_providers.dart';
 import 'calendar_view_screen.dart';
 
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  static bool _hasShownStartupPopup = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndShowStartupPopup();
+    });
+  }
+
+  void _checkAndShowStartupPopup() {
+    if (_hasShownStartupPopup || !mounted) return;
+
+    final pendingCount = ref.read(pendingSmsCountProvider);
+    if (pendingCount > 0) {
+      _hasShownStartupPopup = true;
+      SmsStartupPopup.show(context);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final chartType = ref.watch(dashboardChartTypeProvider);
     final transactionType = ref.watch(dashboardTransactionTypeProvider);
-    // final userSettings = ref.watch(userSettingsStreamProvider);
-    // final showIncomeChart = userSettings.value?.showIncomeChart ?? false;
+
+    // Listen for newly arrived SMS alerts to pop up immediately if user is on Homescreen
+    ref.listen<int>(pendingSmsCountProvider, (prev, next) {
+      if (next > 0 && (prev == null || prev == 0) && !_hasShownStartupPopup) {
+        _hasShownStartupPopup = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            SmsStartupPopup.show(context);
+          }
+        });
+      }
+    });
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -78,6 +114,7 @@ class DashboardScreen extends ConsumerWidget {
         onRefresh: () async {
           ref.invalidate(dashboardStatsProvider);
           ref.invalidate(recentTransactionsProvider);
+          ref.invalidate(pendingSmsTransactionsProvider);
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -85,25 +122,16 @@ class DashboardScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // SMS Auto-detected Transaction Banner (if any pending)
+              const SmsDetectedBanner(),
+
               // Date Filters
               const DateFilterBar(),
               const SizedBox(height: 16),
 
-              // Balance Card (New Design)
+              // Balance Card (Authoritative Liquid & Period Cashflow)
               const BalanceCard(),
               const SizedBox(height: 16),
-
-              /*
-              // Income Trend Chart (Moved to main chart section)
-              if (showIncomeChart) ...[
-                const IncomeTrendChart(),
-                const SizedBox(height: 24),
-              ],
-*/
-
-              // Forecast Card (Removed)
-              // const ForecastCard(),
-              // const SizedBox(height: 24),
 
               // Category Breakdown with chart type selector
               SingleChildScrollView(

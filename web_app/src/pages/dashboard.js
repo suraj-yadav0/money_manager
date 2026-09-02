@@ -133,8 +133,13 @@ export const DashboardPage = {
                   <span class="material-icons">query_stats</span>
                   <span>Cash Flow Trajectory</span>
                 </div>
-                <div style="font-size: 12px; color: var(--text-muted); font-weight: 600;">
-                  Cumulative Inflows vs Outflows
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">
+                    <span class="material-icons" style="font-size: 12px; margin-right: 3px;">touch_app</span>Click chart to drill down
+                  </span>
+                  <div style="font-size: 12px; color: var(--text-muted); font-weight: 600;">
+                    Inflows vs Outflows
+                  </div>
                 </div>
               </div>
               <div style="position: relative; height: 280px; width: 100%; max-width: 100%; min-width: 0; overflow: hidden;">
@@ -183,23 +188,30 @@ export const DashboardPage = {
                   <span class="material-icons">donut_large</span>
                   <span>Spending by Category</span>
                 </div>
+                <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">
+                  <span class="material-icons" style="font-size: 12px; margin-right: 3px;">touch_app</span>Click to drill down
+                </span>
               </div>
 
               ${stats.totalExpenses > 0 ? `
-                <div style="position: relative; height: 200px; width: 100%; max-width: 100%; min-width: 0; overflow: hidden; margin-bottom: 20px;">
+                <div style="position: relative; height: 200px; width: 100%; max-width: 100%; min-width: 0; overflow: hidden; margin-bottom: 14px;">
                   <canvas id="category-donut-canvas"></canvas>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; flex-direction: column; gap: 6px;">
                   ${topCategories.map(cat => `
-                    <div>
+                    <div class="category-breakdown-row" data-cat-name="${cat.name}" title="Click to view all ${cat.name} expenses">
                       <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 6px;">
                         <span style="display: flex; align-items: center; gap: 6px; color: var(--text-primary);">
                           <span class="material-icons" style="font-size: 16px; color: var(--primary);">${IconHelper.getMaterialIcon(cat.icon)}</span>
                           ${cat.name}
                         </span>
-                        <span style="color: var(--text-primary);">${Formatters.currency(cat.amount)} (${cat.percent}%)</span>
+                        <span style="color: var(--text-primary); display: flex; align-items: center; gap: 4px;">
+                          ${Formatters.currency(cat.amount)}
+                          <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">(${cat.percent}%)</span>
+                          <span class="material-icons" style="font-size: 14px; color: var(--text-muted);">chevron_right</span>
+                        </span>
                       </div>
-                      <div class="progress-track" style="margin: 0;">
+                      <div class="progress-track" style="margin: 0; height: 6px;">
                         <div class="progress-bar-fill safe" style="width: ${cat.percent}%;"></div>
                       </div>
                     </div>
@@ -461,6 +473,19 @@ export const DashboardPage = {
       });
     });
 
+    // Category breakdown row click to drill down
+    document.querySelectorAll('.category-breakdown-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const catName = row.getAttribute('data-cat-name');
+        const stats = this.calculateStats(state);
+        const topCats = this.getTopCategories(state, stats.totalExpenses);
+        const cat = topCats.find(c => c.name.toLowerCase() === (catName || '').toLowerCase());
+        if (cat) {
+          this.showCategoryDrillDown(cat, state);
+        }
+      });
+    });
+
     // Initialize Charts after DOM render
     this.renderCharts(state);
   },
@@ -499,9 +524,17 @@ export const DashboardPage = {
       const daysMap = {};
       filteredTx.forEach(tx => {
         const dStr = new Date(tx.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        if (!daysMap[dStr]) daysMap[dStr] = { income: 0, expense: 0 };
+        if (!daysMap[dStr]) {
+          daysMap[dStr] = {
+            income: 0,
+            expense: 0,
+            transactions: [],
+            dateObj: new Date(tx.timestamp)
+          };
+        }
         if (tx.type === 'income') daysMap[dStr].income += tx.amount;
         else daysMap[dStr].expense += tx.amount;
+        daysMap[dStr].transactions.push(tx);
       });
 
       const dayEntries = Object.entries(daysMap);
@@ -559,6 +592,24 @@ export const DashboardPage = {
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          onHover: (event, activeElements) => {
+            if (event.native && event.native.target) {
+              event.native.target.style.cursor = activeElements.length ? 'pointer' : 'default';
+            }
+          },
+          onClick: (event, elements) => {
+            if (!elements || !elements.length) return;
+            const elementIndex = elements[0].index;
+            const dayLabel = labels[elementIndex];
+            const dayData = daysMap[dayLabel];
+            if (dayData && dayData.transactions && dayData.transactions.length > 0) {
+              this.showDateDrillDown(dayLabel, dayData, state);
+            }
+          },
           plugins: {
             legend: {
               position: 'top',
@@ -626,6 +677,19 @@ export const DashboardPage = {
             responsive: true,
             maintainAspectRatio: false,
             cutout: '74%',
+            onHover: (event, activeElements) => {
+              if (event.native && event.native.target) {
+                event.native.target.style.cursor = activeElements.length ? 'pointer' : 'default';
+              }
+            },
+            onClick: (event, elements) => {
+              if (!elements || !elements.length) return;
+              const elementIndex = elements[0].index;
+              const cat = topCats[elementIndex];
+              if (cat) {
+                this.showCategoryDrillDown(cat, state);
+              }
+            },
             plugins: {
               legend: { display: false },
               tooltip: {
@@ -645,5 +709,296 @@ export const DashboardPage = {
         });
       }
     }
+  },
+
+  showCategoryDrillDown(cat, state) {
+    const range = DateRangeHelper.getDateRange(state.dateFilter);
+    const categoryTransactions = state.transactions
+      .filter(t => {
+        const ts = new Date(t.timestamp);
+        if (t.type !== 'expense') return false;
+        if (ts < range.start || ts > range.end) return false;
+        const c = findCategory(state.categories, t.categoryId || t.category_id);
+        const name = c ? c.name : 'Other';
+        return name.toLowerCase() === cat.name.toLowerCase();
+      })
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    const totalSpent = categoryTransactions.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+    const txCount = categoryTransactions.length;
+    const avgSpend = txCount > 0 ? totalSpent / txCount : 0;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay active';
+    overlay.innerHTML = `
+      <div class="modern-modal-dialog drilldown-dialog animate-scale-up">
+        <div class="modal-header" style="margin-bottom: 18px; padding-bottom: 14px;">
+          <div class="modal-title" style="font-size: 18px;">
+            <div class="tx-icon-box" style="width: 38px; height: 38px; border-radius: var(--radius-sm); background: var(--bg-surface-elevated); border: 1px solid var(--glass-border); color: var(--primary);">
+              <span class="material-icons" style="font-size: 20px;">${IconHelper.getMaterialIcon(cat.icon)}</span>
+            </div>
+            <div>
+              <div style="color: var(--text-primary); font-weight: 800;">${cat.name} Spending</div>
+              <div style="font-size: 12px; font-weight: 500; color: var(--text-muted); margin-top: 2px;">
+                ${txCount} ${txCount === 1 ? 'expense' : 'expenses'} in active view
+              </div>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="drilldown-close-btn" aria-label="Close">
+            <span class="material-icons" style="font-size: 18px;">close</span>
+          </button>
+        </div>
+
+        <div class="drilldown-summary-grid">
+          <div class="drilldown-stat-card">
+            <div class="drilldown-stat-label">Total Spent</div>
+            <div class="drilldown-stat-value" style="color: var(--error);">${Formatters.currency(totalSpent)}</div>
+          </div>
+          <div class="drilldown-stat-card">
+            <div class="drilldown-stat-label">Category Share</div>
+            <div class="drilldown-stat-value" style="color: var(--text-primary);">${cat.percent || 0}%</div>
+          </div>
+          <div class="drilldown-stat-card">
+            <div class="drilldown-stat-label">Avg / Expense</div>
+            <div class="drilldown-stat-value" style="color: var(--text-primary);">${Formatters.currency(avgSpend)}</div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <div style="font-size: 13px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 6px;">
+            <span class="material-icons" style="font-size: 16px; color: var(--primary);">calendar_month</span>
+            <span>Itemized Expenses by Date</span>
+          </div>
+          <span style="font-size: 11.5px; color: var(--text-muted);">Click row to view / edit</span>
+        </div>
+
+        <div class="drilldown-tx-list">
+          ${categoryTransactions.length === 0 ? `
+            <div style="text-align: center; padding: 40px 16px; color: var(--text-muted); font-size: 13px;">
+              No individual expenses recorded in this category for this period.
+            </div>
+          ` : categoryTransactions.map(tx => {
+            const d = new Date(tx.timestamp);
+            const dateStr = d.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
+            const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            const dayNum = d.getDate();
+            const monthStr = d.toLocaleDateString('en-US', { month: 'short' });
+
+            return `
+              <div class="drilldown-tx-row" data-sync-id="${tx.sync_id || ''}" data-id="${tx.id || ''}">
+                <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                  <div class="drilldown-date-badge">
+                    <span class="drilldown-date-day">${dayNum}</span>
+                    <span class="drilldown-date-month">${monthStr}</span>
+                  </div>
+                  <div style="min-width: 0;">
+                    <div style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                      ${tx.note || cat.name}
+                    </div>
+                    <div style="font-size: 11.5px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; margin-top: 2px;">
+                      <span>${dateStr} • ${timeStr}</span>
+                      ${tx.paymentMode ? `<span class="tx-tag" style="font-size: 10px; padding: 1px 6px;">${tx.paymentMode}</span>` : ''}
+                    </div>
+                  </div>
+                </div>
+                <div style="text-align: right; flex-shrink: 0; margin-left: 12px;">
+                  <div style="font-size: 14.5px; font-weight: 800; color: var(--error);">
+                    -${Formatters.currency(tx.amount)}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--glass-border);">
+          <button class="btn-ghost" id="drilldown-ledger-btn" style="font-size: 12.5px;">
+            <span class="material-icons" style="font-size: 16px;">format_list_bulleted</span> Open Full Ledger
+          </button>
+          <button class="btn-secondary" id="drilldown-dismiss-btn" style="width: auto; padding: 8px 18px; font-size: 12.5px;">
+            Done
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const closeModal = () => {
+      if (document.body.contains(overlay)) {
+        document.body.removeChild(overlay);
+      }
+    };
+
+    overlay.querySelector('#drilldown-close-btn')?.addEventListener('click', closeModal);
+    overlay.querySelector('#drilldown-dismiss-btn')?.addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal();
+    });
+
+    overlay.querySelector('#drilldown-ledger-btn')?.addEventListener('click', () => {
+      closeModal();
+      StateManager.setState({ navIndex: 1 });
+    });
+
+    overlay.querySelectorAll('.drilldown-tx-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const syncId = row.getAttribute('data-sync-id');
+        const localId = row.getAttribute('data-id');
+        const tx = state.transactions.find(t => (syncId && t.sync_id === syncId) || (localId && String(t.id) === String(localId)));
+        if (tx) {
+          closeModal();
+          import('./add-transaction.js').then(({ AddTransactionModal }) => {
+            AddTransactionModal.show(tx);
+          });
+        }
+      });
+    });
+  },
+
+  showDateDrillDown(dayLabel, dayData, state) {
+    const txList = (dayData.transactions || []).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    const totalIncome = dayData.income || 0;
+    const totalExpense = dayData.expense || 0;
+    const netFlow = totalIncome - totalExpense;
+
+    let fullDateTitle = dayLabel;
+    if (dayData.dateObj) {
+      fullDateTitle = dayData.dateObj.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    }
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay active';
+    overlay.innerHTML = `
+      <div class="modern-modal-dialog drilldown-dialog animate-scale-up">
+        <div class="modal-header" style="margin-bottom: 18px; padding-bottom: 14px;">
+          <div class="modal-title" style="font-size: 18px;">
+            <div class="tx-icon-box" style="width: 38px; height: 38px; border-radius: var(--radius-sm); background: var(--bg-surface-elevated); border: 1px solid var(--glass-border); color: var(--primary);">
+              <span class="material-icons" style="font-size: 20px;">event</span>
+            </div>
+            <div>
+              <div style="color: var(--text-primary); font-weight: 800;">${fullDateTitle}</div>
+              <div style="font-size: 12px; font-weight: 500; color: var(--text-muted); margin-top: 2px;">
+                ${txList.length} ${txList.length === 1 ? 'transaction' : 'transactions'} on this date
+              </div>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="drilldown-close-btn" aria-label="Close">
+            <span class="material-icons" style="font-size: 18px;">close</span>
+          </button>
+        </div>
+
+        <div class="drilldown-summary-grid">
+          <div class="drilldown-stat-card">
+            <div class="drilldown-stat-label">Total Inflow</div>
+            <div class="drilldown-stat-value" style="color: var(--primary);">+${Formatters.currency(totalIncome)}</div>
+          </div>
+          <div class="drilldown-stat-card">
+            <div class="drilldown-stat-label">Total Outflow</div>
+            <div class="drilldown-stat-value" style="color: var(--error);">-${Formatters.currency(totalExpense)}</div>
+          </div>
+          <div class="drilldown-stat-card">
+            <div class="drilldown-stat-label">Net Daily Flow</div>
+            <div class="drilldown-stat-value" style="color: ${netFlow >= 0 ? 'var(--primary)' : 'var(--error)'};">
+              ${netFlow >= 0 ? '+' : ''}${Formatters.currency(netFlow)}
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <div style="font-size: 13px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 6px;">
+            <span class="material-icons" style="font-size: 16px; color: var(--primary);">receipt_long</span>
+            <span>Activity Breakdown</span>
+          </div>
+          <span style="font-size: 11.5px; color: var(--text-muted);">Click row to view / edit</span>
+        </div>
+
+        <div class="drilldown-tx-list">
+          ${txList.length === 0 ? `
+            <div style="text-align: center; padding: 40px 16px; color: var(--text-muted); font-size: 13px;">
+              No transactions recorded for this date.
+            </div>
+          ` : txList.map(tx => {
+            const isIncome = tx.type === 'income';
+            const cat = findCategory(state.categories, tx.categoryId || tx.category_id);
+            const iconName = cat ? cat.icon : 'category';
+            const catName = cat ? cat.name : 'General';
+            const d = new Date(tx.timestamp);
+            const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+            return `
+              <div class="drilldown-tx-row" data-sync-id="${tx.sync_id || ''}" data-id="${tx.id || ''}">
+                <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                  <div class="tx-icon-box" style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--bg-surface-elevated); border: 1px solid var(--glass-border); color: ${isIncome ? 'var(--primary)' : 'var(--text-secondary)'};">
+                    <span class="material-icons" style="font-size: 18px;">${IconHelper.getMaterialIcon(iconName)}</span>
+                  </div>
+                  <div style="min-width: 0;">
+                    <div style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                      ${tx.note || catName}
+                    </div>
+                    <div style="font-size: 11.5px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; margin-top: 2px;">
+                      <span>${catName} • ${timeStr}</span>
+                      ${tx.paymentMode ? `<span class="tx-tag" style="font-size: 10px; padding: 1px 6px;">${tx.paymentMode}</span>` : ''}
+                    </div>
+                  </div>
+                </div>
+                <div style="text-align: right; flex-shrink: 0; margin-left: 12px;">
+                  <div style="font-size: 14.5px; font-weight: 800; color: ${isIncome ? 'var(--primary)' : 'var(--error)'};">
+                    ${isIncome ? '+' : '-'}${Formatters.currency(tx.amount)}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--glass-border);">
+          <button class="btn-ghost" id="drilldown-ledger-btn" style="font-size: 12.5px;">
+            <span class="material-icons" style="font-size: 16px;">format_list_bulleted</span> Open Full Ledger
+          </button>
+          <button class="btn-secondary" id="drilldown-dismiss-btn" style="width: auto; padding: 8px 18px; font-size: 12.5px;">
+            Done
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const closeModal = () => {
+      if (document.body.contains(overlay)) {
+        document.body.removeChild(overlay);
+      }
+    };
+
+    overlay.querySelector('#drilldown-close-btn')?.addEventListener('click', closeModal);
+    overlay.querySelector('#drilldown-dismiss-btn')?.addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal();
+    });
+
+    overlay.querySelector('#drilldown-ledger-btn')?.addEventListener('click', () => {
+      closeModal();
+      StateManager.setState({ navIndex: 1 });
+    });
+
+    overlay.querySelectorAll('.drilldown-tx-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const syncId = row.getAttribute('data-sync-id');
+        const localId = row.getAttribute('data-id');
+        const tx = state.transactions.find(t => (syncId && t.sync_id === syncId) || (localId && String(t.id) === String(localId)));
+        if (tx) {
+          closeModal();
+          import('./add-transaction.js').then(({ AddTransactionModal }) => {
+            AddTransactionModal.show(tx);
+          });
+        }
+      });
+    });
   }
 };

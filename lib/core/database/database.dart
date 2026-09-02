@@ -16,6 +16,8 @@ class Transactions extends Table {
   IntColumn get categoryId => integer().references(Categories, #id)();
   IntColumn get goalId =>
       integer().nullable().references(Goals, #id)(); // Optional goal link
+  IntColumn get accountId =>
+      integer().nullable().references(BankAccounts, #id)(); // Optional bank account link
   DateTimeColumn get timestamp => dateTime()();
   TextColumn get note => text().nullable()();
   TextColumn get paymentMode => text().nullable()(); // 'Cash', 'UPI', etc.
@@ -120,6 +122,56 @@ class Assets extends Table {
       dateTime().nullable().withDefault(currentDateAndTime)();
 }
 
+/// Bank accounts table - tracks user bank accounts and cards
+class BankAccounts extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get syncId => text().nullable()();
+  TextColumn get name => text()(); // e.g. "HDFC Salary Account", "SBI Savings"
+  TextColumn get bankName => text()(); // e.g. "HDFC Bank", "SBI", "ICICI Bank"
+  TextColumn get accountNumberLast4 => text().nullable()(); // e.g. "1234"
+  TextColumn get accountType =>
+      text().withDefault(const Constant('savings'))(); // 'savings' | 'current' | 'credit_card' | 'wallet'
+  RealColumn get balance => real().withDefault(const Constant(0.0))();
+  TextColumn get colorHex => text().nullable()(); // Color hex string
+  BoolColumn get isDefault =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().nullable().withDefault(currentDateAndTime)();
+}
+
+/// Detected SMS transactions table - stores parsed messages pending user review
+class SmsTransactions extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get syncId => text().nullable()();
+  TextColumn get smsId => text().unique()(); // Android SMS message ID or hash
+  TextColumn get sender => text()(); // e.g. "VM-HDFCBK"
+  TextColumn get body => text()(); // Full raw SMS body
+  RealColumn get amount => real()();
+  TextColumn get type => text()(); // 'expense' | 'income'
+  TextColumn get paymentMode =>
+      text().nullable()(); // 'UPI' | 'Debit Card' | 'Credit Card' | 'Net Banking'
+  TextColumn get bankName => text().nullable()();
+  TextColumn get accountNumberLast4 => text().nullable()();
+  TextColumn get merchant => text().nullable()();
+  TextColumn get refNumber => text().nullable()(); // UTR or Ref number
+  RealColumn get balance => real().nullable()(); // Available balance parsed from SMS
+  IntColumn get suggestedCategoryId =>
+      integer().nullable().references(Categories, #id)();
+  IntColumn get suggestedAccountId =>
+      integer().nullable().references(BankAccounts, #id)();
+  DateTimeColumn get smsTimestamp => dateTime()();
+  TextColumn get status =>
+      text().withDefault(const Constant('pending'))(); // 'pending' | 'accepted' | 'rejected'
+  IntColumn get transactionId =>
+      integer().nullable().references(Transactions, #id)();
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().nullable().withDefault(currentDateAndTime)();
+}
+
 @DriftDatabase(
   tables: [
     Transactions,
@@ -129,6 +181,8 @@ class Assets extends Table {
     GoalContributions,
     CategorizationRules,
     Assets,
+    BankAccounts,
+    SmsTransactions,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -136,13 +190,13 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(QueryExecutor e) : super(e);
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
       beforeOpen: (details) async {
-        // Fix any null updated_at fields from legacy schema v9 migrations
+        // Fix any null updated_at fields from legacy schema migrations
         final nowSeconds = DateTime.now().millisecondsSinceEpoch ~/ 1000;
         for (final table in [
           'transactions',
@@ -151,7 +205,9 @@ class AppDatabase extends _$AppDatabase {
           'goals',
           'goal_contributions',
           'categorization_rules',
-          'assets'
+          'assets',
+          'bank_accounts',
+          'sms_transactions'
         ]) {
           try {
             await customStatement(
@@ -164,6 +220,7 @@ class AppDatabase extends _$AppDatabase {
         await m.createAll();
         await _seedDefaultCategories();
         await _seedDefaultRules();
+        await _seedDefaultBankAccounts();
         await _createDefaultUserSettings();
       },
       onUpgrade: (Migrator m, int from, int to) async {
@@ -227,6 +284,15 @@ class AppDatabase extends _$AppDatabase {
           await customStatement('ALTER TABLE goals ADD COLUMN updated_at INTEGER NOT NULL DEFAULT $nowSec');
           await customStatement('ALTER TABLE goal_contributions ADD COLUMN updated_at INTEGER NOT NULL DEFAULT $nowSec');
           await customStatement('ALTER TABLE categorization_rules ADD COLUMN updated_at INTEGER NOT NULL DEFAULT $nowSec');
+        }
+        if (from < 10) {
+          // Create bank accounts and sms transactions tables
+          await m.createTable(bankAccounts);
+          await m.createTable(smsTransactions);
+          await customStatement(
+            'ALTER TABLE transactions ADD COLUMN account_id INTEGER REFERENCES bank_accounts(id)',
+          );
+          await _seedDefaultBankAccounts();
         }
       },
     );
@@ -537,6 +603,52 @@ class AppDatabase extends _$AppDatabase {
         batch.insertAll(categorizationRules, rules);
       });
     }
+  }
+
+  /// Seed default bank accounts
+  Future<void> _seedDefaultBankAccounts() async {
+    final defaultAccounts = [
+      BankAccountsCompanion.insert(
+        name: 'Primary Account',
+        bankName: 'HDFC Bank',
+        accountNumberLast4: const Value('1234'),
+        accountType: const Value('savings'),
+        balance: const Value(25000.0),
+        colorHex: const Value('#1E88E5'),
+        isDefault: const Value(true),
+      ),
+      BankAccountsCompanion.insert(
+        name: 'Secondary Account',
+        bankName: 'State Bank of India',
+        accountNumberLast4: const Value('5678'),
+        accountType: const Value('savings'),
+        balance: const Value(10000.0),
+        colorHex: const Value('#00897B'),
+        isDefault: const Value(false),
+      ),
+      BankAccountsCompanion.insert(
+        name: 'Credit Card',
+        bankName: 'ICICI Bank',
+        accountNumberLast4: const Value('4001'),
+        accountType: const Value('credit_card'),
+        balance: const Value(0.0),
+        colorHex: const Value('#E53935'),
+        isDefault: const Value(false),
+      ),
+      BankAccountsCompanion.insert(
+        name: 'Cash Wallet',
+        bankName: 'Cash',
+        accountNumberLast4: const Value(null),
+        accountType: const Value('wallet'),
+        balance: const Value(2000.0),
+        colorHex: const Value('#43A047'),
+        isDefault: const Value(false),
+      ),
+    ];
+
+    await batch((batch) {
+      batch.insertAll(bankAccounts, defaultAccounts, mode: InsertMode.insertOrIgnore);
+    });
   }
 
   /// Create default user settings

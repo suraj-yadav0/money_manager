@@ -431,8 +431,13 @@ class DayTransactionsScreen extends ConsumerWidget {
     }
 
     if (context.mounted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Transaction deleted')),
+        const SnackBar(
+          content: Text('Transaction deleted'),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
+        ),
       );
     }
   }

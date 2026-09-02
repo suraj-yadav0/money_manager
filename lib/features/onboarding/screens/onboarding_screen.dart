@@ -65,30 +65,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         ),
       );
 
-      // Create an actual income transaction for this month
-      // Find the Salary income category
-      final salaryCategory = await (db.select(
-        db.categories,
-      )..where((c) => c.name.equals('Salary'))).getSingleOrNull();
-
-      // Verify it's an income category before creating transaction
-      if (salaryCategory != null && salaryCategory.type == 'income') {
-        final now = DateTime.now();
-        // Create income transaction for 1st of current month
-        await db
-            .into(db.transactions)
-            .insert(
-              TransactionsCompanion.insert(
-                amount: income,
-                type: 'income',
-                categoryId: salaryCategory.id,
-                timestamp: DateTime(now.year, now.month, 1),
-                note: const Value('Monthly Salary'),
-                isRecurring: const Value(true),
-              ),
-            );
-      }
-
       // Enable guest mode if not logged in so the user enters the app directly
       final currentUser = ref.read(currentUserProvider);
       if (currentUser == null) {

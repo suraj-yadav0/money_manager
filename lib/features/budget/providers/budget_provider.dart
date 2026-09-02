@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/database/database.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/utils/formatters.dart';
-import '../../dashboard/providers/dashboard_providers.dart';
 
 /// Budget statistics for a category
 class CategoryBudgetStats {
@@ -55,67 +54,44 @@ class BudgetStats {
   bool get isOverBudget => totalSpent > totalBudget;
 }
 
-/// Provider for budget statistics - respects dashboard date filter for month views
+/// Provider for selected budget month
+final budgetSelectedMonthProvider = StateProvider<DateTime>((ref) {
+  final now = DateTime.now();
+  return DateTime(now.year, now.month, 1);
+});
+
+/// Provider for budget statistics - respects selected budget month
 final budgetStatsProvider = FutureProvider<BudgetStats>((ref) async {
   final db = ref.watch(databaseProvider);
-  final filter = ref.watch(dashboardDateFilterProvider);
+  final selectedMonth = ref.watch(budgetSelectedMonthProvider);
   final now = DateTime.now();
 
-  // Determine date range based on filter
-  // Budget tracking uses monthly budgets, so we apply the filter for month views
-  DateTime monthStart;
-  DateTime monthEnd;
-  int daysRemaining;
-  String periodLabel;
+  final monthStart = DateTime(selectedMonth.year, selectedMonth.month, 1);
+  final lastDay = DateTime(selectedMonth.year, selectedMonth.month + 1, 0);
+  final monthEnd = DateTime(
+    lastDay.year,
+    lastDay.month,
+    lastDay.day,
+    23,
+    59,
+    59,
+    999,
+  );
 
-  switch (filter) {
-    case DashboardDateFilter.thisMonth:
-      monthStart = DateTime(now.year, now.month, 1);
-      final lastDay = DateTime(now.year, now.month + 1, 0);
-      monthEnd = DateTime(
-        lastDay.year,
-        lastDay.month,
-        lastDay.day,
-        23,
-        59,
-        59,
-        999,
-      );
-      daysRemaining = Formatters.daysRemainingInMonth();
-      periodLabel = 'This Month';
-      break;
+  final isCurrentMonth = selectedMonth.year == now.year && selectedMonth.month == now.month;
+  final isPastMonth = selectedMonth.isBefore(DateTime(now.year, now.month, 1));
+  final int daysRemaining;
+  final String periodLabel;
 
-    case DashboardDateFilter.lastMonth:
-      monthStart = DateTime(now.year, now.month - 1, 1);
-      final lastDay = DateTime(now.year, now.month, 0);
-      monthEnd = DateTime(
-        lastDay.year,
-        lastDay.month,
-        lastDay.day,
-        23,
-        59,
-        59,
-        999,
-      );
-      daysRemaining = 0; // Past month, no days remaining
-      periodLabel = 'Last Month';
-      break;
-
-    default:
-      // For week/year/all-time views, default to current month for budget context
-      monthStart = DateTime(now.year, now.month, 1);
-      final lastDay = DateTime(now.year, now.month + 1, 0);
-      monthEnd = DateTime(
-        lastDay.year,
-        lastDay.month,
-        lastDay.day,
-        23,
-        59,
-        59,
-        999,
-      );
-      daysRemaining = Formatters.daysRemainingInMonth();
-      periodLabel = 'This Month';
+  if (isCurrentMonth) {
+    daysRemaining = Formatters.daysRemainingInMonth();
+    periodLabel = 'This Month';
+  } else if (isPastMonth) {
+    daysRemaining = 0;
+    periodLabel = Formatters.month(selectedMonth);
+  } else {
+    daysRemaining = lastDay.day;
+    periodLabel = Formatters.month(selectedMonth);
   }
 
   // Get categories with positive monthly budgets

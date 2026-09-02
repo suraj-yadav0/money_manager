@@ -1,10 +1,9 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../theme/app_theme.dart';
 
-/// A container with glassmorphism effect (blur, semi-transparent background, gradient border).
+/// A high-performance fintech container with crisp micro-borders and subtle elevation
 class GlassContainer extends StatelessWidget {
   final Widget child;
   final double width;
@@ -12,8 +11,6 @@ class GlassContainer extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   final EdgeInsetsGeometry margin;
   final double borderRadius;
-  final double blur;
-  final double opacity;
   final Color? color;
   final List<Color>? gradientColors;
   final Border? border;
@@ -25,69 +22,50 @@ class GlassContainer extends StatelessWidget {
     this.height,
     this.padding = const EdgeInsets.all(16),
     this.margin = EdgeInsets.zero,
-    this.borderRadius = 20,
-    this.blur = 8,
-    this.opacity = 0.3,
-    this.color, // If provided, overrides gradientColors
+    this.borderRadius = 22,
+    this.color,
     this.gradientColors,
     this.border,
+    double? blur, // deprecated parameter kept for API compatibility
+    double? opacity, // deprecated parameter kept for API compatibility
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final defaultGradientColors = isDark
-        ? [Colors.white.withOpacity(0.15), Colors.white.withOpacity(0.05)]
-        : [Colors.white.withOpacity(0.8), Colors.white.withOpacity(0.5)];
-
-    final defaultBorderColor = isDark
-        ? Colors.white.withOpacity(0.2)
-        : Colors.white.withOpacity(0.6);
+    final defaultBg = isDark ? AppTheme.bgSurfaceDark : AppTheme.bgSurfaceLight;
+    final defaultBorder = isDark ? AppTheme.borderDark : AppTheme.borderLight;
 
     return Container(
+      width: width,
+      height: height,
       margin: margin,
+      padding: padding,
       decoration: BoxDecoration(
+        color: color ?? (gradientColors == null ? defaultBg : null),
+        borderRadius: BorderRadius.circular(borderRadius),
+        border: border ?? Border.all(color: defaultBorder, width: 1),
+        gradient: gradientColors != null
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: gradientColors!,
+              )
+            : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(25),
-            blurRadius: 16,
-            spreadRadius: 2,
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+            blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-          child: Container(
-            width: width,
-            height: height,
-            padding: padding,
-            decoration: BoxDecoration(
-              color:
-                  color?.withOpacity(opacity) ??
-                  (isDark ? Colors.white : Colors.black).withOpacity(opacity),
-              borderRadius: BorderRadius.circular(borderRadius),
-              border:
-                  border ?? Border.all(color: defaultBorderColor, width: 1.5),
-              gradient: color == null
-                  ? LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: gradientColors ?? defaultGradientColors,
-                    )
-                  : null,
-            ),
-            child: child,
-          ),
-        ),
-      ),
+      child: child,
     );
   }
 }
 
-/// A button with glassmorphism styling.
+/// Fast elevated action button
 class GlassButton extends StatelessWidget {
   final VoidCallback onPressed;
   final String text;
@@ -103,75 +81,52 @@ class GlassButton extends StatelessWidget {
     required this.text,
     this.icon,
     this.width = double.infinity,
-    this.height = 56,
+    this.height = 52,
     this.borderRadius = 16,
     this.gradientColors,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final defaultGradientColors = isDark
-        ? [Colors.white.withOpacity(0.2), Colors.white.withOpacity(0.1)]
-        : [
-            AppTheme.narutoOrange.withOpacity(0.9),
-            AppTheme.narutoOrange.withOpacity(0.7),
-          ];
-
-    final borderColor = isDark
-        ? Colors.white.withOpacity(0.2)
-        : Colors.white.withOpacity(0.4);
-
     return Container(
       width: width,
       height: height,
       decoration: BoxDecoration(
+        gradient: gradientColors != null
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: gradientColors!,
+              )
+            : AppTheme.neonGradient,
+        borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: [
           BoxShadow(
-            color:
-                (gradientColors?.first ??
-                        (isDark ? Colors.white : AppTheme.narutoOrange))
-                    .withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: AppTheme.narutoOrange.withValues(alpha: 0.3),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(borderRadius),
-              border: Border.all(color: borderColor, width: 1.5),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: gradientColors ?? defaultGradientColors,
-              ),
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onPressed,
-                child: Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (icon != null) ...[icon!, const SizedBox(width: 8)],
-                      Text(
-                        text,
-                        style: GoogleFonts.outfit(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(borderRadius),
+          onTap: onPressed,
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (icon != null) ...[icon!, const SizedBox(width: 8)],
+                Text(
+                  text,
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
                   ),
                 ),
-              ),
+              ],
             ),
           ),
         ),
@@ -180,7 +135,7 @@ class GlassButton extends StatelessWidget {
   }
 }
 
-/// A wrapper that provides the global background gradient and handles the Stack
+/// A clean, zero-lag Scaffold wrapper
 class GlassScaffold extends StatelessWidget {
   final Widget body;
   final Widget? bottomNavigationBar;
@@ -209,15 +164,14 @@ class GlassScaffold extends StatelessWidget {
       appBar: appBar,
       floatingActionButton: floatingActionButton,
       floatingActionButtonLocation: floatingActionButtonLocation,
-      backgroundColor:
-          Colors.transparent, // Important for the background to show through
+      backgroundColor: isDark ? AppTheme.bgMainDark : AppTheme.bgMainLight,
       body: Stack(
         children: [
-          // Plain Background
+          // Background Gradient
           Container(
             decoration: BoxDecoration(
               gradient: isDark
-                  ? AppTheme.glassGradient
+                  ? AppTheme.glassGradientDark
                   : AppTheme.glassGradientLight,
             ),
           ),
@@ -236,7 +190,7 @@ class GlassScaffold extends StatelessWidget {
   }
 }
 
-/// A glass-styled AppBar that implements PreferredSizeWidget
+/// A clean AppBar that implements PreferredSizeWidget
 class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final List<Widget>? actions;
@@ -259,39 +213,31 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final backgroundColor = isDark
-        ? AppTheme.glassBackgroundDark.withOpacity(0.7)
-        : AppTheme.glassBackgroundWhite.withOpacity(0.85);
+        ? AppTheme.bgMainDark.withValues(alpha: 0.95)
+        : AppTheme.bgMainLight.withValues(alpha: 0.95);
 
-    final borderColor = isDark
-        ? Colors.white.withOpacity(0.1)
-        : Colors.black.withOpacity(0.03);
+    final borderColor = isDark ? AppTheme.borderDark : AppTheme.borderLight;
 
-    return ClipRRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-        child: Container(
-          decoration: BoxDecoration(
-            color: backgroundColor, // Semi-transparent background
-            border: Border(bottom: BorderSide(color: borderColor, width: 1)),
-          ),
-          child: AppBar(
-            title: Text(
-              title,
-              style: GoogleFonts.outfit(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-            centerTitle: centerTitle,
-            backgroundColor:
-                Colors.transparent, // Transparent to show container decoration
-            elevation: 0,
-            leading: leading,
-            actions: actions,
-            iconTheme: IconThemeData(color: theme.colorScheme.onSurface),
-            actionsIconTheme: IconThemeData(color: theme.colorScheme.onSurface),
+    return Container(
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        border: Border(bottom: BorderSide(color: borderColor, width: 1)),
+      ),
+      child: AppBar(
+        title: Text(
+          title,
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurface,
           ),
         ),
+        centerTitle: centerTitle,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: leading,
+        actions: actions,
+        iconTheme: IconThemeData(color: theme.colorScheme.onSurface),
+        actionsIconTheme: IconThemeData(color: theme.colorScheme.onSurface),
       ),
     );
   }

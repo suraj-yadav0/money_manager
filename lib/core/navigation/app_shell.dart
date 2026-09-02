@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,11 +7,12 @@ import '../../features/networth/screens/net_worth_screen.dart';
 import '../../features/goals/screens/goals_screen.dart';
 import '../../features/transactions/screens/add_transaction_screen.dart';
 import '../../features/transactions/services/recurring_service.dart';
+import '../../features/sms/providers/sms_providers.dart';
 import '../presentation/glass_widgets.dart';
 import '../providers/auth_providers.dart';
 import '../theme/app_theme.dart';
 
-/// Main app shell with bottom navigation
+/// Main app shell with floating vibrant navigation dock
 class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key});
 
@@ -34,11 +34,22 @@ class _AppShellState extends ConsumerState<AppShell> {
   @override
   void initState() {
     super.initState();
-    // Process recurring transactions & trigger background sync on app startup
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _processRecurringTransactions();
+      _scanSmsInbox();
       _triggerCloudSync();
     });
+  }
+
+  Future<void> _scanSmsInbox() async {
+    try {
+      final hasPerm = await ref.read(smsReaderServiceProvider).hasPermission();
+      if (hasPerm) {
+        await ref.read(smsScanNotifierProvider.notifier).scanInbox();
+      }
+    } catch (e) {
+      debugPrint('Error running startup SMS scan: $e');
+    }
   }
 
   Future<void> _triggerCloudSync() async {
@@ -57,7 +68,6 @@ class _AppShellState extends ConsumerState<AppShell> {
       final service = ref.read(recurringTransactionServiceProvider);
       await service.processRecurringTransactions();
     } catch (e) {
-      // Silently handle errors - don't block app startup
       debugPrint('Error processing recurring transactions: $e');
     }
   }
@@ -71,115 +81,71 @@ class _AppShellState extends ConsumerState<AppShell> {
       extendBody: true,
       body: IndexedStack(index: currentIndex, children: _screens),
       bottomNavigationBar: Container(
-        margin: const EdgeInsets.fromLTRB(20, 0, 20, 30),
-        height: 80,
+        margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        height: 70,
         decoration: BoxDecoration(
-          color: isDark
-              ? Colors.black.withOpacity(0.2)
-              : Colors.white.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(30),
+          color: isDark ? AppTheme.bgSurfaceDark : Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(
+            color: isDark ? AppTheme.borderDark : AppTheme.borderLight,
+            width: 1.5,
+          ),
           boxShadow: [
             BoxShadow(
-              color: isDark
-                  ? Colors.black.withOpacity(0.3)
-                  : Colors.grey.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.08),
               blurRadius: 20,
-              offset: const Offset(0, 10),
+              offset: const Offset(0, 6),
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(30),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withOpacity(0.1)
-                      : Colors.black.withOpacity(0.05),
-                  width: 1,
-                ),
-                borderRadius: BorderRadius.circular(30),
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: isDark
-                      ? [
-                          Colors.white.withOpacity(0.1),
-                          Colors.white.withOpacity(0.05),
-                        ]
-                      : [
-                          Colors.white.withOpacity(0.6),
-                          Colors.white.withOpacity(0.4),
-                        ],
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildNavItem(0, Icons.grid_view_rounded, 'Home'),
-                  _buildNavItem(
-                    1,
-                    Icons.account_balance_wallet_rounded,
-                    'Budget',
-                  ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildNavItem(0, Icons.grid_view_rounded, 'Overview'),
+            _buildNavItem(1, Icons.pie_chart_outline_rounded, 'Budget'),
 
-                  // Floating Action Button in the middle
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  const AddTransactionScreen(),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                                const begin = Offset(0.0, 1.0);
-                                const end = Offset.zero;
-                                const curve = Curves.ease;
-                                var tween = Tween(
-                                  begin: begin,
-                                  end: end,
-                                ).chain(CurveTween(curve: curve));
-                                return SlideTransition(
-                                  position: animation.drive(tween),
-                                  child: child,
-                                );
-                              },
-                          opaque: false, // For glass effect overlay if needed
-                        ),
-                      );
+            // Center Floating Action Button with Signature Orange Gradient
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation, secondaryAnimation) =>
+                        const AddTransactionScreen(),
+                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                      const begin = Offset(0.0, 1.0);
+                      const end = Offset.zero;
+                      const curve = Curves.easeOutCubic;
+                      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                      return SlideTransition(position: animation.drive(tween), child: child);
                     },
-                    child: Container(
-                      width: 55,
-                      height: 55,
-                      decoration: BoxDecoration(
-                        gradient: AppTheme.neonGradient,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.narutoOrange.withOpacity(0.5),
-                            blurRadius: 15,
-                            spreadRadius: 2,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.add,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                    ),
                   ),
-
-                  _buildNavItem(2, Icons.account_balance_rounded, 'Net Worth'),
-                  _buildNavItem(3, Icons.savings_rounded, 'Goals'),
-                ],
+                );
+              },
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  gradient: AppTheme.neonGradient,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.narutoOrange.withValues(alpha: 0.45),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.add_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
               ),
             ),
-          ),
+
+            _buildNavItem(2, Icons.account_balance_wallet_outlined, 'Net Worth'),
+            _buildNavItem(3, Icons.savings_outlined, 'Goals'),
+          ],
         ),
       ),
     );
@@ -192,39 +158,23 @@ class _AppShellState extends ConsumerState<AppShell> {
 
     return GestureDetector(
       onTap: () => ref.read(navIndexProvider.notifier).state = index,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? (isDark
-                        ? Colors.white.withOpacity(0.1)
-                        : Colors.black.withOpacity(0.05))
-                  : Colors.transparent,
-              shape: BoxShape.circle,
-              boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                        color: AppTheme.narutoOrange.withOpacity(0.3),
-                        blurRadius: 12,
-                      ),
-                    ]
-                  : [],
-            ),
-            child: Icon(
-              icon,
-              color: isSelected
-                  ? AppTheme.narutoOrange
-                  : (isDark
-                        ? Colors.white.withOpacity(0.6)
-                        : Colors.black.withOpacity(0.5)),
-              size: 24,
-            ),
-          ),
-        ],
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppTheme.narutoOrange.withValues(alpha: isDark ? 0.15 : 0.1)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Icon(
+          icon,
+          color: isSelected
+              ? AppTheme.narutoOrange
+              : (isDark ? AppTheme.textMutedDark : const Color(0xFF94A3B8)),
+          size: 22,
+        ),
       ),
     );
   }

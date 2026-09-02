@@ -1215,6 +1215,712 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
   }
 }
 
+class $BankAccountsTable extends BankAccounts
+    with TableInfo<$BankAccountsTable, BankAccount> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BankAccountsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _syncIdMeta = const VerificationMeta('syncId');
+  @override
+  late final GeneratedColumn<String> syncId = GeneratedColumn<String>(
+    'sync_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _bankNameMeta = const VerificationMeta(
+    'bankName',
+  );
+  @override
+  late final GeneratedColumn<String> bankName = GeneratedColumn<String>(
+    'bank_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _accountNumberLast4Meta =
+      const VerificationMeta('accountNumberLast4');
+  @override
+  late final GeneratedColumn<String> accountNumberLast4 =
+      GeneratedColumn<String>(
+        'account_number_last4',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _accountTypeMeta = const VerificationMeta(
+    'accountType',
+  );
+  @override
+  late final GeneratedColumn<String> accountType = GeneratedColumn<String>(
+    'account_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('savings'),
+  );
+  static const VerificationMeta _balanceMeta = const VerificationMeta(
+    'balance',
+  );
+  @override
+  late final GeneratedColumn<double> balance = GeneratedColumn<double>(
+    'balance',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _colorHexMeta = const VerificationMeta(
+    'colorHex',
+  );
+  @override
+  late final GeneratedColumn<String> colorHex = GeneratedColumn<String>(
+    'color_hex',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isDefaultMeta = const VerificationMeta(
+    'isDefault',
+  );
+  @override
+  late final GeneratedColumn<bool> isDefault = GeneratedColumn<bool>(
+    'is_default',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_default" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isSyncedMeta = const VerificationMeta(
+    'isSynced',
+  );
+  @override
+  late final GeneratedColumn<bool> isSynced = GeneratedColumn<bool>(
+    'is_synced',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_synced" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    syncId,
+    name,
+    bankName,
+    accountNumberLast4,
+    accountType,
+    balance,
+    colorHex,
+    isDefault,
+    isSynced,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'bank_accounts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<BankAccount> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('sync_id')) {
+      context.handle(
+        _syncIdMeta,
+        syncId.isAcceptableOrUnknown(data['sync_id']!, _syncIdMeta),
+      );
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('bank_name')) {
+      context.handle(
+        _bankNameMeta,
+        bankName.isAcceptableOrUnknown(data['bank_name']!, _bankNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_bankNameMeta);
+    }
+    if (data.containsKey('account_number_last4')) {
+      context.handle(
+        _accountNumberLast4Meta,
+        accountNumberLast4.isAcceptableOrUnknown(
+          data['account_number_last4']!,
+          _accountNumberLast4Meta,
+        ),
+      );
+    }
+    if (data.containsKey('account_type')) {
+      context.handle(
+        _accountTypeMeta,
+        accountType.isAcceptableOrUnknown(
+          data['account_type']!,
+          _accountTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('balance')) {
+      context.handle(
+        _balanceMeta,
+        balance.isAcceptableOrUnknown(data['balance']!, _balanceMeta),
+      );
+    }
+    if (data.containsKey('color_hex')) {
+      context.handle(
+        _colorHexMeta,
+        colorHex.isAcceptableOrUnknown(data['color_hex']!, _colorHexMeta),
+      );
+    }
+    if (data.containsKey('is_default')) {
+      context.handle(
+        _isDefaultMeta,
+        isDefault.isAcceptableOrUnknown(data['is_default']!, _isDefaultMeta),
+      );
+    }
+    if (data.containsKey('is_synced')) {
+      context.handle(
+        _isSyncedMeta,
+        isSynced.isAcceptableOrUnknown(data['is_synced']!, _isSyncedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  BankAccount map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return BankAccount(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      syncId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_id'],
+      ),
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      bankName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}bank_name'],
+      )!,
+      accountNumberLast4: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_number_last4'],
+      ),
+      accountType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_type'],
+      )!,
+      balance: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}balance'],
+      )!,
+      colorHex: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}color_hex'],
+      ),
+      isDefault: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_default'],
+      )!,
+      isSynced: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_synced'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
+    );
+  }
+
+  @override
+  $BankAccountsTable createAlias(String alias) {
+    return $BankAccountsTable(attachedDatabase, alias);
+  }
+}
+
+class BankAccount extends DataClass implements Insertable<BankAccount> {
+  final int id;
+  final String? syncId;
+  final String name;
+  final String bankName;
+  final String? accountNumberLast4;
+  final String accountType;
+  final double balance;
+  final String? colorHex;
+  final bool isDefault;
+  final bool isSynced;
+  final DateTime createdAt;
+  final DateTime? updatedAt;
+  const BankAccount({
+    required this.id,
+    this.syncId,
+    required this.name,
+    required this.bankName,
+    this.accountNumberLast4,
+    required this.accountType,
+    required this.balance,
+    this.colorHex,
+    required this.isDefault,
+    required this.isSynced,
+    required this.createdAt,
+    this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    if (!nullToAbsent || syncId != null) {
+      map['sync_id'] = Variable<String>(syncId);
+    }
+    map['name'] = Variable<String>(name);
+    map['bank_name'] = Variable<String>(bankName);
+    if (!nullToAbsent || accountNumberLast4 != null) {
+      map['account_number_last4'] = Variable<String>(accountNumberLast4);
+    }
+    map['account_type'] = Variable<String>(accountType);
+    map['balance'] = Variable<double>(balance);
+    if (!nullToAbsent || colorHex != null) {
+      map['color_hex'] = Variable<String>(colorHex);
+    }
+    map['is_default'] = Variable<bool>(isDefault);
+    map['is_synced'] = Variable<bool>(isSynced);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
+    return map;
+  }
+
+  BankAccountsCompanion toCompanion(bool nullToAbsent) {
+    return BankAccountsCompanion(
+      id: Value(id),
+      syncId: syncId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncId),
+      name: Value(name),
+      bankName: Value(bankName),
+      accountNumberLast4: accountNumberLast4 == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accountNumberLast4),
+      accountType: Value(accountType),
+      balance: Value(balance),
+      colorHex: colorHex == null && nullToAbsent
+          ? const Value.absent()
+          : Value(colorHex),
+      isDefault: Value(isDefault),
+      isSynced: Value(isSynced),
+      createdAt: Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
+    );
+  }
+
+  factory BankAccount.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return BankAccount(
+      id: serializer.fromJson<int>(json['id']),
+      syncId: serializer.fromJson<String?>(json['syncId']),
+      name: serializer.fromJson<String>(json['name']),
+      bankName: serializer.fromJson<String>(json['bankName']),
+      accountNumberLast4: serializer.fromJson<String?>(
+        json['accountNumberLast4'],
+      ),
+      accountType: serializer.fromJson<String>(json['accountType']),
+      balance: serializer.fromJson<double>(json['balance']),
+      colorHex: serializer.fromJson<String?>(json['colorHex']),
+      isDefault: serializer.fromJson<bool>(json['isDefault']),
+      isSynced: serializer.fromJson<bool>(json['isSynced']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'syncId': serializer.toJson<String?>(syncId),
+      'name': serializer.toJson<String>(name),
+      'bankName': serializer.toJson<String>(bankName),
+      'accountNumberLast4': serializer.toJson<String?>(accountNumberLast4),
+      'accountType': serializer.toJson<String>(accountType),
+      'balance': serializer.toJson<double>(balance),
+      'colorHex': serializer.toJson<String?>(colorHex),
+      'isDefault': serializer.toJson<bool>(isDefault),
+      'isSynced': serializer.toJson<bool>(isSynced),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
+    };
+  }
+
+  BankAccount copyWith({
+    int? id,
+    Value<String?> syncId = const Value.absent(),
+    String? name,
+    String? bankName,
+    Value<String?> accountNumberLast4 = const Value.absent(),
+    String? accountType,
+    double? balance,
+    Value<String?> colorHex = const Value.absent(),
+    bool? isDefault,
+    bool? isSynced,
+    DateTime? createdAt,
+    Value<DateTime?> updatedAt = const Value.absent(),
+  }) => BankAccount(
+    id: id ?? this.id,
+    syncId: syncId.present ? syncId.value : this.syncId,
+    name: name ?? this.name,
+    bankName: bankName ?? this.bankName,
+    accountNumberLast4: accountNumberLast4.present
+        ? accountNumberLast4.value
+        : this.accountNumberLast4,
+    accountType: accountType ?? this.accountType,
+    balance: balance ?? this.balance,
+    colorHex: colorHex.present ? colorHex.value : this.colorHex,
+    isDefault: isDefault ?? this.isDefault,
+    isSynced: isSynced ?? this.isSynced,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+  );
+  BankAccount copyWithCompanion(BankAccountsCompanion data) {
+    return BankAccount(
+      id: data.id.present ? data.id.value : this.id,
+      syncId: data.syncId.present ? data.syncId.value : this.syncId,
+      name: data.name.present ? data.name.value : this.name,
+      bankName: data.bankName.present ? data.bankName.value : this.bankName,
+      accountNumberLast4: data.accountNumberLast4.present
+          ? data.accountNumberLast4.value
+          : this.accountNumberLast4,
+      accountType: data.accountType.present
+          ? data.accountType.value
+          : this.accountType,
+      balance: data.balance.present ? data.balance.value : this.balance,
+      colorHex: data.colorHex.present ? data.colorHex.value : this.colorHex,
+      isDefault: data.isDefault.present ? data.isDefault.value : this.isDefault,
+      isSynced: data.isSynced.present ? data.isSynced.value : this.isSynced,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BankAccount(')
+          ..write('id: $id, ')
+          ..write('syncId: $syncId, ')
+          ..write('name: $name, ')
+          ..write('bankName: $bankName, ')
+          ..write('accountNumberLast4: $accountNumberLast4, ')
+          ..write('accountType: $accountType, ')
+          ..write('balance: $balance, ')
+          ..write('colorHex: $colorHex, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('isSynced: $isSynced, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    syncId,
+    name,
+    bankName,
+    accountNumberLast4,
+    accountType,
+    balance,
+    colorHex,
+    isDefault,
+    isSynced,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is BankAccount &&
+          other.id == this.id &&
+          other.syncId == this.syncId &&
+          other.name == this.name &&
+          other.bankName == this.bankName &&
+          other.accountNumberLast4 == this.accountNumberLast4 &&
+          other.accountType == this.accountType &&
+          other.balance == this.balance &&
+          other.colorHex == this.colorHex &&
+          other.isDefault == this.isDefault &&
+          other.isSynced == this.isSynced &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class BankAccountsCompanion extends UpdateCompanion<BankAccount> {
+  final Value<int> id;
+  final Value<String?> syncId;
+  final Value<String> name;
+  final Value<String> bankName;
+  final Value<String?> accountNumberLast4;
+  final Value<String> accountType;
+  final Value<double> balance;
+  final Value<String?> colorHex;
+  final Value<bool> isDefault;
+  final Value<bool> isSynced;
+  final Value<DateTime> createdAt;
+  final Value<DateTime?> updatedAt;
+  const BankAccountsCompanion({
+    this.id = const Value.absent(),
+    this.syncId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.bankName = const Value.absent(),
+    this.accountNumberLast4 = const Value.absent(),
+    this.accountType = const Value.absent(),
+    this.balance = const Value.absent(),
+    this.colorHex = const Value.absent(),
+    this.isDefault = const Value.absent(),
+    this.isSynced = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  BankAccountsCompanion.insert({
+    this.id = const Value.absent(),
+    this.syncId = const Value.absent(),
+    required String name,
+    required String bankName,
+    this.accountNumberLast4 = const Value.absent(),
+    this.accountType = const Value.absent(),
+    this.balance = const Value.absent(),
+    this.colorHex = const Value.absent(),
+    this.isDefault = const Value.absent(),
+    this.isSynced = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  }) : name = Value(name),
+       bankName = Value(bankName);
+  static Insertable<BankAccount> custom({
+    Expression<int>? id,
+    Expression<String>? syncId,
+    Expression<String>? name,
+    Expression<String>? bankName,
+    Expression<String>? accountNumberLast4,
+    Expression<String>? accountType,
+    Expression<double>? balance,
+    Expression<String>? colorHex,
+    Expression<bool>? isDefault,
+    Expression<bool>? isSynced,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (syncId != null) 'sync_id': syncId,
+      if (name != null) 'name': name,
+      if (bankName != null) 'bank_name': bankName,
+      if (accountNumberLast4 != null)
+        'account_number_last4': accountNumberLast4,
+      if (accountType != null) 'account_type': accountType,
+      if (balance != null) 'balance': balance,
+      if (colorHex != null) 'color_hex': colorHex,
+      if (isDefault != null) 'is_default': isDefault,
+      if (isSynced != null) 'is_synced': isSynced,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  BankAccountsCompanion copyWith({
+    Value<int>? id,
+    Value<String?>? syncId,
+    Value<String>? name,
+    Value<String>? bankName,
+    Value<String?>? accountNumberLast4,
+    Value<String>? accountType,
+    Value<double>? balance,
+    Value<String?>? colorHex,
+    Value<bool>? isDefault,
+    Value<bool>? isSynced,
+    Value<DateTime>? createdAt,
+    Value<DateTime?>? updatedAt,
+  }) {
+    return BankAccountsCompanion(
+      id: id ?? this.id,
+      syncId: syncId ?? this.syncId,
+      name: name ?? this.name,
+      bankName: bankName ?? this.bankName,
+      accountNumberLast4: accountNumberLast4 ?? this.accountNumberLast4,
+      accountType: accountType ?? this.accountType,
+      balance: balance ?? this.balance,
+      colorHex: colorHex ?? this.colorHex,
+      isDefault: isDefault ?? this.isDefault,
+      isSynced: isSynced ?? this.isSynced,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (syncId.present) {
+      map['sync_id'] = Variable<String>(syncId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (bankName.present) {
+      map['bank_name'] = Variable<String>(bankName.value);
+    }
+    if (accountNumberLast4.present) {
+      map['account_number_last4'] = Variable<String>(accountNumberLast4.value);
+    }
+    if (accountType.present) {
+      map['account_type'] = Variable<String>(accountType.value);
+    }
+    if (balance.present) {
+      map['balance'] = Variable<double>(balance.value);
+    }
+    if (colorHex.present) {
+      map['color_hex'] = Variable<String>(colorHex.value);
+    }
+    if (isDefault.present) {
+      map['is_default'] = Variable<bool>(isDefault.value);
+    }
+    if (isSynced.present) {
+      map['is_synced'] = Variable<bool>(isSynced.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BankAccountsCompanion(')
+          ..write('id: $id, ')
+          ..write('syncId: $syncId, ')
+          ..write('name: $name, ')
+          ..write('bankName: $bankName, ')
+          ..write('accountNumberLast4: $accountNumberLast4, ')
+          ..write('accountType: $accountType, ')
+          ..write('balance: $balance, ')
+          ..write('colorHex: $colorHex, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('isSynced: $isSynced, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $TransactionsTable extends Transactions
     with TableInfo<$TransactionsTable, Transaction> {
   @override
@@ -1285,6 +1991,20 @@ class $TransactionsTable extends Transactions
     requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES goals (id)',
+    ),
+  );
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<int> accountId = GeneratedColumn<int>(
+    'account_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES bank_accounts (id)',
     ),
   );
   static const VerificationMeta _timestampMeta = const VerificationMeta(
@@ -1391,6 +2111,7 @@ class $TransactionsTable extends Transactions
     type,
     categoryId,
     goalId,
+    accountId,
     timestamp,
     note,
     paymentMode,
@@ -1449,6 +2170,12 @@ class $TransactionsTable extends Transactions
       context.handle(
         _goalIdMeta,
         goalId.isAcceptableOrUnknown(data['goal_id']!, _goalIdMeta),
+      );
+    }
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
       );
     }
     if (data.containsKey('timestamp')) {
@@ -1543,6 +2270,10 @@ class $TransactionsTable extends Transactions
         DriftSqlType.int,
         data['${effectivePrefix}goal_id'],
       ),
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}account_id'],
+      ),
       timestamp: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}timestamp'],
@@ -1591,6 +2322,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   final String type;
   final int categoryId;
   final int? goalId;
+  final int? accountId;
   final DateTime timestamp;
   final String? note;
   final String? paymentMode;
@@ -1606,6 +2338,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     required this.type,
     required this.categoryId,
     this.goalId,
+    this.accountId,
     required this.timestamp,
     this.note,
     this.paymentMode,
@@ -1627,6 +2360,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     map['category_id'] = Variable<int>(categoryId);
     if (!nullToAbsent || goalId != null) {
       map['goal_id'] = Variable<int>(goalId);
+    }
+    if (!nullToAbsent || accountId != null) {
+      map['account_id'] = Variable<int>(accountId);
     }
     map['timestamp'] = Variable<DateTime>(timestamp);
     if (!nullToAbsent || note != null) {
@@ -1659,6 +2395,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       goalId: goalId == null && nullToAbsent
           ? const Value.absent()
           : Value(goalId),
+      accountId: accountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accountId),
       timestamp: Value(timestamp),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
       paymentMode: paymentMode == null && nullToAbsent
@@ -1688,6 +2427,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       type: serializer.fromJson<String>(json['type']),
       categoryId: serializer.fromJson<int>(json['categoryId']),
       goalId: serializer.fromJson<int?>(json['goalId']),
+      accountId: serializer.fromJson<int?>(json['accountId']),
       timestamp: serializer.fromJson<DateTime>(json['timestamp']),
       note: serializer.fromJson<String?>(json['note']),
       paymentMode: serializer.fromJson<String?>(json['paymentMode']),
@@ -1708,6 +2448,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       'type': serializer.toJson<String>(type),
       'categoryId': serializer.toJson<int>(categoryId),
       'goalId': serializer.toJson<int?>(goalId),
+      'accountId': serializer.toJson<int?>(accountId),
       'timestamp': serializer.toJson<DateTime>(timestamp),
       'note': serializer.toJson<String?>(note),
       'paymentMode': serializer.toJson<String?>(paymentMode),
@@ -1726,6 +2467,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     String? type,
     int? categoryId,
     Value<int?> goalId = const Value.absent(),
+    Value<int?> accountId = const Value.absent(),
     DateTime? timestamp,
     Value<String?> note = const Value.absent(),
     Value<String?> paymentMode = const Value.absent(),
@@ -1741,6 +2483,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     type: type ?? this.type,
     categoryId: categoryId ?? this.categoryId,
     goalId: goalId.present ? goalId.value : this.goalId,
+    accountId: accountId.present ? accountId.value : this.accountId,
     timestamp: timestamp ?? this.timestamp,
     note: note.present ? note.value : this.note,
     paymentMode: paymentMode.present ? paymentMode.value : this.paymentMode,
@@ -1762,6 +2505,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           ? data.categoryId.value
           : this.categoryId,
       goalId: data.goalId.present ? data.goalId.value : this.goalId,
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
       timestamp: data.timestamp.present ? data.timestamp.value : this.timestamp,
       note: data.note.present ? data.note.value : this.note,
       paymentMode: data.paymentMode.present
@@ -1788,6 +2532,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           ..write('type: $type, ')
           ..write('categoryId: $categoryId, ')
           ..write('goalId: $goalId, ')
+          ..write('accountId: $accountId, ')
           ..write('timestamp: $timestamp, ')
           ..write('note: $note, ')
           ..write('paymentMode: $paymentMode, ')
@@ -1808,6 +2553,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     type,
     categoryId,
     goalId,
+    accountId,
     timestamp,
     note,
     paymentMode,
@@ -1827,6 +2573,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           other.type == this.type &&
           other.categoryId == this.categoryId &&
           other.goalId == this.goalId &&
+          other.accountId == this.accountId &&
           other.timestamp == this.timestamp &&
           other.note == this.note &&
           other.paymentMode == this.paymentMode &&
@@ -1844,6 +2591,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
   final Value<String> type;
   final Value<int> categoryId;
   final Value<int?> goalId;
+  final Value<int?> accountId;
   final Value<DateTime> timestamp;
   final Value<String?> note;
   final Value<String?> paymentMode;
@@ -1859,6 +2607,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     this.type = const Value.absent(),
     this.categoryId = const Value.absent(),
     this.goalId = const Value.absent(),
+    this.accountId = const Value.absent(),
     this.timestamp = const Value.absent(),
     this.note = const Value.absent(),
     this.paymentMode = const Value.absent(),
@@ -1875,6 +2624,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     required String type,
     required int categoryId,
     this.goalId = const Value.absent(),
+    this.accountId = const Value.absent(),
     required DateTime timestamp,
     this.note = const Value.absent(),
     this.paymentMode = const Value.absent(),
@@ -1894,6 +2644,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     Expression<String>? type,
     Expression<int>? categoryId,
     Expression<int>? goalId,
+    Expression<int>? accountId,
     Expression<DateTime>? timestamp,
     Expression<String>? note,
     Expression<String>? paymentMode,
@@ -1910,6 +2661,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       if (type != null) 'type': type,
       if (categoryId != null) 'category_id': categoryId,
       if (goalId != null) 'goal_id': goalId,
+      if (accountId != null) 'account_id': accountId,
       if (timestamp != null) 'timestamp': timestamp,
       if (note != null) 'note': note,
       if (paymentMode != null) 'payment_mode': paymentMode,
@@ -1928,6 +2680,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     Value<String>? type,
     Value<int>? categoryId,
     Value<int?>? goalId,
+    Value<int?>? accountId,
     Value<DateTime>? timestamp,
     Value<String?>? note,
     Value<String?>? paymentMode,
@@ -1944,6 +2697,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       type: type ?? this.type,
       categoryId: categoryId ?? this.categoryId,
       goalId: goalId ?? this.goalId,
+      accountId: accountId ?? this.accountId,
       timestamp: timestamp ?? this.timestamp,
       note: note ?? this.note,
       paymentMode: paymentMode ?? this.paymentMode,
@@ -1975,6 +2729,9 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     }
     if (goalId.present) {
       map['goal_id'] = Variable<int>(goalId.value);
+    }
+    if (accountId.present) {
+      map['account_id'] = Variable<int>(accountId.value);
     }
     if (timestamp.present) {
       map['timestamp'] = Variable<DateTime>(timestamp.value);
@@ -2012,6 +2769,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
           ..write('type: $type, ')
           ..write('categoryId: $categoryId, ')
           ..write('goalId: $goalId, ')
+          ..write('accountId: $accountId, ')
           ..write('timestamp: $timestamp, ')
           ..write('note: $note, ')
           ..write('paymentMode: $paymentMode, ')
@@ -4187,11 +4945,1186 @@ class AssetsCompanion extends UpdateCompanion<Asset> {
   }
 }
 
+class $SmsTransactionsTable extends SmsTransactions
+    with TableInfo<$SmsTransactionsTable, SmsTransaction> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SmsTransactionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _syncIdMeta = const VerificationMeta('syncId');
+  @override
+  late final GeneratedColumn<String> syncId = GeneratedColumn<String>(
+    'sync_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _smsIdMeta = const VerificationMeta('smsId');
+  @override
+  late final GeneratedColumn<String> smsId = GeneratedColumn<String>(
+    'sms_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _senderMeta = const VerificationMeta('sender');
+  @override
+  late final GeneratedColumn<String> sender = GeneratedColumn<String>(
+    'sender',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _bodyMeta = const VerificationMeta('body');
+  @override
+  late final GeneratedColumn<String> body = GeneratedColumn<String>(
+    'body',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<double> amount = GeneratedColumn<double>(
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _paymentModeMeta = const VerificationMeta(
+    'paymentMode',
+  );
+  @override
+  late final GeneratedColumn<String> paymentMode = GeneratedColumn<String>(
+    'payment_mode',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _bankNameMeta = const VerificationMeta(
+    'bankName',
+  );
+  @override
+  late final GeneratedColumn<String> bankName = GeneratedColumn<String>(
+    'bank_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _accountNumberLast4Meta =
+      const VerificationMeta('accountNumberLast4');
+  @override
+  late final GeneratedColumn<String> accountNumberLast4 =
+      GeneratedColumn<String>(
+        'account_number_last4',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _merchantMeta = const VerificationMeta(
+    'merchant',
+  );
+  @override
+  late final GeneratedColumn<String> merchant = GeneratedColumn<String>(
+    'merchant',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _refNumberMeta = const VerificationMeta(
+    'refNumber',
+  );
+  @override
+  late final GeneratedColumn<String> refNumber = GeneratedColumn<String>(
+    'ref_number',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _balanceMeta = const VerificationMeta(
+    'balance',
+  );
+  @override
+  late final GeneratedColumn<double> balance = GeneratedColumn<double>(
+    'balance',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _suggestedCategoryIdMeta =
+      const VerificationMeta('suggestedCategoryId');
+  @override
+  late final GeneratedColumn<int> suggestedCategoryId = GeneratedColumn<int>(
+    'suggested_category_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES categories (id)',
+    ),
+  );
+  static const VerificationMeta _suggestedAccountIdMeta =
+      const VerificationMeta('suggestedAccountId');
+  @override
+  late final GeneratedColumn<int> suggestedAccountId = GeneratedColumn<int>(
+    'suggested_account_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES bank_accounts (id)',
+    ),
+  );
+  static const VerificationMeta _smsTimestampMeta = const VerificationMeta(
+    'smsTimestamp',
+  );
+  @override
+  late final GeneratedColumn<DateTime> smsTimestamp = GeneratedColumn<DateTime>(
+    'sms_timestamp',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  static const VerificationMeta _transactionIdMeta = const VerificationMeta(
+    'transactionId',
+  );
+  @override
+  late final GeneratedColumn<int> transactionId = GeneratedColumn<int>(
+    'transaction_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES transactions (id)',
+    ),
+  );
+  static const VerificationMeta _isSyncedMeta = const VerificationMeta(
+    'isSynced',
+  );
+  @override
+  late final GeneratedColumn<bool> isSynced = GeneratedColumn<bool>(
+    'is_synced',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_synced" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    syncId,
+    smsId,
+    sender,
+    body,
+    amount,
+    type,
+    paymentMode,
+    bankName,
+    accountNumberLast4,
+    merchant,
+    refNumber,
+    balance,
+    suggestedCategoryId,
+    suggestedAccountId,
+    smsTimestamp,
+    status,
+    transactionId,
+    isSynced,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sms_transactions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SmsTransaction> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('sync_id')) {
+      context.handle(
+        _syncIdMeta,
+        syncId.isAcceptableOrUnknown(data['sync_id']!, _syncIdMeta),
+      );
+    }
+    if (data.containsKey('sms_id')) {
+      context.handle(
+        _smsIdMeta,
+        smsId.isAcceptableOrUnknown(data['sms_id']!, _smsIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_smsIdMeta);
+    }
+    if (data.containsKey('sender')) {
+      context.handle(
+        _senderMeta,
+        sender.isAcceptableOrUnknown(data['sender']!, _senderMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_senderMeta);
+    }
+    if (data.containsKey('body')) {
+      context.handle(
+        _bodyMeta,
+        body.isAcceptableOrUnknown(data['body']!, _bodyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_bodyMeta);
+    }
+    if (data.containsKey('amount')) {
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('payment_mode')) {
+      context.handle(
+        _paymentModeMeta,
+        paymentMode.isAcceptableOrUnknown(
+          data['payment_mode']!,
+          _paymentModeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('bank_name')) {
+      context.handle(
+        _bankNameMeta,
+        bankName.isAcceptableOrUnknown(data['bank_name']!, _bankNameMeta),
+      );
+    }
+    if (data.containsKey('account_number_last4')) {
+      context.handle(
+        _accountNumberLast4Meta,
+        accountNumberLast4.isAcceptableOrUnknown(
+          data['account_number_last4']!,
+          _accountNumberLast4Meta,
+        ),
+      );
+    }
+    if (data.containsKey('merchant')) {
+      context.handle(
+        _merchantMeta,
+        merchant.isAcceptableOrUnknown(data['merchant']!, _merchantMeta),
+      );
+    }
+    if (data.containsKey('ref_number')) {
+      context.handle(
+        _refNumberMeta,
+        refNumber.isAcceptableOrUnknown(data['ref_number']!, _refNumberMeta),
+      );
+    }
+    if (data.containsKey('balance')) {
+      context.handle(
+        _balanceMeta,
+        balance.isAcceptableOrUnknown(data['balance']!, _balanceMeta),
+      );
+    }
+    if (data.containsKey('suggested_category_id')) {
+      context.handle(
+        _suggestedCategoryIdMeta,
+        suggestedCategoryId.isAcceptableOrUnknown(
+          data['suggested_category_id']!,
+          _suggestedCategoryIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('suggested_account_id')) {
+      context.handle(
+        _suggestedAccountIdMeta,
+        suggestedAccountId.isAcceptableOrUnknown(
+          data['suggested_account_id']!,
+          _suggestedAccountIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sms_timestamp')) {
+      context.handle(
+        _smsTimestampMeta,
+        smsTimestamp.isAcceptableOrUnknown(
+          data['sms_timestamp']!,
+          _smsTimestampMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_smsTimestampMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('transaction_id')) {
+      context.handle(
+        _transactionIdMeta,
+        transactionId.isAcceptableOrUnknown(
+          data['transaction_id']!,
+          _transactionIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_synced')) {
+      context.handle(
+        _isSyncedMeta,
+        isSynced.isAcceptableOrUnknown(data['is_synced']!, _isSyncedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SmsTransaction map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SmsTransaction(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      syncId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_id'],
+      ),
+      smsId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sms_id'],
+      )!,
+      sender: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sender'],
+      )!,
+      body: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}body'],
+      )!,
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}amount'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      paymentMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payment_mode'],
+      ),
+      bankName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}bank_name'],
+      ),
+      accountNumberLast4: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_number_last4'],
+      ),
+      merchant: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}merchant'],
+      ),
+      refNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ref_number'],
+      ),
+      balance: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}balance'],
+      ),
+      suggestedCategoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}suggested_category_id'],
+      ),
+      suggestedAccountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}suggested_account_id'],
+      ),
+      smsTimestamp: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}sms_timestamp'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      transactionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}transaction_id'],
+      ),
+      isSynced: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_synced'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
+    );
+  }
+
+  @override
+  $SmsTransactionsTable createAlias(String alias) {
+    return $SmsTransactionsTable(attachedDatabase, alias);
+  }
+}
+
+class SmsTransaction extends DataClass implements Insertable<SmsTransaction> {
+  final int id;
+  final String? syncId;
+  final String smsId;
+  final String sender;
+  final String body;
+  final double amount;
+  final String type;
+  final String? paymentMode;
+  final String? bankName;
+  final String? accountNumberLast4;
+  final String? merchant;
+  final String? refNumber;
+  final double? balance;
+  final int? suggestedCategoryId;
+  final int? suggestedAccountId;
+  final DateTime smsTimestamp;
+  final String status;
+  final int? transactionId;
+  final bool isSynced;
+  final DateTime createdAt;
+  final DateTime? updatedAt;
+  const SmsTransaction({
+    required this.id,
+    this.syncId,
+    required this.smsId,
+    required this.sender,
+    required this.body,
+    required this.amount,
+    required this.type,
+    this.paymentMode,
+    this.bankName,
+    this.accountNumberLast4,
+    this.merchant,
+    this.refNumber,
+    this.balance,
+    this.suggestedCategoryId,
+    this.suggestedAccountId,
+    required this.smsTimestamp,
+    required this.status,
+    this.transactionId,
+    required this.isSynced,
+    required this.createdAt,
+    this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    if (!nullToAbsent || syncId != null) {
+      map['sync_id'] = Variable<String>(syncId);
+    }
+    map['sms_id'] = Variable<String>(smsId);
+    map['sender'] = Variable<String>(sender);
+    map['body'] = Variable<String>(body);
+    map['amount'] = Variable<double>(amount);
+    map['type'] = Variable<String>(type);
+    if (!nullToAbsent || paymentMode != null) {
+      map['payment_mode'] = Variable<String>(paymentMode);
+    }
+    if (!nullToAbsent || bankName != null) {
+      map['bank_name'] = Variable<String>(bankName);
+    }
+    if (!nullToAbsent || accountNumberLast4 != null) {
+      map['account_number_last4'] = Variable<String>(accountNumberLast4);
+    }
+    if (!nullToAbsent || merchant != null) {
+      map['merchant'] = Variable<String>(merchant);
+    }
+    if (!nullToAbsent || refNumber != null) {
+      map['ref_number'] = Variable<String>(refNumber);
+    }
+    if (!nullToAbsent || balance != null) {
+      map['balance'] = Variable<double>(balance);
+    }
+    if (!nullToAbsent || suggestedCategoryId != null) {
+      map['suggested_category_id'] = Variable<int>(suggestedCategoryId);
+    }
+    if (!nullToAbsent || suggestedAccountId != null) {
+      map['suggested_account_id'] = Variable<int>(suggestedAccountId);
+    }
+    map['sms_timestamp'] = Variable<DateTime>(smsTimestamp);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || transactionId != null) {
+      map['transaction_id'] = Variable<int>(transactionId);
+    }
+    map['is_synced'] = Variable<bool>(isSynced);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
+    return map;
+  }
+
+  SmsTransactionsCompanion toCompanion(bool nullToAbsent) {
+    return SmsTransactionsCompanion(
+      id: Value(id),
+      syncId: syncId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncId),
+      smsId: Value(smsId),
+      sender: Value(sender),
+      body: Value(body),
+      amount: Value(amount),
+      type: Value(type),
+      paymentMode: paymentMode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(paymentMode),
+      bankName: bankName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(bankName),
+      accountNumberLast4: accountNumberLast4 == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accountNumberLast4),
+      merchant: merchant == null && nullToAbsent
+          ? const Value.absent()
+          : Value(merchant),
+      refNumber: refNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(refNumber),
+      balance: balance == null && nullToAbsent
+          ? const Value.absent()
+          : Value(balance),
+      suggestedCategoryId: suggestedCategoryId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(suggestedCategoryId),
+      suggestedAccountId: suggestedAccountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(suggestedAccountId),
+      smsTimestamp: Value(smsTimestamp),
+      status: Value(status),
+      transactionId: transactionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(transactionId),
+      isSynced: Value(isSynced),
+      createdAt: Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
+    );
+  }
+
+  factory SmsTransaction.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SmsTransaction(
+      id: serializer.fromJson<int>(json['id']),
+      syncId: serializer.fromJson<String?>(json['syncId']),
+      smsId: serializer.fromJson<String>(json['smsId']),
+      sender: serializer.fromJson<String>(json['sender']),
+      body: serializer.fromJson<String>(json['body']),
+      amount: serializer.fromJson<double>(json['amount']),
+      type: serializer.fromJson<String>(json['type']),
+      paymentMode: serializer.fromJson<String?>(json['paymentMode']),
+      bankName: serializer.fromJson<String?>(json['bankName']),
+      accountNumberLast4: serializer.fromJson<String?>(
+        json['accountNumberLast4'],
+      ),
+      merchant: serializer.fromJson<String?>(json['merchant']),
+      refNumber: serializer.fromJson<String?>(json['refNumber']),
+      balance: serializer.fromJson<double?>(json['balance']),
+      suggestedCategoryId: serializer.fromJson<int?>(
+        json['suggestedCategoryId'],
+      ),
+      suggestedAccountId: serializer.fromJson<int?>(json['suggestedAccountId']),
+      smsTimestamp: serializer.fromJson<DateTime>(json['smsTimestamp']),
+      status: serializer.fromJson<String>(json['status']),
+      transactionId: serializer.fromJson<int?>(json['transactionId']),
+      isSynced: serializer.fromJson<bool>(json['isSynced']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'syncId': serializer.toJson<String?>(syncId),
+      'smsId': serializer.toJson<String>(smsId),
+      'sender': serializer.toJson<String>(sender),
+      'body': serializer.toJson<String>(body),
+      'amount': serializer.toJson<double>(amount),
+      'type': serializer.toJson<String>(type),
+      'paymentMode': serializer.toJson<String?>(paymentMode),
+      'bankName': serializer.toJson<String?>(bankName),
+      'accountNumberLast4': serializer.toJson<String?>(accountNumberLast4),
+      'merchant': serializer.toJson<String?>(merchant),
+      'refNumber': serializer.toJson<String?>(refNumber),
+      'balance': serializer.toJson<double?>(balance),
+      'suggestedCategoryId': serializer.toJson<int?>(suggestedCategoryId),
+      'suggestedAccountId': serializer.toJson<int?>(suggestedAccountId),
+      'smsTimestamp': serializer.toJson<DateTime>(smsTimestamp),
+      'status': serializer.toJson<String>(status),
+      'transactionId': serializer.toJson<int?>(transactionId),
+      'isSynced': serializer.toJson<bool>(isSynced),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
+    };
+  }
+
+  SmsTransaction copyWith({
+    int? id,
+    Value<String?> syncId = const Value.absent(),
+    String? smsId,
+    String? sender,
+    String? body,
+    double? amount,
+    String? type,
+    Value<String?> paymentMode = const Value.absent(),
+    Value<String?> bankName = const Value.absent(),
+    Value<String?> accountNumberLast4 = const Value.absent(),
+    Value<String?> merchant = const Value.absent(),
+    Value<String?> refNumber = const Value.absent(),
+    Value<double?> balance = const Value.absent(),
+    Value<int?> suggestedCategoryId = const Value.absent(),
+    Value<int?> suggestedAccountId = const Value.absent(),
+    DateTime? smsTimestamp,
+    String? status,
+    Value<int?> transactionId = const Value.absent(),
+    bool? isSynced,
+    DateTime? createdAt,
+    Value<DateTime?> updatedAt = const Value.absent(),
+  }) => SmsTransaction(
+    id: id ?? this.id,
+    syncId: syncId.present ? syncId.value : this.syncId,
+    smsId: smsId ?? this.smsId,
+    sender: sender ?? this.sender,
+    body: body ?? this.body,
+    amount: amount ?? this.amount,
+    type: type ?? this.type,
+    paymentMode: paymentMode.present ? paymentMode.value : this.paymentMode,
+    bankName: bankName.present ? bankName.value : this.bankName,
+    accountNumberLast4: accountNumberLast4.present
+        ? accountNumberLast4.value
+        : this.accountNumberLast4,
+    merchant: merchant.present ? merchant.value : this.merchant,
+    refNumber: refNumber.present ? refNumber.value : this.refNumber,
+    balance: balance.present ? balance.value : this.balance,
+    suggestedCategoryId: suggestedCategoryId.present
+        ? suggestedCategoryId.value
+        : this.suggestedCategoryId,
+    suggestedAccountId: suggestedAccountId.present
+        ? suggestedAccountId.value
+        : this.suggestedAccountId,
+    smsTimestamp: smsTimestamp ?? this.smsTimestamp,
+    status: status ?? this.status,
+    transactionId: transactionId.present
+        ? transactionId.value
+        : this.transactionId,
+    isSynced: isSynced ?? this.isSynced,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+  );
+  SmsTransaction copyWithCompanion(SmsTransactionsCompanion data) {
+    return SmsTransaction(
+      id: data.id.present ? data.id.value : this.id,
+      syncId: data.syncId.present ? data.syncId.value : this.syncId,
+      smsId: data.smsId.present ? data.smsId.value : this.smsId,
+      sender: data.sender.present ? data.sender.value : this.sender,
+      body: data.body.present ? data.body.value : this.body,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      type: data.type.present ? data.type.value : this.type,
+      paymentMode: data.paymentMode.present
+          ? data.paymentMode.value
+          : this.paymentMode,
+      bankName: data.bankName.present ? data.bankName.value : this.bankName,
+      accountNumberLast4: data.accountNumberLast4.present
+          ? data.accountNumberLast4.value
+          : this.accountNumberLast4,
+      merchant: data.merchant.present ? data.merchant.value : this.merchant,
+      refNumber: data.refNumber.present ? data.refNumber.value : this.refNumber,
+      balance: data.balance.present ? data.balance.value : this.balance,
+      suggestedCategoryId: data.suggestedCategoryId.present
+          ? data.suggestedCategoryId.value
+          : this.suggestedCategoryId,
+      suggestedAccountId: data.suggestedAccountId.present
+          ? data.suggestedAccountId.value
+          : this.suggestedAccountId,
+      smsTimestamp: data.smsTimestamp.present
+          ? data.smsTimestamp.value
+          : this.smsTimestamp,
+      status: data.status.present ? data.status.value : this.status,
+      transactionId: data.transactionId.present
+          ? data.transactionId.value
+          : this.transactionId,
+      isSynced: data.isSynced.present ? data.isSynced.value : this.isSynced,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SmsTransaction(')
+          ..write('id: $id, ')
+          ..write('syncId: $syncId, ')
+          ..write('smsId: $smsId, ')
+          ..write('sender: $sender, ')
+          ..write('body: $body, ')
+          ..write('amount: $amount, ')
+          ..write('type: $type, ')
+          ..write('paymentMode: $paymentMode, ')
+          ..write('bankName: $bankName, ')
+          ..write('accountNumberLast4: $accountNumberLast4, ')
+          ..write('merchant: $merchant, ')
+          ..write('refNumber: $refNumber, ')
+          ..write('balance: $balance, ')
+          ..write('suggestedCategoryId: $suggestedCategoryId, ')
+          ..write('suggestedAccountId: $suggestedAccountId, ')
+          ..write('smsTimestamp: $smsTimestamp, ')
+          ..write('status: $status, ')
+          ..write('transactionId: $transactionId, ')
+          ..write('isSynced: $isSynced, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    id,
+    syncId,
+    smsId,
+    sender,
+    body,
+    amount,
+    type,
+    paymentMode,
+    bankName,
+    accountNumberLast4,
+    merchant,
+    refNumber,
+    balance,
+    suggestedCategoryId,
+    suggestedAccountId,
+    smsTimestamp,
+    status,
+    transactionId,
+    isSynced,
+    createdAt,
+    updatedAt,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SmsTransaction &&
+          other.id == this.id &&
+          other.syncId == this.syncId &&
+          other.smsId == this.smsId &&
+          other.sender == this.sender &&
+          other.body == this.body &&
+          other.amount == this.amount &&
+          other.type == this.type &&
+          other.paymentMode == this.paymentMode &&
+          other.bankName == this.bankName &&
+          other.accountNumberLast4 == this.accountNumberLast4 &&
+          other.merchant == this.merchant &&
+          other.refNumber == this.refNumber &&
+          other.balance == this.balance &&
+          other.suggestedCategoryId == this.suggestedCategoryId &&
+          other.suggestedAccountId == this.suggestedAccountId &&
+          other.smsTimestamp == this.smsTimestamp &&
+          other.status == this.status &&
+          other.transactionId == this.transactionId &&
+          other.isSynced == this.isSynced &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class SmsTransactionsCompanion extends UpdateCompanion<SmsTransaction> {
+  final Value<int> id;
+  final Value<String?> syncId;
+  final Value<String> smsId;
+  final Value<String> sender;
+  final Value<String> body;
+  final Value<double> amount;
+  final Value<String> type;
+  final Value<String?> paymentMode;
+  final Value<String?> bankName;
+  final Value<String?> accountNumberLast4;
+  final Value<String?> merchant;
+  final Value<String?> refNumber;
+  final Value<double?> balance;
+  final Value<int?> suggestedCategoryId;
+  final Value<int?> suggestedAccountId;
+  final Value<DateTime> smsTimestamp;
+  final Value<String> status;
+  final Value<int?> transactionId;
+  final Value<bool> isSynced;
+  final Value<DateTime> createdAt;
+  final Value<DateTime?> updatedAt;
+  const SmsTransactionsCompanion({
+    this.id = const Value.absent(),
+    this.syncId = const Value.absent(),
+    this.smsId = const Value.absent(),
+    this.sender = const Value.absent(),
+    this.body = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.type = const Value.absent(),
+    this.paymentMode = const Value.absent(),
+    this.bankName = const Value.absent(),
+    this.accountNumberLast4 = const Value.absent(),
+    this.merchant = const Value.absent(),
+    this.refNumber = const Value.absent(),
+    this.balance = const Value.absent(),
+    this.suggestedCategoryId = const Value.absent(),
+    this.suggestedAccountId = const Value.absent(),
+    this.smsTimestamp = const Value.absent(),
+    this.status = const Value.absent(),
+    this.transactionId = const Value.absent(),
+    this.isSynced = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  SmsTransactionsCompanion.insert({
+    this.id = const Value.absent(),
+    this.syncId = const Value.absent(),
+    required String smsId,
+    required String sender,
+    required String body,
+    required double amount,
+    required String type,
+    this.paymentMode = const Value.absent(),
+    this.bankName = const Value.absent(),
+    this.accountNumberLast4 = const Value.absent(),
+    this.merchant = const Value.absent(),
+    this.refNumber = const Value.absent(),
+    this.balance = const Value.absent(),
+    this.suggestedCategoryId = const Value.absent(),
+    this.suggestedAccountId = const Value.absent(),
+    required DateTime smsTimestamp,
+    this.status = const Value.absent(),
+    this.transactionId = const Value.absent(),
+    this.isSynced = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  }) : smsId = Value(smsId),
+       sender = Value(sender),
+       body = Value(body),
+       amount = Value(amount),
+       type = Value(type),
+       smsTimestamp = Value(smsTimestamp);
+  static Insertable<SmsTransaction> custom({
+    Expression<int>? id,
+    Expression<String>? syncId,
+    Expression<String>? smsId,
+    Expression<String>? sender,
+    Expression<String>? body,
+    Expression<double>? amount,
+    Expression<String>? type,
+    Expression<String>? paymentMode,
+    Expression<String>? bankName,
+    Expression<String>? accountNumberLast4,
+    Expression<String>? merchant,
+    Expression<String>? refNumber,
+    Expression<double>? balance,
+    Expression<int>? suggestedCategoryId,
+    Expression<int>? suggestedAccountId,
+    Expression<DateTime>? smsTimestamp,
+    Expression<String>? status,
+    Expression<int>? transactionId,
+    Expression<bool>? isSynced,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (syncId != null) 'sync_id': syncId,
+      if (smsId != null) 'sms_id': smsId,
+      if (sender != null) 'sender': sender,
+      if (body != null) 'body': body,
+      if (amount != null) 'amount': amount,
+      if (type != null) 'type': type,
+      if (paymentMode != null) 'payment_mode': paymentMode,
+      if (bankName != null) 'bank_name': bankName,
+      if (accountNumberLast4 != null)
+        'account_number_last4': accountNumberLast4,
+      if (merchant != null) 'merchant': merchant,
+      if (refNumber != null) 'ref_number': refNumber,
+      if (balance != null) 'balance': balance,
+      if (suggestedCategoryId != null)
+        'suggested_category_id': suggestedCategoryId,
+      if (suggestedAccountId != null)
+        'suggested_account_id': suggestedAccountId,
+      if (smsTimestamp != null) 'sms_timestamp': smsTimestamp,
+      if (status != null) 'status': status,
+      if (transactionId != null) 'transaction_id': transactionId,
+      if (isSynced != null) 'is_synced': isSynced,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  SmsTransactionsCompanion copyWith({
+    Value<int>? id,
+    Value<String?>? syncId,
+    Value<String>? smsId,
+    Value<String>? sender,
+    Value<String>? body,
+    Value<double>? amount,
+    Value<String>? type,
+    Value<String?>? paymentMode,
+    Value<String?>? bankName,
+    Value<String?>? accountNumberLast4,
+    Value<String?>? merchant,
+    Value<String?>? refNumber,
+    Value<double?>? balance,
+    Value<int?>? suggestedCategoryId,
+    Value<int?>? suggestedAccountId,
+    Value<DateTime>? smsTimestamp,
+    Value<String>? status,
+    Value<int?>? transactionId,
+    Value<bool>? isSynced,
+    Value<DateTime>? createdAt,
+    Value<DateTime?>? updatedAt,
+  }) {
+    return SmsTransactionsCompanion(
+      id: id ?? this.id,
+      syncId: syncId ?? this.syncId,
+      smsId: smsId ?? this.smsId,
+      sender: sender ?? this.sender,
+      body: body ?? this.body,
+      amount: amount ?? this.amount,
+      type: type ?? this.type,
+      paymentMode: paymentMode ?? this.paymentMode,
+      bankName: bankName ?? this.bankName,
+      accountNumberLast4: accountNumberLast4 ?? this.accountNumberLast4,
+      merchant: merchant ?? this.merchant,
+      refNumber: refNumber ?? this.refNumber,
+      balance: balance ?? this.balance,
+      suggestedCategoryId: suggestedCategoryId ?? this.suggestedCategoryId,
+      suggestedAccountId: suggestedAccountId ?? this.suggestedAccountId,
+      smsTimestamp: smsTimestamp ?? this.smsTimestamp,
+      status: status ?? this.status,
+      transactionId: transactionId ?? this.transactionId,
+      isSynced: isSynced ?? this.isSynced,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (syncId.present) {
+      map['sync_id'] = Variable<String>(syncId.value);
+    }
+    if (smsId.present) {
+      map['sms_id'] = Variable<String>(smsId.value);
+    }
+    if (sender.present) {
+      map['sender'] = Variable<String>(sender.value);
+    }
+    if (body.present) {
+      map['body'] = Variable<String>(body.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<double>(amount.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (paymentMode.present) {
+      map['payment_mode'] = Variable<String>(paymentMode.value);
+    }
+    if (bankName.present) {
+      map['bank_name'] = Variable<String>(bankName.value);
+    }
+    if (accountNumberLast4.present) {
+      map['account_number_last4'] = Variable<String>(accountNumberLast4.value);
+    }
+    if (merchant.present) {
+      map['merchant'] = Variable<String>(merchant.value);
+    }
+    if (refNumber.present) {
+      map['ref_number'] = Variable<String>(refNumber.value);
+    }
+    if (balance.present) {
+      map['balance'] = Variable<double>(balance.value);
+    }
+    if (suggestedCategoryId.present) {
+      map['suggested_category_id'] = Variable<int>(suggestedCategoryId.value);
+    }
+    if (suggestedAccountId.present) {
+      map['suggested_account_id'] = Variable<int>(suggestedAccountId.value);
+    }
+    if (smsTimestamp.present) {
+      map['sms_timestamp'] = Variable<DateTime>(smsTimestamp.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (transactionId.present) {
+      map['transaction_id'] = Variable<int>(transactionId.value);
+    }
+    if (isSynced.present) {
+      map['is_synced'] = Variable<bool>(isSynced.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SmsTransactionsCompanion(')
+          ..write('id: $id, ')
+          ..write('syncId: $syncId, ')
+          ..write('smsId: $smsId, ')
+          ..write('sender: $sender, ')
+          ..write('body: $body, ')
+          ..write('amount: $amount, ')
+          ..write('type: $type, ')
+          ..write('paymentMode: $paymentMode, ')
+          ..write('bankName: $bankName, ')
+          ..write('accountNumberLast4: $accountNumberLast4, ')
+          ..write('merchant: $merchant, ')
+          ..write('refNumber: $refNumber, ')
+          ..write('balance: $balance, ')
+          ..write('suggestedCategoryId: $suggestedCategoryId, ')
+          ..write('suggestedAccountId: $suggestedAccountId, ')
+          ..write('smsTimestamp: $smsTimestamp, ')
+          ..write('status: $status, ')
+          ..write('transactionId: $transactionId, ')
+          ..write('isSynced: $isSynced, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $CategoriesTable categories = $CategoriesTable(this);
   late final $GoalsTable goals = $GoalsTable(this);
+  late final $BankAccountsTable bankAccounts = $BankAccountsTable(this);
   late final $TransactionsTable transactions = $TransactionsTable(this);
   late final $UserSettingsTable userSettings = $UserSettingsTable(this);
   late final $GoalContributionsTable goalContributions =
@@ -4199,6 +6132,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CategorizationRulesTable categorizationRules =
       $CategorizationRulesTable(this);
   late final $AssetsTable assets = $AssetsTable(this);
+  late final $SmsTransactionsTable smsTransactions = $SmsTransactionsTable(
+    this,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4206,11 +6142,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     categories,
     goals,
+    bankAccounts,
     transactions,
     userSettings,
     goalContributions,
     categorizationRules,
     assets,
+    smsTransactions,
   ];
 }
 
@@ -4285,6 +6223,29 @@ final class $$CategoriesTableReferences
 
     final cache = $_typedResult.readTableOrNull(
       _categorizationRulesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$SmsTransactionsTable, List<SmsTransaction>>
+  _smsTransactionsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.smsTransactions,
+    aliasName: $_aliasNameGenerator(
+      db.categories.id,
+      db.smsTransactions.suggestedCategoryId,
+    ),
+  );
+
+  $$SmsTransactionsTableProcessedTableManager get smsTransactionsRefs {
+    final manager =
+        $$SmsTransactionsTableTableManager($_db, $_db.smsTransactions).filter(
+          (f) => f.suggestedCategoryId.id.sqlEquals($_itemColumn<int>('id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(
+      _smsTransactionsRefsTable($_db),
     );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
@@ -4387,6 +6348,31 @@ class $$CategoriesTableFilterComposer
           }) => $$CategorizationRulesTableFilterComposer(
             $db: $db,
             $table: $db.categorizationRules,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> smsTransactionsRefs(
+    Expression<bool> Function($$SmsTransactionsTableFilterComposer f) f,
+  ) {
+    final $$SmsTransactionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.smsTransactions,
+      getReferencedColumn: (t) => t.suggestedCategoryId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SmsTransactionsTableFilterComposer(
+            $db: $db,
+            $table: $db.smsTransactions,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -4540,6 +6526,31 @@ class $$CategoriesTableAnnotationComposer
         );
     return f(composer);
   }
+
+  Expression<T> smsTransactionsRefs<T extends Object>(
+    Expression<T> Function($$SmsTransactionsTableAnnotationComposer a) f,
+  ) {
+    final $$SmsTransactionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.smsTransactions,
+      getReferencedColumn: (t) => t.suggestedCategoryId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SmsTransactionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.smsTransactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$CategoriesTableTableManager
@@ -4558,6 +6569,7 @@ class $$CategoriesTableTableManager
           PrefetchHooks Function({
             bool transactionsRefs,
             bool categorizationRulesRefs,
+            bool smsTransactionsRefs,
           })
         > {
   $$CategoriesTableTableManager(_$AppDatabase db, $CategoriesTable table)
@@ -4624,12 +6636,17 @@ class $$CategoriesTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({transactionsRefs = false, categorizationRulesRefs = false}) {
+              ({
+                transactionsRefs = false,
+                categorizationRulesRefs = false,
+                smsTransactionsRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (transactionsRefs) db.transactions,
                     if (categorizationRulesRefs) db.categorizationRules,
+                    if (smsTransactionsRefs) db.smsTransactions,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -4676,6 +6693,27 @@ class $$CategoriesTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (smsTransactionsRefs)
+                        await $_getPrefetchedData<
+                          Category,
+                          $CategoriesTable,
+                          SmsTransaction
+                        >(
+                          currentTable: table,
+                          referencedTable: $$CategoriesTableReferences
+                              ._smsTransactionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$CategoriesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).smsTransactionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.suggestedCategoryId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -4699,6 +6737,7 @@ typedef $$CategoriesTableProcessedTableManager =
       PrefetchHooks Function({
         bool transactionsRefs,
         bool categorizationRulesRefs,
+        bool smsTransactionsRefs,
       })
     >;
 typedef $$GoalsTableCreateCompanionBuilder =
@@ -5221,6 +7260,544 @@ typedef $$GoalsTableProcessedTableManager =
         bool goalContributionsRefs,
       })
     >;
+typedef $$BankAccountsTableCreateCompanionBuilder =
+    BankAccountsCompanion Function({
+      Value<int> id,
+      Value<String?> syncId,
+      required String name,
+      required String bankName,
+      Value<String?> accountNumberLast4,
+      Value<String> accountType,
+      Value<double> balance,
+      Value<String?> colorHex,
+      Value<bool> isDefault,
+      Value<bool> isSynced,
+      Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
+    });
+typedef $$BankAccountsTableUpdateCompanionBuilder =
+    BankAccountsCompanion Function({
+      Value<int> id,
+      Value<String?> syncId,
+      Value<String> name,
+      Value<String> bankName,
+      Value<String?> accountNumberLast4,
+      Value<String> accountType,
+      Value<double> balance,
+      Value<String?> colorHex,
+      Value<bool> isDefault,
+      Value<bool> isSynced,
+      Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
+    });
+
+final class $$BankAccountsTableReferences
+    extends BaseReferences<_$AppDatabase, $BankAccountsTable, BankAccount> {
+  $$BankAccountsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$TransactionsTable, List<Transaction>>
+  _transactionsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.transactions,
+    aliasName: $_aliasNameGenerator(
+      db.bankAccounts.id,
+      db.transactions.accountId,
+    ),
+  );
+
+  $$TransactionsTableProcessedTableManager get transactionsRefs {
+    final manager = $$TransactionsTableTableManager(
+      $_db,
+      $_db.transactions,
+    ).filter((f) => f.accountId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_transactionsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$SmsTransactionsTable, List<SmsTransaction>>
+  _smsTransactionsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.smsTransactions,
+    aliasName: $_aliasNameGenerator(
+      db.bankAccounts.id,
+      db.smsTransactions.suggestedAccountId,
+    ),
+  );
+
+  $$SmsTransactionsTableProcessedTableManager get smsTransactionsRefs {
+    final manager =
+        $$SmsTransactionsTableTableManager($_db, $_db.smsTransactions).filter(
+          (f) => f.suggestedAccountId.id.sqlEquals($_itemColumn<int>('id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(
+      _smsTransactionsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$BankAccountsTableFilterComposer
+    extends Composer<_$AppDatabase, $BankAccountsTable> {
+  $$BankAccountsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncId => $composableBuilder(
+    column: $table.syncId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get bankName => $composableBuilder(
+    column: $table.bankName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accountNumberLast4 => $composableBuilder(
+    column: $table.accountNumberLast4,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accountType => $composableBuilder(
+    column: $table.accountType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get balance => $composableBuilder(
+    column: $table.balance,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get colorHex => $composableBuilder(
+    column: $table.colorHex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDefault => $composableBuilder(
+    column: $table.isDefault,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isSynced => $composableBuilder(
+    column: $table.isSynced,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> transactionsRefs(
+    Expression<bool> Function($$TransactionsTableFilterComposer f) f,
+  ) {
+    final $$TransactionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.transactions,
+      getReferencedColumn: (t) => t.accountId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransactionsTableFilterComposer(
+            $db: $db,
+            $table: $db.transactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> smsTransactionsRefs(
+    Expression<bool> Function($$SmsTransactionsTableFilterComposer f) f,
+  ) {
+    final $$SmsTransactionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.smsTransactions,
+      getReferencedColumn: (t) => t.suggestedAccountId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SmsTransactionsTableFilterComposer(
+            $db: $db,
+            $table: $db.smsTransactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$BankAccountsTableOrderingComposer
+    extends Composer<_$AppDatabase, $BankAccountsTable> {
+  $$BankAccountsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncId => $composableBuilder(
+    column: $table.syncId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get bankName => $composableBuilder(
+    column: $table.bankName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get accountNumberLast4 => $composableBuilder(
+    column: $table.accountNumberLast4,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get accountType => $composableBuilder(
+    column: $table.accountType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get balance => $composableBuilder(
+    column: $table.balance,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get colorHex => $composableBuilder(
+    column: $table.colorHex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDefault => $composableBuilder(
+    column: $table.isDefault,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isSynced => $composableBuilder(
+    column: $table.isSynced,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$BankAccountsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $BankAccountsTable> {
+  $$BankAccountsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get syncId =>
+      $composableBuilder(column: $table.syncId, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get bankName =>
+      $composableBuilder(column: $table.bankName, builder: (column) => column);
+
+  GeneratedColumn<String> get accountNumberLast4 => $composableBuilder(
+    column: $table.accountNumberLast4,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get accountType => $composableBuilder(
+    column: $table.accountType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get balance =>
+      $composableBuilder(column: $table.balance, builder: (column) => column);
+
+  GeneratedColumn<String> get colorHex =>
+      $composableBuilder(column: $table.colorHex, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDefault =>
+      $composableBuilder(column: $table.isDefault, builder: (column) => column);
+
+  GeneratedColumn<bool> get isSynced =>
+      $composableBuilder(column: $table.isSynced, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  Expression<T> transactionsRefs<T extends Object>(
+    Expression<T> Function($$TransactionsTableAnnotationComposer a) f,
+  ) {
+    final $$TransactionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.transactions,
+      getReferencedColumn: (t) => t.accountId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransactionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.transactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> smsTransactionsRefs<T extends Object>(
+    Expression<T> Function($$SmsTransactionsTableAnnotationComposer a) f,
+  ) {
+    final $$SmsTransactionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.smsTransactions,
+      getReferencedColumn: (t) => t.suggestedAccountId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SmsTransactionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.smsTransactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$BankAccountsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $BankAccountsTable,
+          BankAccount,
+          $$BankAccountsTableFilterComposer,
+          $$BankAccountsTableOrderingComposer,
+          $$BankAccountsTableAnnotationComposer,
+          $$BankAccountsTableCreateCompanionBuilder,
+          $$BankAccountsTableUpdateCompanionBuilder,
+          (BankAccount, $$BankAccountsTableReferences),
+          BankAccount,
+          PrefetchHooks Function({
+            bool transactionsRefs,
+            bool smsTransactionsRefs,
+          })
+        > {
+  $$BankAccountsTableTableManager(_$AppDatabase db, $BankAccountsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$BankAccountsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$BankAccountsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$BankAccountsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String?> syncId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> bankName = const Value.absent(),
+                Value<String?> accountNumberLast4 = const Value.absent(),
+                Value<String> accountType = const Value.absent(),
+                Value<double> balance = const Value.absent(),
+                Value<String?> colorHex = const Value.absent(),
+                Value<bool> isDefault = const Value.absent(),
+                Value<bool> isSynced = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
+              }) => BankAccountsCompanion(
+                id: id,
+                syncId: syncId,
+                name: name,
+                bankName: bankName,
+                accountNumberLast4: accountNumberLast4,
+                accountType: accountType,
+                balance: balance,
+                colorHex: colorHex,
+                isDefault: isDefault,
+                isSynced: isSynced,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String?> syncId = const Value.absent(),
+                required String name,
+                required String bankName,
+                Value<String?> accountNumberLast4 = const Value.absent(),
+                Value<String> accountType = const Value.absent(),
+                Value<double> balance = const Value.absent(),
+                Value<String?> colorHex = const Value.absent(),
+                Value<bool> isDefault = const Value.absent(),
+                Value<bool> isSynced = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
+              }) => BankAccountsCompanion.insert(
+                id: id,
+                syncId: syncId,
+                name: name,
+                bankName: bankName,
+                accountNumberLast4: accountNumberLast4,
+                accountType: accountType,
+                balance: balance,
+                colorHex: colorHex,
+                isDefault: isDefault,
+                isSynced: isSynced,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$BankAccountsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({transactionsRefs = false, smsTransactionsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (transactionsRefs) db.transactions,
+                    if (smsTransactionsRefs) db.smsTransactions,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (transactionsRefs)
+                        await $_getPrefetchedData<
+                          BankAccount,
+                          $BankAccountsTable,
+                          Transaction
+                        >(
+                          currentTable: table,
+                          referencedTable: $$BankAccountsTableReferences
+                              ._transactionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BankAccountsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).transactionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.accountId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (smsTransactionsRefs)
+                        await $_getPrefetchedData<
+                          BankAccount,
+                          $BankAccountsTable,
+                          SmsTransaction
+                        >(
+                          currentTable: table,
+                          referencedTable: $$BankAccountsTableReferences
+                              ._smsTransactionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BankAccountsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).smsTransactionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.suggestedAccountId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$BankAccountsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $BankAccountsTable,
+      BankAccount,
+      $$BankAccountsTableFilterComposer,
+      $$BankAccountsTableOrderingComposer,
+      $$BankAccountsTableAnnotationComposer,
+      $$BankAccountsTableCreateCompanionBuilder,
+      $$BankAccountsTableUpdateCompanionBuilder,
+      (BankAccount, $$BankAccountsTableReferences),
+      BankAccount,
+      PrefetchHooks Function({bool transactionsRefs, bool smsTransactionsRefs})
+    >;
 typedef $$TransactionsTableCreateCompanionBuilder =
     TransactionsCompanion Function({
       Value<int> id,
@@ -5229,6 +7806,7 @@ typedef $$TransactionsTableCreateCompanionBuilder =
       required String type,
       required int categoryId,
       Value<int?> goalId,
+      Value<int?> accountId,
       required DateTime timestamp,
       Value<String?> note,
       Value<String?> paymentMode,
@@ -5246,6 +7824,7 @@ typedef $$TransactionsTableUpdateCompanionBuilder =
       Value<String> type,
       Value<int> categoryId,
       Value<int?> goalId,
+      Value<int?> accountId,
       Value<DateTime> timestamp,
       Value<String?> note,
       Value<String?> paymentMode,
@@ -5294,6 +7873,48 @@ final class $$TransactionsTableReferences
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $BankAccountsTable _accountIdTable(_$AppDatabase db) =>
+      db.bankAccounts.createAlias(
+        $_aliasNameGenerator(db.transactions.accountId, db.bankAccounts.id),
+      );
+
+  $$BankAccountsTableProcessedTableManager? get accountId {
+    final $_column = $_itemColumn<int>('account_id');
+    if ($_column == null) return null;
+    final manager = $$BankAccountsTableTableManager(
+      $_db,
+      $_db.bankAccounts,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_accountIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$SmsTransactionsTable, List<SmsTransaction>>
+  _smsTransactionsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.smsTransactions,
+    aliasName: $_aliasNameGenerator(
+      db.transactions.id,
+      db.smsTransactions.transactionId,
+    ),
+  );
+
+  $$SmsTransactionsTableProcessedTableManager get smsTransactionsRefs {
+    final manager = $$SmsTransactionsTableTableManager(
+      $_db,
+      $_db.smsTransactions,
+    ).filter((f) => f.transactionId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _smsTransactionsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
     );
   }
 }
@@ -5412,6 +8033,54 @@ class $$TransactionsTableFilterComposer
     );
     return composer;
   }
+
+  $$BankAccountsTableFilterComposer get accountId {
+    final $$BankAccountsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.accountId,
+      referencedTable: $db.bankAccounts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BankAccountsTableFilterComposer(
+            $db: $db,
+            $table: $db.bankAccounts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> smsTransactionsRefs(
+    Expression<bool> Function($$SmsTransactionsTableFilterComposer f) f,
+  ) {
+    final $$SmsTransactionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.smsTransactions,
+      getReferencedColumn: (t) => t.transactionId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SmsTransactionsTableFilterComposer(
+            $db: $db,
+            $table: $db.smsTransactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$TransactionsTableOrderingComposer
@@ -5528,6 +8197,29 @@ class $$TransactionsTableOrderingComposer
     );
     return composer;
   }
+
+  $$BankAccountsTableOrderingComposer get accountId {
+    final $$BankAccountsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.accountId,
+      referencedTable: $db.bankAccounts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BankAccountsTableOrderingComposer(
+            $db: $db,
+            $table: $db.bankAccounts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$TransactionsTableAnnotationComposer
@@ -5626,6 +8318,54 @@ class $$TransactionsTableAnnotationComposer
     );
     return composer;
   }
+
+  $$BankAccountsTableAnnotationComposer get accountId {
+    final $$BankAccountsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.accountId,
+      referencedTable: $db.bankAccounts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BankAccountsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.bankAccounts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> smsTransactionsRefs<T extends Object>(
+    Expression<T> Function($$SmsTransactionsTableAnnotationComposer a) f,
+  ) {
+    final $$SmsTransactionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.smsTransactions,
+      getReferencedColumn: (t) => t.transactionId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SmsTransactionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.smsTransactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$TransactionsTableTableManager
@@ -5641,7 +8381,12 @@ class $$TransactionsTableTableManager
           $$TransactionsTableUpdateCompanionBuilder,
           (Transaction, $$TransactionsTableReferences),
           Transaction,
-          PrefetchHooks Function({bool categoryId, bool goalId})
+          PrefetchHooks Function({
+            bool categoryId,
+            bool goalId,
+            bool accountId,
+            bool smsTransactionsRefs,
+          })
         > {
   $$TransactionsTableTableManager(_$AppDatabase db, $TransactionsTable table)
     : super(
@@ -5662,6 +8407,7 @@ class $$TransactionsTableTableManager
                 Value<String> type = const Value.absent(),
                 Value<int> categoryId = const Value.absent(),
                 Value<int?> goalId = const Value.absent(),
+                Value<int?> accountId = const Value.absent(),
                 Value<DateTime> timestamp = const Value.absent(),
                 Value<String?> note = const Value.absent(),
                 Value<String?> paymentMode = const Value.absent(),
@@ -5677,6 +8423,7 @@ class $$TransactionsTableTableManager
                 type: type,
                 categoryId: categoryId,
                 goalId: goalId,
+                accountId: accountId,
                 timestamp: timestamp,
                 note: note,
                 paymentMode: paymentMode,
@@ -5694,6 +8441,7 @@ class $$TransactionsTableTableManager
                 required String type,
                 required int categoryId,
                 Value<int?> goalId = const Value.absent(),
+                Value<int?> accountId = const Value.absent(),
                 required DateTime timestamp,
                 Value<String?> note = const Value.absent(),
                 Value<String?> paymentMode = const Value.absent(),
@@ -5709,6 +8457,7 @@ class $$TransactionsTableTableManager
                 type: type,
                 categoryId: categoryId,
                 goalId: goalId,
+                accountId: accountId,
                 timestamp: timestamp,
                 note: note,
                 paymentMode: paymentMode,
@@ -5726,60 +8475,109 @@ class $$TransactionsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({categoryId = false, goalId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (categoryId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.categoryId,
-                                referencedTable: $$TransactionsTableReferences
-                                    ._categoryIdTable(db),
-                                referencedColumn: $$TransactionsTableReferences
-                                    ._categoryIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
-                    if (goalId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.goalId,
-                                referencedTable: $$TransactionsTableReferences
-                                    ._goalIdTable(db),
-                                referencedColumn: $$TransactionsTableReferences
-                                    ._goalIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
+          prefetchHooksCallback:
+              ({
+                categoryId = false,
+                goalId = false,
+                accountId = false,
+                smsTransactionsRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (smsTransactionsRefs) db.smsTransactions,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (categoryId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.categoryId,
+                                    referencedTable:
+                                        $$TransactionsTableReferences
+                                            ._categoryIdTable(db),
+                                    referencedColumn:
+                                        $$TransactionsTableReferences
+                                            ._categoryIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (goalId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.goalId,
+                                    referencedTable:
+                                        $$TransactionsTableReferences
+                                            ._goalIdTable(db),
+                                    referencedColumn:
+                                        $$TransactionsTableReferences
+                                            ._goalIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (accountId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.accountId,
+                                    referencedTable:
+                                        $$TransactionsTableReferences
+                                            ._accountIdTable(db),
+                                    referencedColumn:
+                                        $$TransactionsTableReferences
+                                            ._accountIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
 
-                    return state;
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (smsTransactionsRefs)
+                        await $_getPrefetchedData<
+                          Transaction,
+                          $TransactionsTable,
+                          SmsTransaction
+                        >(
+                          currentTable: table,
+                          referencedTable: $$TransactionsTableReferences
+                              ._smsTransactionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$TransactionsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).smsTransactionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.transactionId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
                   },
-              getPrefetchedDataCallback: (items) async {
-                return [];
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -5796,7 +8594,12 @@ typedef $$TransactionsTableProcessedTableManager =
       $$TransactionsTableUpdateCompanionBuilder,
       (Transaction, $$TransactionsTableReferences),
       Transaction,
-      PrefetchHooks Function({bool categoryId, bool goalId})
+      PrefetchHooks Function({
+        bool categoryId,
+        bool goalId,
+        bool accountId,
+        bool smsTransactionsRefs,
+      })
     >;
 typedef $$UserSettingsTableCreateCompanionBuilder =
     UserSettingsCompanion Function({
@@ -7138,6 +9941,840 @@ typedef $$AssetsTableProcessedTableManager =
       Asset,
       PrefetchHooks Function()
     >;
+typedef $$SmsTransactionsTableCreateCompanionBuilder =
+    SmsTransactionsCompanion Function({
+      Value<int> id,
+      Value<String?> syncId,
+      required String smsId,
+      required String sender,
+      required String body,
+      required double amount,
+      required String type,
+      Value<String?> paymentMode,
+      Value<String?> bankName,
+      Value<String?> accountNumberLast4,
+      Value<String?> merchant,
+      Value<String?> refNumber,
+      Value<double?> balance,
+      Value<int?> suggestedCategoryId,
+      Value<int?> suggestedAccountId,
+      required DateTime smsTimestamp,
+      Value<String> status,
+      Value<int?> transactionId,
+      Value<bool> isSynced,
+      Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
+    });
+typedef $$SmsTransactionsTableUpdateCompanionBuilder =
+    SmsTransactionsCompanion Function({
+      Value<int> id,
+      Value<String?> syncId,
+      Value<String> smsId,
+      Value<String> sender,
+      Value<String> body,
+      Value<double> amount,
+      Value<String> type,
+      Value<String?> paymentMode,
+      Value<String?> bankName,
+      Value<String?> accountNumberLast4,
+      Value<String?> merchant,
+      Value<String?> refNumber,
+      Value<double?> balance,
+      Value<int?> suggestedCategoryId,
+      Value<int?> suggestedAccountId,
+      Value<DateTime> smsTimestamp,
+      Value<String> status,
+      Value<int?> transactionId,
+      Value<bool> isSynced,
+      Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
+    });
+
+final class $$SmsTransactionsTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $SmsTransactionsTable, SmsTransaction> {
+  $$SmsTransactionsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $CategoriesTable _suggestedCategoryIdTable(_$AppDatabase db) =>
+      db.categories.createAlias(
+        $_aliasNameGenerator(
+          db.smsTransactions.suggestedCategoryId,
+          db.categories.id,
+        ),
+      );
+
+  $$CategoriesTableProcessedTableManager? get suggestedCategoryId {
+    final $_column = $_itemColumn<int>('suggested_category_id');
+    if ($_column == null) return null;
+    final manager = $$CategoriesTableTableManager(
+      $_db,
+      $_db.categories,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_suggestedCategoryIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $BankAccountsTable _suggestedAccountIdTable(_$AppDatabase db) =>
+      db.bankAccounts.createAlias(
+        $_aliasNameGenerator(
+          db.smsTransactions.suggestedAccountId,
+          db.bankAccounts.id,
+        ),
+      );
+
+  $$BankAccountsTableProcessedTableManager? get suggestedAccountId {
+    final $_column = $_itemColumn<int>('suggested_account_id');
+    if ($_column == null) return null;
+    final manager = $$BankAccountsTableTableManager(
+      $_db,
+      $_db.bankAccounts,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_suggestedAccountIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $TransactionsTable _transactionIdTable(_$AppDatabase db) =>
+      db.transactions.createAlias(
+        $_aliasNameGenerator(
+          db.smsTransactions.transactionId,
+          db.transactions.id,
+        ),
+      );
+
+  $$TransactionsTableProcessedTableManager? get transactionId {
+    final $_column = $_itemColumn<int>('transaction_id');
+    if ($_column == null) return null;
+    final manager = $$TransactionsTableTableManager(
+      $_db,
+      $_db.transactions,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_transactionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$SmsTransactionsTableFilterComposer
+    extends Composer<_$AppDatabase, $SmsTransactionsTable> {
+  $$SmsTransactionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncId => $composableBuilder(
+    column: $table.syncId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get smsId => $composableBuilder(
+    column: $table.smsId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sender => $composableBuilder(
+    column: $table.sender,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get body => $composableBuilder(
+    column: $table.body,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get paymentMode => $composableBuilder(
+    column: $table.paymentMode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get bankName => $composableBuilder(
+    column: $table.bankName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accountNumberLast4 => $composableBuilder(
+    column: $table.accountNumberLast4,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get merchant => $composableBuilder(
+    column: $table.merchant,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get refNumber => $composableBuilder(
+    column: $table.refNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get balance => $composableBuilder(
+    column: $table.balance,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get smsTimestamp => $composableBuilder(
+    column: $table.smsTimestamp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isSynced => $composableBuilder(
+    column: $table.isSynced,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$CategoriesTableFilterComposer get suggestedCategoryId {
+    final $$CategoriesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.suggestedCategoryId,
+      referencedTable: $db.categories,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoriesTableFilterComposer(
+            $db: $db,
+            $table: $db.categories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BankAccountsTableFilterComposer get suggestedAccountId {
+    final $$BankAccountsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.suggestedAccountId,
+      referencedTable: $db.bankAccounts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BankAccountsTableFilterComposer(
+            $db: $db,
+            $table: $db.bankAccounts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$TransactionsTableFilterComposer get transactionId {
+    final $$TransactionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.transactionId,
+      referencedTable: $db.transactions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransactionsTableFilterComposer(
+            $db: $db,
+            $table: $db.transactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SmsTransactionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SmsTransactionsTable> {
+  $$SmsTransactionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncId => $composableBuilder(
+    column: $table.syncId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get smsId => $composableBuilder(
+    column: $table.smsId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sender => $composableBuilder(
+    column: $table.sender,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get body => $composableBuilder(
+    column: $table.body,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get paymentMode => $composableBuilder(
+    column: $table.paymentMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get bankName => $composableBuilder(
+    column: $table.bankName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get accountNumberLast4 => $composableBuilder(
+    column: $table.accountNumberLast4,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get merchant => $composableBuilder(
+    column: $table.merchant,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get refNumber => $composableBuilder(
+    column: $table.refNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get balance => $composableBuilder(
+    column: $table.balance,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get smsTimestamp => $composableBuilder(
+    column: $table.smsTimestamp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isSynced => $composableBuilder(
+    column: $table.isSynced,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$CategoriesTableOrderingComposer get suggestedCategoryId {
+    final $$CategoriesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.suggestedCategoryId,
+      referencedTable: $db.categories,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoriesTableOrderingComposer(
+            $db: $db,
+            $table: $db.categories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BankAccountsTableOrderingComposer get suggestedAccountId {
+    final $$BankAccountsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.suggestedAccountId,
+      referencedTable: $db.bankAccounts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BankAccountsTableOrderingComposer(
+            $db: $db,
+            $table: $db.bankAccounts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$TransactionsTableOrderingComposer get transactionId {
+    final $$TransactionsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.transactionId,
+      referencedTable: $db.transactions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransactionsTableOrderingComposer(
+            $db: $db,
+            $table: $db.transactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SmsTransactionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SmsTransactionsTable> {
+  $$SmsTransactionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get syncId =>
+      $composableBuilder(column: $table.syncId, builder: (column) => column);
+
+  GeneratedColumn<String> get smsId =>
+      $composableBuilder(column: $table.smsId, builder: (column) => column);
+
+  GeneratedColumn<String> get sender =>
+      $composableBuilder(column: $table.sender, builder: (column) => column);
+
+  GeneratedColumn<String> get body =>
+      $composableBuilder(column: $table.body, builder: (column) => column);
+
+  GeneratedColumn<double> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get paymentMode => $composableBuilder(
+    column: $table.paymentMode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get bankName =>
+      $composableBuilder(column: $table.bankName, builder: (column) => column);
+
+  GeneratedColumn<String> get accountNumberLast4 => $composableBuilder(
+    column: $table.accountNumberLast4,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get merchant =>
+      $composableBuilder(column: $table.merchant, builder: (column) => column);
+
+  GeneratedColumn<String> get refNumber =>
+      $composableBuilder(column: $table.refNumber, builder: (column) => column);
+
+  GeneratedColumn<double> get balance =>
+      $composableBuilder(column: $table.balance, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get smsTimestamp => $composableBuilder(
+    column: $table.smsTimestamp,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<bool> get isSynced =>
+      $composableBuilder(column: $table.isSynced, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$CategoriesTableAnnotationComposer get suggestedCategoryId {
+    final $$CategoriesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.suggestedCategoryId,
+      referencedTable: $db.categories,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoriesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.categories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BankAccountsTableAnnotationComposer get suggestedAccountId {
+    final $$BankAccountsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.suggestedAccountId,
+      referencedTable: $db.bankAccounts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BankAccountsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.bankAccounts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$TransactionsTableAnnotationComposer get transactionId {
+    final $$TransactionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.transactionId,
+      referencedTable: $db.transactions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransactionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.transactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SmsTransactionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SmsTransactionsTable,
+          SmsTransaction,
+          $$SmsTransactionsTableFilterComposer,
+          $$SmsTransactionsTableOrderingComposer,
+          $$SmsTransactionsTableAnnotationComposer,
+          $$SmsTransactionsTableCreateCompanionBuilder,
+          $$SmsTransactionsTableUpdateCompanionBuilder,
+          (SmsTransaction, $$SmsTransactionsTableReferences),
+          SmsTransaction,
+          PrefetchHooks Function({
+            bool suggestedCategoryId,
+            bool suggestedAccountId,
+            bool transactionId,
+          })
+        > {
+  $$SmsTransactionsTableTableManager(
+    _$AppDatabase db,
+    $SmsTransactionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SmsTransactionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SmsTransactionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SmsTransactionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String?> syncId = const Value.absent(),
+                Value<String> smsId = const Value.absent(),
+                Value<String> sender = const Value.absent(),
+                Value<String> body = const Value.absent(),
+                Value<double> amount = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<String?> paymentMode = const Value.absent(),
+                Value<String?> bankName = const Value.absent(),
+                Value<String?> accountNumberLast4 = const Value.absent(),
+                Value<String?> merchant = const Value.absent(),
+                Value<String?> refNumber = const Value.absent(),
+                Value<double?> balance = const Value.absent(),
+                Value<int?> suggestedCategoryId = const Value.absent(),
+                Value<int?> suggestedAccountId = const Value.absent(),
+                Value<DateTime> smsTimestamp = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int?> transactionId = const Value.absent(),
+                Value<bool> isSynced = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
+              }) => SmsTransactionsCompanion(
+                id: id,
+                syncId: syncId,
+                smsId: smsId,
+                sender: sender,
+                body: body,
+                amount: amount,
+                type: type,
+                paymentMode: paymentMode,
+                bankName: bankName,
+                accountNumberLast4: accountNumberLast4,
+                merchant: merchant,
+                refNumber: refNumber,
+                balance: balance,
+                suggestedCategoryId: suggestedCategoryId,
+                suggestedAccountId: suggestedAccountId,
+                smsTimestamp: smsTimestamp,
+                status: status,
+                transactionId: transactionId,
+                isSynced: isSynced,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String?> syncId = const Value.absent(),
+                required String smsId,
+                required String sender,
+                required String body,
+                required double amount,
+                required String type,
+                Value<String?> paymentMode = const Value.absent(),
+                Value<String?> bankName = const Value.absent(),
+                Value<String?> accountNumberLast4 = const Value.absent(),
+                Value<String?> merchant = const Value.absent(),
+                Value<String?> refNumber = const Value.absent(),
+                Value<double?> balance = const Value.absent(),
+                Value<int?> suggestedCategoryId = const Value.absent(),
+                Value<int?> suggestedAccountId = const Value.absent(),
+                required DateTime smsTimestamp,
+                Value<String> status = const Value.absent(),
+                Value<int?> transactionId = const Value.absent(),
+                Value<bool> isSynced = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
+              }) => SmsTransactionsCompanion.insert(
+                id: id,
+                syncId: syncId,
+                smsId: smsId,
+                sender: sender,
+                body: body,
+                amount: amount,
+                type: type,
+                paymentMode: paymentMode,
+                bankName: bankName,
+                accountNumberLast4: accountNumberLast4,
+                merchant: merchant,
+                refNumber: refNumber,
+                balance: balance,
+                suggestedCategoryId: suggestedCategoryId,
+                suggestedAccountId: suggestedAccountId,
+                smsTimestamp: smsTimestamp,
+                status: status,
+                transactionId: transactionId,
+                isSynced: isSynced,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$SmsTransactionsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({
+                suggestedCategoryId = false,
+                suggestedAccountId = false,
+                transactionId = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (suggestedCategoryId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.suggestedCategoryId,
+                                    referencedTable:
+                                        $$SmsTransactionsTableReferences
+                                            ._suggestedCategoryIdTable(db),
+                                    referencedColumn:
+                                        $$SmsTransactionsTableReferences
+                                            ._suggestedCategoryIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (suggestedAccountId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.suggestedAccountId,
+                                    referencedTable:
+                                        $$SmsTransactionsTableReferences
+                                            ._suggestedAccountIdTable(db),
+                                    referencedColumn:
+                                        $$SmsTransactionsTableReferences
+                                            ._suggestedAccountIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (transactionId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.transactionId,
+                                    referencedTable:
+                                        $$SmsTransactionsTableReferences
+                                            ._transactionIdTable(db),
+                                    referencedColumn:
+                                        $$SmsTransactionsTableReferences
+                                            ._transactionIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$SmsTransactionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SmsTransactionsTable,
+      SmsTransaction,
+      $$SmsTransactionsTableFilterComposer,
+      $$SmsTransactionsTableOrderingComposer,
+      $$SmsTransactionsTableAnnotationComposer,
+      $$SmsTransactionsTableCreateCompanionBuilder,
+      $$SmsTransactionsTableUpdateCompanionBuilder,
+      (SmsTransaction, $$SmsTransactionsTableReferences),
+      SmsTransaction,
+      PrefetchHooks Function({
+        bool suggestedCategoryId,
+        bool suggestedAccountId,
+        bool transactionId,
+      })
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -7146,6 +10783,8 @@ class $AppDatabaseManager {
       $$CategoriesTableTableManager(_db, _db.categories);
   $$GoalsTableTableManager get goals =>
       $$GoalsTableTableManager(_db, _db.goals);
+  $$BankAccountsTableTableManager get bankAccounts =>
+      $$BankAccountsTableTableManager(_db, _db.bankAccounts);
   $$TransactionsTableTableManager get transactions =>
       $$TransactionsTableTableManager(_db, _db.transactions);
   $$UserSettingsTableTableManager get userSettings =>
@@ -7156,4 +10795,6 @@ class $AppDatabaseManager {
       $$CategorizationRulesTableTableManager(_db, _db.categorizationRules);
   $$AssetsTableTableManager get assets =>
       $$AssetsTableTableManager(_db, _db.assets);
+  $$SmsTransactionsTableTableManager get smsTransactions =>
+      $$SmsTransactionsTableTableManager(_db, _db.smsTransactions);
 }

@@ -187,21 +187,6 @@ export const OnboardingPage = {
             isOnboarded: true
           });
         }
-
-        // Create Salary Income transaction for 1st of the current month
-        const salaryCat = StateManager.state.categories.find(c => c.name === 'Salary');
-        if (salaryCat) {
-          const now = new Date();
-          const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-          await DbService.addTransaction({
-            amount: income,
-            type: 'income',
-            categoryId: salaryCat.id || salaryCat.sync_id,
-            timestamp: firstOfMonth,
-            note: 'Monthly Salary',
-            isRecurring: true
-          });
-        }
         
         this.step = 0;
         this.incomeInputVal = '';
