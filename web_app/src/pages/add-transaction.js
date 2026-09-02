@@ -150,17 +150,35 @@ export const AddTransactionModal = {
             </div>
           </div>
 
+          <!-- Bank Account Selector -->
+          ${(state.bankAccounts || []).length > 0 ? `
+            <div class="form-group">
+              <label class="form-label">Bank Account / Card</label>
+              <select class="form-control" id="tx-account-select">
+                <option value="">No Account Linked</option>
+                ${(state.bankAccounts || []).map(acc => {
+                  const isSelected = String(this.activeTx?.accountId || this.activeTx?.account_id) === String(acc.sync_id || acc.id);
+                  return `
+                    <option value="${acc.sync_id || acc.id}" ${isSelected ? 'selected' : ''}>
+                      ${acc.name} (${acc.bank_name || 'Bank'}) • ₹${(acc.balance || 0).toLocaleString()}
+                    </option>
+                  `;
+                }).join('')}
+              </select>
+            </div>
+          ` : ''}
+
           <!-- Additional Options (Goal link & Recurring) -->
           <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding: 10px 14px; background: var(--bg-surface-subtle); border-radius: var(--radius-md); border: 1px solid var(--glass-border);">
             <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); cursor: pointer;">
-              <input type="checkbox" id="tx-recurring-check" ${this.activeTx?.isRecurring ? 'checked' : ''}>
+              <input type="checkbox" id="tx-recurring-check" ${this.activeTx?.isRecurring || this.activeTx?.is_recurring ? 'checked' : ''}>
               <span>Recurring Monthly Transaction</span>
             </label>
 
             ${goals.length > 0 ? `
               <select class="form-control" id="tx-goal-link-select" style="width: auto; padding: 6px 32px 6px 10px; font-size: 12px;">
                 <option value="">No Goal Linked</option>
-                ${goals.map(g => `<option value="${g.id || g.sync_id}" ${String(this.activeTx?.goalId) === String(g.id || g.sync_id) ? 'selected' : ''}>${g.name}</option>`).join('')}
+                ${goals.map(g => `<option value="${g.id || g.sync_id}" ${String(this.activeTx?.goalId || this.activeTx?.goal_id) === String(g.id || g.sync_id) ? 'selected' : ''}>${g.name}</option>`).join('')}
               </select>
             ` : ''}
           </div>
@@ -305,6 +323,7 @@ export const AddTransactionModal = {
         const paymentMode = this.paymentMode || 'Cash';
         const isRecurring = document.getElementById('tx-recurring-check')?.checked || false;
         const goalId = document.getElementById('tx-goal-link-select')?.value || null;
+        const accountId = document.getElementById('tx-account-select')?.value || null;
 
         if (isNaN(amount) || amount <= 0) {
           alert('Please enter a valid transaction amount.');
@@ -317,6 +336,7 @@ export const AddTransactionModal = {
 
         const cleanCatId = /^\d+$/.test(String(this.selectedCategoryId)) ? parseInt(this.selectedCategoryId, 10) : (this.selectedCategoryId || 1);
         const cleanGoalId = goalId ? (/^\d+$/.test(String(goalId)) ? parseInt(goalId, 10) : goalId) : null;
+        const cleanAccountId = accountId ? (/^\d+$/.test(String(accountId)) ? parseInt(accountId, 10) : accountId) : null;
 
         const txPayload = {
           amount,
@@ -331,6 +351,8 @@ export const AddTransactionModal = {
           is_recurring: isRecurring,
           goalId: cleanGoalId,
           goal_id: cleanGoalId,
+          accountId: cleanAccountId,
+          account_id: cleanAccountId,
         };
 
         if (this.activeTx) {

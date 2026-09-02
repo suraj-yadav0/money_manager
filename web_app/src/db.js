@@ -142,10 +142,36 @@ function normalizeCategory(raw, docId) {
   };
 }
 
+function normalizeBankAccount(raw, docId) {
+  const syncId = raw.sync_id || docId;
+  const isDefault = raw.is_default !== undefined ? Boolean(raw.is_default) : Boolean(raw.isDefault);
+
+  return {
+    ...raw,
+    sync_id: syncId,
+    id: raw.id !== undefined ? raw.id : syncId,
+    name: raw.name || 'Bank Account',
+    bank_name: raw.bank_name || raw.bankName || 'Bank',
+    bankName: raw.bank_name || raw.bankName || 'Bank',
+    account_number_last4: raw.account_number_last4 || raw.accountNumberLast4 || null,
+    accountNumberLast4: raw.account_number_last4 || raw.accountNumberLast4 || null,
+    account_type: raw.account_type || raw.accountType || 'savings',
+    accountType: raw.account_type || raw.accountType || 'savings',
+    balance: Number(raw.balance || 0),
+    color_hex: raw.color_hex || raw.colorHex || null,
+    colorHex: raw.color_hex || raw.colorHex || null,
+    is_default: isDefault,
+    isDefault: isDefault,
+    created_at: parseTimestamp(raw.created_at || raw.createdAt),
+    updated_at: parseTimestamp(raw.updated_at || raw.updatedAt)
+  };
+}
+
 function normalizeTransaction(raw, docId) {
   const syncId = raw.sync_id || docId;
   const categoryId = raw.category_id !== undefined ? raw.category_id : raw.categoryId;
   const goalId = raw.goal_id !== undefined ? raw.goal_id : raw.goalId;
+  const accountId = raw.account_id !== undefined ? raw.account_id : raw.accountId;
   const paymentMode = raw.payment_mode || raw.paymentMode || 'Cash';
   const isRecurring = raw.is_recurring !== undefined ? Boolean(raw.is_recurring) : Boolean(raw.isRecurring);
 
@@ -158,6 +184,8 @@ function normalizeTransaction(raw, docId) {
     category_id: categoryId,
     goalId,
     goal_id: goalId,
+    accountId: accountId || null,
+    account_id: accountId || null,
     timestamp: parseTimestamp(raw.timestamp),
     note: raw.note || '',
     paymentMode,
@@ -398,6 +426,19 @@ export const DbService = {
       console.error('[Quantro Sync] Firestore assets error:', err);
     });
     activeListeners.push(unsubAssets);
+
+    // 9. Bank Accounts listener
+    const unsubBankAccounts = onSnapshot(collection(db, 'users', userId, 'bank_accounts'), (snapshot) => {
+      const bankAccounts = snapshot.docs.map(d => normalizeBankAccount(d.data(), d.id));
+      StateManager.setState({ 
+        bankAccounts: bankAccounts,
+        syncStatus: 'synced',
+        lastSyncedAt: new Date().toISOString()
+      });
+    }, (err) => {
+      console.error('[Quantro Sync] Firestore bank_accounts error:', err);
+    });
+    activeListeners.push(unsubBankAccounts);
   },
 
   // Stop all active real-time listeners (e.g. on sign out)
@@ -426,7 +467,7 @@ export const DbService = {
     StateManager.setState({ syncStatus: 'syncing' });
 
     try {
-      const [settingsSnap, catSnap, txSnap, goalsSnap, contribSnap, rulesSnap, assetsSnap] = await Promise.all([
+      const [settingsSnap, catSnap, txSnap, goalsSnap, contribSnap, rulesSnap, assetsSnap, bankAccountsSnap] = await Promise.all([
         getDocs(collection(db, 'users', userId, 'user_settings')),
         getDocs(collection(db, 'users', userId, 'categories')),
         getDocs(collection(db, 'users', userId, 'transactions')),
@@ -434,6 +475,7 @@ export const DbService = {
         getDocs(collection(db, 'users', userId, 'goal_contributions')),
         getDocs(collection(db, 'users', userId, 'categorization_rules')),
         getDocs(collection(db, 'users', userId, 'assets')),
+        getDocs(collection(db, 'users', userId, 'bank_accounts')),
       ]);
 
       const updates = {
@@ -454,10 +496,11 @@ export const DbService = {
       updates.categorizationRules = rulesSnap.docs.map(d => normalizeRule(d.data(), d.id));
       const rawAssets = assetsSnap.docs.map(d => normalizeAsset(d.data(), d.id));
       updates.assets = deduplicateAssets(rawAssets, userId);
+      updates.bankAccounts = bankAccountsSnap.docs.map(d => normalizeBankAccount(d.data(), d.id));
 
       StateManager.setState(updates);
 
-      console.log(`[Quantro Sync] syncNow completed: ${updates.transactions.length} txs, ${updates.goals.length} goals, ${(updates.categories || []).length} categories`);
+      console.log(`[Quantro Sync] syncNow completed: ${updates.transactions.length} txs, ${updates.goals.length} goals, ${(updates.bankAccounts || []).length} accounts`);
 
       return {
         success: true,
@@ -727,6 +770,7 @@ export const DbService = {
         }
         await this.syncGoalProgressForTransaction(oldTx, newTx);
         await this.syncInvestmentAssetForTransaction(oldTx, newTx);
+        await this.syncBankAccountForTransaction(oldTx, newTx);
         StateManager.saveGuestState();
         StateManager.notify();
       } else {
@@ -749,6 +793,7 @@ export const DbService = {
 
         await this.syncGoalProgressForTransaction(oldTx, newTx);
         await this.syncInvestmentAssetForTransaction(oldTx, newTx);
+        await this.syncBankAccountForTransaction(oldTx, newTx);
         StateManager.notify();
 
         const docRef = doc(db, 'users', userId, 'transactions', syncId);
@@ -913,6 +958,132 @@ export const DbService = {
     }
   },
 
+  async syncBankAccountForTransaction(oldTx, newTx) {
+    try {
+      const accounts = StateManager.state.bankAccounts || [];
+      if (accounts.length === 0) return;
+
+      // Case 1: Revert old transaction amount from old account
+      if (oldTx && (oldTx.account_id || oldTx.accountId)) {
+        const targetId = String(oldTx.account_id || oldTx.accountId);
+        const oldAcc = accounts.find(a => (a.sync_id && String(a.sync_id) === targetId) || String(a.id) === targetId);
+        if (oldAcc) {
+          const oldAmount = Number(oldTx.amount || 0);
+          const rollbackBal = oldTx.type === 'income' ? oldAcc.balance - oldAmount : oldAcc.balance + oldAmount;
+          await this.updateBankAccount(oldAcc.sync_id || oldAcc.id, { balance: rollbackBal });
+        }
+      }
+
+      // Case 2: Apply new transaction amount to new account
+      if (newTx && (newTx.account_id || newTx.accountId)) {
+        const targetId = String(newTx.account_id || newTx.accountId);
+        const newAcc = accounts.find(a => (a.sync_id && String(a.sync_id) === targetId) || String(a.id) === targetId);
+        if (newAcc) {
+          const newAmount = Number(newTx.amount || 0);
+          const appliedBal = newTx.type === 'income' ? newAcc.balance + newAmount : newAcc.balance - newAmount;
+          await this.updateBankAccount(newAcc.sync_id || newAcc.id, { balance: appliedBal });
+        }
+      }
+    } catch (err) {
+      console.warn('Error in syncBankAccountForTransaction:', err);
+    }
+  },
+
+  async addBankAccount(accountData) {
+    try {
+      const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
+      const syncId = accountData.sync_id || generateUUID();
+      const newAccount = {
+        ...accountData,
+        sync_id: syncId,
+        id: accountData.id || syncId,
+        name: accountData.name || 'Bank Account',
+        bank_name: accountData.bank_name || accountData.bankName || 'Bank',
+        bankName: accountData.bank_name || accountData.bankName || 'Bank',
+        account_number_last4: accountData.account_number_last4 || accountData.accountNumberLast4 || null,
+        accountNumberLast4: accountData.account_number_last4 || accountData.accountNumberLast4 || null,
+        account_type: accountData.account_type || accountData.accountType || 'savings',
+        accountType: accountData.account_type || accountData.accountType || 'savings',
+        balance: Number(accountData.balance || 0),
+        color_hex: accountData.color_hex || accountData.colorHex || null,
+        colorHex: accountData.color_hex || accountData.colorHex || null,
+        is_default: Boolean(accountData.is_default || accountData.isDefault),
+        isDefault: Boolean(accountData.is_default || accountData.isDefault),
+        created_at: accountData.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      if (!StateManager.state.bankAccounts) StateManager.state.bankAccounts = [];
+
+      if (isGuest) {
+        StateManager.state.bankAccounts.push(newAccount);
+        StateManager.saveGuestState();
+        StateManager.notify();
+      } else {
+        const userId = StateManager.state.user?.uid;
+        if (!userId) return;
+        newAccount.user_id = userId;
+        StateManager.state.bankAccounts.push(newAccount);
+        StateManager.notify();
+
+        const docRef = doc(db, 'users', userId, 'bank_accounts', syncId);
+        await setDoc(docRef, cleanFirestorePayload(newAccount), { merge: true });
+      }
+      return newAccount;
+    } catch (err) {
+      console.error('Error in addBankAccount:', err);
+    }
+  },
+
+  async updateBankAccount(syncId, accountData) {
+    try {
+      const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
+      const accounts = StateManager.state.bankAccounts || [];
+      const idx = accounts.findIndex(a => (a.sync_id && String(a.sync_id) === String(syncId)) || String(a.id) === String(syncId));
+      if (idx === -1) return;
+
+      const updated = {
+        ...accounts[idx],
+        ...accountData,
+        updated_at: new Date().toISOString()
+      };
+      accounts[idx] = updated;
+
+      if (isGuest) {
+        StateManager.saveGuestState();
+        StateManager.notify();
+      } else {
+        const userId = StateManager.state.user?.uid;
+        if (!userId) return;
+        StateManager.notify();
+        const docRef = doc(db, 'users', userId, 'bank_accounts', updated.sync_id || syncId);
+        await setDoc(docRef, cleanFirestorePayload(updated), { merge: true });
+      }
+      return updated;
+    } catch (err) {
+      console.error('Error in updateBankAccount:', err);
+    }
+  },
+
+  async deleteBankAccount(syncId) {
+    try {
+      const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
+      StateManager.state.bankAccounts = (StateManager.state.bankAccounts || []).filter(a => a.sync_id !== syncId && String(a.id) !== String(syncId));
+
+      if (isGuest) {
+        StateManager.saveGuestState();
+        StateManager.notify();
+      } else {
+        const userId = StateManager.state.user?.uid;
+        if (!userId) return;
+        StateManager.notify();
+        await deleteDoc(doc(db, 'users', userId, 'bank_accounts', syncId));
+      }
+    } catch (err) {
+      console.error('Error in deleteBankAccount:', err);
+    }
+  },
+
   async deleteTransaction(syncId, localId) {
     const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
     const oldTx = StateManager.state.transactions.find(t => 
@@ -923,6 +1094,7 @@ export const DbService = {
       StateManager.state.transactions = StateManager.state.transactions.filter(t => t.id !== localId && t.sync_id !== syncId);
       await this.syncGoalProgressForTransaction(oldTx, null);
       await this.syncInvestmentAssetForTransaction(oldTx, null);
+      await this.syncBankAccountForTransaction(oldTx, null);
       StateManager.saveGuestState();
       StateManager.notify();
     } else {
@@ -933,6 +1105,7 @@ export const DbService = {
       StateManager.state.transactions = StateManager.state.transactions.filter(t => t.sync_id !== syncId);
       await this.syncGoalProgressForTransaction(oldTx, null);
       await this.syncInvestmentAssetForTransaction(oldTx, null);
+      await this.syncBankAccountForTransaction(oldTx, null);
       StateManager.notify();
 
       if (syncId) {

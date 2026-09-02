@@ -27,6 +27,7 @@ class AppStateManager {
       goalContributions: [],
       categorizationRules: [],
       assets: [],
+      bankAccounts: [],
 
       // Theme State ('dark' | 'light')
       theme: localStorage.getItem('money_manager_theme') || localStorage.getItem('quantro_theme') || 'dark',
@@ -110,6 +111,9 @@ class AppStateManager {
         
         const savedAssets = localStorage.getItem('money_manager_assets');
         if (savedAssets) this.state.assets = JSON.parse(savedAssets);
+        
+        const savedBankAccs = localStorage.getItem('money_manager_bank_accounts');
+        if (savedBankAccs) this.state.bankAccounts = JSON.parse(savedBankAccs);
       } catch (err) {
         console.error('Error loading guest state from localStorage:', err);
       }
@@ -128,6 +132,7 @@ class AppStateManager {
       localStorage.setItem('money_manager_goal_contributions', JSON.stringify(this.state.goalContributions));
       localStorage.setItem('money_manager_categorization_rules', JSON.stringify(this.state.categorizationRules));
       localStorage.setItem('money_manager_assets', JSON.stringify(this.state.assets));
+      localStorage.setItem('money_manager_bank_accounts', JSON.stringify(this.state.bankAccounts));
     } catch (err) {
       console.error('Error saving guest state to localStorage:', err);
     }
@@ -157,6 +162,7 @@ class AppStateManager {
     localStorage.removeItem('money_manager_goal_contributions');
     localStorage.removeItem('money_manager_categorization_rules');
     localStorage.removeItem('money_manager_assets');
+    localStorage.removeItem('money_manager_bank_accounts');
     localStorage.removeItem('quantro_is_guest_mode');
     this.state.isGuestMode = false;
   }
@@ -181,6 +187,7 @@ class AppStateManager {
       this.state.goalContributions = [];
       this.state.categorizationRules = [];
       this.state.assets = [];
+      this.state.bankAccounts = [];
       this.notify();
     }
   }
