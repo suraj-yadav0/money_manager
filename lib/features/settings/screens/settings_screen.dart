@@ -107,11 +107,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
       );
 
-      // If income changed, create/update the recurring income transaction for this month
-      if (newIncome != _originalIncome) {
-        await _updateMonthlyIncomeTransaction(db, newIncome);
-      }
-
       // Refresh providers
       ref.invalidate(dashboardStatsProvider);
       ref.invalidate(recentTransactionsProvider);
@@ -141,60 +136,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _updateMonthlyIncomeTransaction(
-    AppDatabase db,
-    double newIncome,
-  ) async {
-    final now = DateTime.now();
-    final monthStart = DateTime(now.year, now.month, 1);
-    final monthEnd = DateTime(now.year, now.month + 1, 0, 23, 59, 59, 999);
-
-    // Find the Salary income category
-    final salaryCategory = await (db.select(
-      db.categories,
-    )..where((c) => c.name.equals('Salary'))).getSingleOrNull();
-
-    if (salaryCategory == null || salaryCategory.type != 'income') return;
-
-    // Check if there's already a salary transaction this month
-    // Query all income transactions for salary category and filter in Dart
-    final salaryTransactions = await (db.select(
-      db.transactions,
-    )..where((t) => t.categoryId.equals(salaryCategory.id))).get();
-
-    final existingTransaction = salaryTransactions
-        .where(
-          (t) =>
-              t.type == 'income' &&
-              t.timestamp.isAfter(
-                monthStart.subtract(const Duration(seconds: 1)),
-              ) &&
-              t.timestamp.isBefore(monthEnd.add(const Duration(seconds: 1))),
-        )
-        .firstOrNull;
-
-    if (existingTransaction != null) {
-      // Update existing transaction
-      await (db.update(db.transactions)
-            ..where((t) => t.id.equals(existingTransaction.id)))
-          .write(TransactionsCompanion(amount: Value(newIncome)));
-    } else {
-      // Create new income transaction
-      await db
-          .into(db.transactions)
-          .insert(
-            TransactionsCompanion.insert(
-              amount: newIncome,
-              type: 'income',
-              categoryId: salaryCategory.id,
-              timestamp: monthStart,
-              note: const Value('Monthly Salary'),
-              isRecurring: const Value(true),
-            ),
-          );
     }
   }
 
@@ -292,7 +233,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            'This will update your recurring salary transaction',
+                            'Monthly income baseline for budget pacing and savings analysis',
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                             ),
@@ -547,8 +488,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget _buildSmsAndBankAccountsCard(BuildContext context) {
     final pendingCount = ref.watch(pendingSmsCountProvider);
     final scanState = ref.watch(smsScanNotifierProvider);
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return Card(
       child: Column(

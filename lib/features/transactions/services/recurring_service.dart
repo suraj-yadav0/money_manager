@@ -17,12 +17,26 @@ class RecurringTransactionService {
     final now = DateTime.now();
     final currentMonthStart = DateTime(now.year, now.month, 1);
 
+    // Unmark any recurring salary or income templates so they never auto-credit
+    await (db.update(db.transactions)
+      ..where(
+        (t) =>
+            t.isRecurring.equals(true) &
+            (t.note.equals('Monthly Salary') | t.type.equals('income')),
+      )).write(const TransactionsCompanion(isRecurring: Value(false)));
+
     // Get all recurring transactions (templates)
     final recurringTransactions = await (db.select(
       db.transactions,
     )..where((t) => t.isRecurring.equals(true))).get();
 
     for (final template in recurringTransactions) {
+      // Do not auto-credit recurring income or salary
+      if (template.type == 'income' ||
+          (template.note?.toLowerCase().contains('salary') ?? false)) {
+        continue;
+      }
+
       // Check if a transaction for this month already exists
       // We look for transactions with the same categoryId, type, and amount
       // in the current month
