@@ -6,10 +6,37 @@ import { Formatters } from '../utils/formatters.js';
 import { IconHelper, findCategory } from '../utils/icons.js';
 
 export const BudgetPage = {
+  currentDate: new Date(),
+
   render(state) {
+    const targetDate = this.currentDate || new Date();
+    const year = targetDate.getFullYear();
+    const month = targetDate.getMonth();
+    const monthName = targetDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const now = new Date();
+    const isCurrentMonth = year === now.getFullYear() && month === now.getMonth();
+    const isPastMonth = year < now.getFullYear() || (year === now.getFullYear() && month < now.getMonth());
+    const isFutureMonth = year > now.getFullYear() || (year === now.getFullYear() && month > now.getMonth());
+
     const stats = this.calculateBudgetStats(state);
     const suggestions = this.calculateAverageCategorySpending(state);
     const suggestionEntries = Object.entries(suggestions);
+
+    // Dynamic timeline month strip centered on targetDate or current month
+    const centerDate = Math.abs((year - now.getFullYear()) * 12 + (month - now.getMonth())) > 2 ? targetDate : now;
+    const timelineMonths = [];
+    for (let offset = -3; offset <= 2; offset++) {
+      const d = new Date(centerDate.getFullYear(), centerDate.getMonth() + offset, 1);
+      const isSelected = d.getFullYear() === year && d.getMonth() === month;
+      const isCurrent = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+      timelineMonths.push({
+        year: d.getFullYear(),
+        month: d.getMonth(),
+        label: d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+        isSelected,
+        isCurrent
+      });
+    }
 
     return `
       <div class="animate-fade-in" style="display: flex; flex-direction: column; gap: 28px;">
@@ -22,13 +49,44 @@ export const BudgetPage = {
               <p class="hero-subtitle">Set category thresholds, track utilization burn rates, and receive automated pacing suggestions.</p>
             </div>
             
-            <button class="btn-primary" id="budget-set-all-btn">
-              <span class="material-icons" style="font-size: 18px;">tune</span> Adjust Budgets
-            </button>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <!-- Timeline Month Navigator -->
+              <div class="budget-timeline-nav" style="display: flex; align-items: center; gap: 4px; background: var(--bg-surface-elevated); padding: 4px 6px; border-radius: var(--radius-md); border: 1px solid var(--glass-border);">
+                <button class="btn-icon btn-icon-sm" id="budget-prev-month" title="Previous Month">
+                  <span class="material-icons" style="font-size: 18px;">chevron_left</span>
+                </button>
+                <div style="font-weight: 700; font-size: 13.5px; min-width: 140px; text-align: center; color: var(--text-primary); font-family: var(--font-heading);">
+                  ${monthName}
+                </div>
+                <button class="btn-icon btn-icon-sm" id="budget-next-month" title="Next Month">
+                  <span class="material-icons" style="font-size: 18px;">chevron_right</span>
+                </button>
+              </div>
+
+              ${!isCurrentMonth ? `
+                <button class="btn-secondary btn-sm" id="budget-current-month-btn" style="padding: 7px 14px; font-size: 12.5px;" title="Jump to current month">
+                  This Month
+                </button>
+              ` : ''}
+
+              <button class="btn-primary" id="budget-set-all-btn">
+                <span class="material-icons" style="font-size: 18px;">tune</span> Adjust Budgets
+              </button>
+            </div>
+          </div>
+
+          <!-- Timeline Quick-Jump Strip -->
+          <div class="budget-timeline-strip">
+            ${timelineMonths.map(m => `
+              <button class="budget-timeline-chip ${m.isSelected ? 'active' : ''}" data-year="${m.year}" data-month="${m.month}">
+                <span>${m.label}</span>
+                ${m.isCurrent ? `<span class="timeline-current-pill">Live</span>` : ''}
+              </button>
+            `).join('')}
           </div>
 
           <!-- Top Budget Summary KPI Cards -->
-          <div class="kpi-grid">
+          <div class="kpi-grid" style="margin-top: 18px;">
             <div class="kpi-card">
               <div class="kpi-top">
                 <span class="kpi-label">Monthly Budget Pool</span>
@@ -46,7 +104,7 @@ export const BudgetPage = {
 
             <div class="kpi-card">
               <div class="kpi-top">
-                <span class="kpi-label">Total Spent to Date</span>
+                <span class="kpi-label">Total Spent in Period</span>
                 <div class="kpi-icon-box" style="background: rgba(244, 63, 94, 0.12); color: var(--error);">
                   <span class="material-icons" style="font-size: 20px;">shopping_bag</span>
                 </div>
@@ -55,7 +113,7 @@ export const BudgetPage = {
                 ${Formatters.currency(stats.totalSpent)}
               </div>
               <div class="kpi-footer">
-                <span>In current monthly cycle</span>
+                <span>${isCurrentMonth ? 'In current monthly cycle' : (isPastMonth ? 'Final closed cycle spend' : 'Planned cycle spend')}</span>
               </div>
             </div>
 
@@ -71,7 +129,7 @@ export const BudgetPage = {
               </div>
               <div class="kpi-footer">
                 <span class="kpi-badge ${stats.totalRemaining >= 0 ? 'positive' : 'negative'}">
-                  ${stats.daysRemaining} days left in cycle
+                  ${stats.daysLabel}
                 </span>
               </div>
             </div>
@@ -87,7 +145,7 @@ export const BudgetPage = {
                 ${Formatters.currency(stats.dailyAllowance)}
               </div>
               <div class="kpi-footer">
-                <span>Per day for remainder of month</span>
+                <span>${isCurrentMonth ? 'Per day for remainder of month' : (isPastMonth ? 'Cycle completed' : 'Target daily allowance')}</span>
               </div>
             </div>
           </div>
@@ -98,7 +156,7 @@ export const BudgetPage = {
           <div class="fintech-card" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.08) 0%, rgba(99, 102, 241, 0.04) 100%); border-color: rgba(56, 189, 248, 0.25);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
               <span class="material-icons" style="color: var(--secondary); font-size: 22px;">tips_and_updates</span>
-              <span style="font-weight: 700; font-size: 16px; color: var(--text-primary);">Smart Budget Recommendations (3-Month Rolling Average)</span>
+              <span style="font-weight: 700; font-size: 16px; color: var(--text-primary);">Smart Budget Recommendations (3-Month Prior Average)</span>
             </div>
             <div style="display: flex; flex-wrap: wrap; gap: 12px;">
               ${suggestionEntries.slice(0, 4).map(([catName, avg]) => {
@@ -127,7 +185,7 @@ export const BudgetPage = {
           <div class="card-header" style="margin-bottom: 16px;">
             <div class="card-title">
               <span class="material-icons">category</span>
-              <span>Category Budget Limits</span>
+              <span>Category Budget Limits (${stats.categoryStats.length})</span>
             </div>
           </div>
 
@@ -146,11 +204,12 @@ export const BudgetPage = {
             <div class="budget-grid">
               ${stats.categoryStats.map(item => {
                 const progressClass = item.percentUsed > 100 ? 'danger' : item.percentUsed > 80 ? 'warning' : 'safe';
+                const remainingAmount = item.budget - item.spent;
                 return `
                   <div class="budget-card">
                     <div class="budget-card-header">
                       <div class="budget-cat-name">
-                        <div class="tx-icon-box" style="width: 36px; height: 36px; background: rgba(255,255,255,0.05); color: var(--primary);">
+                        <div class="tx-icon-box" style="width: 38px; height: 38px; border-radius: var(--radius-sm); background: var(--bg-surface-elevated); border: 1px solid var(--glass-border); color: var(--primary);">
                           <span class="material-icons" style="font-size: 20px;">${IconHelper.getMaterialIcon(item.icon)}</span>
                         </div>
                         <span>${item.name}</span>
@@ -170,8 +229,8 @@ export const BudgetPage = {
                     </div>
 
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: 12px;">
-                      <span style="color: ${item.budget - item.spent >= 0 ? 'var(--text-secondary)' : 'var(--error)'};">
-                        ${item.budget - item.spent >= 0 ? `${Formatters.currency(item.budget - item.spent)} remaining` : `${Formatters.currency(item.spent - item.budget)} over cap`}
+                      <span style="color: ${remainingAmount >= 0 ? 'var(--text-secondary)' : 'var(--error)'};">
+                        ${item.spent === 0 ? `${Formatters.currency(item.budget)} available` : (remainingAmount >= 0 ? `${Formatters.currency(remainingAmount)} remaining` : `${Formatters.currency(item.spent - item.budget)} over cap`)}
                       </span>
                       <button class="btn-ghost edit-single-budget-btn" 
                               data-cat-sync-id="${item.sync_id || ''}" 
@@ -192,10 +251,20 @@ export const BudgetPage = {
   },
 
   calculateBudgetStats(state) {
-    const range = DateRangeHelper.getDateRange('thisMonth');
-    const expenses = state.transactions.filter(t => {
+    const targetDate = this.currentDate || new Date();
+    const year = targetDate.getFullYear();
+    const month = targetDate.getMonth();
+    const start = new Date(year, month, 1, 0, 0, 0, 0);
+    const end = new Date(year, month + 1, 0, 23, 59, 59, 999);
+
+    const now = new Date();
+    const isCurrentMonth = year === now.getFullYear() && month === now.getMonth();
+    const isPastMonth = year < now.getFullYear() || (year === now.getFullYear() && month < now.getMonth());
+    const isFutureMonth = year > now.getFullYear() || (year === now.getFullYear() && month > now.getMonth());
+
+    const expenses = (state.transactions || []).filter(t => {
       const ts = new Date(t.timestamp);
-      return t.type === 'expense' && !t.goal_id && !t.goalId && ts >= range.start && ts <= range.end;
+      return t.type === 'expense' && !t.goal_id && !t.goalId && ts >= start && ts <= end;
     });
 
     const categorySpending = {};
@@ -246,8 +315,25 @@ export const BudgetPage = {
     categoryStats.sort((a, b) => b.percentUsed - a.percentUsed);
 
     const totalRemaining = totalBudget - totalSpent;
-    const daysRemaining = Math.max(1, Formatters.daysRemainingInMonth());
-    const dailyAllowance = totalRemaining > 0 ? totalRemaining / daysRemaining : 0;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    let daysRemaining = 0;
+    let daysLabel = '';
+    let dailyAllowance = 0;
+
+    if (isCurrentMonth) {
+      daysRemaining = Math.max(1, daysInMonth - now.getDate() + 1);
+      daysLabel = `${daysRemaining} days left in cycle`;
+      dailyAllowance = totalRemaining > 0 ? totalRemaining / daysRemaining : 0;
+    } else if (isPastMonth) {
+      daysRemaining = 0;
+      daysLabel = 'Cycle completed';
+      dailyAllowance = 0;
+    } else {
+      daysRemaining = daysInMonth;
+      daysLabel = `${daysInMonth} days in period`;
+      dailyAllowance = totalBudget > 0 ? totalBudget / daysInMonth : 0;
+    }
 
     return {
       totalBudget,
@@ -256,18 +342,21 @@ export const BudgetPage = {
       percentUsed: totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0,
       dailyAllowance,
       daysRemaining,
+      daysLabel,
       categoryStats
     };
   },
 
   calculateAverageCategorySpending(state) {
-    const now = new Date();
-    const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
-    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const targetDate = this.currentDate || new Date();
+    const targetYear = targetDate.getFullYear();
+    const targetMonth = targetDate.getMonth();
+    const threeMonthsAgo = new Date(targetYear, targetMonth - 3, 1);
+    const targetMonthStart = new Date(targetYear, targetMonth, 1);
 
-    const pastExpenses = state.transactions.filter(t => {
+    const pastExpenses = (state.transactions || []).filter(t => {
       const ts = new Date(t.timestamp);
-      return t.type === 'expense' && !t.goal_id && !t.goalId && ts >= threeMonthsAgo && ts < currentMonthStart;
+      return t.type === 'expense' && !t.goal_id && !t.goalId && ts >= threeMonthsAgo && ts < targetMonthStart;
     });
 
     const categorySpending = {};
@@ -289,6 +378,37 @@ export const BudgetPage = {
   },
 
   bindEvents(state) {
+    // Prev Month
+    document.getElementById('budget-prev-month')?.addEventListener('click', () => {
+      const cur = this.currentDate || new Date();
+      this.currentDate = new Date(cur.getFullYear(), cur.getMonth() - 1, 1);
+      StateManager.notify();
+    });
+
+    // Next Month
+    document.getElementById('budget-next-month')?.addEventListener('click', () => {
+      const cur = this.currentDate || new Date();
+      this.currentDate = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+      StateManager.notify();
+    });
+
+    // Reset to This Month
+    document.getElementById('budget-current-month-btn')?.addEventListener('click', () => {
+      this.currentDate = new Date();
+      StateManager.notify();
+    });
+
+    // Timeline Chip clicks
+    const timelineChips = document.querySelectorAll('.budget-timeline-chip[data-year][data-month]');
+    timelineChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        const y = parseInt(chip.getAttribute('data-year'), 10);
+        const m = parseInt(chip.getAttribute('data-month'), 10);
+        this.currentDate = new Date(y, m, 1);
+        StateManager.notify();
+      });
+    });
+
     // Open All Category Budgets Modal
     const openSetModal = () => this.showAdjustBudgetsModal(state);
     document.getElementById('budget-set-all-btn')?.addEventListener('click', openSetModal);

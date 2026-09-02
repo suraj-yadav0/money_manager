@@ -44,6 +44,10 @@ class BudgetScreen extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                // Month Navigation Header
+                _buildMonthNavigator(context, ref),
+                const SizedBox(height: 16),
+
                 // Summary Card
                 BudgetSummaryCard(stats: stats),
                 const SizedBox(height: 24),
@@ -139,6 +143,66 @@ class BudgetScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildMonthNavigator(BuildContext context, WidgetRef ref) {
+    final selectedMonth = ref.watch(budgetSelectedMonthProvider);
+    final now = DateTime.now();
+    final isCurrentMonth =
+        selectedMonth.year == now.year && selectedMonth.month == now.month;
+
+    return GlassContainer(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      borderRadius: 16,
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.chevron_left),
+            iconSize: 20,
+            tooltip: 'Previous month',
+            onPressed: () {
+              ref.read(budgetSelectedMonthProvider.notifier).state =
+                  DateTime(selectedMonth.year, selectedMonth.month - 1, 1);
+            },
+          ),
+          Expanded(
+            child: Text(
+              Formatters.month(selectedMonth),
+              textAlign: TextAlign.center,
+              style: GoogleFonts.outfit(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.chevron_right),
+            iconSize: 20,
+            tooltip: 'Next month',
+            onPressed: () {
+              ref.read(budgetSelectedMonthProvider.notifier).state =
+                  DateTime(selectedMonth.year, selectedMonth.month + 1, 1);
+            },
+          ),
+          if (!isCurrentMonth) ...[
+            const SizedBox(width: 4),
+            TextButton(
+              onPressed: () {
+                ref.read(budgetSelectedMonthProvider.notifier).state =
+                    DateTime(now.year, now.month, 1);
+              },
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: const Text('Current', style: TextStyle(fontSize: 12)),
+            ),
+            const SizedBox(width: 4),
+          ],
+        ],
       ),
     );
   }
