@@ -1,18 +1,38 @@
 /* Modern Net Worth & Asset Intelligence Module */
+import { Chart, registerables } from 'chart.js';
 import { StateManager } from '../state.js';
 import { DbService, reconcileInvestmentAssets } from '../db.js';
 import { Formatters } from '../utils/formatters.js';
 
+Chart.register(...registerables);
+
+let trajectoryChartInstance = null;
+let allocationChartInstance = null;
+
+const categoryIcons = {
+  savings: 'account_balance',
+  investment: 'trending_up',
+  real_estate: 'domain',
+  crypto: 'currency_bitcoin',
+  vehicle: 'directions_car',
+  loan: 'request_quote',
+  credit_card: 'credit_card',
+  other: 'category'
+};
+
 export const NetWorthPage = {
-  render(state) {
-    reconcileInvestmentAssets(state);
+  selectedTimeframe: '6M',
+  selectedAllocationView: 'class',
+
+  getTotals(state) {
     const assets = state.assets || [];
-    
+    const bankAccounts = state.bankAccounts || [];
+
     let totalAssets = 0;
     let totalLiabilities = 0;
 
     assets.forEach(a => {
-      const val = Number(a.value || 0);
+      const val = Math.abs(Number(a.value || 0));
       if (a.is_liability || a.isLiability) {
         totalLiabilities += val;
       } else {
@@ -20,11 +40,277 @@ export const NetWorthPage = {
       }
     });
 
+    bankAccounts.forEach(acc => {
+      const bal = Number(acc.balance || 0);
+      if (acc.account_type === 'credit_card' || acc.accountType === 'credit_card') {
+        totalLiabilities += Math.abs(bal);
+      } else {
+        totalAssets += Math.max(0, bal);
+      }
+    });
+
     const netWorth = totalAssets - totalLiabilities;
     const debtRatio = totalAssets > 0 ? Math.round((totalLiabilities / totalAssets) * 100) : 0;
+    const solvencyTier = debtRatio < 30 ? 'Pristine' : debtRatio < 60 ? 'Moderate' : 'Leveraged';
+
+    return { totalAssets, totalLiabilities, netWorth, debtRatio, solvencyTier };
+  },
+
+  getTrajectoryData(state, timeframe = '6M') {
+    const { netWorth: currentNetWorth } = this.getTotals(state);
+    const now = new Date();
+
+    let monthCount = 6;
+    if (timeframe === '1Y') {
+      monthCount = 12;
+    } else if (timeframe === 'ALL') {
+      const timestamps = (state.transactions || [])
+        .map(t => new Date(t.timestamp).getTime())
+        .filter(t => !isNaN(t));
+
+      if (timestamps.length > 0) {
+        const earliest = new Date(Math.min(...timestamps));
+        const diff = (now.getFullYear() - earliest.getFullYear()) * 12 + (now.getMonth() - earliest.getMonth()) + 1;
+        monthCount = Math.min(36, Math.max(6, diff));
+      } else {
+        monthCount = 6;
+      }
+    }
+
+    const months = [];
+    for (let i = monthCount - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const label = d.toLocaleDateString('en-US', { month: 'short', year: monthCount > 6 ? '2-digit' : undefined });
+      const fullLabel = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      months.push({ key, label, fullLabel, date: d });
+    }
+
+    const monthlyStats = {};
+    months.forEach(m => {
+      monthlyStats[m.key] = { inflow: 0, outflow: 0, net: 0 };
+    });
+
+    (state.transactions || []).forEach(tx => {
+      if (!tx.timestamp) return;
+      const d = new Date(tx.timestamp);
+      if (isNaN(d.getTime())) return;
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      if (monthlyStats[key]) {
+        const amt = Number(tx.amount || 0);
+        if (tx.type === 'income') {
+          monthlyStats[key].inflow += amt;
+        } else {
+          monthlyStats[key].outflow += amt;
+        }
+        monthlyStats[key].net = monthlyStats[key].inflow - monthlyStats[key].outflow;
+      }
+    });
+
+    // Anchor to current net worth at the latest month and back-propagate
+    const values = new Array(monthCount);
+    values[monthCount - 1] = currentNetWorth;
+
+    for (let i = monthCount - 1; i > 0; i--) {
+      const currentKey = months[i].key;
+      const currentNet = monthlyStats[currentKey] ? monthlyStats[currentKey].net : 0;
+      values[i - 1] = values[i] - currentNet;
+    }
+
+    const startNetWorth = values[0];
+    const endNetWorth = values[monthCount - 1];
+    const periodDelta = endNetWorth - startNetWorth;
+    const periodDeltaPercent = startNetWorth !== 0
+      ? ((periodDelta / Math.abs(startNetWorth)) * 100).toFixed(1)
+      : (periodDelta > 0 ? 100 : periodDelta < 0 ? -100 : 0);
+    const avgMonthlyGain = Math.round(periodDelta / Math.max(1, monthCount - 1));
+    const peakNetWorth = Math.max(...values);
+
+    return {
+      months,
+      labels: months.map(m => m.label),
+      fullLabels: months.map(m => m.fullLabel),
+      values,
+      monthlyStats,
+      summary: {
+        startNetWorth,
+        endNetWorth,
+        periodDelta,
+        periodDeltaPercent,
+        avgMonthlyGain,
+        peakNetWorth
+      }
+    };
+  },
+
+  getAllocationData(state, viewType = 'class') {
+    const totals = this.getTotals(state);
+    const { totalAssets, totalLiabilities, netWorth, debtRatio } = totals;
+
+    const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
+    const isLight = activeTheme === 'light';
+
+    const colorsDark = ['#FFFFFF', '#E2E8F0', '#CBD5E1', '#94A3B8', '#64748B', '#475569', '#334155'];
+    const colorsLight = ['#0F172A', '#334155', '#475569', '#64748B', '#94A3B8', '#CBD5E1', '#E2E8F0'];
+    const palette = isLight ? colorsLight : colorsDark;
+
+    if (viewType === 'solvency') {
+      const equity = Math.max(0, netWorth);
+      const liabilities = totalLiabilities;
+      const total = equity + liabilities;
+
+      const equityPct = total > 0 ? Math.round((equity / total) * 100) : 100;
+      const debtPct = total > 0 ? 100 - equityPct : 0;
+
+      const items = [
+        {
+          name: 'Net Equity',
+          value: equity,
+          percent: equityPct,
+          color: palette[0],
+          icon: 'verified_user'
+        },
+        {
+          name: 'Total Liabilities',
+          value: liabilities,
+          percent: debtPct,
+          color: palette[3],
+          icon: 'credit_card'
+        }
+      ];
+
+      return {
+        viewType: 'solvency',
+        total,
+        centerLabel: 'Debt Ratio',
+        centerValue: `${debtRatio}%`,
+        labels: items.map(i => i.name),
+        values: items.map(i => i.value),
+        colors: items.map(i => i.color),
+        items
+      };
+    }
+
+    const categoryLabels = {
+      savings: 'Cash & Liquid',
+      investment: 'Investments',
+      real_estate: 'Real Estate',
+      crypto: 'Crypto Assets',
+      vehicle: 'Vehicles',
+      other: 'Other Holdings'
+    };
+
+    const categoryTotals = {
+      savings: 0,
+      investment: 0,
+      real_estate: 0,
+      crypto: 0,
+      vehicle: 0,
+      other: 0
+    };
+
+    (state.bankAccounts || []).forEach(acc => {
+      const isCredit = acc.account_type === 'credit_card' || acc.accountType === 'credit_card';
+      if (!isCredit) {
+        categoryTotals.savings += Number(acc.balance || 0);
+      }
+    });
+
+    (state.assets || []).forEach(a => {
+      const isLiab = a.is_liability || a.isLiability;
+      if (!isLiab) {
+        const val = Number(a.value || 0);
+        const type = a.type || 'other';
+        if (categoryTotals[type] !== undefined) {
+          categoryTotals[type] += val;
+        } else {
+          categoryTotals.other += val;
+        }
+      }
+    });
+
+    const activeEntries = Object.entries(categoryTotals)
+      .filter(([_, val]) => val > 0)
+      .sort((a, b) => b[1] - a[1]);
+
+    const items = activeEntries.map(([key, val], idx) => {
+      const name = categoryLabels[key] || categoryLabels.other;
+      const percent = totalAssets > 0 ? Math.round((val / totalAssets) * 100) : 0;
+      return {
+        key,
+        name,
+        icon: categoryIcons[key] || 'category',
+        value: val,
+        percent,
+        color: palette[idx % palette.length]
+      };
+    });
+
+    return {
+      viewType: 'class',
+      total: totalAssets,
+      centerLabel: 'Gross Assets',
+      centerValue: Formatters.compactCurrency(totalAssets),
+      labels: items.map(i => i.name),
+      values: items.map(i => i.value),
+      colors: items.map(i => i.color),
+      items
+    };
+  },
+
+  render(state) {
+    reconcileInvestmentAssets(state);
+    const totals = this.getTotals(state);
+    const { totalAssets, totalLiabilities, netWorth, debtRatio, solvencyTier } = totals;
+
+    const rawAssets = state.assets || [];
+    const bankAccounts = state.bankAccounts || [];
+
+    const assetItems = [
+      ...bankAccounts
+        .filter(acc => acc.account_type !== 'credit_card' && acc.accountType !== 'credit_card')
+        .map(acc => ({
+          name: acc.name || 'Bank Account',
+          type: 'Cash / Bank',
+          icon: 'account_balance',
+          value: Number(acc.balance || 0),
+          isBank: true,
+          sync_id: acc.sync_id || '',
+          id: acc.id || ''
+        })),
+      ...rawAssets
+        .filter(a => !(a.is_liability || a.isLiability))
+        .map(a => ({
+          ...a,
+          icon: categoryIcons[a.type] || 'account_balance_wallet',
+          isBank: false
+        }))
+    ];
+
+    const liabilityItems = [
+      ...bankAccounts
+        .filter(acc => acc.account_type === 'credit_card' || acc.accountType === 'credit_card')
+        .map(acc => ({
+          name: acc.name || 'Credit Card',
+          type: 'Credit Card',
+          icon: 'credit_card',
+          value: Math.abs(Number(acc.balance || 0)),
+          isBank: true,
+          sync_id: acc.sync_id || '',
+          id: acc.id || ''
+        })),
+      ...rawAssets
+        .filter(a => a.is_liability || a.isLiability)
+        .map(a => ({
+          ...a,
+          value: Math.abs(Number(a.value || 0)),
+          icon: categoryIcons[a.type] || 'request_quote',
+          isBank: false
+        }))
+    ];
 
     return `
-      <div class="animate-fade-in" style="display: flex; flex-direction: column; gap: 20px;">
+      <div class="animate-fade-in" style="display: flex; flex-direction: column; gap: 24px;">
         
         <!-- Hero Header -->
         <section class="hero-section" style="padding-bottom: 0;">
@@ -65,7 +351,7 @@ export const NetWorthPage = {
               </div>
               <div class="kpi-value">${Formatters.currency(totalAssets)}</div>
               <div class="kpi-footer">
-                <span>${assets.filter(a => !(a.is_liability || a.isLiability)).length} Holdings</span>
+                <span>${assetItems.length} Holdings</span>
               </div>
             </div>
 
@@ -78,7 +364,7 @@ export const NetWorthPage = {
               </div>
               <div class="kpi-value">${Formatters.currency(totalLiabilities)}</div>
               <div class="kpi-footer">
-                <span>${assets.filter(a => a.is_liability || a.isLiability).length} Active</span>
+                <span>${liabilityItems.length} Active Debts</span>
               </div>
             </div>
 
@@ -89,7 +375,7 @@ export const NetWorthPage = {
                   <span class="material-icons">verified</span>
                 </div>
               </div>
-              <div class="kpi-value">${debtRatio < 30 ? 'Pristine' : debtRatio < 60 ? 'Moderate' : 'Leveraged'}</div>
+              <div class="kpi-value">${solvencyTier}</div>
               <div class="kpi-footer">
                 <span>Leverage tier</span>
               </div>
@@ -97,7 +383,51 @@ export const NetWorthPage = {
           </div>
         </section>
 
-        <!-- Assets & Liabilities Split Grid -->
+        <!-- Net Worth Visual Analytics and Charts -->
+        <div class="nw-charts-grid">
+          
+          <!-- Net Worth Trajectory Chart Card -->
+          <div class="fintech-card nw-chart-card">
+            <div class="card-header">
+              <div class="card-title">
+                <span class="material-icons">show_chart</span>
+                <span>Net Worth Trajectory</span>
+              </div>
+              <div class="filter-group" style="padding: 2px;">
+                <button class="filter-chip ${this.selectedTimeframe === '6M' ? 'active' : ''}" data-nw-timeframe="6M">6M</button>
+                <button class="filter-chip ${this.selectedTimeframe === '1Y' ? 'active' : ''}" data-nw-timeframe="1Y">1Y</button>
+                <button class="filter-chip ${this.selectedTimeframe === 'ALL' ? 'active' : ''}" data-nw-timeframe="ALL">ALL</button>
+              </div>
+            </div>
+
+            <!-- Dynamic Trajectory Metric Bar -->
+            <div id="nw-trajectory-metrics" class="nw-stats-bar"></div>
+
+            <div style="position: relative; height: 260px; width: 100%; max-width: 100%; min-width: 0; overflow: hidden;">
+              <canvas id="networth-trend-canvas"></canvas>
+            </div>
+          </div>
+
+          <!-- Asset Allocation & Capital Structure Card -->
+          <div class="fintech-card nw-chart-card">
+            <div class="card-header">
+              <div class="card-title">
+                <span class="material-icons">pie_chart</span>
+                <span id="nw-allocation-title">${this.selectedAllocationView === 'solvency' ? 'Capital Solvency' : 'Asset Allocation'}</span>
+              </div>
+              <div class="filter-group" style="padding: 2px;">
+                <button class="filter-chip ${this.selectedAllocationView === 'class' ? 'active' : ''}" data-nw-alloc-view="class">Asset Mix</button>
+                <button class="filter-chip ${this.selectedAllocationView === 'solvency' ? 'active' : ''}" data-nw-alloc-view="solvency">Solvency</button>
+              </div>
+            </div>
+
+            <!-- Dynamic Donut Chart & Legend -->
+            <div id="nw-allocation-content" style="display: flex; flex-direction: column; flex: 1; justify-content: center;"></div>
+          </div>
+
+        </div>
+
+        <!-- Assets & Liabilities Holdings Detail Grid -->
         <div class="dashboard-split-grid">
           
           <!-- Assets Column -->
@@ -110,21 +440,30 @@ export const NetWorthPage = {
             </div>
 
             <div class="assets-grid">
-              ${assets.filter(a => !(a.is_liability || a.isLiability)).length === 0 ? `
+              ${assetItems.length === 0 ? `
                 <div style="grid-column: 1 / -1; text-align: center; padding: 28px 0; color: var(--text-muted); font-size: 13px;">
                   No asset records added yet. Add bank accounts, investments, or properties.
                 </div>
-              ` : assets.filter(a => !(a.is_liability || a.isLiability)).map(a => `
+              ` : assetItems.map(a => `
                 <div class="asset-card">
-                  <div>
-                    <div style="font-weight: 700; font-size: 14.5px; color: var(--text-primary);">${a.name}</div>
-                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-top: 2px;">${a.type || 'Savings'}</div>
+                  <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                    <div class="asset-card-icon-box">
+                      <span class="material-icons" style="font-size: 18px; color: var(--text-primary);">${a.icon}</span>
+                    </div>
+                    <div style="min-width: 0;">
+                      <div style="font-weight: 700; font-size: 14px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${a.name}</div>
+                      <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-top: 2px;">${a.type || 'Savings'}</div>
+                    </div>
                   </div>
-                  <div style="display: flex; align-items: center; gap: 10px;">
+                  <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
                     <div style="font-weight: 700; font-size: 14.5px; color: var(--text-primary);">${Formatters.currency(a.value)}</div>
-                    <button class="btn-icon btn-icon-sm delete-asset-btn" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" title="Delete asset">
-                      <span class="material-icons" style="font-size: 16px;">delete_outline</span>
-                    </button>
+                    ${a.isBank ? `
+                      <span style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); background: var(--bg-surface-elevated); padding: 3px 6px; border-radius: var(--radius-xs); border: 1px solid var(--glass-border);">Account</span>
+                    ` : `
+                      <button class="btn-icon btn-icon-sm delete-asset-btn" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" title="Delete asset">
+                        <span class="material-icons" style="font-size: 16px;">delete_outline</span>
+                      </button>
+                    `}
                   </div>
                 </div>
               `).join('')}
@@ -141,21 +480,30 @@ export const NetWorthPage = {
             </div>
 
             <div class="assets-grid">
-              ${assets.filter(a => a.is_liability || a.isLiability).length === 0 ? `
+              ${liabilityItems.length === 0 ? `
                 <div style="grid-column: 1 / -1; text-align: center; padding: 28px 0; color: var(--text-muted); font-size: 13px;">
                   Zero liabilities recorded. You have a 100% debt-free profile!
                 </div>
-              ` : assets.filter(a => a.is_liability || a.isLiability).map(a => `
+              ` : liabilityItems.map(a => `
                 <div class="asset-card">
-                  <div>
-                    <div style="font-weight: 700; font-size: 14.5px; color: var(--text-primary);">${a.name}</div>
-                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-top: 2px;">${a.type || 'Debt'}</div>
+                  <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                    <div class="asset-card-icon-box">
+                      <span class="material-icons" style="font-size: 18px; color: var(--text-secondary);">${a.icon}</span>
+                    </div>
+                    <div style="min-width: 0;">
+                      <div style="font-weight: 700; font-size: 14px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${a.name}</div>
+                      <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-top: 2px;">${a.type || 'Debt'}</div>
+                    </div>
                   </div>
-                  <div style="display: flex; align-items: center; gap: 10px;">
+                  <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
                     <div style="font-weight: 700; font-size: 14.5px; color: var(--text-secondary);">${Formatters.currency(a.value)}</div>
-                    <button class="btn-icon btn-icon-sm delete-asset-btn" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" title="Delete liability">
-                      <span class="material-icons" style="font-size: 16px;">delete_outline</span>
-                    </button>
+                    ${a.isBank ? `
+                      <span style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); background: var(--bg-surface-elevated); padding: 3px 6px; border-radius: var(--radius-xs); border: 1px solid var(--glass-border);">Card</span>
+                    ` : `
+                      <button class="btn-icon btn-icon-sm delete-asset-btn" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" title="Delete liability">
+                        <span class="material-icons" style="font-size: 16px;">delete_outline</span>
+                      </button>
+                    `}
                   </div>
                 </div>
               `).join('')}
@@ -168,12 +516,10 @@ export const NetWorthPage = {
   },
 
   bindEvents(state) {
-    // Add Asset Modal CTA
     document.getElementById('add-asset-btn')?.addEventListener('click', () => {
       this.showAddAssetModal();
     });
 
-    // Delete asset button
     const deleteBtns = document.querySelectorAll('.delete-asset-btn');
     deleteBtns.forEach(btn => {
       btn.addEventListener('click', async (e) => {
@@ -182,6 +528,340 @@ export const NetWorthPage = {
         const localId = btn.getAttribute('data-id');
         if (confirm('Delete this asset/liability entry?')) {
           await DbService.deleteAsset(syncId, localId);
+        }
+      });
+    });
+
+    // Timeframe selector for trajectory chart
+    const timeframeChips = document.querySelectorAll('.filter-chip[data-nw-timeframe]');
+    timeframeChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        const tf = chip.getAttribute('data-nw-timeframe');
+        this.selectedTimeframe = tf;
+        timeframeChips.forEach(c => c.classList.toggle('active', c === chip));
+        this.renderTrajectoryChart(state);
+      });
+    });
+
+    // Allocation view selector
+    const allocChips = document.querySelectorAll('.filter-chip[data-nw-alloc-view]');
+    allocChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        const view = chip.getAttribute('data-nw-alloc-view');
+        this.selectedAllocationView = view;
+        allocChips.forEach(c => c.classList.toggle('active', c === chip));
+        const titleEl = document.getElementById('nw-allocation-title');
+        if (titleEl) {
+          titleEl.textContent = view === 'solvency' ? 'Capital Solvency' : 'Asset Allocation';
+        }
+        this.renderAllocationChart(state);
+      });
+    });
+
+    this.renderCharts(state);
+  },
+
+  renderCharts(state) {
+    this.renderTrajectoryChart(state);
+    this.renderAllocationChart(state);
+  },
+
+  renderTrajectoryChart(state) {
+    const canvas = document.getElementById('networth-trend-canvas');
+    if (!canvas) return;
+
+    if (trajectoryChartInstance) {
+      trajectoryChartInstance.destroy();
+      trajectoryChartInstance = null;
+    }
+
+    const trajectory = this.getTrajectoryData(state, this.selectedTimeframe);
+
+    const metricsEl = document.getElementById('nw-trajectory-metrics');
+    if (metricsEl) {
+      const isPositive = trajectory.summary.periodDelta >= 0;
+      const sign = isPositive ? '+' : '';
+      metricsEl.innerHTML = `
+        <div class="nw-stat-item">
+          <span class="nw-stat-label">Period Growth</span>
+          <span class="nw-stat-val" style="color: ${isPositive ? 'var(--text-primary)' : 'var(--text-secondary)'};">
+            <span class="material-icons" style="font-size: 15px;">${isPositive ? 'trending_up' : 'trending_down'}</span>
+            ${sign}${Formatters.currency(trajectory.summary.periodDelta)} (${sign}${trajectory.summary.periodDeltaPercent}%)
+          </span>
+        </div>
+        <div class="nw-stat-item">
+          <span class="nw-stat-label">Monthly Velocity</span>
+          <span class="nw-stat-val">
+            ${sign}${Formatters.currency(trajectory.summary.avgMonthlyGain)}/mo
+          </span>
+        </div>
+        <div class="nw-stat-item">
+          <span class="nw-stat-label">Period Peak</span>
+          <span class="nw-stat-val">
+            ${Formatters.currency(trajectory.summary.peakNetWorth)}
+          </span>
+        </div>
+      `;
+    }
+
+    const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
+    const isLight = activeTheme === 'light';
+    const textColor = isLight ? '#475569' : '#94A3B8';
+    const gridColor = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
+    const tooltipBg = isLight ? '#FFFFFF' : '#11141E';
+    const tooltipTitle = isLight ? '#0F172A' : '#FFFFFF';
+    const tooltipBorder = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)';
+    const lineColor = isLight ? '#0F172A' : '#FFFFFF';
+
+    const ctx = canvas.getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+    gradient.addColorStop(0, isLight ? 'rgba(15, 23, 42, 0.12)' : 'rgba(255, 255, 255, 0.15)');
+    gradient.addColorStop(1, 'transparent');
+
+    const allIdentical = trajectory.values.length > 0 &&
+      trajectory.values.every(v => v === trajectory.values[0]);
+
+    trajectoryChartInstance = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: trajectory.labels,
+        datasets: [{
+          label: 'Net Worth',
+          data: trajectory.values,
+          borderColor: lineColor,
+          backgroundColor: gradient,
+          borderWidth: 2.2,
+          tension: 0.35,
+          fill: true,
+          pointRadius: trajectory.labels.length > 18 ? 0 : 3.5,
+          pointHoverRadius: 6,
+          pointBackgroundColor: lineColor,
+          pointBorderColor: isLight ? '#FFFFFF' : '#111215',
+          pointBorderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: tooltipBg,
+            titleColor: tooltipTitle,
+            bodyColor: textColor,
+            borderColor: tooltipBorder,
+            borderWidth: 1,
+            padding: 12,
+            cornerRadius: 8,
+            callbacks: {
+              title: (items) => {
+                if (!items.length) return '';
+                const idx = items[0].dataIndex;
+                return trajectory.fullLabels[idx] || items[0].label;
+              },
+              label: (ctx) => ` Consolidated Net Worth: ${Formatters.currency(ctx.parsed.y)}`,
+              afterLabel: (ctx) => {
+                const idx = ctx.dataIndex;
+                const month = trajectory.months[idx];
+                if (!month) return '';
+                const stat = trajectory.monthlyStats[month.key];
+                if (!stat) return '';
+                if (stat.inflow === 0 && stat.outflow === 0) return '';
+                const sign = stat.net >= 0 ? '+' : '';
+                return ` Monthly Delta: ${sign}${Formatters.currency(stat.net)}\n Inflows: ${Formatters.currency(stat.inflow)} | Outflows: ${Formatters.currency(stat.outflow)}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: gridColor },
+            ticks: {
+              color: textColor,
+              font: { family: 'Plus Jakarta Sans', size: 11 },
+              maxRotation: 0,
+              autoSkip: true,
+              maxTicksLimit: 8
+            }
+          },
+          y: {
+            grid: { color: gridColor },
+            suggestedMin: allIdentical
+              ? (trajectory.values[0] > 0 ? trajectory.values[0] * 0.85 : (trajectory.values[0] === 0 ? 0 : trajectory.values[0] * 1.15))
+              : undefined,
+            suggestedMax: allIdentical
+              ? (trajectory.values[0] > 0 ? trajectory.values[0] * 1.15 : (trajectory.values[0] === 0 ? 10000 : trajectory.values[0] * 0.85))
+              : undefined,
+            ticks: {
+              color: textColor,
+              font: { family: 'Plus Jakarta Sans', size: 11 },
+              callback: (val) => Formatters.compactCurrency(val)
+            }
+          }
+        }
+      }
+    });
+  },
+
+  renderAllocationChart(state) {
+    const contentEl = document.getElementById('nw-allocation-content');
+    if (!contentEl) return;
+
+    if (allocationChartInstance) {
+      allocationChartInstance.destroy();
+      allocationChartInstance = null;
+    }
+
+    const data = this.getAllocationData(state, this.selectedAllocationView);
+
+    if (data.items.length === 0 || data.total === 0) {
+      contentEl.innerHTML = `
+        <div style="text-align: center; padding: 40px 16px; color: var(--text-muted);">
+          <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--bg-surface-subtle); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+            <span class="material-icons" style="font-size: 22px; opacity: 0.6;">pie_chart</span>
+          </div>
+          <div style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">No capital assets recorded</div>
+          <div style="font-size: 12px; margin-bottom: 16px;">Add bank accounts, investments, or physical assets to visualize distribution.</div>
+          <button class="btn-primary btn-sm" id="empty-add-asset-btn" style="width: auto; margin: 0 auto; display: inline-flex; align-items: center; gap: 6px;">
+            <span class="material-icons" style="font-size: 15px;">add</span> Add Asset
+          </button>
+        </div>
+      `;
+      document.getElementById('empty-add-asset-btn')?.addEventListener('click', () => {
+        this.showAddAssetModal();
+      });
+      return;
+    }
+
+    contentEl.innerHTML = `
+      <div class="nw-donut-container">
+        <canvas id="networth-allocation-canvas"></canvas>
+        <div class="nw-donut-center">
+          <div class="nw-donut-center-label">${data.centerLabel}</div>
+          <div class="nw-donut-center-val">${data.centerValue}</div>
+        </div>
+      </div>
+
+      <div class="nw-legend-list">
+        ${data.items.map(item => `
+          <div class="nw-legend-row">
+            <div class="nw-legend-left">
+              <span class="nw-color-dot" style="background: ${item.color};"></span>
+              <span class="nw-legend-name">${item.name}</span>
+            </div>
+            <div class="nw-legend-right">
+              <span class="nw-legend-val">${Formatters.currency(item.value)}</span>
+              <span class="nw-legend-pct">${item.percent}%</span>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+
+    const canvas = document.getElementById('networth-allocation-canvas');
+    if (!canvas) return;
+
+    const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
+    const isLight = activeTheme === 'light';
+    const textColor = isLight ? '#475569' : '#94A3B8';
+    const tooltipBg = isLight ? '#FFFFFF' : '#11141E';
+    const tooltipTitle = isLight ? '#0F172A' : '#FFFFFF';
+    const tooltipBorder = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)';
+
+    allocationChartInstance = new Chart(canvas, {
+      type: 'doughnut',
+      data: {
+        labels: data.labels,
+        datasets: [{
+          data: data.values,
+          backgroundColor: data.colors,
+          borderWidth: 0,
+          hoverOffset: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '72%',
+        onHover: (event, activeElements) => {
+          const centerLabelEl = contentEl.querySelector('.nw-donut-center-label');
+          const centerValEl = contentEl.querySelector('.nw-donut-center-val');
+          const legendRows = contentEl.querySelectorAll('.nw-legend-row');
+
+          if (activeElements && activeElements.length > 0) {
+            const idx = activeElements[0].index;
+            const item = data.items[idx];
+            if (item) {
+              if (centerLabelEl) centerLabelEl.textContent = `${item.name} (${item.percent}%)`;
+              if (centerValEl) centerValEl.textContent = Formatters.currency(item.value);
+              legendRows.forEach((row, rIdx) => {
+                const active = rIdx === idx;
+                row.style.background = active ? 'var(--bg-surface-hover)' : 'var(--bg-surface-subtle)';
+                row.style.borderColor = active ? item.color : 'var(--glass-border)';
+              });
+              return;
+            }
+          }
+
+          if (centerLabelEl) centerLabelEl.textContent = data.centerLabel;
+          if (centerValEl) centerValEl.textContent = data.centerValue;
+          legendRows.forEach(row => {
+            row.style.background = 'var(--bg-surface-subtle)';
+            row.style.borderColor = 'var(--glass-border)';
+          });
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false }
+        }
+      }
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+      const centerLabelEl = contentEl.querySelector('.nw-donut-center-label');
+      const centerValEl = contentEl.querySelector('.nw-donut-center-val');
+      if (centerLabelEl) centerLabelEl.textContent = data.centerLabel;
+      if (centerValEl) centerValEl.textContent = data.centerValue;
+      const legendRows = contentEl.querySelectorAll('.nw-legend-row');
+      legendRows.forEach(row => {
+        row.style.background = 'var(--bg-surface-subtle)';
+        row.style.borderColor = 'var(--glass-border)';
+      });
+    });
+
+    // Interactive bidirectional link from legend rows to doughnut slices
+    const legendRows = contentEl.querySelectorAll('.nw-legend-row');
+    legendRows.forEach((row, idx) => {
+      row.style.cursor = 'pointer';
+      row.addEventListener('mouseenter', () => {
+        const item = data.items[idx];
+        if (!item) return;
+        const centerLabelEl = contentEl.querySelector('.nw-donut-center-label');
+        const centerValEl = contentEl.querySelector('.nw-donut-center-val');
+        if (centerLabelEl) centerLabelEl.textContent = `${item.name} (${item.percent}%)`;
+        if (centerValEl) centerValEl.textContent = Formatters.currency(item.value);
+        row.style.background = 'var(--bg-surface-hover)';
+        row.style.borderColor = item.color;
+        if (allocationChartInstance) {
+          allocationChartInstance.setActiveElements([{ datasetIndex: 0, index: idx }]);
+          allocationChartInstance.update();
+        }
+      });
+
+      row.addEventListener('mouseleave', () => {
+        const centerLabelEl = contentEl.querySelector('.nw-donut-center-label');
+        const centerValEl = contentEl.querySelector('.nw-donut-center-val');
+        if (centerLabelEl) centerLabelEl.textContent = data.centerLabel;
+        if (centerValEl) centerValEl.textContent = data.centerValue;
+        row.style.background = 'var(--bg-surface-subtle)';
+        row.style.borderColor = 'var(--glass-border)';
+        if (allocationChartInstance) {
+          allocationChartInstance.setActiveElements([]);
+          allocationChartInstance.update();
         }
       });
     });
