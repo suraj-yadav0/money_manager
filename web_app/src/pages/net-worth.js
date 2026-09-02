@@ -266,12 +266,28 @@ export const NetWorthPage = {
     const rawAssets = state.assets || [];
     const bankAccounts = state.bankAccounts || [];
 
+    const formatTypeLabel = (type) => {
+      const map = {
+        savings: 'Savings',
+        cash: 'Cash Wallet',
+        checking: 'Checking',
+        credit_card: 'Credit Card',
+        investment: 'Investment',
+        real_estate: 'Real Estate',
+        crypto: 'Crypto',
+        vehicle: 'Vehicle',
+        loan: 'Personal Loan',
+        other: 'Other'
+      };
+      return map[type] || (type ? type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, ' ') : 'Asset');
+    };
+
     const assetItems = [
       ...bankAccounts
         .filter(acc => acc.account_type !== 'credit_card' && acc.accountType !== 'credit_card')
         .map(acc => ({
           name: acc.name || 'Bank Account',
-          type: 'Cash / Bank',
+          typeLabel: formatTypeLabel(acc.account_type || acc.accountType || 'savings'),
           icon: 'account_balance',
           value: Number(acc.balance || 0),
           isBank: true,
@@ -282,6 +298,7 @@ export const NetWorthPage = {
         .filter(a => !(a.is_liability || a.isLiability))
         .map(a => ({
           ...a,
+          typeLabel: formatTypeLabel(a.type),
           icon: categoryIcons[a.type] || 'account_balance_wallet',
           isBank: false
         }))
@@ -292,7 +309,7 @@ export const NetWorthPage = {
         .filter(acc => acc.account_type === 'credit_card' || acc.accountType === 'credit_card')
         .map(acc => ({
           name: acc.name || 'Credit Card',
-          type: 'Credit Card',
+          typeLabel: 'Credit Card',
           icon: 'credit_card',
           value: Math.abs(Number(acc.balance || 0)),
           isBank: true,
@@ -304,6 +321,7 @@ export const NetWorthPage = {
         .map(a => ({
           ...a,
           value: Math.abs(Number(a.value || 0)),
+          typeLabel: formatTypeLabel(a.type || 'loan'),
           icon: categoryIcons[a.type] || 'request_quote',
           isBank: false
         }))
@@ -445,33 +463,35 @@ export const NetWorthPage = {
                   No asset records added yet. Add bank accounts, investments, or properties.
                 </div>
               ` : assetItems.map(a => `
-                <div class="asset-card" data-is-bank="${a.isBank ? 'true' : 'false'}" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" style="cursor: pointer;">
-                  <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                <div class="asset-card" data-is-bank="${a.isBank ? 'true' : 'false'}" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}">
+                  <div class="asset-card-left">
                     <div class="asset-card-icon-box">
-                      <span class="material-icons" style="font-size: 18px; color: var(--text-primary);">${a.icon}</span>
+                      <span class="material-icons" style="font-size: 19px; color: var(--text-primary);">${a.icon}</span>
                     </div>
-                    <div style="min-width: 0;">
-                      <div style="font-weight: 700; font-size: 14px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${a.name}</div>
-                      <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-top: 2px;">${a.type || 'Savings'}</div>
+                    <div class="asset-card-info">
+                      <div class="asset-card-name" title="${a.name}">${a.name}</div>
+                      <div class="asset-card-meta">
+                        <span class="asset-category-pill">${a.typeLabel}</span>
+                        ${a.isBank ? `<span class="asset-account-pill">Account</span>` : ''}
+                      </div>
                     </div>
                   </div>
-                  <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
-                    <div style="font-weight: 700; font-size: 14.5px; color: var(--text-primary); margin-right: 4px;">${Formatters.currency(a.value)}</div>
-                    ${a.isBank ? `
-                      <span style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); background: var(--bg-surface-elevated); padding: 3px 6px; border-radius: var(--radius-xs); border: 1px solid var(--glass-border);">Account</span>
-                    ` : ''}
-                    <button class="btn-icon btn-icon-sm edit-holding-btn" data-is-bank="${a.isBank ? 'true' : 'false'}" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" title="Edit holding">
-                      <span class="material-icons" style="font-size: 16px;">edit</span>
-                    </button>
-                    ${!a.isBank ? `
-                      <button class="btn-icon btn-icon-sm delete-asset-btn" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" title="Delete asset">
-                        <span class="material-icons" style="font-size: 16px;">delete_outline</span>
+                  <div class="asset-card-right">
+                    <div class="asset-card-value">${Formatters.currency(a.value)}</div>
+                    <div class="asset-card-actions">
+                      <button class="btn-icon btn-icon-sm edit-holding-btn" data-is-bank="${a.isBank ? 'true' : 'false'}" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" title="Edit holding">
+                        <span class="material-icons" style="font-size: 16px;">edit</span>
                       </button>
-                    ` : `
-                      <button class="btn-icon btn-icon-sm delete-bank-btn" data-sync-id="${a.sync_id || a.id || ''}" title="Delete account">
-                        <span class="material-icons" style="font-size: 16px;">delete_outline</span>
-                      </button>
-                    `}
+                      ${!a.isBank ? `
+                        <button class="btn-icon btn-icon-sm delete-asset-btn" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" title="Delete asset">
+                          <span class="material-icons" style="font-size: 16px;">delete_outline</span>
+                        </button>
+                      ` : `
+                        <button class="btn-icon btn-icon-sm delete-bank-btn" data-sync-id="${a.sync_id || a.id || ''}" title="Delete account">
+                          <span class="material-icons" style="font-size: 16px;">delete_outline</span>
+                        </button>
+                      `}
+                    </div>
                   </div>
                 </div>
               `).join('')}
@@ -493,33 +513,35 @@ export const NetWorthPage = {
                   Zero liabilities recorded. You have a 100% debt-free profile!
                 </div>
               ` : liabilityItems.map(a => `
-                <div class="asset-card" data-is-bank="${a.isBank ? 'true' : 'false'}" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" style="cursor: pointer;">
-                  <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                <div class="asset-card" data-is-bank="${a.isBank ? 'true' : 'false'}" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}">
+                  <div class="asset-card-left">
                     <div class="asset-card-icon-box">
-                      <span class="material-icons" style="font-size: 18px; color: var(--text-secondary);">${a.icon}</span>
+                      <span class="material-icons" style="font-size: 19px; color: var(--text-secondary);">${a.icon}</span>
                     </div>
-                    <div style="min-width: 0;">
-                      <div style="font-weight: 700; font-size: 14px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${a.name}</div>
-                      <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-top: 2px;">${a.type || 'Debt'}</div>
+                    <div class="asset-card-info">
+                      <div class="asset-card-name" title="${a.name}">${a.name}</div>
+                      <div class="asset-card-meta">
+                        <span class="asset-category-pill">${a.typeLabel}</span>
+                        ${a.isBank ? `<span class="asset-account-pill">Card</span>` : ''}
+                      </div>
                     </div>
                   </div>
-                  <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
-                    <div style="font-weight: 700; font-size: 14.5px; color: var(--text-secondary); margin-right: 4px;">${Formatters.currency(a.value)}</div>
-                    ${a.isBank ? `
-                      <span style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); background: var(--bg-surface-elevated); padding: 3px 6px; border-radius: var(--radius-xs); border: 1px solid var(--glass-border);">Card</span>
-                    ` : ''}
-                    <button class="btn-icon btn-icon-sm edit-holding-btn" data-is-bank="${a.isBank ? 'true' : 'false'}" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" title="Edit holding">
-                      <span class="material-icons" style="font-size: 16px;">edit</span>
-                    </button>
-                    ${!a.isBank ? `
-                      <button class="btn-icon btn-icon-sm delete-asset-btn" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" title="Delete liability">
-                        <span class="material-icons" style="font-size: 16px;">delete_outline</span>
+                  <div class="asset-card-right">
+                    <div class="asset-card-value" style="color: var(--text-secondary);">${Formatters.currency(a.value)}</div>
+                    <div class="asset-card-actions">
+                      <button class="btn-icon btn-icon-sm edit-holding-btn" data-is-bank="${a.isBank ? 'true' : 'false'}" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" title="Edit holding">
+                        <span class="material-icons" style="font-size: 16px;">edit</span>
                       </button>
-                    ` : `
-                      <button class="btn-icon btn-icon-sm delete-bank-btn" data-sync-id="${a.sync_id || a.id || ''}" title="Delete account">
-                        <span class="material-icons" style="font-size: 16px;">delete_outline</span>
-                      </button>
-                    `}
+                      ${!a.isBank ? `
+                        <button class="btn-icon btn-icon-sm delete-asset-btn" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" title="Delete liability">
+                          <span class="material-icons" style="font-size: 16px;">delete_outline</span>
+                        </button>
+                      ` : `
+                        <button class="btn-icon btn-icon-sm delete-bank-btn" data-sync-id="${a.sync_id || a.id || ''}" title="Delete account">
+                          <span class="material-icons" style="font-size: 16px;">delete_outline</span>
+                        </button>
+                      `}
+                    </div>
                   </div>
                 </div>
               `).join('')}
