@@ -1,8 +1,6 @@
 /* Specific styles for Transactions, Budget, Goals, Net Worth, Insights, Calendar, and Auth Landing */
 
-/* ==========================================================================
-   TRANSACTIONS LEDGER & ACTIVITY FEED
-   ========================================================================== */
+/* Transactions Ledger & Activity Feed */
 .tx-list {
   display: flex;
   flex-direction: column;
@@ -190,13 +188,13 @@
   }
 }
 
-/* ==========================================================================
+/* Budget Section */
 .budget-timeline-strip {
   display: flex;
   align-items: center;
   gap: 8px;
   overflow-x: auto;
-  padding: 14px 0 4px;
+  padding: 10px 0 2px;
   scrollbar-width: thin;
 }
 
@@ -224,7 +222,7 @@
 
 .budget-timeline-chip.active {
   background: var(--text-primary);
-  color: var(--bg-base);
+  color: var(--bg-surface);
   border-color: var(--text-primary);
   font-weight: 700;
 }
@@ -242,21 +240,24 @@
 }
 
 .budget-timeline-chip.active .timeline-current-pill {
-  background: rgba(0, 0, 0, 0.25);
-  color: #10b981;
+  background: rgba(0, 0, 0, 0.2);
+  color: inherit;
 }
 
 .budget-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
-  gap: 20px;
+  gap: 18px;
 }
 
 .budget-card {
   background: var(--bg-surface-subtle);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  padding: 24px 22px;
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   transition: transform var(--transition-smooth), border-color var(--transition-smooth), box-shadow var(--transition-smooth);
 }
 
@@ -271,30 +272,32 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .budget-cat-name {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  color: var(--text-primary);
 }
 
 .progress-track {
   width: 100%;
-  height: 9px;
-  background: var(--bg-surface-subtle);
+  height: 8px;
+  background: var(--bg-surface-elevated);
   border-radius: var(--radius-full);
+  border: 1px solid var(--glass-border);
   overflow: hidden;
-  margin: 14px 0 10px;
+  margin: 12px 0 8px;
 }
 
 .progress-bar-fill {
   height: 100%;
   border-radius: var(--radius-full);
-  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: width 0.4s ease;
 }
 
 .progress-bar-fill.safe {
@@ -302,16 +305,14 @@
 }
 
 .progress-bar-fill.warning {
-  background: var(--text-secondary);
+  background: #f59e0b;
 }
 
 .progress-bar-fill.danger {
-  background: var(--text-secondary);
+  background: #f43f5e;
 }
 
-/* ==========================================================================
-   SAVINGS GOALS
-   ========================================================================== */
+/* Savings Goals */
 .goals-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -335,9 +336,7 @@
   transform: translateY(-2px);
 }
 
-/* ==========================================================================
-   NET WORTH & ASSETS
-   ========================================================================== */
+/* Net Worth & Assets */
 .assets-grid {
   display: flex;
   flex-direction: column;
@@ -647,9 +646,7 @@
   text-align: right;
 }
 
-/* ==========================================================================
-   AI INSIGHTS CARDS
-   ========================================================================== */
+/* AI Insights Cards */
 .insights-feed {
   display: flex;
   flex-direction: column;
@@ -814,9 +811,7 @@
   margin-right: 6px;
 }
 
-/* ==========================================================================
-   AUTHENTICATION & LANDING PAGE
-   ========================================================================== */
+/* Authentication & Landing Page */
 .landing-hero {
   text-align: center;
   max-width: 760px;
@@ -967,9 +962,7 @@
   transform: translateY(-1px);
 }
 
-/* ==========================================================================
-   PAGE RESPONSIVENESS (Mobile & Tablet)
-   ========================================================================== */
+/* Page Responsiveness */
 @media (max-width: 768px) {
   .budget-grid, .goals-grid {
     grid-template-columns: 1fr;
