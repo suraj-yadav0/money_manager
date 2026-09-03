@@ -14,12 +14,16 @@ let cashFlowChartInstance = null;
 let categoryChartInstance = null;
 
 export const DashboardPage = {
+  cashFlowViewMode: 'trajectory', // 'trajectory', 'net', 'daily'
+
   render(state) {
     reconcileGoalSavedAmounts(state);
     reconcileInvestmentAssets(state);
+    const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
+    const isLight = activeTheme === 'light';
     const stats = this.calculateStats(state);
     const recentTx = this.getRecentTransactions(state);
-    const topCategories = this.getTopCategories(state, stats.totalExpenses);
+    const topCategories = this.getTopCategories(state, stats.totalExpenses, isLight);
     const activeGoals = state.goals.filter(g => g.is_active !== false && !g.is_completed).slice(0, 2);
 
     return `
@@ -128,21 +132,28 @@ export const DashboardPage = {
             
             <!-- Cash Flow Chart Card -->
             <div class="fintech-card">
-              <div class="card-header">
+              <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
                 <div class="card-title">
                   <span class="material-icons">query_stats</span>
-                  <span>Cash Flow Trajectory</span>
+                  <span>Cash Flow Analysis</span>
                 </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">
-                    <span class="material-icons" style="font-size: 12px; margin-right: 3px;">touch_app</span>Click chart to drill down
-                  </span>
-                  <div style="font-size: 12px; color: var(--text-muted); font-weight: 600;">
-                    Inflows vs Outflows
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <!-- View Mode Switcher -->
+                  <div class="filter-group" style="margin: 0;" id="dashboard-cf-mode-group">
+                    <button class="filter-chip ${this.cashFlowViewMode === 'trajectory' ? 'active' : ''}" data-cf-mode="trajectory" style="padding: 3px 10px; font-size: 11.5px;">Trajectory</button>
+                    <button class="filter-chip ${this.cashFlowViewMode === 'net' ? 'active' : ''}" data-cf-mode="net" style="padding: 3px 10px; font-size: 11.5px;">Net Spread</button>
+                    <button class="filter-chip ${this.cashFlowViewMode === 'daily' ? 'active' : ''}" data-cf-mode="daily" style="padding: 3px 10px; font-size: 11.5px;">Daily Bars</button>
                   </div>
+                  <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">
+                    <span class="material-icons" style="font-size: 12px; margin-right: 2px;">touch_app</span>Click to drill down
+                  </span>
                 </div>
               </div>
-              <div style="position: relative; height: 280px; width: 100%; max-width: 100%; min-width: 0; overflow: hidden;">
+
+              <!-- Dynamic Mini Summary Row -->
+              <div class="cf-mini-summary" id="cf-mini-summary"></div>
+
+              <div style="position: relative; height: 260px; width: 100%; max-width: 100%; min-width: 0; overflow: hidden;">
                 <canvas id="cashflow-chart-canvas"></canvas>
               </div>
             </div>
@@ -188,31 +199,41 @@ export const DashboardPage = {
                   <span class="material-icons">donut_large</span>
                   <span>Spending by Category</span>
                 </div>
-                <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">
-                  <span class="material-icons" style="font-size: 12px; margin-right: 3px;">touch_app</span>Click to drill down
-                </span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">
+                    ${topCategories.length} Categories
+                  </span>
+                  <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">
+                    <span class="material-icons" style="font-size: 12px; margin-right: 2px;">touch_app</span>Click to drill down
+                  </span>
+                </div>
               </div>
 
               ${stats.totalExpenses > 0 ? `
-                <div style="position: relative; height: 200px; width: 100%; max-width: 100%; min-width: 0; overflow: hidden; margin-bottom: 14px;">
+                <div style="position: relative; height: 210px; width: 100%; max-width: 100%; min-width: 0; display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
                   <canvas id="category-donut-canvas"></canvas>
+                  <div class="nw-donut-center" style="max-width: 150px;">
+                    <div class="nw-donut-center-label" id="dashboard-cat-donut-label" style="max-width: 145px; font-size: 9.5px; letter-spacing: 0.3px;">Total Spend</div>
+                    <div class="nw-donut-center-val" id="dashboard-cat-donut-val" style="font-size: 17px;">${Formatters.compactCurrency(stats.totalExpenses)}</div>
+                  </div>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 6px;">
-                  ${topCategories.map(cat => `
-                    <div class="category-breakdown-row" data-cat-name="${cat.name}" title="Click to view all ${cat.name} expenses">
+                <div style="display: flex; flex-direction: column; gap: 6px;" id="dashboard-category-list">
+                  ${topCategories.map((cat, idx) => `
+                    <div class="category-breakdown-row" data-cat-name="${cat.name}" data-cat-idx="${idx}" title="Click to view all ${cat.name} expenses">
                       <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 6px;">
-                        <span style="display: flex; align-items: center; gap: 6px; color: var(--text-primary);">
-                          <span class="material-icons" style="font-size: 16px; color: var(--primary);">${IconHelper.getMaterialIcon(cat.icon)}</span>
-                          ${cat.name}
+                        <span style="display: flex; align-items: center; gap: 8px; color: var(--text-primary); min-width: 0;">
+                          <span class="nw-color-dot" style="background: ${cat.color}; flex-shrink: 0;"></span>
+                          <span class="material-icons" style="font-size: 15px; opacity: 0.8; flex-shrink: 0;">${IconHelper.getMaterialIcon(cat.icon)}</span>
+                          <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${cat.name}</span>
                         </span>
-                        <span style="color: var(--text-primary); display: flex; align-items: center; gap: 4px;">
-                          ${Formatters.currency(cat.amount)}
+                        <span style="color: var(--text-primary); display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-left: 8px;">
+                          <span>${Formatters.currency(cat.amount)}</span>
                           <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">(${cat.percent}%)</span>
                           <span class="material-icons" style="font-size: 14px; color: var(--text-muted);">chevron_right</span>
                         </span>
                       </div>
-                      <div class="progress-track" style="margin: 0; height: 6px;">
-                        <div class="progress-bar-fill safe" style="width: ${cat.percent}%;"></div>
+                      <div class="progress-track" style="margin: 0; height: 5px;">
+                        <div class="progress-bar-fill" style="width: ${cat.percent}%; background: ${cat.color};"></div>
                       </div>
                     </div>
                   `).join('')}
@@ -343,7 +364,7 @@ export const DashboardPage = {
       .slice(0, 6);
   },
 
-  getTopCategories(state, totalExpenses) {
+  getTopCategories(state, totalExpenses, isLight = false) {
     if (!totalExpenses || totalExpenses <= 0) return [];
 
     const categoryMap = {};
@@ -358,18 +379,42 @@ export const DashboardPage = {
       const name = cat ? cat.name : 'Other';
       const icon = cat ? cat.icon : 'category';
       if (!categoryMap[name]) {
-        categoryMap[name] = { name, icon, amount: 0 };
+        categoryMap[name] = { name, icon, amount: 0, count: 0 };
       }
-      categoryMap[name].amount += tx.amount;
+      categoryMap[name].amount += Number(tx.amount || 0);
+      categoryMap[name].count += 1;
     }
 
-    return Object.values(categoryMap)
-      .sort((a, b) => b.amount - a.amount)
-      .slice(0, 4)
-      .map(c => ({
-        ...c,
-        percent: Math.round((c.amount / totalExpenses) * 100)
-      }));
+    const colorsDark = ['#FFFFFF', '#E2E8F0', '#CBD5E1', '#94A3B8', '#64748B', '#475569', '#334155'];
+    const colorsLight = ['#0F172A', '#334155', '#475569', '#64748B', '#94A3B8', '#CBD5E1', '#E2E8F0'];
+    const palette = isLight ? colorsLight : colorsDark;
+
+    const sorted = Object.values(categoryMap).sort((a, b) => b.amount - a.amount);
+    
+    let displayList = [];
+    if (sorted.length > 5) {
+      const top4 = sorted.slice(0, 4);
+      const remainder = sorted.slice(4);
+      const remainderAmount = remainder.reduce((sum, c) => sum + c.amount, 0);
+      const remainderCount = remainder.reduce((sum, c) => sum + c.count, 0);
+      displayList = [
+        ...top4,
+        {
+          name: `Other (${remainder.length} categories)`,
+          icon: 'more_horiz',
+          amount: remainderAmount,
+          count: remainderCount
+        }
+      ];
+    } else {
+      displayList = sorted;
+    }
+
+    return displayList.map((c, idx) => ({
+      ...c,
+      color: palette[idx % palette.length],
+      percent: totalExpenses > 0 ? Math.round((c.amount / totalExpenses) * 100) : 0
+    }));
   },
 
   calculateStats(state) {
@@ -473,13 +518,57 @@ export const DashboardPage = {
       });
     });
 
-    // Category breakdown row click to drill down
-    document.querySelectorAll('.category-breakdown-row').forEach(row => {
+    // Cash flow view mode switch buttons
+    document.querySelectorAll('#dashboard-cf-mode-group [data-cf-mode]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const mode = btn.getAttribute('data-cf-mode');
+        if (this.cashFlowViewMode !== mode) {
+          this.cashFlowViewMode = mode;
+          document.querySelectorAll('#dashboard-cf-mode-group [data-cf-mode]').forEach(b => {
+            b.classList.toggle('active', b.getAttribute('data-cf-mode') === mode);
+          });
+          this.renderCashFlowChart(state);
+        }
+      });
+    });
+
+    // Category breakdown row hover sync & drill down
+    const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
+    const isLight = activeTheme === 'light';
+    const stats = this.calculateStats(state);
+    const topCats = this.getTopCategories(state, stats.totalExpenses, isLight);
+
+    const catRows = document.querySelectorAll('#dashboard-category-list .category-breakdown-row');
+    catRows.forEach(row => {
+      const idx = Number(row.getAttribute('data-cat-idx'));
+      const cat = topCats[idx];
+
+      row.addEventListener('mouseenter', () => {
+        if (cat) {
+          const donutLabel = document.getElementById('dashboard-cat-donut-label');
+          const donutVal = document.getElementById('dashboard-cat-donut-val');
+          if (donutLabel) donutLabel.textContent = `${cat.name} (${cat.percent}%)`;
+          if (donutVal) donutVal.textContent = Formatters.currency(cat.amount);
+          if (categoryChartInstance) {
+            categoryChartInstance.setActiveElements([{ datasetIndex: 0, index: idx }]);
+            categoryChartInstance.update();
+          }
+        }
+      });
+
+      row.addEventListener('mouseleave', () => {
+        const donutLabel = document.getElementById('dashboard-cat-donut-label');
+        const donutVal = document.getElementById('dashboard-cat-donut-val');
+        if (donutLabel) donutLabel.textContent = 'Total Spend';
+        if (donutVal) donutVal.textContent = Formatters.compactCurrency(stats.totalExpenses);
+        if (categoryChartInstance) {
+          categoryChartInstance.setActiveElements([]);
+          categoryChartInstance.update();
+        }
+      });
+
       row.addEventListener('click', () => {
-        const catName = row.getAttribute('data-cat-name');
-        const stats = this.calculateStats(state);
-        const topCats = this.getTopCategories(state, stats.totalExpenses);
-        const cat = topCats.find(c => c.name.toLowerCase() === (catName || '').toLowerCase());
         if (cat) {
           this.showCategoryDrillDown(cat, state);
         }
@@ -491,111 +580,167 @@ export const DashboardPage = {
   },
 
   renderCharts(state) {
-    // 1. Cash Flow Trend Chart
+    this.renderCashFlowChart(state);
+    this.renderCategoryChart(state);
+  },
+
+  renderCashFlowChart(state) {
     const cashFlowCtx = document.getElementById('cashflow-chart-canvas');
-    if (cashFlowCtx) {
-      if (cashFlowChartInstance) cashFlowChartInstance.destroy();
+    if (!cashFlowCtx) return;
 
-      const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
-      const isLight = activeTheme === 'light';
-      const textColor = isLight ? '#475569' : '#94A3B8';
-      const gridColor = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
-      const tooltipBg = isLight ? '#FFFFFF' : '#11141E';
-      const tooltipTitle = isLight ? '#0F172A' : '#FFFFFF';
-      const tooltipBorder = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)';
+    if (cashFlowChartInstance) {
+      cashFlowChartInstance.destroy();
+      cashFlowChartInstance = null;
+    }
 
-      const range = DateRangeHelper.getDateRange(state.dateFilter);
-      const filteredTx = state.transactions
-        .filter(t => {
-          const ts = new Date(t.timestamp);
-          return ts >= range.start && ts <= range.end;
-        })
-        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
+    const isLight = activeTheme === 'light';
+    const textColor = isLight ? '#475569' : '#94A3B8';
+    const gridColor = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
+    const tooltipBg = isLight ? '#FFFFFF' : '#11141E';
+    const tooltipTitle = isLight ? '#0F172A' : '#FFFFFF';
+    const tooltipBorder = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)';
 
-      // Build daily cumulative trend
-      const labels = [];
-      const incomeData = [];
-      const expenseData = [];
-      
-      let cumIncome = 0;
-      let cumExpense = 0;
+    const range = DateRangeHelper.getDateRange(state.dateFilter);
+    const filteredTx = state.transactions
+      .filter(t => {
+        const ts = new Date(t.timestamp);
+        return ts >= range.start && ts <= range.end;
+      })
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
-      // Group by date
-      const daysMap = {};
-      filteredTx.forEach(tx => {
-        const dStr = new Date(tx.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        if (!daysMap[dStr]) {
-          daysMap[dStr] = {
-            income: 0,
-            expense: 0,
-            transactions: [],
-            dateObj: new Date(tx.timestamp)
-          };
-        }
-        if (tx.type === 'income') daysMap[dStr].income += tx.amount;
-        else daysMap[dStr].expense += tx.amount;
-        daysMap[dStr].transactions.push(tx);
-      });
-
-      const dayEntries = Object.entries(daysMap);
-      if (dayEntries.length === 0) {
-        labels.push('Today');
-        incomeData.push(0);
-        expenseData.push(0);
-      } else {
-        dayEntries.forEach(([day, vals]) => {
-          labels.push(day);
-          cumIncome += vals.income;
-          cumExpense += vals.expense;
-          incomeData.push(cumIncome);
-          expenseData.push(cumExpense);
-        });
+    // Group by date
+    const daysMap = {};
+    filteredTx.forEach(tx => {
+      const dStr = new Date(tx.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      if (!daysMap[dStr]) {
+        daysMap[dStr] = {
+          income: 0,
+          expense: 0,
+          transactions: [],
+          dateObj: new Date(tx.timestamp)
+        };
       }
+      if (tx.type === 'income') daysMap[dStr].income += Number(tx.amount || 0);
+      else daysMap[dStr].expense += Number(tx.amount || 0);
+      daysMap[dStr].transactions.push(tx);
+    });
 
-      const gradientInflows = cashFlowCtx.getContext('2d').createLinearGradient(0, 0, 0, 260);
-      gradientInflows.addColorStop(0, isLight ? 'rgba(15, 23, 42, 0.1)' : 'rgba(255, 255, 255, 0.12)');
+    const dayEntries = Object.entries(daysMap);
+    const labels = [];
+    let cumIncome = 0;
+    let cumExpense = 0;
+    const incomeCumulative = [];
+    const expenseCumulative = [];
+    const dailyNetList = [];
+    const dailyIncomeList = [];
+    const dailyExpenseList = [];
+
+    if (dayEntries.length === 0) {
+      labels.push('Today');
+      incomeCumulative.push(0);
+      expenseCumulative.push(0);
+      dailyNetList.push(0);
+      dailyIncomeList.push(0);
+      dailyExpenseList.push(0);
+    } else {
+      dayEntries.forEach(([day, vals]) => {
+        labels.push(day);
+        cumIncome += vals.income;
+        cumExpense += vals.expense;
+        incomeCumulative.push(cumIncome);
+        expenseCumulative.push(cumExpense);
+        dailyNetList.push(vals.income - vals.expense);
+        dailyIncomeList.push(vals.income);
+        dailyExpenseList.push(vals.expense);
+      });
+    }
+
+    const netPeriod = cumIncome - cumExpense;
+
+    // Update Mini Summary
+    const summaryContainer = document.getElementById('cf-mini-summary');
+    if (summaryContainer) {
+      if (this.cashFlowViewMode === 'trajectory') {
+        summaryContainer.innerHTML = `
+          <div class="cf-mini-item"><span>Total Inflow</span><strong>+${Formatters.currency(cumIncome)}</strong></div>
+          <div class="cf-mini-item"><span>Total Outflow</span><strong>-${Formatters.currency(cumExpense)}</strong></div>
+          <div class="cf-mini-item"><span>Net Margin</span><strong style="color: ${netPeriod >= 0 ? 'var(--primary)' : 'var(--error)'};">${(netPeriod >= 0 ? '+' : '') + Formatters.currency(netPeriod)}</strong></div>
+        `;
+      } else if (this.cashFlowViewMode === 'net') {
+        let maxSurplusDay = null;
+        let maxDeficitDay = null;
+        dayEntries.forEach(([day, vals]) => {
+          const net = vals.income - vals.expense;
+          if (net > 0 && (!maxSurplusDay || net > (maxSurplusDay[1].income - maxSurplusDay[1].expense))) {
+            maxSurplusDay = [day, vals];
+          }
+          if (net < 0 && (!maxDeficitDay || net < (maxDeficitDay[1].income - maxDeficitDay[1].expense))) {
+            maxDeficitDay = [day, vals];
+          }
+        });
+        summaryContainer.innerHTML = `
+          <div class="cf-mini-item"><span>Net Period Cashflow</span><strong style="color: ${netPeriod >= 0 ? 'var(--primary)' : 'var(--error)'};">${(netPeriod >= 0 ? '+' : '') + Formatters.currency(netPeriod)}</strong></div>
+          <div class="cf-mini-item"><span>Top Surplus</span><strong>${maxSurplusDay ? `${maxSurplusDay[0]} (+${Formatters.compactCurrency(maxSurplusDay[1].income - maxSurplusDay[1].expense)})` : 'None'}</strong></div>
+          <div class="cf-mini-item"><span>Top Outflow</span><strong>${maxDeficitDay ? `${maxDeficitDay[0]} (-${Formatters.compactCurrency(maxDeficitDay[1].expense - maxDeficitDay[1].income)})` : 'None'}</strong></div>
+        `;
+      } else {
+        summaryContainer.innerHTML = `
+          <div class="cf-mini-item"><span>Active Days</span><strong>${dayEntries.length}</strong></div>
+          <div class="cf-mini-item"><span>Daily Avg Inflow</span><strong>${Formatters.compactCurrency(dayEntries.length ? cumIncome / dayEntries.length : 0)}</strong></div>
+          <div class="cf-mini-item"><span>Daily Avg Outflow</span><strong>${Formatters.compactCurrency(dayEntries.length ? cumExpense / dayEntries.length : 0)}</strong></div>
+        `;
+      }
+    }
+
+    // Chart Options & Datasets by Mode
+    let chartConfig = null;
+
+    if (this.cashFlowViewMode === 'trajectory') {
+      const gradientInflows = cashFlowCtx.getContext('2d').createLinearGradient(0, 0, 0, 240);
+      gradientInflows.addColorStop(0, isLight ? 'rgba(15, 23, 42, 0.12)' : 'rgba(255, 255, 255, 0.15)');
       gradientInflows.addColorStop(1, 'transparent');
 
-      const gradientOutflows = cashFlowCtx.getContext('2d').createLinearGradient(0, 0, 0, 260);
+      const gradientOutflows = cashFlowCtx.getContext('2d').createLinearGradient(0, 0, 0, 240);
       gradientOutflows.addColorStop(0, isLight ? 'rgba(100, 116, 139, 0.08)' : 'rgba(148, 163, 184, 0.08)');
       gradientOutflows.addColorStop(1, 'transparent');
 
-      cashFlowChartInstance = new Chart(cashFlowCtx, {
+      chartConfig = {
         type: 'line',
         data: {
           labels,
           datasets: [
             {
               label: 'Inflows',
-              data: incomeData,
+              data: incomeCumulative,
               borderColor: isLight ? '#0F172A' : '#FFFFFF',
               backgroundColor: gradientInflows,
               borderWidth: 2,
               tension: 0.35,
               fill: true,
-              pointRadius: labels.length > 20 ? 0 : 3.5,
-              pointBackgroundColor: isLight ? '#0F172A' : '#FFFFFF',
+              pointRadius: labels.length > 15 ? 0 : 3.5,
+              pointHoverRadius: 6,
+              pointBackgroundColor: isLight ? '#0F172A' : '#FFFFFF'
             },
             {
               label: 'Outflows',
-              data: expenseData,
+              data: expenseCumulative,
               borderColor: isLight ? '#64748B' : '#94A3B8',
               backgroundColor: gradientOutflows,
               borderWidth: 2,
               tension: 0.35,
               fill: true,
-              pointRadius: labels.length > 20 ? 0 : 3.5,
-              pointBackgroundColor: isLight ? '#64748B' : '#94A3B8',
+              pointRadius: labels.length > 15 ? 0 : 3.5,
+              pointHoverRadius: 6,
+              pointBackgroundColor: isLight ? '#64748B' : '#94A3B8'
             }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          interaction: {
-            mode: 'index',
-            intersect: false
-          },
+          interaction: { mode: 'index', intersect: false },
+          layout: { padding: { top: 6, right: 8, bottom: 4, left: 4 } },
           onHover: (event, activeElements) => {
             if (event.native && event.native.target) {
               event.native.target.style.cursor = activeElements.length ? 'pointer' : 'default';
@@ -603,17 +748,17 @@ export const DashboardPage = {
           },
           onClick: (event, elements) => {
             if (!elements || !elements.length) return;
-            const elementIndex = elements[0].index;
-            const dayLabel = labels[elementIndex];
+            const idx = elements[0].index;
+            const dayLabel = labels[idx];
             const dayData = daysMap[dayLabel];
-            if (dayData && dayData.transactions && dayData.transactions.length > 0) {
+            if (dayData?.transactions?.length > 0) {
               this.showDateDrillDown(dayLabel, dayData, state);
             }
           },
           plugins: {
             legend: {
               position: 'top',
-              labels: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 12, weight: 600 }, boxWidth: 12 }
+              labels: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 11.5, weight: 600 }, boxWidth: 10, padding: 12 }
             },
             tooltip: {
               backgroundColor: tooltipBg,
@@ -621,9 +766,8 @@ export const DashboardPage = {
               bodyColor: textColor,
               borderColor: tooltipBorder,
               borderWidth: 1,
-              padding: 12,
-              cornerRadius: 8,
-              boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+              padding: 10,
+              cornerRadius: 6,
               callbacks: {
                 label: (ctx) => ` ${ctx.dataset.label}: ${Formatters.currency(ctx.parsed.y)}`
               }
@@ -632,82 +776,248 @@ export const DashboardPage = {
           scales: {
             x: {
               grid: { color: gridColor },
-              ticks: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 11 } }
+              ticks: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 10 }, maxRotation: 0, minRotation: 0, autoSkip: true, maxTicksLimit: 7 }
             },
             y: {
               grid: { color: gridColor },
-              ticks: {
-                color: textColor,
-                font: { family: 'Plus Jakarta Sans', size: 11 },
-                callback: (val) => Formatters.compactCurrency(val)
-              }
+              border: { dash: [3, 3] },
+              ticks: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 10 }, maxTicksLimit: 5, callback: (val) => Formatters.compactCurrency(val) }
             }
           }
         }
+      };
+    } else if (this.cashFlowViewMode === 'net') {
+      const netBarColors = dailyNetList.map(net => {
+        if (net >= 0) return isLight ? '#0F172A' : '#FFFFFF';
+        return 'rgba(239, 68, 68, 0.85)';
       });
-    }
 
-    // 2. Category Donut Chart
-    const categoryCtx = document.getElementById('category-donut-canvas');
-    if (categoryCtx) {
-      if (categoryChartInstance) categoryChartInstance.destroy();
-
-      const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
-      const isLight = activeTheme === 'light';
-      const topCats = this.getTopCategories(state, 100);
-      if (topCats.length > 0) {
-        const labels = topCats.map(c => c.name);
-        const data = topCats.map(c => c.amount);
-        const colors = isLight 
-          ? ['#0F172A', '#334155', '#475569', '#64748B', '#94A3B8', '#CBD5E1', '#E2E8F0']
-          : ['#FFFFFF', '#E2E8F0', '#CBD5E1', '#94A3B8', '#64748B', '#475569', '#334155'];
-
-        categoryChartInstance = new Chart(categoryCtx, {
-          type: 'doughnut',
-          data: {
-            labels,
-            datasets: [{
-              data,
-              backgroundColor: colors.slice(0, labels.length),
-              borderWidth: 0,
-              hoverOffset: 6
-            }]
+      chartConfig = {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Net Flow',
+              data: dailyNetList,
+              backgroundColor: netBarColors,
+              borderRadius: 4,
+              maxBarThickness: 22
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: { top: 6, right: 8, bottom: 4, left: 4 } },
+          onHover: (event, activeElements) => {
+            if (event.native && event.native.target) {
+              event.native.target.style.cursor = activeElements.length ? 'pointer' : 'default';
+            }
           },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '74%',
-            onHover: (event, activeElements) => {
-              if (event.native && event.native.target) {
-                event.native.target.style.cursor = activeElements.length ? 'pointer' : 'default';
-              }
-            },
-            onClick: (event, elements) => {
-              if (!elements || !elements.length) return;
-              const elementIndex = elements[0].index;
-              const cat = topCats[elementIndex];
-              if (cat) {
-                this.showCategoryDrillDown(cat, state);
-              }
-            },
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                backgroundColor: isLight ? '#FFFFFF' : '#11141E',
-                titleColor: isLight ? '#0F172A' : '#FFFFFF',
-                bodyColor: isLight ? '#475569' : '#94A3B8',
-                borderColor: isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)',
-                borderWidth: 1,
-                padding: 10,
-                cornerRadius: 8,
-                callbacks: {
-                  label: (ctx) => ` ${ctx.label}: ${Formatters.currency(ctx.parsed)}`
+          onClick: (event, elements) => {
+            if (!elements || !elements.length) return;
+            const idx = elements[0].index;
+            const dayLabel = labels[idx];
+            const dayData = daysMap[dayLabel];
+            if (dayData?.transactions?.length > 0) {
+              this.showDateDrillDown(dayLabel, dayData, state);
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: tooltipBg,
+              titleColor: tooltipTitle,
+              bodyColor: textColor,
+              borderColor: tooltipBorder,
+              borderWidth: 1,
+              padding: 10,
+              cornerRadius: 6,
+              callbacks: {
+                label: (ctx) => {
+                  const val = ctx.parsed.y;
+                  const prefix = val >= 0 ? '+' : '';
+                  const status = val >= 0 ? 'Surplus' : 'Deficit';
+                  return ` Net Flow: ${prefix}${Formatters.currency(val)} (${status})`;
                 }
               }
             }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 10 }, maxRotation: 0, minRotation: 0, autoSkip: true, maxTicksLimit: 7 }
+            },
+            y: {
+              grid: {
+                color: (ctx) => ctx.tick?.value === 0 ? (isLight ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.35)') : gridColor
+              },
+              border: { dash: [3, 3] },
+              ticks: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 10 }, maxTicksLimit: 5, callback: (val) => Formatters.compactCurrency(val) }
+            }
           }
+        }
+      };
+    } else {
+      chartConfig = {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Inflows',
+              data: dailyIncomeList,
+              backgroundColor: isLight ? '#0F172A' : '#FFFFFF',
+              borderRadius: 4,
+              maxBarThickness: 16
+            },
+            {
+              label: 'Outflows',
+              data: dailyExpenseList,
+              backgroundColor: isLight ? '#64748B' : 'rgba(148, 163, 184, 0.75)',
+              borderRadius: 4,
+              maxBarThickness: 16
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: { top: 6, right: 8, bottom: 4, left: 4 } },
+          onHover: (event, activeElements) => {
+            if (event.native && event.native.target) {
+              event.native.target.style.cursor = activeElements.length ? 'pointer' : 'default';
+            }
+          },
+          onClick: (event, elements) => {
+            if (!elements || !elements.length) return;
+            const idx = elements[0].index;
+            const dayLabel = labels[idx];
+            const dayData = daysMap[dayLabel];
+            if (dayData?.transactions?.length > 0) {
+              this.showDateDrillDown(dayLabel, dayData, state);
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 11.5, weight: 600 }, boxWidth: 10, padding: 12 }
+            },
+            tooltip: {
+              backgroundColor: tooltipBg,
+              titleColor: tooltipTitle,
+              bodyColor: textColor,
+              borderColor: tooltipBorder,
+              borderWidth: 1,
+              padding: 10,
+              cornerRadius: 6,
+              callbacks: {
+                label: (ctx) => ` ${ctx.dataset.label}: ${Formatters.currency(ctx.parsed.y)}`
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 10 }, maxRotation: 0, minRotation: 0, autoSkip: true, maxTicksLimit: 7 }
+            },
+            y: {
+              grid: { color: gridColor },
+              border: { dash: [3, 3] },
+              ticks: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 10 }, maxTicksLimit: 5, callback: (val) => Formatters.compactCurrency(val) }
+            }
+          }
+        }
+      };
+    }
+
+    cashFlowChartInstance = new Chart(cashFlowCtx, chartConfig);
+  },
+
+  renderCategoryChart(state) {
+    const categoryCtx = document.getElementById('category-donut-canvas');
+    if (!categoryCtx) return;
+
+    if (categoryChartInstance) {
+      categoryChartInstance.destroy();
+      categoryChartInstance = null;
+    }
+
+    const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
+    const isLight = activeTheme === 'light';
+    const stats = this.calculateStats(state);
+    const topCats = this.getTopCategories(state, stats.totalExpenses, isLight);
+
+    if (topCats.length > 0) {
+      const labels = topCats.map(c => c.name);
+      const data = topCats.map(c => c.amount);
+      const colors = topCats.map(c => c.color);
+
+      categoryChartInstance = new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{
+            data,
+            backgroundColor: colors,
+            borderWidth: 0,
+            hoverOffset: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '74%',
+          onHover: (event, activeElements) => {
+            if (event.native && event.native.target) {
+              event.native.target.style.cursor = activeElements.length ? 'pointer' : 'default';
+            }
+            const donutLabel = document.getElementById('dashboard-cat-donut-label');
+            const donutVal = document.getElementById('dashboard-cat-donut-val');
+            const catRows = document.querySelectorAll('#dashboard-category-list .category-breakdown-row');
+
+            if (activeElements && activeElements.length > 0) {
+              const idx = activeElements[0].index;
+              const cat = topCats[idx];
+              if (cat) {
+                if (donutLabel) donutLabel.textContent = `${cat.name} (${cat.percent}%)`;
+                if (donutVal) donutVal.textContent = Formatters.currency(cat.amount);
+                catRows.forEach((r, rIdx) => {
+                  r.classList.toggle('active', rIdx === idx);
+                });
+                return;
+              }
+            }
+
+            if (donutLabel) donutLabel.textContent = 'Total Spend';
+            if (donutVal) donutVal.textContent = Formatters.compactCurrency(stats.totalExpenses);
+            catRows.forEach(r => r.classList.remove('active'));
+          },
+          onClick: (event, elements) => {
+            if (!elements || !elements.length) return;
+            const idx = elements[0].index;
+            const cat = topCats[idx];
+            if (cat) {
+              this.showCategoryDrillDown(cat, state);
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: false }
+          }
+        }
+      });
+
+      categoryCtx.addEventListener('mouseleave', () => {
+        const donutLabel = document.getElementById('dashboard-cat-donut-label');
+        const donutVal = document.getElementById('dashboard-cat-donut-val');
+        if (donutLabel) donutLabel.textContent = 'Total Spend';
+        if (donutVal) donutVal.textContent = Formatters.compactCurrency(stats.totalExpenses);
+        document.querySelectorAll('#dashboard-category-list .category-breakdown-row').forEach(r => {
+          r.classList.remove('active');
         });
-      }
+      });
     }
   },
 
