@@ -2,6 +2,7 @@
 import { StateManager } from '../state.js';
 import { AuthService } from '../auth.js';
 import { DbService } from '../db.js';
+import { CloudConfigModal } from './cloud-config-modal.js';
 
 export const AuthPage = {
   isSignUp: false,
@@ -34,8 +35,8 @@ export const AuthPage = {
 
               <div class="header-actions">
                 <button class="btn-secondary" id="landing-guest-btn" style="padding: 7px 16px; font-size: 13px; font-weight: 600;">
-                  <span class="material-icons" style="font-size: 16px; color: var(--primary);">explore</span>
-                  <span>Explore Demo</span>
+                  <span class="material-icons" style="font-size: 16px; color: var(--primary);">shield</span>
+                  <span>Private Local Mode</span>
                 </button>
               </div>
             </div>
@@ -121,9 +122,14 @@ export const AuthPage = {
                 <span>Continue with Google</span>
               </button>
 
-              <div style="margin-top: 22px; text-align: center;">
-                <button class="btn-ghost" id="auth-guest-link" style="font-size: 13px; color: var(--text-secondary); width: 100%;">
-                  Want to try without an account? <span style="color: var(--primary); text-decoration: underline; font-weight: 600;">Explore Demo Mode →</span>
+              <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 8px; text-align: center;">
+                <button class="btn-ghost" id="auth-guest-link" style="font-size: 13px; color: var(--text-primary); font-weight: 600; width: 100%; justify-content: center;">
+                  <span class="material-icons" style="font-size: 16px; color: var(--primary);">shield</span>
+                  <span>Start in Private Local Mode (No Cloud)</span>
+                </button>
+                <button class="btn-ghost" id="auth-cloud-config-link" style="font-size: 12px; color: var(--text-muted); width: 100%; justify-content: center;">
+                  <span class="material-icons" style="font-size: 14px;">tune</span>
+                  <span>Bring Your Own Firebase (Custom Cloud)</span>
                 </button>
               </div>
             </div>
@@ -254,13 +260,17 @@ export const AuthPage = {
       }
     });
 
-    // Offline Guest Demo Mode
+    // Offline Private Local Mode & Custom Cloud
     document.getElementById('landing-guest-btn')?.addEventListener('click', () => {
       StateManager.enableGuestMode();
     });
 
     document.getElementById('auth-guest-link')?.addEventListener('click', () => {
       StateManager.enableGuestMode();
+    });
+
+    document.getElementById('auth-cloud-config-link')?.addEventListener('click', () => {
+      CloudConfigModal.show();
     });
   }
 };

@@ -1,0 +1,9 @@
+services:
+  money_manager_web:
+    build:
+      context: ./web_app
+      dockerfile: Dockerfile
+    container_name: money_manager_web
+    restart: unless-stopped
+    ports:
+      - "8080:80"

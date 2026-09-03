@@ -191,6 +191,52 @@ class AppStateManager {
       this.notify();
     }
   }
+
+  // Export all local data to a portable JSON object
+  exportBackupData() {
+    return {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      userSettings: this.state.userSettings,
+      categories: this.state.categories,
+      transactions: this.state.transactions,
+      goals: this.state.goals,
+      goalContributions: this.state.goalContributions,
+      categorizationRules: this.state.categorizationRules,
+      assets: this.state.assets,
+      bankAccounts: this.state.bankAccounts
+    };
+  }
+
+  // Import JSON backup data and persist to local storage
+  importBackupData(jsonString) {
+    try {
+      const data = typeof jsonString === 'string' ? JSON.parse(jsonString) : jsonString;
+      if (!data || typeof data !== 'object') throw new Error('Invalid JSON format');
+
+      if (Array.isArray(data.transactions)) this.state.transactions = data.transactions;
+      if (Array.isArray(data.categories)) this.state.categories = data.categories;
+      if (Array.isArray(data.goals)) this.state.goals = data.goals;
+      if (Array.isArray(data.goalContributions)) this.state.goalContributions = data.goalContributions;
+      if (Array.isArray(data.categorizationRules)) this.state.categorizationRules = data.categorizationRules;
+      if (Array.isArray(data.assets)) this.state.assets = data.assets;
+      if (Array.isArray(data.bankAccounts)) this.state.bankAccounts = data.bankAccounts;
+      if (data.userSettings && typeof data.userSettings === 'object') {
+        this.state.userSettings = { ...this.state.userSettings, ...data.userSettings };
+      }
+
+      this.saveGuestState();
+      this.notify();
+      return {
+        transactionsCount: this.state.transactions.length,
+        categoriesCount: this.state.categories.length,
+        goalsCount: this.state.goals.length,
+        assetsCount: this.state.assets.length
+      };
+    } catch (err) {
+      throw new Error('Failed to import backup: ' + err.message);
+    }
+  }
 }
 
 export const StateManager = new AppStateManager();

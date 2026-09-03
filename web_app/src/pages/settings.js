@@ -5,6 +5,8 @@ import { AuthService } from '../auth.js';
 import { Formatters } from '../utils/formatters.js';
 import { AppConstants } from '../utils/constants.js';
 import { Router } from '../router.js';
+import { CloudConfigModal } from './cloud-config-modal.js';
+import { isUsingCustomFirebase, getActiveProjectId } from '../firebase-config.js';
 
 export const SettingsPage = {
   isSaving: false,
@@ -15,6 +17,8 @@ export const SettingsPage = {
   render(state) {
     const user = state.user;
     const settings = state.userSettings || {};
+    const isCustom = isUsingCustomFirebase();
+    const activeProject = getActiveProjectId();
     
     if (this.incomeInputVal === '') {
       this.incomeInputVal = settings.monthlyIncome || settings.monthly_income || 0;
@@ -54,14 +58,18 @@ export const SettingsPage = {
                 </span>
               </div>
               <div style="flex: 1;">
-                <div style="font-weight: 700; font-size: 16px; color: var(--text-primary);">${user ? (user.email || 'Cloud Account') : 'Guest Mode (Offline)'}</div>
+                <div style="font-weight: 700; font-size: 16px; color: var(--text-primary);">${user ? (user.email || 'Cloud Account') : 'Private Local Storage (Offline)'}</div>
                 <div style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">
-                  ${user ? `Connected to Cloud Firestore • Last synced: ${lastSyncLabel}` : 'Data is cached locally on this browser'}
+                  ${user ? `Connected to ${isCustom ? `Custom Firebase (${activeProject})` : 'Cloud Firestore'} • Last synced: ${lastSyncLabel}` : 'Data is stored securely in this browser without cloud dependencies'}
                 </div>
               </div>
             </div>
 
-            <div style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--glass-border); padding-top: 14px;">
+            <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--glass-border); padding-top: 14px; flex-wrap: wrap;">
+              <button class="btn-ghost" id="settings-cloud-config-btn" style="padding: 7px 14px; font-size: 12.5px;">
+                <span class="material-icons" style="font-size: 15px;">tune</span>
+                <span>${isCustom ? 'Manage Custom Cloud' : 'Configure Custom Cloud'}</span>
+              </button>
               ${user ? `
                 <button class="btn-secondary" id="settings-sync-now-btn" ${this.isSyncing ? 'disabled' : ''} style="padding: 7px 16px; font-size: 13px;">
                   <span class="material-icons ${this.isSyncing ? 'animate-spin' : ''}" style="font-size: 16px;">sync</span>
@@ -114,17 +122,27 @@ export const SettingsPage = {
           <!-- Data Export -->
           <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-surface-subtle); border: 1px solid var(--glass-border); padding: 16px 20px; border-radius: var(--radius-md); cursor: pointer;" id="settings-export-row">
             <div>
-              <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">Export Local JSON Backup</div>
-              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Download entire transaction dataset</div>
+              <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">Export Complete Backup</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Download all transactions, categories, goals, and assets as JSON</div>
             </div>
             <span class="material-icons" style="color: var(--text-muted);">download</span>
+          </div>
+
+          <!-- Data Import -->
+          <input type="file" id="settings-import-file-input" accept=".json" style="display: none;">
+          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-surface-subtle); border: 1px solid var(--glass-border); padding: 16px 20px; border-radius: var(--radius-md); cursor: pointer;" id="settings-import-row">
+            <div>
+              <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">Import Backup from JSON</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Restore transactions and assets onto this device</div>
+            </div>
+            <span class="material-icons" style="color: var(--text-muted);">upload</span>
           </div>
 
           <!-- Reset Local Storage -->
           <div style="display: flex; align-items: center; justify-content: space-between; background: var(--error-bg); border: 1px solid rgba(255, 51, 102, 0.25); padding: 16px 20px; border-radius: var(--radius-md); cursor: pointer;" id="settings-reset-row">
             <div>
               <div style="font-weight: 700; font-size: 15px; color: var(--error);">Reset Local Cache</div>
-              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Purge local browser cache without affecting Firebase cloud data</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Purge local browser cache without affecting cloud data</div>
             </div>
             <span class="material-icons" style="color: var(--error);">delete_forever</span>
           </div>
@@ -197,20 +215,50 @@ export const SettingsPage = {
       Router.closeOverlay();
     });
 
-    // Export row
+    // Cloud Config modal
+    document.getElementById('settings-cloud-config-btn')?.addEventListener('click', () => {
+      CloudConfigModal.show();
+    });
+
+    // Export complete backup
     document.getElementById('settings-export-row')?.addEventListener('click', () => {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.transactions, null, 2));
+      const backupData = StateManager.exportBackupData();
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `quantro_data_${new Date().toISOString().slice(0, 10)}.json`);
+      downloadAnchor.setAttribute("download", `quantro_backup_${new Date().toISOString().slice(0, 10)}.json`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
     });
 
+    // Import backup
+    const fileInput = document.getElementById('settings-import-file-input');
+    document.getElementById('settings-import-row')?.addEventListener('click', () => {
+      fileInput?.click();
+    });
+
+    fileInput?.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const content = event.target?.result;
+          const res = StateManager.importBackupData(content);
+          alert(`Backup restored successfully!\n\nImported:\n• ${res.transactionsCount} Transactions\n• ${res.categoriesCount} Categories\n• ${res.goalsCount} Goals\n• ${res.assetsCount} Assets`);
+          Router.closeOverlay();
+        } catch (err) {
+          alert('Import failed: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    });
+
     // Reset local cache row
     document.getElementById('settings-reset-row')?.addEventListener('click', () => {
-      if (confirm('Reset offline browser cache? Your Firebase cloud data will remain safe.')) {
+      if (confirm('Reset offline browser cache? Your cloud data will remain safe.')) {
         StateManager.clearGuestLocalStorage();
         window.location.reload();
       }
