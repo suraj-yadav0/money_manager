@@ -6,6 +6,7 @@ import { Formatters } from '../utils/formatters.js';
 import { AppConstants } from '../utils/constants.js';
 import { Router } from '../router.js';
 import { CloudConfigModal } from './cloud-config-modal.js';
+import { SetupGuideModal } from './setup-guide-modal.js';
 import { isUsingCustomFirebase, getActiveProjectId } from '../firebase-config.js';
 
 export const SettingsPage = {
@@ -138,6 +139,15 @@ export const SettingsPage = {
             <span class="material-icons" style="color: var(--text-muted);">upload</span>
           </div>
 
+          <!-- Self-Hosting & Network Guide -->
+          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-surface-subtle); border: 1px solid var(--glass-border); padding: 16px 20px; border-radius: var(--radius-md); cursor: pointer;" id="settings-setup-guide-row">
+            <div>
+              <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">Self-Hosting & Network Guide</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Instructions for Docker, Wi-Fi LAN access, and custom Firebase</div>
+            </div>
+            <span class="material-icons" style="color: var(--text-muted);">menu_book</span>
+          </div>
+
           <!-- Reset Local Storage -->
           <div style="display: flex; align-items: center; justify-content: space-between; background: var(--error-bg); border: 1px solid rgba(255, 51, 102, 0.25); padding: 16px 20px; border-radius: var(--radius-md); cursor: pointer;" id="settings-reset-row">
             <div>
@@ -254,6 +264,11 @@ export const SettingsPage = {
         }
       };
       reader.readAsText(file);
+    });
+
+    // Self-Hosting Guide modal
+    document.getElementById('settings-setup-guide-row')?.addEventListener('click', () => {
+      SetupGuideModal.show();
     });
 
     // Reset local cache row

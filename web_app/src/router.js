@@ -10,6 +10,7 @@ import { SettingsPage } from './pages/settings.js';
 import { InsightsPage } from './pages/insights.js';
 import { CalendarPage } from './pages/calendar.js';
 import { AllTransactionsPage } from './pages/all-transactions.js';
+import { SetupGuideModal } from './pages/setup-guide-modal.js';
 import { DbService } from './db.js';
 
 export const Router = {
@@ -224,10 +225,12 @@ export const Router = {
                   <div class="footer-brand-sub">Cloud-synced personal finance & wealth matrix</div>
                 </div>
               </div>
-              <div class="footer-meta">
+              <div class="footer-meta" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                 <span>End-to-End Encrypted</span>
                 <span class="footer-meta-dot">•</span>
                 <span>Real-time Cross-Platform Sync</span>
+                <span class="footer-meta-dot">•</span>
+                <button class="btn-ghost" id="footer-setup-guide-btn" style="font-size: 11.5px; padding: 0; color: var(--text-muted); text-decoration: underline; cursor: pointer;">Hosting Guide</button>
               </div>
             </div>
           </div>
@@ -307,6 +310,11 @@ export const Router = {
     // Settings trigger button
     document.getElementById('header-settings-btn')?.addEventListener('click', () => {
       this.openOverlay('settings');
+    });
+
+    // Hosting Guide button in footer
+    document.getElementById('footer-setup-guide-btn')?.addEventListener('click', () => {
+      SetupGuideModal.show();
     });
 
     // Mobile sub-nav horizontal wheel scrolling & active tab auto-centering

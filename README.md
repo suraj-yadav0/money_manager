@@ -14,6 +14,7 @@ Quantro is a cross-platform personal finance management application built with F
 - [Database Schema](#database-schema)
 - [Application Flow](#application-flow)
 - [Setup and Installation](#setup-and-installation)
+- [Web Platform & Local Self-Hosting](#web-platform--local-self-hosting)
 - [Platform-Specific Build Instructions](#platform-specific-build-instructions)
 - [Development Workflow](#development-workflow)
 - [Contributing](#contributing)
@@ -600,6 +601,80 @@ flutter run -d macos
 # Linux
 flutter run -d linux
 ```
+
+---
+
+## Web Platform & Local Self-Hosting
+
+Quantro includes a responsive, modern web application (`web_app/`) designed to be self-hosted on your home network or private server. Other users (family, household, or team members) can access the application from any phone, laptop, or tablet on your Wi-Fi network without installing software.
+
+### Hosting Methods
+
+#### Method 1: Production Docker Container (Recommended)
+
+Run from the project root:
+
+```bash
+docker compose up -d --build
+```
+
+- **Access URL:** `http://localhost:8080` (locally) or `http://<your-host-ip>:8080` (across your local network).
+- **Architecture:** Multi-stage build producing an optimized production bundle served by an Alpine Nginx container with gzip compression, security headers, and single-page application routing.
+- **Stop Service:** `docker compose down`.
+
+#### Method 2: Native Node.js Host
+
+Run from the `web_app/` directory:
+
+```bash
+cd web_app
+npm install
+npm run build
+npm run host
+```
+
+- **Access URL:** `http://<your-host-ip>:5173`.
+- **Architecture:** Starts Vite preview bound to `0.0.0.0:5173`.
+
+### Connecting from Other Devices on LAN
+
+1. **Find your host machine's local IP address:**
+   - Linux: `hostname -I | awk '{print $1}'`
+   - macOS: `ipconfig getifaddr en0`
+   - Windows: `ipconfig` (find your IPv4 Address)
+2. **Allow traffic through the firewall if needed:**
+   ```bash
+   sudo ufw allow 8080/tcp   # For Docker container
+   sudo ufw allow 5173/tcp   # For Node host
+   ```
+3. Open a browser on any phone or device connected to the same Wi-Fi and navigate to:
+   `http://<your-host-ip>:8080` (example: `http://192.168.1.50:8080`).
+
+### Privacy and Storage Models
+
+Every user has full independence regarding data storage and privacy:
+
+#### 1. Private Local Mode (Default & Zero Cloud)
+- Click **"Private Local Mode"** on the landing page.
+- 100% of financial records (transactions, categories, goals, assets, budgets) are stored in that user's browser storage (`localStorage` / IndexedDB).
+- Zero data is transmitted to your host server or external clouds.
+- **Complete Data Portability:** Users can export their full state at any time via **Settings > Export Complete Backup** (generates a structured JSON file) and restore or migrate to another device via **Settings > Import Backup from JSON**.
+
+#### 2. Bring Your Own Firebase (BYOF)
+- For users who want cross-device cloud sync without storing their financial data in someone else's Firebase project:
+  1. Create a free project at [console.firebase.google.com](https://console.firebase.google.com).
+  2. Under **Build**, enable **Firestore Database** and **Authentication** (Email/Password or Google).
+  3. Under **Project Settings > General > Your Apps**, click the Web icon (`</>`) to register a web app.
+  4. Copy the `const firebaseConfig = { ... }` configuration snippet.
+  5. In Quantro, open **Settings > Configure Custom Cloud** (or click **Bring Your Own Firebase** on the landing page).
+  6. Paste the configuration snippet and click **Save & Connect**.
+- Configuration credentials remain stored exclusively in that user's local browser storage.
+
+### Secure Remote Access Outside Home (Tailscale)
+
+To access your instance securely outside your home Wi-Fi without exposing ports to the public internet:
+1. Install **Tailscale** on your host computer and your mobile device or remote laptop.
+2. Access the application using your host machine's private Tailscale IP (e.g., `http://100.x.y.z:8080`). All traffic is end-to-end encrypted with WireGuard.
 
 ---
 

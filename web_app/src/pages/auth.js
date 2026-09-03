@@ -3,6 +3,7 @@ import { StateManager } from '../state.js';
 import { AuthService } from '../auth.js';
 import { DbService } from '../db.js';
 import { CloudConfigModal } from './cloud-config-modal.js';
+import { SetupGuideModal } from './setup-guide-modal.js';
 
 export const AuthPage = {
   isSignUp: false,
@@ -130,6 +131,10 @@ export const AuthPage = {
                 <button class="btn-ghost" id="auth-cloud-config-link" style="font-size: 12px; color: var(--text-muted); width: 100%; justify-content: center;">
                   <span class="material-icons" style="font-size: 14px;">tune</span>
                   <span>Bring Your Own Firebase (Custom Cloud)</span>
+                </button>
+                <button class="btn-ghost" id="auth-setup-guide-link" style="font-size: 12px; color: var(--text-muted); width: 100%; justify-content: center;">
+                  <span class="material-icons" style="font-size: 14px;">menu_book</span>
+                  <span>Self-Hosting & Network Guide</span>
                 </button>
               </div>
             </div>
@@ -271,6 +276,10 @@ export const AuthPage = {
 
     document.getElementById('auth-cloud-config-link')?.addEventListener('click', () => {
       CloudConfigModal.show();
+    });
+
+    document.getElementById('auth-setup-guide-link')?.addEventListener('click', () => {
+      SetupGuideModal.show();
     });
   }
 };
