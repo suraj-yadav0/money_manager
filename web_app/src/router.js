@@ -310,6 +310,14 @@ export const Router = {
 
               </div>
 
+              <!-- Architectural Metallic Gradient Display Wordmark -->
+              <div class="footer-display-container">
+                <div class="footer-display-wrap">
+                  <span class="footer-display-wordmark">QUANTRO</span>
+                  <span class="footer-display-registered">®</span>
+                </div>
+              </div>
+
               <!-- Lower Sub-Bar: Copyright, Security & Back-to-Top -->
               <div class="footer-subbar">
                 <div class="footer-copyright">

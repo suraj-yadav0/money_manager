@@ -540,6 +540,63 @@
   cursor: default;
 }
 
+/* ==========================================================================
+   ARCHITECTURAL METALLIC GRADIENT DISPLAY WORDMARK
+   ========================================================================== */
+.footer-display-container {
+  width: 100%;
+  margin: 16px 0 24px;
+  padding-top: 28px;
+  border-top: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  user-select: none;
+}
+
+.footer-display-wrap {
+  display: inline-flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  line-height: 0.85;
+}
+
+.footer-display-wordmark {
+  font-family: var(--font-heading);
+  font-size: clamp(52px, 15vw, 195px);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.42) 58%, rgba(255, 255, 255, 0.10) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 0.82;
+  display: inline-block;
+  text-align: center;
+  filter: drop-shadow(0 2px 20px rgba(255, 255, 255, 0.04));
+  transition: opacity var(--transition-smooth);
+}
+
+[data-theme="light"] .footer-display-wordmark {
+  background: linear-gradient(180deg, #0F172A 0%, rgba(15, 23, 42, 0.45) 60%, rgba(15, 23, 42, 0.12) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: none;
+}
+
+.footer-display-registered {
+  font-family: var(--font-heading);
+  font-size: clamp(14px, 3.2vw, 40px);
+  font-weight: 800;
+  color: var(--text-muted);
+  opacity: 0.5;
+  margin-left: 6px;
+  vertical-align: top;
+  line-height: 1;
+}
+
 /* Sub-Footer Bar */
 .footer-subbar {
   display: flex;
@@ -876,6 +933,11 @@
   .footer-nav-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 24px;
+  }
+
+  .footer-display-container {
+    margin: 12px 0 16px;
+    padding-top: 20px;
   }
 
   .footer-subbar {
