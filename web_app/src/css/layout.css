@@ -233,70 +233,305 @@
   align-items: flex-start;
 }
 
-/* Footer */
+/* ==========================================================================
+   ENKY-INSPIRED EDITORIAL HERO FOOTER
+   ========================================================================== */
 .site-footer {
   margin-top: auto;
-  border-top: 1px solid var(--glass-border);
-  background: var(--bg-surface);
-  padding: 32px 0;
+  padding: 40px 0 32px;
+  background: transparent;
   color: var(--text-secondary);
-  font-size: 13px;
 }
 
-.footer-inner {
+.footer-hero-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--glass-border);
+  border-radius: 28px;
+  padding: 48px 48px 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  flex-wrap: wrap;
+  flex-direction: column;
 }
 
-.footer-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.footer-hero-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(0, 229, 153, 0.35) 50%, transparent 100%);
 }
 
-.footer-logo {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  background: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  box-shadow: var(--shadow-sm);
+/* Top Section: Split Newsletter & Nav Columns */
+.footer-top-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 48px;
+  align-items: flex-start;
+  margin-bottom: 36px;
 }
 
-.footer-logo .material-icons {
-  font-size: 18px;
-  color: var(--text-inverse);
+.footer-newsletter-col {
+  max-width: 480px;
 }
 
-.footer-brand-title {
-  font-weight: 700;
-  font-size: 14px;
+.footer-newsletter-title {
+  font-size: 16px;
+  font-weight: 600;
   color: var(--text-primary);
+  line-height: 1.45;
+  margin-bottom: 18px;
   letter-spacing: -0.01em;
 }
 
-.footer-brand-sub {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-top: 1px;
+.footer-newsletter-form {
+  position: relative;
 }
 
-.footer-meta {
+.footer-newsletter-pill {
   display: flex;
   align-items: center;
-  gap: 8px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-full);
+  padding: 4px 5px 4px 18px;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.footer-newsletter-pill:focus-within {
+  border-color: rgba(0, 229, 153, 0.45);
+  box-shadow: 0 0 0 3px rgba(0, 229, 153, 0.12);
+}
+
+.footer-newsletter-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  outline: none;
+  padding: 8px 0;
+}
+
+.footer-newsletter-input::placeholder {
+  color: var(--text-muted);
+}
+
+.footer-newsletter-btn {
+  background: #00E599;
+  color: #090A0C;
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 9px 22px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform var(--transition-fast), filter var(--transition-fast);
+  white-space: nowrap;
+}
+
+.footer-newsletter-btn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.footer-newsletter-btn:active {
+  transform: translateY(0);
+}
+
+.footer-newsletter-feedback {
+  font-size: 12px;
+  color: #00E599;
+  margin-top: 6px;
+  min-height: 16px;
+  transition: opacity var(--transition-fast);
+}
+
+.footer-disclaimer {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-top: 4px;
+  margin-bottom: 20px;
+}
+
+/* Social Icon Pills */
+.footer-social-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.footer-social-pill {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: var(--bg-surface-subtle);
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.footer-social-pill:hover {
+  color: var(--text-primary);
+  border-color: rgba(0, 229, 153, 0.45);
+  background: rgba(0, 229, 153, 0.08);
+  transform: translateY(-2px);
+}
+
+/* Right Navigation Columns */
+.footer-nav-columns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+
+.footer-nav-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.footer-nav-heading {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+
+.footer-nav-link {
+  font-size: 13px;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: var(--font-body);
+  transition: color var(--transition-fast), transform var(--transition-fast);
+  display: inline-block;
+  width: fit-content;
+}
+
+.footer-nav-link:hover {
+  color: var(--text-primary);
+  transform: translateX(2px);
+}
+
+.footer-nav-highlight {
+  color: #00E599;
+  font-weight: 600;
+}
+
+.footer-nav-highlight:hover {
+  color: #00ffaa;
+}
+
+/* ==========================================================================
+   MASSIVE ENKY-STYLE WORDMARK
+   ========================================================================== */
+.footer-wordmark-container {
+  width: 100%;
+  margin: 12px 0 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  user-select: none;
+}
+
+.footer-wordmark-wrap {
+  display: inline-flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  line-height: 0.85;
+}
+
+.footer-wordmark-text {
+  font-family: var(--font-heading);
+  font-size: clamp(54px, 16vw, 195px);
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  text-transform: lowercase;
+  color: #00E599;
+  line-height: 0.82;
+  display: inline-block;
+  text-align: center;
+  transition: opacity 0.3s ease;
+}
+
+[data-theme="light"] .footer-wordmark-text {
+  color: #059669;
+}
+
+.footer-wordmark-reg {
+  font-family: var(--font-heading);
+  font-size: clamp(14px, 3.2vw, 40px);
+  font-weight: 800;
+  color: #00E599;
+  margin-left: 6px;
+  vertical-align: top;
+  line-height: 1;
+}
+
+[data-theme="light"] .footer-wordmark-reg {
+  color: #059669;
+}
+
+/* Sub-Footer Bar */
+.footer-bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--glass-border);
   font-size: 12px;
   color: var(--text-muted);
 }
 
-.footer-meta-dot {
-  opacity: 0.5;
+.footer-bottom-badges {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.footer-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--glass-border);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.footer-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00E599;
+  box-shadow: 0 0 6px rgba(0, 229, 153, 0.6);
 }
 
 /* ==========================================================================
@@ -562,16 +797,25 @@
     padding: 24px 0 32px;
   }
 
-  .footer-inner {
+  .footer-hero-card {
+    padding: 32px 20px 20px;
+    border-radius: 22px;
+  }
+
+  .footer-top-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .footer-nav-columns {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .footer-bottom-bar {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
-  }
-
-  .footer-meta {
-    flex-wrap: wrap;
-    gap: 6px;
-    font-size: 11.5px;
   }
 }
 
