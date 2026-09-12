@@ -471,12 +471,12 @@
 
 .footer-wordmark-text {
   font-family: var(--font-heading);
-  font-size: clamp(64px, 18vw, 225px);
+  font-size: clamp(52px, 15vw, 195px);
   font-weight: 900;
-  letter-spacing: -0.06em;
-  text-transform: lowercase;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
   color: var(--text-primary);
-  line-height: 0.82;
+  line-height: 0.85;
   display: inline-block;
   text-align: center;
   transition: opacity 0.3s ease;

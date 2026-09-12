@@ -290,10 +290,10 @@ export const Router = {
 
               </div>
 
-              <!-- Massive Enky-Style Brand Wordmark -->
+              <!-- Massive Brand Wordmark -->
               <div class="footer-wordmark-container">
                 <div class="footer-wordmark-wrap">
-                  <span class="footer-wordmark-text">quantro</span>
+                  <span class="footer-wordmark-text">QUANTRO</span>
                   <span class="footer-wordmark-reg">®</span>
                 </div>
               </div>
