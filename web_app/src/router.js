@@ -213,102 +213,119 @@ export const Router = {
         </main>
 
         <!-- Footer -->
+        <!-- Footer -->
         <footer class="site-footer">
           <div class="site-container">
-            <div class="footer-hero-card">
+            <div class="footer-card">
               
-              <!-- Top Section: Newsletter & Nav Columns -->
-              <div class="footer-top-grid">
+              <!-- Upper Architectural Grid -->
+              <div class="footer-grid">
                 
-                <!-- Left Column: Newsletter & Socials -->
-                <div class="footer-newsletter-col">
-                  <h3 class="footer-newsletter-title">Join our newsletter to stay up to date on the latest news and updates.</h3>
-                  
-                  <form class="footer-newsletter-form" id="footer-newsletter-form">
-                    <div class="footer-newsletter-pill">
-                      <input 
-                        type="email" 
-                        class="footer-newsletter-input" 
-                        id="footer-email-input" 
-                        placeholder="Enter your email" 
-                        required 
-                        autocomplete="email"
-                      />
-                      <button type="submit" class="footer-newsletter-btn" id="footer-subscribe-btn">Subscribe</button>
+                <!-- Left: Identity, Mission & Telemetry Bezel -->
+                <div class="footer-brand-col">
+                  <div class="footer-brand-header">
+                    <div class="footer-brand-badge">
+                      <span class="footer-brand-glyph">Q</span>
                     </div>
-                    <div class="footer-newsletter-feedback" id="footer-newsletter-feedback"></div>
-                  </form>
-                  
-                  <p class="footer-disclaimer">By subscribing, you agree to our Privacy Policy and consent to receive updates from us.</p>
-                  
-                  <div class="footer-social-row">
-                    <a href="https://github.com/suraj-yadav0/money_manager" target="_blank" rel="noopener noreferrer" class="footer-social-pill" title="GitHub Repository">
+                    <div>
+                      <div class="footer-brand-name">Quantro</div>
+                      <div class="footer-brand-tagline">Financial Architecture</div>
+                    </div>
+                  </div>
+
+                  <p class="footer-brand-description">
+                    Private, local-first financial matrix. Engineered with client-side SQLite storage, deterministic wealth forecasting, and zero telemetry.
+                  </p>
+
+                  <!-- Double-Bezel Telemetry Capsule -->
+                  <div class="footer-engine-bezel">
+                    <div class="footer-engine-core">
+                      <div class="footer-engine-status">
+                        <span class="footer-engine-dot"></span>
+                        <span class="footer-engine-label">Engine: Drift SQLite (Active)</span>
+                      </div>
+                      <div class="footer-engine-metrics">
+                        <span class="footer-engine-tag">AES-256</span>
+                        <span class="footer-engine-tag">Zero Telemetry</span>
+                        <span class="footer-engine-tag">Offline First</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Quick Action Pills -->
+                  <div class="footer-actions-row">
+                    <a href="https://github.com/suraj-yadav0/money_manager/releases/download/v1.0.1/quantro-v1.0.1.apk" target="_blank" rel="noopener noreferrer" class="footer-action-btn">
+                      <span class="material-icons" style="font-size: 15px;">android</span>
+                      <span>Android App</span>
+                      <span class="footer-action-arrow">↗</span>
+                    </a>
+                    <button type="button" class="footer-action-btn footer-action-secondary" id="footer-setup-guide-btn">
+                      <span class="material-icons" style="font-size: 15px;">dns</span>
+                      <span>Self-Host</span>
+                    </button>
+                    <a href="https://github.com/suraj-yadav0/money_manager" target="_blank" rel="noopener noreferrer" class="footer-icon-pill" title="GitHub Repository">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
                     </a>
-                    <a href="https://github.com/suraj-yadav0/money_manager/releases/tag/v1.0.1" target="_blank" rel="noopener noreferrer" class="footer-social-pill" title="Download Android APK">
-                      <span class="material-icons" style="font-size: 16px;">android</span>
-                    </a>
-                    <button type="button" class="footer-social-pill" id="footer-setup-icon-btn" title="Self-Hosting Guide">
-                      <span class="material-icons" style="font-size: 16px;">dns</span>
-                    </button>
-                    <a href="https://github.com/suraj-yadav0/money_manager/releases" target="_blank" rel="noopener noreferrer" class="footer-social-pill" title="Releases & Changelog">
-                      <span class="material-icons" style="font-size: 16px;">verified</span>
-                    </a>
                   </div>
                 </div>
 
-                <!-- Right Column: Navigation Links (3 sub-columns) -->
-                <div class="footer-nav-columns">
-                  <div class="footer-nav-col">
-                    <div class="footer-nav-heading">Platform</div>
-                    <button class="footer-nav-link" data-footer-nav="0">Overview</button>
-                    <button class="footer-nav-link" data-footer-nav="1">Ledger</button>
-                    <button class="footer-nav-link" data-footer-nav="2">Budget</button>
-                    <button class="footer-nav-link" data-footer-nav="3">Goals</button>
-                    <button class="footer-nav-link" data-footer-nav="4">Net Worth</button>
-                    <button class="footer-nav-link" data-footer-nav="5">Insights</button>
-                    <button class="footer-nav-link" data-footer-nav="6">Calendar</button>
+                <!-- Right: Curated 3-Column Navigation -->
+                <div class="footer-nav-grid">
+                  
+                  <div class="footer-col">
+                    <div class="footer-col-title">WORKSPACE</div>
+                    <div class="footer-links">
+                      <button class="footer-link" data-footer-nav="0">Overview</button>
+                      <button class="footer-link" data-footer-nav="1">Ledger</button>
+                      <button class="footer-link" data-footer-nav="2">Budget</button>
+                      <button class="footer-link" data-footer-nav="3">Savings Goals</button>
+                      <button class="footer-link" data-footer-nav="4">Net Worth</button>
+                      <button class="footer-link" data-footer-nav="5">Intelligence</button>
+                      <button class="footer-link" data-footer-nav="6">Calendar</button>
+                    </div>
                   </div>
 
-                  <div class="footer-nav-col">
-                    <div class="footer-nav-heading">Ecosystem</div>
-                    <a href="https://github.com/suraj-yadav0/money_manager/releases/download/v1.0.1/quantro-v1.0.1.apk" class="footer-nav-link" target="_blank" rel="noopener noreferrer">Android APK</a>
-                    <button class="footer-nav-link" data-footer-nav="0">Web Client</button>
-                    <button class="footer-nav-link footer-nav-highlight" id="footer-setup-guide-btn">Self-Hosting</button>
-                    <a href="https://github.com/suraj-yadav0/money_manager#readme" class="footer-nav-link" target="_blank" rel="noopener noreferrer">Architecture</a>
-                    <span class="footer-nav-link" style="cursor: default; opacity: 0.7;">Offline First</span>
+                  <div class="footer-col">
+                    <div class="footer-col-title">ARCHITECTURE</div>
+                    <div class="footer-links">
+                      <span class="footer-link-static">Local SQLite</span>
+                      <span class="footer-link-static">Deterministic Burn</span>
+                      <button class="footer-link footer-link-accent" id="footer-setup-guide-link">Self-Hosting Guide</button>
+                      <a href="https://github.com/suraj-yadav0/money_manager#readme" target="_blank" rel="noopener noreferrer" class="footer-link">Architecture Specs</a>
+                      <span class="footer-link-static">Zero External Calls</span>
+                    </div>
                   </div>
 
-                  <div class="footer-nav-col">
-                    <div class="footer-nav-heading">Resources</div>
-                    <a href="https://github.com/suraj-yadav0/money_manager/releases/tag/v1.0.1" class="footer-nav-link" target="_blank" rel="noopener noreferrer">Release v1.0.1</a>
-                    <a href="https://github.com/suraj-yadav0/money_manager" class="footer-nav-link" target="_blank" rel="noopener noreferrer">GitHub Source</a>
-                    <span class="footer-nav-link" style="cursor: default; opacity: 0.7;">Drift SQLite</span>
-                    <span class="footer-nav-link" style="cursor: default; opacity: 0.7;">MIT License</span>
+                  <div class="footer-col">
+                    <div class="footer-col-title">ECOSYSTEM</div>
+                    <div class="footer-links">
+                      <a href="https://github.com/suraj-yadav0/money_manager/releases/tag/v1.0.1" target="_blank" rel="noopener noreferrer" class="footer-link">Release v1.0.1</a>
+                      <a href="https://github.com/suraj-yadav0/money_manager/releases/download/v1.0.1/quantro-v1.0.1.apk" target="_blank" rel="noopener noreferrer" class="footer-link">Android APK</a>
+                      <a href="https://github.com/suraj-yadav0/money_manager" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub Source</a>
+                      <a href="https://github.com/suraj-yadav0/money_manager/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" class="footer-link">MIT License</a>
+                    </div>
                   </div>
+
                 </div>
 
               </div>
 
-              <!-- Massive Brand Wordmark -->
-              <div class="footer-wordmark-container">
-                <div class="footer-wordmark-wrap">
-                  <span class="footer-wordmark-text">QUANTRO</span>
-                  <span class="footer-wordmark-reg">®</span>
-                </div>
-              </div>
-
-              <!-- Sub-Footer Metadata Bar -->
-              <div class="footer-bottom-bar">
+              <!-- Lower Sub-Bar: Copyright, Security & Back-to-Top -->
+              <div class="footer-subbar">
                 <div class="footer-copyright">
-                  © 2026 Quantro Finance. Private, local-first financial architecture.
+                  © 2026 Quantro Finance. All ledger data resides strictly on your local hardware.
                 </div>
-                <div class="footer-bottom-badges">
-                  <span class="footer-status-pill">
-                    <span class="footer-status-dot"></span>
-                    Local SQLite Active
-                  </span>
-                  <span>End-to-End Encrypted</span>
+                
+                <div class="footer-subbar-right">
+                  <div class="footer-security-pill">
+                    <span class="material-icons" style="font-size: 13px;">shield</span>
+                    <span>Cryptographic Privacy Guarantee</span>
+                  </div>
+                  
+                  <button type="button" class="footer-scroll-top-btn" id="footer-back-to-top" title="Back to top">
+                    <span>Top</span>
+                    <span class="material-icons" style="font-size: 13px;">arrow_upward</span>
+                  </button>
                 </div>
               </div>
 
@@ -396,8 +413,13 @@ export const Router = {
     document.getElementById('footer-setup-guide-btn')?.addEventListener('click', () => {
       SetupGuideModal.show();
     });
-    document.getElementById('footer-setup-icon-btn')?.addEventListener('click', () => {
+    document.getElementById('footer-setup-guide-link')?.addEventListener('click', () => {
       SetupGuideModal.show();
+    });
+
+    // Back to top trigger in footer
+    document.getElementById('footer-back-to-top')?.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
     // Footer Navigation triggers
@@ -408,26 +430,6 @@ export const Router = {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     });
-
-    // Newsletter subscription form
-    const newsletterForm = document.getElementById('footer-newsletter-form');
-    if (newsletterForm) {
-      newsletterForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const input = document.getElementById('footer-email-input');
-        const feedback = document.getElementById('footer-newsletter-feedback');
-        if (input && feedback) {
-          const email = input.value.trim();
-          if (email) {
-            feedback.textContent = 'Subscribed! You will receive updates on new releases.';
-            input.value = '';
-            setTimeout(() => {
-              feedback.textContent = '';
-            }, 5000);
-          }
-        }
-      });
-    }
 
     // Mobile sub-nav horizontal wheel scrolling & active tab auto-centering
     const subNav = document.querySelector('.mobile-subnav-bar');

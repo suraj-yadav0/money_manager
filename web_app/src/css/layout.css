@@ -235,188 +235,280 @@
 
 /* ==========================================================================
    ENKY-INSPIRED EDITORIAL HERO FOOTER
+/* ==========================================================================
+   ARCHITECTURAL HIGH-CRAFT FOOTER (Taste-Skill & Double-Bezel Architecture)
    ========================================================================== */
 .site-footer {
   margin-top: auto;
-  padding: 60px 0 48px;
+  padding: 48px 0 40px;
   background: transparent;
   color: var(--text-secondary);
 }
 
-.footer-hero-card {
+.footer-card {
   background: var(--bg-surface);
   border: 1px solid var(--glass-border);
-  border-radius: 32px;
-  padding: 80px 64px 44px;
+  border-radius: var(--radius-xl);
+  padding: 48px 48px 28px;
   position: relative;
   overflow: hidden;
   box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
-  min-height: 620px;
-  justify-content: space-between;
 }
 
-.footer-hero-card::before {
+.footer-card::before {
   content: '';
   position: absolute;
   top: 0;
-  left: 8%;
-  right: 8%;
+  left: 10%;
+  right: 10%;
   height: 1px;
   background: var(--card-top-glow);
 }
 
-/* Top Section: Split Newsletter & Nav Columns */
-.footer-top-grid {
+/* Grid Layout */
+.footer-grid {
   display: grid;
-  grid-template-columns: 1.15fr 1fr;
-  gap: 64px;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 56px;
   align-items: flex-start;
-  margin-bottom: 72px;
+  margin-bottom: 36px;
 }
 
-.footer-newsletter-col {
-  max-width: 500px;
+/* Left Brand Column */
+.footer-brand-col {
+  display: flex;
+  flex-direction: column;
+  max-width: 480px;
 }
 
-.footer-newsletter-title {
+.footer-brand-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.footer-brand-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-sm), inset 0 1px 1px rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.footer-brand-glyph {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.footer-brand-name {
+  font-family: var(--font-heading);
   font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.footer-brand-tagline {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.footer-brand-description {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 22px;
+}
+
+/* Double-Bezel Telemetry Capsule */
+.footer-engine-bezel {
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  margin-bottom: 24px;
+}
+
+.footer-engine-core {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: calc(var(--radius-md) - 3px);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05);
+}
+
+.footer-engine-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-engine-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  box-shadow: 0 0 6px var(--primary-glow);
+  animation: pulse-dot 2.4s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.85); }
+}
+
+.footer-engine-label {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
   font-weight: 600;
   color: var(--text-primary);
-  line-height: 1.5;
-  margin-bottom: 22px;
   letter-spacing: -0.01em;
 }
 
-.footer-newsletter-form {
-  position: relative;
-}
-
-.footer-newsletter-pill {
+.footer-engine-metrics {
   display: flex;
   align-items: center;
-  background: var(--bg-surface-elevated);
+  gap: 6px;
+}
+
+.footer-engine-tag {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  background: var(--bg-surface-subtle);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-full);
-  padding: 6px 6px 6px 20px;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.footer-newsletter-pill:focus-within {
-  border-color: var(--glass-border-focus);
-  box-shadow: 0 0 0 3px var(--primary-glow);
-}
-
-.footer-newsletter-input {
-  flex: 1;
-  min-width: 0;
-  border: none;
-  background: transparent;
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: 14px;
-  outline: none;
-  padding: 10px 0;
-}
-
-.footer-newsletter-input::placeholder {
   color: var(--text-muted);
 }
 
-.footer-newsletter-btn {
+/* Action Buttons Row */
+.footer-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.footer-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
   background: var(--primary);
   color: var(--text-inverse);
-  border: none;
-  border-radius: var(--radius-full);
-  padding: 11px 26px;
   font-family: var(--font-body);
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 700;
+  text-decoration: none;
+  border: 1px solid transparent;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   transition: transform var(--transition-fast), background var(--transition-fast);
-  white-space: nowrap;
 }
 
-.footer-newsletter-btn:hover {
+.footer-action-btn:hover {
   background: var(--primary-light);
   transform: translateY(-1px);
 }
 
-.footer-newsletter-btn:active {
+.footer-action-btn:active {
   transform: translateY(0);
 }
 
-.footer-newsletter-feedback {
-  font-size: 12.5px;
-  color: var(--text-primary);
-  font-weight: 600;
-  margin-top: 8px;
-  min-height: 18px;
-  transition: opacity var(--transition-fast);
+.footer-action-arrow {
+  font-size: 12px;
+  transition: transform var(--transition-fast);
 }
 
-.footer-disclaimer {
-  font-size: 11.5px;
-  color: var(--text-muted);
-  line-height: 1.5;
-  margin-top: 6px;
-  margin-bottom: 26px;
+.footer-action-btn:hover .footer-action-arrow {
+  transform: translate(2px, -2px);
 }
 
-/* Social Icon Pills */
-.footer-social-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.footer-social-pill {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
+.footer-action-secondary {
+  background: var(--bg-surface-elevated);
   border: 1px solid var(--glass-border);
-  background: var(--bg-surface-subtle);
+  color: var(--text-primary);
+}
+
+.footer-action-secondary:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--glass-border-hover);
+}
+
+.footer-icon-pill {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--glass-border);
   color: var(--text-secondary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
   text-decoration: none;
+  cursor: pointer;
   transition: all var(--transition-fast);
 }
 
-.footer-social-pill:hover {
+.footer-icon-pill:hover {
   color: var(--text-primary);
   border-color: var(--glass-border-hover);
   background: var(--bg-surface-hover);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 /* Right Navigation Columns */
-.footer-nav-columns {
+.footer-nav-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 40px;
+  gap: 32px;
 }
 
-.footer-nav-col {
+.footer-col {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
-.footer-nav-heading {
-  font-size: 14px;
+.footer-col-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
   font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
-  margin-bottom: 6px;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
 }
 
-.footer-nav-link {
-  font-size: 13.5px;
+.footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.footer-link {
+  font-size: 13px;
   color: var(--text-secondary);
   background: none;
   border: none;
@@ -430,106 +522,81 @@
   width: fit-content;
 }
 
-.footer-nav-link:hover {
+.footer-link:hover {
   color: var(--text-primary);
-  transform: translateX(2px);
+  transform: translateX(3px);
 }
 
-.footer-nav-highlight {
+.footer-link-accent {
   color: var(--text-primary);
-  font-weight: 700;
+  font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
-.footer-nav-highlight:hover {
-  color: var(--primary-light);
-}
-
-/* ==========================================================================
-   MASSIVE ENKY-STYLE WORDMARK
-   ========================================================================== */
-.footer-wordmark-container {
-  width: 100%;
-  margin: 28px 0 36px;
-  padding-top: 40px;
-  border-top: 1px solid var(--glass-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  user-select: none;
-}
-
-.footer-wordmark-wrap {
-  display: inline-flex;
-  align-items: flex-start;
-  justify-content: center;
-  width: 100%;
-  line-height: 0.85;
-}
-
-.footer-wordmark-text {
-  font-family: var(--font-heading);
-  font-size: clamp(52px, 15vw, 195px);
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  text-transform: uppercase;
-  color: var(--text-primary);
-  line-height: 0.85;
-  display: inline-block;
-  text-align: center;
-  transition: opacity 0.3s ease;
-}
-
-.footer-wordmark-reg {
-  font-family: var(--font-heading);
-  font-size: clamp(16px, 3.6vw, 44px);
-  font-weight: 800;
-  color: var(--text-secondary);
-  margin-left: 8px;
-  vertical-align: top;
-  line-height: 1;
+.footer-link-static {
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: default;
 }
 
 /* Sub-Footer Bar */
-.footer-bottom-bar {
+.footer-subbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 16px;
-  padding-top: 24px;
+  padding-top: 22px;
   border-top: 1px solid var(--glass-border);
   font-size: 12px;
   color: var(--text-muted);
 }
 
-.footer-bottom-badges {
-  display: flex;
-  align-items: center;
-  gap: 14px;
+.footer-copyright {
+  line-height: 1.5;
 }
 
-.footer-status-pill {
+.footer-subbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.footer-security-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 12px;
+  padding: 4px 11px;
   border-radius: var(--radius-full);
   background: var(--bg-surface-subtle);
   border: 1px solid var(--glass-border);
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 11.5px;
+  font-weight: 500;
   color: var(--text-secondary);
 }
 
-.footer-status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--text-primary);
-  box-shadow: 0 0 6px var(--primary-glow);
+.footer-scroll-top-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.footer-scroll-top-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--glass-border-hover);
+  background: var(--bg-surface-hover);
+  transform: translateY(-1px);
 }
 
 /* ==========================================================================
@@ -792,35 +859,36 @@
   }
 
   .site-footer {
-    padding: 36px 0 36px;
+    padding: 32px 0 32px;
   }
 
-  .footer-hero-card {
-    padding: 48px 24px 28px;
-    border-radius: 24px;
-    min-height: auto;
+  .footer-card {
+    padding: 32px 20px 20px;
+    border-radius: var(--radius-lg);
   }
 
-  .footer-top-grid {
+  .footer-grid {
     grid-template-columns: 1fr;
-    gap: 40px;
-    margin-bottom: 44px;
+    gap: 36px;
+    margin-bottom: 28px;
   }
 
-  .footer-nav-columns {
+  .footer-nav-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 24px;
   }
 
-  .footer-wordmark-container {
-    margin: 20px 0 24px;
-    padding-top: 24px;
-  }
-
-  .footer-bottom-bar {
+  .footer-subbar {
     flex-direction: column;
     align-items: flex-start;
     gap: 14px;
+  }
+
+  .footer-subbar-right {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 }
 
