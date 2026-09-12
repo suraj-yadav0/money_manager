@@ -187,9 +187,9 @@ export const AllTransactionsPage = {
                 <span class="material-icons">pie_chart</span>
                 <span>${this.activeTypeFilter === 'income' ? 'Income by Category' : 'Spend by Category'}</span>
               </div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">
-                  <span class="material-icons" style="font-size: 12px; margin-right: 2px;">touch_app</span>Click to filter
+              <div class="card-header-actions">
+                <span class="kpi-badge neutral drilldown-hint" style="font-size: 11px; font-weight: 600;" title="Click to filter">
+                  <span class="material-icons" style="font-size: 12px; margin-right: 2px;">touch_app</span><span class="hint-text">Click to filter</span>
                 </span>
                 <span id="ledger-cat-header-badge">
                   ${this.activeCategoryFilter ? `
@@ -244,9 +244,9 @@ export const AllTransactionsPage = {
                 <span class="material-icons">bar_chart</span>
                 <span>Daily Spend Velocity</span>
               </div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">
-                  <span class="material-icons" style="font-size: 12px; margin-right: 2px;">touch_app</span>Click day to filter
+              <div class="card-header-actions">
+                <span class="kpi-badge neutral drilldown-hint" style="font-size: 11px; font-weight: 600;" title="Click day to filter">
+                  <span class="material-icons" style="font-size: 12px; margin-right: 2px;">touch_app</span><span class="hint-text">Click day to filter</span>
                 </span>
                 <span id="ledger-date-header-badge">
                   ${this.activeDateFilter ? `

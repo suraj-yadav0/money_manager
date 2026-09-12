@@ -34,7 +34,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
   margin-bottom: 24px;
+  min-width: 0;
+}
+
+.card-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .card-title {
@@ -139,6 +150,8 @@
   background: var(--bg-surface-elevated);
   border: 1px solid var(--glass-border);
   color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .kpi-badge.positive {
@@ -157,6 +170,26 @@
   color: var(--text-secondary);
   background: var(--bg-surface-elevated);
   border: 1px solid var(--glass-border);
+}
+
+.drilldown-hint {
+  cursor: default;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .drilldown-hint .hint-text {
+    display: none;
+  }
+
+  .drilldown-hint {
+    padding: 3px 6px;
+  }
 }
 
 /* Modern Buttons */

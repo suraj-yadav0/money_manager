@@ -319,15 +319,18 @@
   }
 }
 
+/* Medium Tablets & Laptops (< 1080px) */
+@media (max-width: 1080px) {
+  .dashboard-split-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
 /* Tablet (< 992px) */
 @media (max-width: 992px) {
   .site-container {
     padding: 0 20px;
-  }
-
-  .dashboard-split-grid {
-    grid-template-columns: 1fr;
-    gap: 24px;
   }
 
   .hero-welcome-title {
@@ -517,6 +520,20 @@
     box-sizing: border-box;
   }
 
+  .card-header {
+    margin-bottom: 16px;
+    gap: 10px;
+  }
+
+  .card-title {
+    font-size: 16px;
+    gap: 8px;
+  }
+
+  .card-title .material-icons {
+    font-size: 20px;
+  }
+
   .dashboard-split-grid {
     grid-template-columns: 1fr;
     gap: 16px;
@@ -617,6 +634,15 @@
 
   .fintech-card {
     padding: 14px 10px;
+  }
+
+  .card-header {
+    margin-bottom: 12px;
+    gap: 8px;
+  }
+
+  .card-title {
+    font-size: 15px;
   }
 
   .filter-chip {

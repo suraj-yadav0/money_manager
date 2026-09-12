@@ -434,9 +434,9 @@ export const NetWorthPage = {
                 <span class="material-icons">show_chart</span>
                 <span>Net Worth Trajectory</span>
               </div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">
-                  <span class="material-icons" style="font-size: 12px; margin-right: 3px;">touch_app</span>Click to drill down
+              <div class="card-header-actions">
+                <span class="kpi-badge neutral drilldown-hint" style="font-size: 11px; font-weight: 600;" title="Click to drill down">
+                  <span class="material-icons" style="font-size: 12px; margin-right: 3px;">touch_app</span><span class="hint-text">Click to drill down</span>
                 </span>
                 <div class="filter-group" style="padding: 2px;">
                   <button class="filter-chip ${this.selectedTimeframe === '6M' ? 'active' : ''}" data-nw-timeframe="6M">6M</button>
@@ -461,9 +461,9 @@ export const NetWorthPage = {
                 <span class="material-icons">pie_chart</span>
                 <span id="nw-allocation-title">${this.selectedAllocationView === 'solvency' ? 'Capital Solvency' : 'Asset Allocation'}</span>
               </div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">
-                  <span class="material-icons" style="font-size: 12px; margin-right: 3px;">touch_app</span>Click to drill down
+              <div class="card-header-actions">
+                <span class="kpi-badge neutral drilldown-hint" style="font-size: 11px; font-weight: 600;" title="Click to drill down">
+                  <span class="material-icons" style="font-size: 12px; margin-right: 3px;">touch_app</span><span class="hint-text">Click to drill down</span>
                 </span>
                 <div class="filter-group" style="padding: 2px;">
                   <button class="filter-chip ${this.selectedAllocationView === 'class' ? 'active' : ''}" data-nw-alloc-view="class">Asset Mix</button>

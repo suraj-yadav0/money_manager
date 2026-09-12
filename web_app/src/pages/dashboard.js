@@ -137,15 +137,15 @@ export const DashboardPage = {
                   <span class="material-icons">query_stats</span>
                   <span>Cash Flow Analysis</span>
                 </div>
-                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <div class="card-header-actions">
                   <!-- View Mode Switcher -->
                   <div class="filter-group" style="margin: 0;" id="dashboard-cf-mode-group">
                     <button class="filter-chip ${this.cashFlowViewMode === 'trajectory' ? 'active' : ''}" data-cf-mode="trajectory" style="padding: 3px 10px; font-size: 11.5px;">Trajectory</button>
                     <button class="filter-chip ${this.cashFlowViewMode === 'net' ? 'active' : ''}" data-cf-mode="net" style="padding: 3px 10px; font-size: 11.5px;">Net Spread</button>
                     <button class="filter-chip ${this.cashFlowViewMode === 'daily' ? 'active' : ''}" data-cf-mode="daily" style="padding: 3px 10px; font-size: 11.5px;">Daily Bars</button>
                   </div>
-                  <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">
-                    <span class="material-icons" style="font-size: 12px; margin-right: 2px;">touch_app</span>Click to drill down
+                  <span class="kpi-badge neutral drilldown-hint" style="font-size: 11px; font-weight: 600;" title="Click chart points to drill down">
+                    <span class="material-icons" style="font-size: 12px; margin-right: 2px;">touch_app</span><span class="hint-text">Click to drill down</span>
                   </span>
                 </div>
               </div>
@@ -199,12 +199,12 @@ export const DashboardPage = {
                   <span class="material-icons">donut_large</span>
                   <span>Spending by Category</span>
                 </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="card-header-actions">
                   <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">
                     ${topCategories.length} Categories
                   </span>
-                  <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">
-                    <span class="material-icons" style="font-size: 12px; margin-right: 2px;">touch_app</span>Click to drill down
+                  <span class="kpi-badge neutral drilldown-hint" style="font-size: 11px; font-weight: 600;" title="Click any category to drill down">
+                    <span class="material-icons" style="font-size: 12px; margin-right: 2px;">touch_app</span><span class="hint-text">Click to drill down</span>
                   </span>
                 </div>
               </div>
