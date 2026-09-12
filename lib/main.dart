@@ -37,6 +37,14 @@ class AuthWrapper extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final currentUser = ref.watch(currentUserProvider);
+    final isGuestMode = ref.watch(guestModeProvider);
+
+    // If user is already authenticated or active guest, go straight to main app
+    if (currentUser != null || isGuestMode) {
+      return const AppShell();
+    }
+
     final isOnboardedAsync = ref.watch(isOnboardedProvider);
 
     return isOnboardedAsync.when(
@@ -44,14 +52,6 @@ class AuthWrapper extends ConsumerWidget {
         if (!isOnboarded) {
           return const OnboardingScreen();
         }
-
-        final currentUser = ref.watch(currentUserProvider);
-        final isGuestMode = ref.watch(guestModeProvider);
-
-        if (currentUser != null || isGuestMode) {
-          return const AppShell();
-        }
-
         return const AuthScreen();
       },
       loading: () => const _SplashScreen(),

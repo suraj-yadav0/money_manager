@@ -59,11 +59,15 @@ class AuthService {
     return credential;
   }
 
+  static final GoogleSignIn _googleSignIn = GoogleSignIn(
+    serverClientId: '277150463102-2nve9qflhf00urksfbe290rpkm5gsv4f.apps.googleusercontent.com',
+  );
+
   /// Sign in with Google OAuth
   Future<bool> signInWithGoogle() async {
     final auth = _requireFirebase();
     try {
-      final googleUser = await GoogleSignIn().signIn();
+      final googleUser = await _googleSignIn.signIn();
       if (googleUser == null) return false;
 
       final googleAuth = await googleUser.authentication;
@@ -77,6 +81,12 @@ class AuthService {
       return true;
     } catch (e) {
       debugPrint('Google sign in error: $e');
+      final errorStr = e.toString();
+      if (errorStr.contains(': 10') || errorStr.contains('ApiException: 10')) {
+        throw Exception(
+          'Google Sign-In configuration error (Code 10). The APK SHA-1 fingerprint (1F:58:6E:C3:EF:28:D6:3D:4D:BD:3B:C8:9F:D6:0F:F8:63:CB:5D:F2) must be registered in Firebase Console under Android Project Settings.',
+        );
+      }
       rethrow;
     }
   }

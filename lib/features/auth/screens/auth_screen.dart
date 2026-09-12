@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:drift/drift.dart' show Value;
+import '../../../core/database/database.dart';
+import '../../../core/providers/app_state_provider.dart';
 import '../../../core/presentation/glass_widgets.dart';
 import '../../../core/providers/auth_providers.dart';
 import '../../../core/config/firebase_config.dart';
@@ -45,6 +48,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           email: _emailController.text,
           password: _passwordController.text,
         );
+        final db = ref.read(databaseProvider);
+        await db.into(db.userSettings).insertOnConflictUpdate(
+          UserSettingsCompanion(
+            id: const Value(1),
+            isOnboarded: const Value(true),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+        ref.invalidate(isOnboardedProvider);
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -62,7 +75,15 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           email: _emailController.text,
           password: _passwordController.text,
         );
-        // Trigger Cloud Sync after successful login
+        final db = ref.read(databaseProvider);
+        await db.into(db.userSettings).insertOnConflictUpdate(
+          UserSettingsCompanion(
+            id: const Value(1),
+            isOnboarded: const Value(true),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+        ref.invalidate(isOnboardedProvider);
         ref.read(syncNotifierProvider.notifier).triggerSync();
       }
     } catch (e) {
@@ -86,10 +107,20 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
     try {
       await authService.signInWithGoogle();
+      final db = ref.read(databaseProvider);
+      await db.into(db.userSettings).insertOnConflictUpdate(
+        UserSettingsCompanion(
+          id: const Value(1),
+          isOnboarded: const Value(true),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+      ref.invalidate(isOnboardedProvider);
       ref.read(syncNotifierProvider.notifier).triggerSync();
     } catch (e) {
       setState(() {
-        _errorMessage = 'Google sign in failed: ${e.toString()}';
+        final err = e.toString().replaceAll('Exception:', '').trim();
+        _errorMessage = err;
       });
     } finally {
       if (mounted) {
