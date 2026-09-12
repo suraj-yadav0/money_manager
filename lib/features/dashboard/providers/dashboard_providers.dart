@@ -144,6 +144,8 @@ class DashboardStats {
   final Map<String, double> categoryBreakdown;
   final Map<String, double> incomeCategoryBreakdown;
   final double goalAllocations; // Amount allocated to savings goals
+  final double consumptionExpenses;
+  final double capitalAllocations;
 
   DashboardStats({
     required this.totalIncome,
@@ -156,6 +158,8 @@ class DashboardStats {
     required this.categoryBreakdown,
     required this.incomeCategoryBreakdown,
     this.goalAllocations = 0,
+    this.consumptionExpenses = 0,
+    this.capitalAllocations = 0,
   });
 
   int get savingsRate => totalIncome > 0 ? (((totalIncome - totalExpenses) / totalIncome) * 100).clamp(0, 100).round() : 0;
@@ -171,6 +175,8 @@ class DashboardStats {
     categoryBreakdown: {},
     incomeCategoryBreakdown: {},
     goalAllocations: 0,
+    consumptionExpenses: 0,
+    capitalAllocations: 0,
   );
 }
 
@@ -189,10 +195,17 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
     db.transactions,
   )..where((t) => t.timestamp.isBetweenValues(range.start, range.end))).get();
 
+  // Get categories first to classify spending
+  final categories = await db.select(db.categories).get();
+  final categoryObjMap = {for (var c in categories) c.id: c};
+  final categoryMap = {for (var c in categories) c.id: c.name};
+
   // Calculate totals from actual transactions only
   double totalIncome = 0;
   double totalExpenses = 0;
   double goalAllocatedAmount = 0;
+  double capitalAllocations = 0;
+  double consumptionExpenses = 0;
   Map<int, double> expenseCategoryTotals = {};
   Map<int, double> incomeCategoryTotals = {};
 
@@ -203,6 +216,24 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
           (incomeCategoryTotals[tx.categoryId] ?? 0) + tx.amount;
     } else {
       totalExpenses += tx.amount;
+
+      final cat = categoryObjMap[tx.categoryId];
+      final catName = (cat?.name ?? '').toLowerCase();
+      final catIcon = (cat?.icon ?? '').toLowerCase();
+      final isCapital = tx.goalId != null ||
+          catName == 'investments' ||
+          catName == 'investment' ||
+          catName == 'savings' ||
+          catIcon == 'show_chart' ||
+          catIcon == 'trending_up' ||
+          catIcon == 'savings';
+
+      if (isCapital) {
+        capitalAllocations += tx.amount;
+      } else {
+        consumptionExpenses += tx.amount;
+      }
+
       // Track goal allocations separately - don't add to category breakdown
       if (tx.goalId != null) {
         goalAllocatedAmount += tx.amount;
@@ -213,10 +244,6 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
       }
     }
   }
-
-  // Get category names
-  final categories = await db.select(db.categories).get();
-  final categoryMap = {for (var c in categories) c.id: c.name};
 
   Map<String, double> categoryBreakdown = {};
   for (final entry in expenseCategoryTotals.entries) {
@@ -232,7 +259,7 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
 
   // Add goal allocations as a separate entry if any exist
   if (goalAllocatedAmount > 0) {
-    categoryBreakdown['🎯 Savings Goals'] = goalAllocatedAmount;
+    categoryBreakdown['Savings Goals'] = goalAllocatedAmount;
   }
 
   // Calculate metrics
@@ -249,7 +276,9 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
   if (filter == DashboardDateFilter.thisMonth) {
     final daysElapsed = Formatters.daysElapsedInMonth();
     daysRemaining = Formatters.daysRemainingInMonth();
-    dailyBurnRate = daysElapsed > 0 ? totalExpenses / daysElapsed : 0;
+    // Daily burn rate is computed strictly on recurring consumption expenses.
+    // Periodic capital allocations (savings, investments, goals) do not burn ongoing daily runway.
+    dailyBurnRate = daysElapsed > 0 ? consumptionExpenses / daysElapsed : 0;
     final projectedAdditionalSpend = dailyBurnRate * daysRemaining;
     projectedBalance = balance - projectedAdditionalSpend;
 
@@ -277,6 +306,8 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
     categoryBreakdown: categoryBreakdown,
     incomeCategoryBreakdown: incomeCategoryBreakdown,
     goalAllocations: goalAllocatedAmount,
+    consumptionExpenses: consumptionExpenses,
+    capitalAllocations: capitalAllocations,
   );
 });
 
@@ -474,9 +505,9 @@ final drillDownTransactionsProvider =
       }).toList();
 
       // If a category name filter is provided, keep only matching rows.
-      // The '🎯 Savings Goals' pseudo-category is matched via goalId != null.
+      // The 'Savings Goals' pseudo-category is matched via goalId != null.
       if (params.categoryName != null) {
-        if (params.categoryName == '🎯 Savings Goals') {
+        if (params.categoryName == 'Savings Goals' || params.categoryName!.contains('Savings Goals')) {
           return results
               .where((t) => t.transaction.goalId != null)
               .toList();

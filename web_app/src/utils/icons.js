@@ -108,3 +108,21 @@ export function isInvestmentCategory(categories, categoryId) {
   const name = (cat.name || '').toLowerCase();
   return name === 'investments' || name === 'investment' || cat.icon === 'show_chart' || cat.icon === 'trending_up';
 }
+
+export function isCapitalAllocation(categories, tx) {
+  if (!tx) return false;
+  if (tx.goalId || tx.goal_id) return true;
+  const catId = tx.categoryId || tx.category_id;
+  const cat = findCategory(categories, catId);
+  if (!cat) return false;
+  const name = (cat.name || '').toLowerCase();
+  const icon = (cat.icon || '').toLowerCase();
+  return (
+    name === 'investments' ||
+    name === 'investment' ||
+    name === 'savings' ||
+    icon === 'show_chart' ||
+    icon === 'trending_up' ||
+    icon === 'savings'
+  );
+}

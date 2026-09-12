@@ -77,6 +77,27 @@ class InsightsEngine {
     final expenses = transactions.where((t) => t.type == 'expense').toList();
     final totalExpenses = expenses.fold<double>(0, (sum, t) => sum + t.amount);
 
+    double capitalAllocations = 0;
+    double consumptionExpenses = 0;
+    for (final t in expenses) {
+      final cat = categoryMap[t.categoryId];
+      final catName = (cat?.name ?? '').toLowerCase();
+      final catIcon = (cat?.icon ?? '').toLowerCase();
+      final isCapital = t.goalId != null ||
+          catName == 'investments' ||
+          catName == 'investment' ||
+          catName == 'savings' ||
+          catIcon == 'show_chart' ||
+          catIcon == 'trending_up' ||
+          catIcon == 'savings';
+
+      if (isCapital) {
+        capitalAllocations += t.amount;
+      } else {
+        consumptionExpenses += t.amount;
+      }
+    }
+
     // 1. Spending Spike Detection
     final spikeInsight = _checkSpendingSpike(expenses);
     if (spikeInsight != null) insights.add(spikeInsight);
@@ -98,7 +119,11 @@ class InsightsEngine {
     if (weekendInsight != null) insights.add(weekendInsight);
 
     // 5. Forecast Warning
-    final forecastInsight = await _checkForecast(totalExpenses, monthlyIncome);
+    final forecastInsight = await _checkForecast(
+      totalExpenses,
+      consumptionExpenses,
+      monthlyIncome,
+    );
     if (forecastInsight != null) insights.add(forecastInsight);
 
     return insights;
@@ -189,6 +214,11 @@ class InsightsEngine {
       final ratio = entry.value / totalExpenses;
       if (ratio > AppConstants.categoryDominanceThreshold) {
         final category = categoryMap[entry.key];
+        final catName = (category?.name ?? '').toLowerCase();
+        // Skip capital allocations from spending reduction advice
+        if (catName == 'investments' || catName == 'investment' || catName == 'savings') {
+          continue;
+        }
         return Insight(
           type: InsightType.categoryDominance,
           severity: InsightSeverity.info,
@@ -287,6 +317,7 @@ class InsightsEngine {
   /// Check forecast for warnings
   Future<Insight?> _checkForecast(
     double totalExpenses,
+    double consumptionExpenses,
     double monthlyIncome,
   ) async {
     if (monthlyIncome == 0) return null;
@@ -296,7 +327,9 @@ class InsightsEngine {
 
     if (daysElapsed == 0) return null;
 
-    final dailyBurn = totalExpenses / daysElapsed;
+    // Daily burn is calculated strictly on consumption expenses so periodic
+    // savings and investments are not multiplied forward across remaining days.
+    final dailyBurn = consumptionExpenses / daysElapsed;
     final projectedTotal = totalExpenses + (dailyBurn * daysRemaining);
     final projectedBalance = monthlyIncome - projectedTotal;
 

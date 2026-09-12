@@ -3,7 +3,7 @@ import { Chart, registerables } from 'chart.js';
 import { StateManager } from '../state.js';
 import { DateRangeHelper } from '../utils/date-range.js';
 import { Formatters } from '../utils/formatters.js';
-import { IconHelper, findCategory, isInvestmentCategory } from '../utils/icons.js';
+import { IconHelper, findCategory, isInvestmentCategory, isCapitalAllocation } from '../utils/icons.js';
 import { Router } from '../router.js';
 import { reconcileGoalSavedAmounts, reconcileInvestmentAssets } from '../db.js';
 
@@ -99,7 +99,7 @@ export const DashboardPage = {
               </div>
               <div class="kpi-footer">
                 <span class="kpi-badge neutral">
-                  Burn: ${Formatters.currency(stats.dailyBurnRate)}/day
+                  Lifestyle Burn: ${Formatters.currency(stats.dailyBurnRate)}/day
                 </span>
               </div>
             </div>
@@ -116,9 +116,10 @@ export const DashboardPage = {
                 ${Formatters.currency(stats.projectedBalance)}
               </div>
               <div class="kpi-footer">
-                <span class="kpi-badge neutral">
+                <span class="kpi-badge ${stats.forecastStatus === 'safe' ? 'positive' : stats.forecastStatus === 'caution' ? 'neutral' : 'negative'}">
                   ${stats.forecastStatus === 'safe' ? 'Healthy Trajectory' : stats.forecastStatus === 'caution' ? 'Moderate Margin' : 'Deficit Risk'}
                 </span>
+                ${stats.capitalAllocations > 0 ? `<span style="font-size: 11px; color: var(--text-muted);">(${Formatters.compactCurrency(stats.capitalAllocations)} invested/saved)</span>` : ''}
               </div>
             </div>
           </div>
@@ -299,7 +300,7 @@ export const DashboardPage = {
                         .filter(t => t.type === 'expense' && isInvestmentCategory(state.categories, t.categoryId || t.category_id))
                         .reduce((sum, t) => sum + Number(t.amount || 0), 0);
                       if (totalInvested > 0) {
-                        return `🚀 <b>Wealth Compounding:</b> You channeled ${Formatters.currency(totalInvested)} into investments. This directly expands your Net Worth and compounds future wealth!`;
+                        return `<b>Wealth Compounding:</b> You channeled ${Formatters.currency(totalInvested)} into investments. This directly expands your Net Worth and compounds future wealth!`;
                       } else if (stats.savingsRate >= 20) {
                         return `Excellent savings discipline! You are currently retaining ${stats.savingsRate}% of your capital this period.`;
                       } else {
@@ -426,12 +427,19 @@ export const DashboardPage = {
 
     let totalIncome = 0;
     let totalExpenses = 0;
+    let capitalAllocations = 0;
+    let consumptionExpenses = 0;
 
     for (const tx of txList) {
       if (tx.type === 'income') {
         totalIncome += tx.amount;
       } else {
         totalExpenses += tx.amount;
+        if (isCapitalAllocation(state.categories, tx)) {
+          capitalAllocations += tx.amount;
+        } else {
+          consumptionExpenses += tx.amount;
+        }
       }
     }
 
@@ -446,7 +454,9 @@ export const DashboardPage = {
     if (state.dateFilter === 'thisMonth') {
       const daysElapsed = Math.max(1, Formatters.daysElapsedInMonth());
       const daysRemaining = Formatters.daysRemainingInMonth();
-      dailyBurnRate = totalExpenses / daysElapsed;
+      // Only lifestyle consumption expenses are projected into daily burn rate.
+      // Lump-sum savings and investments occur periodically and are not daily burns.
+      dailyBurnRate = consumptionExpenses / daysElapsed;
       projectedBalance = balance - (dailyBurnRate * daysRemaining);
       
       const monthlyIncome = state.userSettings?.monthlyIncome || state.userSettings?.monthly_income || 0;
@@ -467,6 +477,8 @@ export const DashboardPage = {
     return {
       totalIncome,
       totalExpenses,
+      capitalAllocations,
+      consumptionExpenses,
       balance,
       savingsRate,
       dailyBurnRate,
