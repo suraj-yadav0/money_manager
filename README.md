@@ -8,8 +8,8 @@ Quantro is a private, local-first personal finance platform featuring an Android
 
 ### Android Application
 Download the latest pre-compiled universal APK from GitHub Releases:
-- **Latest Release:** [Quantro v1.0.0](https://github.com/suraj-yadav0/money_manager/releases/tag/v1.0.0)
-- **Direct APK Download:** [quantro-v1.0.0.apk](https://github.com/suraj-yadav0/money_manager/releases/download/v1.0.0/quantro-v1.0.0.apk)
+- **Latest Release:** [Quantro v1.0.1](https://github.com/suraj-yadav0/money_manager/releases/tag/v1.0.1)
+- **Direct APK Download:** [quantro-v1.0.1.apk](https://github.com/suraj-yadav0/money_manager/releases/download/v1.0.1/quantro-v1.0.1.apk)
 
 Compatible with Android 8.0+ (ARM64, ARMv7, x86_64).
 
