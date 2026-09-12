@@ -59,9 +59,9 @@ async function initApp() {
       { id: 'tx-3', amount: 14500, type: 'expense', category_id: 3, note: 'Gourmet Dinner & Bistro', timestamp: isoDate(1) },
       { id: 'tx-4', amount: 4200, type: 'expense', category_id: 4, note: 'Uber Commute', timestamp: isoDate(1) },
       { id: 'tx-5', amount: 12800, type: 'expense', category_id: 5, note: 'Electronics & Peripherals', timestamp: isoDate(3) },
-      { id: 'tx-6', amount: 16500, type: 'expense', category_id: 6, note: 'Apartment Utilities & Fiber', timestamp: isoDate(4) },
-      { id: 'tx-7', amount: 5400, type: 'expense', category_id: 7, note: 'Concert & Streaming Subs', timestamp: isoDate(6) },
-      { id: 'tx-8', amount: 25000, type: 'expense', category_id: 8, note: 'Index Mutual Fund SIP', timestamp: isoDate(7) },
+      { id: 'tx-6', amount: 16500, type: 'expense', category_id: 6, note: 'Apartment Utilities & Fiber', timestamp: isoDate(4), is_recurring: true, isRecurring: true },
+      { id: 'tx-7', amount: 5400, type: 'expense', category_id: 7, note: 'Concert & Streaming Subs', timestamp: isoDate(6), is_recurring: true, isRecurring: true },
+      { id: 'tx-8', amount: 25000, type: 'expense', category_id: 8, note: 'Index Mutual Fund SIP', timestamp: isoDate(7), is_recurring: true, isRecurring: true },
       { id: 'tx-9', amount: 3800, type: 'expense', category_id: 3, note: 'Weekly Groceries Mart', timestamp: isoDate(8) }
     ];
 

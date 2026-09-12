@@ -28,50 +28,75 @@ export const DashboardPage = {
 
     return `
       <div class="animate-fade-in">
-        <!-- Hero Header -->
+        <!-- Hero Command Bar -->
         <section class="hero-section">
-          <div class="hero-header">
-            <div>
+          <div class="hero-command-bar">
+            <div class="hero-command-left">
+              <div class="telemetry-tag">
+                <span class="telemetry-dot"></span>
+                <span>FINANCIAL TELEMETRY // LIVE</span>
+                <span class="telemetry-sep">•</span>
+                <span class="telemetry-period">${this.getFilterLabel(state.dateFilter)}</span>
+              </div>
               <h1 class="hero-welcome-title">Financial Overview</h1>
-              <p class="hero-subtitle">Unified capital tracking, automated cash flow forecasting & real-time analytics.</p>
+              <p class="hero-subtitle">Unified capital tracking, automated cash flow forecasting and multi-horizon analytics.</p>
             </div>
 
-            <!-- Date Filter Pills -->
-            <div class="filter-group">
-              ${this.renderFilterChip('thisWeek', '7 Days', state.dateFilter)}
-              ${this.renderFilterChip('thisMonth', 'This Month', state.dateFilter)}
-              ${this.renderFilterChip('lastMonth', 'Last Month', state.dateFilter)}
-              ${this.renderFilterChip('thisYear', 'This Year', state.dateFilter)}
-              ${this.renderFilterChip('allTime', 'All Time', state.dateFilter)}
+            <!-- Action & Filter Strip -->
+            <div class="hero-command-right">
+              <div class="filter-group">
+                ${this.renderFilterChip('thisWeek', '7 Days', state.dateFilter)}
+                ${this.renderFilterChip('thisMonth', 'This Month', state.dateFilter)}
+                ${this.renderFilterChip('lastMonth', 'Last Month', state.dateFilter)}
+                ${this.renderFilterChip('thisYear', 'This Year', state.dateFilter)}
+                ${this.renderFilterChip('allTime', 'All Time', state.dateFilter)}
+              </div>
+              <button class="btn-primary hero-quick-action" id="hero-quick-add-btn">
+                <span class="material-icons" style="font-size: 16px;">add</span>
+                <span>Quick Entry</span>
+              </button>
             </div>
           </div>
 
-          <!-- 4 KPI Stat Cards -->
+          <!-- 4 Asymmetrical Bento KPI Stat Cards -->
           <div class="kpi-grid">
-            <!-- 1. Net Cash / Balance -->
-            <div class="kpi-card">
+            <!-- 1. Hero Net Balance / Primary Capital Reserve Anchor -->
+            <div class="kpi-card kpi-card-hero">
               <div class="kpi-top">
-                <span class="kpi-label">Net Balance</span>
+                <div class="kpi-label-group">
+                  <span class="kpi-label">Net Reserve Balance</span>
+                  <span class="kpi-sublabel">Current Liquidity</span>
+                </div>
                 <div class="kpi-icon-box">
                   <span class="material-icons" style="font-size: 20px;">account_balance_wallet</span>
                 </div>
               </div>
-              <div class="kpi-value">
-                ${Formatters.currency(stats.balance)}
-              </div>
-              <div class="kpi-footer">
+              <div class="kpi-value-row">
+                <div class="kpi-value">${Formatters.currency(stats.balance)}</div>
                 <span class="kpi-badge positive">
-                  <span class="material-icons" style="font-size: 14px;">trending_up</span>
-                  ${stats.savingsRate}% saved
+                  <span class="material-icons" style="font-size: 13px;">trending_up</span>
+                  ${stats.savingsRate}% retained
                 </span>
-                <span>In selected period</span>
+              </div>
+              <div class="kpi-ratio-section">
+                <div class="kpi-ratio-bar">
+                  <div class="kpi-ratio-fill inflow" style="width: ${stats.inflowRatio}%;"></div>
+                  <div class="kpi-ratio-fill outflow" style="width: ${100 - stats.inflowRatio}%;"></div>
+                </div>
+                <div class="kpi-ratio-legend">
+                  <span>Inflow ${stats.inflowRatio}%</span>
+                  <span>Outflow ${100 - stats.inflowRatio}%</span>
+                </div>
               </div>
             </div>
 
-            <!-- 2. Monthly Income -->
+            <!-- 2. Capital Inflow -->
             <div class="kpi-card">
               <div class="kpi-top">
-                <span class="kpi-label">Total Inflow</span>
+                <div class="kpi-label-group">
+                  <span class="kpi-label">Total Inflow</span>
+                  <span class="kpi-sublabel">Period Revenue</span>
+                </div>
                 <div class="kpi-icon-box">
                   <span class="material-icons" style="font-size: 20px;">arrow_downward</span>
                 </div>
@@ -83,13 +108,17 @@ export const DashboardPage = {
                 <span class="kpi-badge neutral">
                   Baseline: ${Formatters.currency(state.userSettings?.monthlyIncome || 0)}
                 </span>
+                ${stats.inflowDeltaText ? `<span class="kpi-subtext">${stats.inflowDeltaText}</span>` : ''}
               </div>
             </div>
 
-            <!-- 3. Total Outflow -->
+            <!-- 3. Capital Outflow -->
             <div class="kpi-card">
               <div class="kpi-top">
-                <span class="kpi-label">Total Outflow</span>
+                <div class="kpi-label-group">
+                  <span class="kpi-label">Total Outflow</span>
+                  <span class="kpi-sublabel">Capital Deployed</span>
+                </div>
                 <div class="kpi-icon-box">
                   <span class="material-icons" style="font-size: 20px;">arrow_upward</span>
                 </div>
@@ -99,27 +128,36 @@ export const DashboardPage = {
               </div>
               <div class="kpi-footer">
                 <span class="kpi-badge neutral">
-                  Lifestyle Burn: ${Formatters.currency(stats.dailyBurnRate)}/day
+                  Lifestyle: ${Formatters.currency(Math.round(stats.dailyBurnRate))}/day
                 </span>
+                ${stats.capitalAllocations > 0 ? `<span class="kpi-subtext">${Formatters.compactCurrency(stats.capitalAllocations)} invested</span>` : ''}
               </div>
             </div>
 
-            <!-- 4. Month-End Forecast -->
-            <div class="kpi-card">
+            <!-- 4. Month-End Forecast & Burn Velocity -->
+            <div class="kpi-card kpi-card-projection">
               <div class="kpi-top">
-                <span class="kpi-label">Month-End Projection</span>
+                <div class="kpi-label-group">
+                  <span class="kpi-label">Month-End Runway</span>
+                  <span class="kpi-sublabel">Dynamic Forecast</span>
+                </div>
                 <div class="kpi-icon-box">
                   <span class="material-icons" style="font-size: 20px;">auto_graph</span>
                 </div>
               </div>
-              <div class="kpi-value">
+              <div class="kpi-value ${stats.projectedBalance < 0 ? 'deficit-val' : ''}">
                 ${Formatters.currency(stats.projectedBalance)}
               </div>
-              <div class="kpi-footer">
-                <span class="kpi-badge ${stats.forecastStatus === 'safe' ? 'positive' : stats.forecastStatus === 'caution' ? 'neutral' : 'negative'}">
-                  ${stats.forecastStatus === 'safe' ? 'Healthy Trajectory' : stats.forecastStatus === 'caution' ? 'Moderate Margin' : 'Deficit Risk'}
-                </span>
-                ${stats.capitalAllocations > 0 ? `<span style="font-size: 11px; color: var(--text-muted);">(${Formatters.compactCurrency(stats.capitalAllocations)} invested/saved)</span>` : ''}
+              <div class="burn-velocity-container">
+                <div class="burn-velocity-header">
+                  <span>Cycle (Day ${stats.daysElapsed}/${stats.totalDays})</span>
+                  <span class="kpi-badge ${stats.forecastStatus === 'safe' ? 'positive' : stats.forecastStatus === 'caution' ? 'neutral' : 'negative'}">
+                    ${stats.forecastStatus === 'safe' ? 'Safe' : stats.forecastStatus === 'caution' ? 'Moderate' : 'Deficit Risk'}
+                  </span>
+                </div>
+                <div class="burn-velocity-track">
+                  <div class="burn-velocity-fill" style="width: ${stats.monthPercentElapsed}%;"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -165,10 +203,16 @@ export const DashboardPage = {
                 <div class="card-title">
                   <span class="material-icons">receipt_long</span>
                   <span>Recent Activity</span>
+                  <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">${recentTx.length} items</span>
                 </div>
-                <button class="btn-ghost" id="view-all-tx-btn">
-                  View Full Ledger <span class="material-icons" style="font-size: 16px;">arrow_forward</span>
-                </button>
+                <div class="card-header-actions">
+                  <button class="btn-ghost" id="recent-activity-add-btn" style="padding: 4px 10px; font-size: 12px;">
+                    <span class="material-icons" style="font-size: 15px;">add</span> New
+                  </button>
+                  <button class="btn-ghost" id="view-all-tx-btn" style="padding: 4px 10px; font-size: 12px;">
+                    Full Ledger <span class="material-icons" style="font-size: 15px;">arrow_forward</span>
+                  </button>
+                </div>
               </div>
 
               ${recentTx.length === 0 ? `
@@ -190,7 +234,7 @@ export const DashboardPage = {
             </div>
           </div>
 
-          <!-- Right Column (Category Breakdown, Goals & Intelligence) -->
+          <!-- Right Column (Category Breakdown, Recurring Liabilities, Goals & Intelligence) -->
           <div style="display: flex; flex-direction: column; gap: 24px;">
             
             <!-- Category Spending Donut & Top List -->
@@ -246,51 +290,17 @@ export const DashboardPage = {
               `}
             </div>
 
-            <!-- Active Savings Goals Quick Preview -->
-            <div class="fintech-card">
-              <div class="card-header">
-                <div class="card-title">
-                  <span class="material-icons">savings</span>
-                  <span>Savings Goals</span>
-                </div>
-                <button class="btn-ghost" id="view-all-goals-btn">
-                  Manage <span class="material-icons" style="font-size: 16px;">arrow_forward</span>
-                </button>
-              </div>
+            <!-- New Intelligence Module: Upcoming Recurring Liabilities -->
+            ${this.renderRecurringWidget(state)}
 
-              ${activeGoals.length === 0 ? `
-                <div style="text-align: center; padding: 24px 0; color: var(--text-muted); font-size: 13px;">
-                  No active savings goals. Create one to track your milestones!
-                </div>
-              ` : `
-                <div style="display: flex; flex-direction: column; gap: 14px;">
-                  ${activeGoals.map(goal => {
-                    const pct = Math.min(100, Math.round(((goal.savedAmount || goal.saved_amount || 0) / (goal.targetAmount || goal.target_amount || 1)) * 100));
-                    return `
-                      <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 14px; border-radius: var(--radius-md);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                          <span style="font-weight: 700; font-size: 14px; color: var(--text-primary);">${goal.name}</span>
-                          <span style="font-size: 12px; font-weight: 700; color: var(--primary);">${pct}%</span>
-                        </div>
-                        <div class="progress-track" style="margin: 6px 0 8px;">
-                          <div class="progress-bar-fill safe" style="width: ${pct}%;"></div>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted);">
-                          <span>${Formatters.currency(goal.savedAmount || goal.saved_amount || 0)} saved</span>
-                          <span>Target: ${Formatters.currency(goal.targetAmount || goal.target_amount || 0)}</span>
-                        </div>
-                      </div>
-                    `;
-                  }).join('')}
-                </div>
-              `}
-            </div>
+            <!-- Active Savings Goals Quick Preview -->
+            ${this.renderGoalsWidget(state, activeGoals)}
 
             <!-- Financial Intelligence Advice Card -->
             <div class="fintech-card">
               <div style="display: flex; gap: 14px; align-items: flex-start;">
-                <div class="tx-icon-box" style="width: 36px; height: 36px; border-radius: 8px; background: rgba(0, 229, 153, 0.12); color: var(--success);">
-                  <span class="material-icons" style="font-size: 18px;">trending_up</span>
+                <div class="tx-icon-box" style="width: 36px; height: 36px; border-radius: 8px; background: rgba(255, 255, 255, 0.08); color: var(--text-primary);">
+                  <span class="material-icons" style="font-size: 18px;">insights</span>
                 </div>
                 <div>
                   <div style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 3px;">Smart Wealth Intelligence</div>
@@ -314,6 +324,150 @@ export const DashboardPage = {
 
           </div>
         </div>
+      </div>
+    `;
+  },
+
+  getFilterLabel(key) {
+    const labels = {
+      thisWeek: 'Last 7 Days',
+      thisMonth: 'Current Month',
+      lastMonth: 'Previous Month',
+      thisYear: 'Year to Date',
+      allTime: 'All Time Records'
+    };
+    return labels[key] || 'Current View';
+  },
+
+  getRecurringCommitments(state) {
+    const list = (state.transactions || []).filter(t => {
+      if (t.type !== 'expense') return false;
+      const isRec = Boolean(t.isRecurring || t.is_recurring);
+      const note = (t.note || '').toLowerCase();
+      const isLikelyRecurring = /sip|subscription|fiber|wifi|rent|utility|utilities|bill|membership|cloud|server|gym|spotify|netflix/i.test(note);
+      return isRec || isLikelyRecurring;
+    });
+
+    const map = new Map();
+    for (const tx of list) {
+      const key = (tx.note || 'Commitment').toLowerCase().trim();
+      if (!map.has(key)) {
+        const cat = findCategory(state.categories, tx.categoryId || tx.category_id);
+        const d = new Date(tx.timestamp);
+        const dayOfMonth = d.getDate();
+        map.set(key, {
+          id: tx.id || tx.sync_id,
+          name: tx.note || (cat ? cat.name : 'Subscription'),
+          amount: Number(tx.amount || 0),
+          categoryId: tx.categoryId || tx.category_id,
+          categoryName: cat ? cat.name : 'Subscription',
+          icon: cat ? cat.icon : 'receipt_long',
+          dayOfMonth,
+          timestamp: tx.timestamp
+        });
+      }
+    }
+    return Array.from(map.values()).slice(0, 3);
+  },
+
+  renderRecurringWidget(state) {
+    const recurringList = this.getRecurringCommitments(state);
+    const totalRecurring = recurringList.reduce((sum, item) => sum + item.amount, 0);
+
+    return `
+      <div class="fintech-card">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="material-icons">event_repeat</span>
+            <span>Recurring Liabilities</span>
+          </div>
+          <button class="btn-ghost" id="manage-recurring-btn">
+            View Schedule <span class="material-icons" style="font-size: 16px;">arrow_forward</span>
+          </button>
+        </div>
+
+        <div class="recurring-summary-strip">
+          <div class="recurring-stat-item">
+            <span class="recurring-stat-label">Active Commitments</span>
+            <strong class="recurring-stat-val">${recurringList.length} Items</strong>
+          </div>
+          <div class="recurring-stat-item" style="text-align: right;">
+            <span class="recurring-stat-label">Monthly Allocation</span>
+            <strong class="recurring-stat-val">${Formatters.currency(totalRecurring)}</strong>
+          </div>
+        </div>
+
+        ${recurringList.length === 0 ? `
+          <div style="text-align: center; padding: 24px 0; color: var(--text-muted); font-size: 13px;">
+            No recurring liabilities detected. Mark transactions as recurring to forecast commitments.
+          </div>
+        ` : `
+          <div class="recurring-items-list">
+            ${recurringList.map(item => `
+              <div class="recurring-item-row" data-id="${item.id || ''}">
+                <div class="recurring-item-left">
+                  <div class="recurring-date-pill">
+                    <span class="recurring-date-num">${item.dayOfMonth}th</span>
+                    <span class="recurring-date-sub">Monthly</span>
+                  </div>
+                  <div class="recurring-item-info">
+                    <div class="recurring-item-title">${item.name}</div>
+                    <div class="recurring-item-meta">${item.categoryName}</div>
+                  </div>
+                </div>
+                <div class="recurring-item-right">
+                  <div class="recurring-item-amount">-${Formatters.currency(item.amount)}</div>
+                  <span class="kpi-badge neutral" style="font-size: 10px; padding: 1px 6px;">Automated</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `}
+      </div>
+    `;
+  },
+
+  renderGoalsWidget(state, activeGoals) {
+    return `
+      <div class="fintech-card">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="material-icons">savings</span>
+            <span>Savings Milestones</span>
+          </div>
+          <button class="btn-ghost" id="view-all-goals-btn">
+            Manage <span class="material-icons" style="font-size: 16px;">arrow_forward</span>
+          </button>
+        </div>
+
+        ${activeGoals.length === 0 ? `
+          <div style="text-align: center; padding: 24px 0; color: var(--text-muted); font-size: 13px;">
+            No active savings goals. Create one to track your milestones!
+          </div>
+        ` : `
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            ${activeGoals.map(goal => {
+              const saved = goal.savedAmount || goal.saved_amount || 0;
+              const target = goal.targetAmount || goal.target_amount || 1;
+              const pct = Math.min(100, Math.round((saved / target) * 100));
+              return `
+                <div class="goal-preview-card" data-goal-id="${goal.id || ''}">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span style="font-weight: 700; font-size: 14px; color: var(--text-primary);">${goal.name}</span>
+                    <span style="font-size: 12px; font-weight: 700; color: var(--primary);">${pct}%</span>
+                  </div>
+                  <div class="progress-track" style="margin: 6px 0 8px; height: 6px;">
+                    <div class="progress-bar-fill safe" style="width: ${pct}%;"></div>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted);">
+                    <span>${Formatters.currency(saved)} saved</span>
+                    <span>Target: ${Formatters.currency(target)}</span>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `}
       </div>
     `;
   },
@@ -432,13 +586,14 @@ export const DashboardPage = {
 
     for (const tx of txList) {
       if (tx.type === 'income') {
-        totalIncome += tx.amount;
+        totalIncome += Number(tx.amount || 0);
       } else {
-        totalExpenses += tx.amount;
+        const amt = Number(tx.amount || 0);
+        totalExpenses += amt;
         if (isCapitalAllocation(state.categories, tx)) {
-          capitalAllocations += tx.amount;
+          capitalAllocations += amt;
         } else {
-          consumptionExpenses += tx.amount;
+          consumptionExpenses += amt;
         }
       }
     }
@@ -446,21 +601,27 @@ export const DashboardPage = {
     const balance = totalIncome - totalExpenses;
     const savingsRate = totalIncome > 0 ? Math.max(0, Math.round(((totalIncome - totalExpenses) / totalIncome) * 100)) : 0;
 
+    const totalVolume = totalIncome + totalExpenses;
+    const inflowRatio = totalVolume > 0 ? Math.round((totalIncome / totalVolume) * 100) : 50;
+
+    const daysElapsed = Math.max(1, Formatters.daysElapsedInMonth());
+    const daysRemaining = Formatters.daysRemainingInMonth();
+    const totalDays = Formatters.daysInCurrentMonth();
+    const monthPercentElapsed = Math.min(100, Math.round((daysElapsed / totalDays) * 100));
+
     let dailyBurnRate = 0;
     let projectedBalance = balance;
     let forecastStatus = 'safe';
     let burnRateStatus = 'positive';
 
+    const monthlyIncome = state.userSettings?.monthlyIncome || state.userSettings?.monthly_income || 0;
+
     if (state.dateFilter === 'thisMonth') {
-      const daysElapsed = Math.max(1, Formatters.daysElapsedInMonth());
-      const daysRemaining = Formatters.daysRemainingInMonth();
       // Only lifestyle consumption expenses are projected into daily burn rate.
       // Lump-sum savings and investments occur periodically and are not daily burns.
       dailyBurnRate = consumptionExpenses / daysElapsed;
       projectedBalance = balance - (dailyBurnRate * daysRemaining);
       
-      const monthlyIncome = state.userSettings?.monthlyIncome || state.userSettings?.monthly_income || 0;
-
       if (projectedBalance > monthlyIncome * 0.2) {
         forecastStatus = 'safe';
       } else if (projectedBalance > 0) {
@@ -469,9 +630,23 @@ export const DashboardPage = {
         forecastStatus = 'deficit';
       }
 
-      if (dailyBurnRate > (monthlyIncome / 30)) {
+      if (monthlyIncome > 0 && dailyBurnRate > (monthlyIncome / 30)) {
         burnRateStatus = 'negative';
       }
+    } else {
+      const diffMs = range.end - range.start;
+      const activeDays = Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)));
+      dailyBurnRate = consumptionExpenses / activeDays;
+      projectedBalance = balance;
+      forecastStatus = balance >= 0 ? 'safe' : 'deficit';
+    }
+
+    let inflowDeltaText = '';
+    if (monthlyIncome > 0) {
+      const diff = totalIncome - monthlyIncome;
+      if (diff > 0) inflowDeltaText = `+${Formatters.compactCurrency(diff)} vs base`;
+      else if (diff < 0) inflowDeltaText = `${Formatters.compactCurrency(Math.abs(diff))} under base`;
+      else inflowDeltaText = 'Target reached';
     }
 
     return {
@@ -481,10 +656,16 @@ export const DashboardPage = {
       consumptionExpenses,
       balance,
       savingsRate,
+      inflowRatio,
       dailyBurnRate,
       projectedBalance,
       forecastStatus,
-      burnRateStatus
+      burnRateStatus,
+      daysElapsed,
+      daysRemaining,
+      totalDays,
+      monthPercentElapsed,
+      inflowDeltaText
     };
   },
 
@@ -498,14 +679,55 @@ export const DashboardPage = {
       });
     });
 
+    // Hero Quick Add CTA
+    document.getElementById('hero-quick-add-btn')?.addEventListener('click', () => {
+      import('./add-transaction.js').then(({ AddTransactionModal }) => {
+        AddTransactionModal.show(null);
+      });
+    });
+
+    // Recent Activity Add CTA
+    document.getElementById('recent-activity-add-btn')?.addEventListener('click', () => {
+      import('./add-transaction.js').then(({ AddTransactionModal }) => {
+        AddTransactionModal.show(null);
+      });
+    });
+
     // View All Transactions CTA
     document.getElementById('view-all-tx-btn')?.addEventListener('click', () => {
       StateManager.setState({ navIndex: 1 });
     });
 
+    // Manage Recurring Liabilities CTA
+    document.getElementById('manage-recurring-btn')?.addEventListener('click', () => {
+      StateManager.setState({ navIndex: 6 });
+    });
+
     // View All Goals CTA
     document.getElementById('view-all-goals-btn')?.addEventListener('click', () => {
       StateManager.setState({ navIndex: 3 });
+    });
+
+    // Goal Preview Cards Click
+    document.querySelectorAll('.goal-preview-card').forEach(card => {
+      card.addEventListener('click', () => {
+        StateManager.setState({ navIndex: 3 });
+      });
+    });
+
+    // Recurring Items Click
+    document.querySelectorAll('.recurring-item-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const id = row.getAttribute('data-id');
+        const tx = state.transactions.find(t => String(t.id) === String(id) || (t.sync_id && t.sync_id === id));
+        if (tx) {
+          import('./add-transaction.js').then(({ AddTransactionModal }) => {
+            AddTransactionModal.show(tx);
+          });
+        } else {
+          StateManager.setState({ navIndex: 6 });
+        }
+      });
     });
 
     // Empty state Add Tx CTA
