@@ -52,21 +52,21 @@ export const AuthPage = {
             </div>
 
             <h1 class="min-hero-h1">
-              Private Capital Intelligence.
+              Own your financial truth.
             </h1>
 
             <p class="min-hero-p">
-              Local-first wealth tracking with deterministic runway forecasts and encrypted bi-directional sync.
+              Local-first wealth intelligence with zero telemetry.
             </p>
 
             <div class="min-cta-wrap">
               <button class="min-cta-btn min-cta-primary" id="hero-demo-btn">
                 <span class="material-icons" style="font-size: 18px;">play_circle</span>
-                <span>Explore Live Demo</span>
+                <span>Launch Live Demo</span>
               </button>
               <button class="min-cta-btn min-cta-secondary" id="hero-signin-btn">
                 <span class="material-icons" style="font-size: 18px;">login</span>
-                <span>Sign In to Account</span>
+                <span>Sign In to Sync</span>
               </button>
             </div>
           </section>
@@ -236,7 +236,7 @@ export const AuthPage = {
                   <span>Create Cloud Account</span>
                 ` : `
                   <span class="material-icons" style="font-size: 18px;">arrow_forward</span>
-                  <span>Sign In to Quantro</span>
+                  <span>Sign In to Sync</span>
                 `)}
               </button>
 
@@ -259,7 +259,7 @@ export const AuthPage = {
               <!-- Instant Demo Mode -->
               <button class="btn-demo-action" id="auth-demo-btn">
                 <span class="material-icons" style="font-size: 18px; color: var(--primary);">bolt</span>
-                <span>Instant Test-Drive (Live Demo Mode)</span>
+                <span>Launch Live Demo (Instant Test-Drive)</span>
               </button>
 
               <!-- Auxiliary Links -->
