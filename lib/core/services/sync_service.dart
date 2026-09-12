@@ -496,14 +496,19 @@ class SyncService {
       final snapshot = await userDocRef.collection('bank_accounts').get();
       final remoteSyncIds = snapshot.docs.map((d) => (d.data()['sync_id'] as String?) ?? d.id).toSet();
 
-      // Deletion reconciliation for accounts
-      final localSyncedAccs = await (_db.select(_db.bankAccounts)
-            ..where((a) => a.isSynced.equals(true) & a.syncId.isNotNull()))
-          .get();
-      for (final localAcc in localSyncedAccs) {
-        if (!remoteSyncIds.contains(localAcc.syncId)) {
-          await (_db.delete(_db.bankAccounts)..where((a) => a.id.equals(localAcc.id))).go();
+      // Deletion reconciliation for accounts (safeguarded against empty remote)
+      if (remoteSyncIds.isNotEmpty) {
+        final localSyncedAccs = await (_db.select(_db.bankAccounts)
+              ..where((a) => a.isSynced.equals(true) & a.syncId.isNotNull()))
+            .get();
+        for (final localAcc in localSyncedAccs) {
+          if (!remoteSyncIds.contains(localAcc.syncId)) {
+            await (_db.delete(_db.bankAccounts)..where((a) => a.id.equals(localAcc.id))).go();
+          }
         }
+      } else {
+        await (_db.update(_db.bankAccounts)..where((a) => a.isSynced.equals(true)))
+            .write(const BankAccountsCompanion(isSynced: Value(false)));
       }
 
       for (final doc in snapshot.docs) {
@@ -555,14 +560,19 @@ class SyncService {
       final snapshot = await userDocRef.collection('transactions').get();
       final remoteSyncIds = snapshot.docs.map((d) => (d.data()['sync_id'] as String?) ?? d.id).toSet();
 
-      // Deletion reconciliation for transactions
-      final localSyncedTx = await (_db.select(_db.transactions)
-            ..where((t) => t.isSynced.equals(true) & t.syncId.isNotNull()))
-          .get();
-      for (final localTx in localSyncedTx) {
-        if (!remoteSyncIds.contains(localTx.syncId)) {
-          await (_db.delete(_db.transactions)..where((t) => t.id.equals(localTx.id))).go();
+      // Deletion reconciliation for transactions (safeguarded against empty remote)
+      if (remoteSyncIds.isNotEmpty) {
+        final localSyncedTx = await (_db.select(_db.transactions)
+              ..where((t) => t.isSynced.equals(true) & t.syncId.isNotNull()))
+            .get();
+        for (final localTx in localSyncedTx) {
+          if (!remoteSyncIds.contains(localTx.syncId)) {
+            await (_db.delete(_db.transactions)..where((t) => t.id.equals(localTx.id))).go();
+          }
         }
+      } else {
+        await (_db.update(_db.transactions)..where((t) => t.isSynced.equals(true)))
+            .write(const TransactionsCompanion(isSynced: Value(false)));
       }
 
       for (final doc in snapshot.docs) {
@@ -624,13 +634,19 @@ class SyncService {
       final snapshot = await userDocRef.collection('goals').get();
       final remoteSyncIds = snapshot.docs.map((d) => (d.data()['sync_id'] as String?) ?? d.id).toSet();
 
-      final localSyncedGoals = await (_db.select(_db.goals)
-            ..where((g) => g.isSynced.equals(true) & g.syncId.isNotNull()))
-          .get();
-      for (final localGoal in localSyncedGoals) {
-        if (!remoteSyncIds.contains(localGoal.syncId)) {
-          await (_db.delete(_db.goals)..where((g) => g.id.equals(localGoal.id))).go();
+      // Deletion reconciliation for goals (safeguarded against empty remote)
+      if (remoteSyncIds.isNotEmpty) {
+        final localSyncedGoals = await (_db.select(_db.goals)
+              ..where((g) => g.isSynced.equals(true) & g.syncId.isNotNull()))
+            .get();
+        for (final localGoal in localSyncedGoals) {
+          if (!remoteSyncIds.contains(localGoal.syncId)) {
+            await (_db.delete(_db.goals)..where((g) => g.id.equals(localGoal.id))).go();
+          }
         }
+      } else {
+        await (_db.update(_db.goals)..where((g) => g.isSynced.equals(true)))
+            .write(const GoalsCompanion(isSynced: Value(false)));
       }
 
       for (final doc in snapshot.docs) {
@@ -681,13 +697,19 @@ class SyncService {
       final snapshot = await userDocRef.collection('assets').get();
       final remoteSyncIds = snapshot.docs.map((d) => (d.data()['sync_id'] as String?) ?? d.id).toSet();
 
-      final localSyncedAssets = await (_db.select(_db.assets)
-            ..where((a) => a.isSynced.equals(true) & a.syncId.isNotNull()))
-          .get();
-      for (final localAsset in localSyncedAssets) {
-        if (!remoteSyncIds.contains(localAsset.syncId)) {
-          await (_db.delete(_db.assets)..where((a) => a.id.equals(localAsset.id))).go();
+      // Deletion reconciliation for assets (safeguarded against empty remote)
+      if (remoteSyncIds.isNotEmpty) {
+        final localSyncedAssets = await (_db.select(_db.assets)
+              ..where((a) => a.isSynced.equals(true) & a.syncId.isNotNull()))
+            .get();
+        for (final localAsset in localSyncedAssets) {
+          if (!remoteSyncIds.contains(localAsset.syncId)) {
+            await (_db.delete(_db.assets)..where((a) => a.id.equals(localAsset.id))).go();
+          }
         }
+      } else {
+        await (_db.update(_db.assets)..where((a) => a.isSynced.equals(true)))
+            .write(const AssetsCompanion(isSynced: Value(false)));
       }
 
       for (final doc in snapshot.docs) {

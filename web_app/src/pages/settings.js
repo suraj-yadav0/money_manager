@@ -264,14 +264,22 @@ export const SettingsPage = {
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
         try {
           const content = event.target?.result;
-          const res = StateManager.importBackupData(content);
-          alert(`Backup restored successfully!\n\nImported:\n• ${res.transactionsCount} Transactions\n• ${res.categoriesCount} Categories\n• ${res.goalsCount} Goals\n• ${res.assetsCount} Assets`);
+          const parsed = JSON.parse(content);
+
+          if (state.user) {
+            const res = await DbService.importBackupToCloud(state.user.uid, parsed);
+            await DbService.syncNow(state.user.uid);
+            alert(`Backup restored to cloud successfully!\n\nImported:\n• ${res.transactionsCount} Transactions\n• ${res.categoriesCount} Categories\n• ${res.goalsCount} Goals\n• ${res.assetsCount} Assets`);
+          } else {
+            const res = StateManager.importBackupData(parsed);
+            alert(`Backup restored successfully!\n\nImported:\n• ${res.transactionsCount} Transactions\n• ${res.categoriesCount} Categories\n• ${res.goalsCount} Goals\n• ${res.assetsCount} Assets`);
+          }
           Router.closeOverlay();
         } catch (err) {
-          alert('Import failed: ' + err.message);
+          alert('Import failed: ' + (err.message || 'Invalid backup file'));
         }
       };
       reader.readAsText(file);

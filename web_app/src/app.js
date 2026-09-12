@@ -88,8 +88,12 @@ async function initApp() {
   // 2. Watch Firebase Auth state changes
   AuthService.watchAuthState(async (user) => {
     if (user) {
-      // Clear any guest/demo localStorage immediately when authenticated
-      StateManager.clearGuestLocalStorage();
+      // Migrate guest data to cloud if present, otherwise clear guest localStorage
+      if (StateManager.hasGuestData()) {
+        await DbService.syncGuestDataToCloud(user.uid);
+      } else {
+        StateManager.clearGuestLocalStorage();
+      }
       
       // User is logged in, sync with cloud Firestore in real-time
       DbService.startSync(user.uid);

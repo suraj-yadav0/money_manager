@@ -208,21 +208,75 @@ class AppStateManager {
     };
   }
 
+  // Check if there is genuine user data (not demo data) in local guest storage or state
+  hasGuestData() {
+    try {
+      const isReal = item => item && !item.is_demo && !item.isDemo;
+      if (Array.isArray(this.state.transactions) && this.state.transactions.some(isReal)) return true;
+      if (Array.isArray(this.state.goals) && this.state.goals.some(isReal)) return true;
+      if (Array.isArray(this.state.assets) && this.state.assets.some(isReal)) return true;
+
+      const txStr = localStorage.getItem('money_manager_transactions');
+      if (txStr) {
+        const txs = JSON.parse(txStr);
+        if (Array.isArray(txs) && txs.some(isReal)) return true;
+      }
+      const goalStr = localStorage.getItem('money_manager_goals');
+      if (goalStr) {
+        const goals = JSON.parse(goalStr);
+        if (Array.isArray(goals) && goals.some(isReal)) return true;
+      }
+      const assetStr = localStorage.getItem('money_manager_assets');
+      if (assetStr) {
+        const assets = JSON.parse(assetStr);
+        if (Array.isArray(assets) && assets.some(isReal)) return true;
+      }
+      const accStr = localStorage.getItem('money_manager_bank_accounts');
+      if (accStr) {
+        const accs = JSON.parse(accStr);
+        if (Array.isArray(accs) && accs.length > 0) return true;
+      }
+    } catch (err) {
+      console.warn('Error checking guest data:', err);
+    }
+    return false;
+  }
+
   // Import JSON backup data and persist to local storage
   importBackupData(jsonString) {
     try {
       const data = typeof jsonString === 'string' ? JSON.parse(jsonString) : jsonString;
       if (!data || typeof data !== 'object') throw new Error('Invalid JSON format');
 
-      if (Array.isArray(data.transactions)) this.state.transactions = data.transactions;
-      if (Array.isArray(data.categories)) this.state.categories = data.categories;
-      if (Array.isArray(data.goals)) this.state.goals = data.goals;
-      if (Array.isArray(data.goalContributions)) this.state.goalContributions = data.goalContributions;
+      const generateId = () => {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+          return crypto.randomUUID();
+        }
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+          const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+        });
+      };
+
+      const normalize = (items) => {
+        if (!Array.isArray(items)) return [];
+        return items.map(item => ({
+          ...item,
+          sync_id: item.sync_id || item.id || generateId(),
+          is_demo: false,
+          isDemo: false
+        }));
+      };
+
+      if (Array.isArray(data.transactions)) this.state.transactions = normalize(data.transactions);
+      if (Array.isArray(data.categories)) this.state.categories = normalize(data.categories);
+      if (Array.isArray(data.goals)) this.state.goals = normalize(data.goals);
+      if (Array.isArray(data.goalContributions)) this.state.goalContributions = normalize(data.goalContributions);
       if (Array.isArray(data.categorizationRules)) this.state.categorizationRules = data.categorizationRules;
-      if (Array.isArray(data.assets)) this.state.assets = data.assets;
-      if (Array.isArray(data.bankAccounts)) this.state.bankAccounts = data.bankAccounts;
+      if (Array.isArray(data.assets)) this.state.assets = normalize(data.assets);
+      if (Array.isArray(data.bankAccounts)) this.state.bankAccounts = normalize(data.bankAccounts);
       if (data.userSettings && typeof data.userSettings === 'object') {
-        this.state.userSettings = { ...this.state.userSettings, ...data.userSettings };
+        this.state.userSettings = { ...this.state.userSettings, ...data.userSettings, is_demo: false };
       }
 
       this.saveGuestState();

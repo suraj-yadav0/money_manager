@@ -492,8 +492,7 @@ export const AuthPage = {
       try {
         if (this.isSignUp) {
           const res = await AuthService.signUpWithEmail(emailVal, passVal);
-          // Only migrate guest data if genuinely in local guest mode and not demo
-          if (StateManager.state.isGuestMode && !StateManager.state.isDemoMode) {
+          if (StateManager.hasGuestData()) {
             await DbService.syncGuestDataToCloud(res.user.uid);
           } else {
             StateManager.clearGuestLocalStorage();
@@ -501,8 +500,11 @@ export const AuthPage = {
           DbService.startSync(res.user.uid);
         } else {
           const res = await AuthService.signInWithEmail(emailVal, passVal);
-          // Ensure local guest/demo data never pollutes an existing account
-          StateManager.clearGuestLocalStorage();
+          if (StateManager.hasGuestData()) {
+            await DbService.syncGuestDataToCloud(res.user.uid);
+          } else {
+            StateManager.clearGuestLocalStorage();
+          }
           DbService.startSync(res.user.uid);
         }
         this.isLoading = false;
@@ -523,8 +525,11 @@ export const AuthPage = {
       try {
         const user = await AuthService.signInWithGoogle();
         if (user) {
-          // Ensure local guest/demo data never pollutes an existing account
-          StateManager.clearGuestLocalStorage();
+          if (StateManager.hasGuestData()) {
+            await DbService.syncGuestDataToCloud(user.uid);
+          } else {
+            StateManager.clearGuestLocalStorage();
+          }
           DbService.startSync(user.uid);
         }
         this.isLoading = false;

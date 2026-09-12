@@ -115,43 +115,19 @@ export function deduplicateAssets(assets, userId) {
   return assets;
 }
 
-export const DEMO_TX_NOTES = new Set([
-  'monthly salary credit',
-  'ui design consulting',
-  'gourmet dinner & bistro',
-  'uber commute',
-  'electronics & peripherals',
-  'apartment utilities & fiber',
-  'concert & streaming subs',
-  'index mutual fund sip',
-  'weekly groceries mart'
-]);
-
 export function isDemoTransaction(tx) {
   if (!tx) return false;
-  if (tx.is_demo || tx.isDemo) return true;
-  const id = String(tx.id || tx.sync_id || '');
-  if (id.startsWith('tx-')) return true;
-  const note = (tx.note || '').toLowerCase().trim();
-  return DEMO_TX_NOTES.has(note);
+  return Boolean(tx.is_demo || tx.isDemo);
 }
 
 export function isDemoGoal(g) {
   if (!g) return false;
-  if (g.is_demo || g.isDemo) return true;
-  const id = String(g.id || g.sync_id || '');
-  if (id.startsWith('goal-')) return true;
-  const name = (g.name || '').toLowerCase().trim();
-  return name === 'emergency reserve' || name === 'tech workspace upgrade';
+  return Boolean(g.is_demo || g.isDemo);
 }
 
 export function isDemoAsset(a) {
   if (!a) return false;
-  if (a.is_demo || a.isDemo) return true;
-  const id = String(a.id || a.sync_id || '');
-  if (id.startsWith('ast-')) return true;
-  const name = (a.name || '').toLowerCase().trim();
-  return name === 'primary hdfc savings' || name === 'car loan facility' || (name === 'equities portfolio' && Number(a.value) === 850000 && !a.updated_by_user);
+  return Boolean(a.is_demo || a.isDemo);
 }
 
 function normalizeCategory(raw, docId) {
@@ -340,11 +316,6 @@ export const DbService = {
     this.stopSync();
 
     StateManager.setState({ syncStatus: 'syncing', syncError: null });
-
-    // Automatically purge any polluted demo records from cloud Firestore in background
-    this.purgePollutedDemoData(userId).catch(err => {
-      console.warn('[Quantro Cleanup] Auto-purge warning:', err);
-    });
 
     // 1. Trigger immediate parallel getDocs to populate UI instantly
     this.syncNow(userId).catch(err => {
@@ -1582,21 +1553,24 @@ export const DbService = {
       const localTransactions = (JSON.parse(localStorage.getItem('money_manager_transactions')) || []).filter(tx => !isDemoTransaction(tx));
       const localGoals = (JSON.parse(localStorage.getItem('money_manager_goals')) || []).filter(g => !isDemoGoal(g));
       const localAssets = (JSON.parse(localStorage.getItem('money_manager_assets')) || []).filter(a => !isDemoAsset(a));
+      const localAccounts = JSON.parse(localStorage.getItem('money_manager_bank_accounts')) || [];
+      const localCategories = JSON.parse(localStorage.getItem('money_manager_categories')) || [];
       const localSettings = JSON.parse(localStorage.getItem('money_manager_user_settings'));
 
       const userDocRef = doc(db, 'users', userId);
 
-      // Only push non-empty custom records that aren't already synced and aren't demo
+      // Only push non-empty custom records that aren't demo
       if (localTransactions.length > 0) {
         const txPromises = localTransactions.map(tx => {
           const syncId = tx.sync_id || generateUUID();
-          return setDoc(doc(userDocRef, 'transactions', syncId), {
+          return setDoc(doc(userDocRef, 'transactions', syncId), cleanFirestorePayload({
             ...tx,
             sync_id: syncId,
             user_id: userId,
+            is_demo: false,
             is_synced: true,
-            updated_at: new Date().toISOString()
-          }, { merge: true });
+            updated_at: tx.updated_at || new Date().toISOString()
+          }), { merge: true });
         });
         await Promise.all(txPromises);
       }
@@ -1604,12 +1578,13 @@ export const DbService = {
       if (localGoals.length > 0) {
         const goalPromises = localGoals.map(g => {
           const syncId = g.sync_id || generateUUID();
-          return setDoc(doc(userDocRef, 'goals', syncId), {
+          return setDoc(doc(userDocRef, 'goals', syncId), cleanFirestorePayload({
             ...g,
             sync_id: syncId,
             user_id: userId,
-            updated_at: new Date().toISOString()
-          }, { merge: true });
+            is_demo: false,
+            updated_at: g.updated_at || new Date().toISOString()
+          }), { merge: true });
         });
         await Promise.all(goalPromises);
       }
@@ -1617,14 +1592,43 @@ export const DbService = {
       if (localAssets.length > 0) {
         const assetPromises = localAssets.map(a => {
           const syncId = a.sync_id || generateUUID();
-          return setDoc(doc(userDocRef, 'assets', syncId), {
+          return setDoc(doc(userDocRef, 'assets', syncId), cleanFirestorePayload({
             ...a,
             sync_id: syncId,
             user_id: userId,
-            updated_at: new Date().toISOString()
-          }, { merge: true });
+            is_demo: false,
+            updated_at: a.updated_at || new Date().toISOString()
+          }), { merge: true });
         });
         await Promise.all(assetPromises);
+      }
+
+      if (localAccounts.length > 0) {
+        const accPromises = localAccounts.map(acc => {
+          const syncId = acc.sync_id || generateUUID();
+          return setDoc(doc(userDocRef, 'bank_accounts', syncId), cleanFirestorePayload({
+            ...acc,
+            sync_id: syncId,
+            user_id: userId,
+            is_demo: false,
+            updated_at: acc.updated_at || new Date().toISOString()
+          }), { merge: true });
+        });
+        await Promise.all(accPromises);
+      }
+
+      if (localCategories.length > 0) {
+        const catPromises = localCategories.map(cat => {
+          const syncId = cat.sync_id || generateUUID();
+          return setDoc(doc(userDocRef, 'categories', syncId), cleanFirestorePayload({
+            ...cat,
+            sync_id: syncId,
+            user_id: userId,
+            is_demo: false,
+            updated_at: cat.updated_at || new Date().toISOString()
+          }), { merge: true });
+        });
+        await Promise.all(catPromises);
       }
 
       // If user had custom monthly income in guest settings, save it if cloud settings is empty
@@ -1635,11 +1639,149 @@ export const DbService = {
         }
       }
 
-      // Safely purge ONLY guest local storage keys without clearing in-memory state
+      // Safely clear guest local storage keys only after successful cloud upload
       StateManager.clearGuestLocalStorage();
     } catch (err) {
       console.error('Error in syncGuestDataToCloud:', err);
     }
+  },
+
+  // ---------------------------------------------------------------------------
+  // IMPORT BACKUP DIRECTLY TO CLOUD FIRESTORE
+  // ---------------------------------------------------------------------------
+  async importBackupToCloud(userId, data) {
+    if (!userId || !data || typeof data !== 'object') {
+      throw new Error('Invalid user or backup payload.');
+    }
+
+    const userDocRef = doc(db, 'users', userId);
+    let txCount = 0;
+    let catCount = 0;
+    let goalCount = 0;
+    let assetCount = 0;
+    let accCount = 0;
+
+    // 1. Categories
+    if (Array.isArray(data.categories) && data.categories.length > 0) {
+      const catPromises = data.categories.map(c => {
+        const syncId = c.sync_id || generateUUID();
+        return setDoc(doc(userDocRef, 'categories', syncId), cleanFirestorePayload({
+          ...c,
+          sync_id: syncId,
+          user_id: userId,
+          is_demo: false,
+          isDemo: false,
+          updated_at: new Date().toISOString()
+        }), { merge: true });
+      });
+      await Promise.all(catPromises);
+      catCount = catPromises.length;
+    }
+
+    // 2. Bank Accounts
+    if (Array.isArray(data.bankAccounts) && data.bankAccounts.length > 0) {
+      const accPromises = data.bankAccounts.map(a => {
+        const syncId = a.sync_id || generateUUID();
+        return setDoc(doc(userDocRef, 'bank_accounts', syncId), cleanFirestorePayload({
+          ...a,
+          sync_id: syncId,
+          user_id: userId,
+          is_demo: false,
+          isDemo: false,
+          updated_at: new Date().toISOString()
+        }), { merge: true });
+      });
+      await Promise.all(accPromises);
+      accCount = accPromises.length;
+    }
+
+    // 3. Transactions
+    if (Array.isArray(data.transactions) && data.transactions.length > 0) {
+      const txPromises = data.transactions.map(t => {
+        const syncId = t.sync_id || generateUUID();
+        return setDoc(doc(userDocRef, 'transactions', syncId), cleanFirestorePayload({
+          ...t,
+          sync_id: syncId,
+          user_id: userId,
+          is_synced: true,
+          isSynced: true,
+          is_demo: false,
+          isDemo: false,
+          updated_at: t.updated_at || new Date().toISOString()
+        }), { merge: true });
+      });
+      await Promise.all(txPromises);
+      txCount = txPromises.length;
+    }
+
+    // 4. Goals
+    if (Array.isArray(data.goals) && data.goals.length > 0) {
+      const goalPromises = data.goals.map(g => {
+        const syncId = g.sync_id || generateUUID();
+        return setDoc(doc(userDocRef, 'goals', syncId), cleanFirestorePayload({
+          ...g,
+          sync_id: syncId,
+          user_id: userId,
+          is_demo: false,
+          isDemo: false,
+          updated_at: g.updated_at || new Date().toISOString()
+        }), { merge: true });
+      });
+      await Promise.all(goalPromises);
+      goalCount = goalPromises.length;
+    }
+
+    // 5. Goal Contributions
+    if (Array.isArray(data.goalContributions) && data.goalContributions.length > 0) {
+      const contribPromises = data.goalContributions.map(gc => {
+        const syncId = gc.sync_id || generateUUID();
+        return setDoc(doc(userDocRef, 'goal_contributions', syncId), cleanFirestorePayload({
+          ...gc,
+          sync_id: syncId,
+          user_id: userId,
+          updated_at: new Date().toISOString()
+        }), { merge: true });
+      });
+      await Promise.all(contribPromises);
+    }
+
+    // 6. Assets
+    if (Array.isArray(data.assets) && data.assets.length > 0) {
+      const assetPromises = data.assets.map(a => {
+        const syncId = a.sync_id || generateUUID();
+        return setDoc(doc(userDocRef, 'assets', syncId), cleanFirestorePayload({
+          ...a,
+          sync_id: syncId,
+          user_id: userId,
+          is_demo: false,
+          isDemo: false,
+          updated_at: a.updated_at || new Date().toISOString()
+        }), { merge: true });
+      });
+      await Promise.all(assetPromises);
+      assetCount = assetPromises.length;
+    }
+
+    // 7. User Settings
+    if (data.userSettings && typeof data.userSettings === 'object') {
+      const settingsSnap = await getDocs(collection(userDocRef, 'user_settings'));
+      const syncId = settingsSnap.empty ? generateUUID() : settingsSnap.docs[0].id;
+      await setDoc(doc(userDocRef, 'user_settings', syncId), cleanFirestorePayload({
+        ...data.userSettings,
+        sync_id: syncId,
+        user_id: userId,
+        is_demo: false,
+        updated_at: new Date().toISOString()
+      }), { merge: true });
+    }
+
+    return {
+      transactionsCount: txCount,
+      categoriesCount: catCount,
+      goalsCount: goalCount,
+      assetsCount: assetCount,
+      accountsCount: accCount
+    };
   },
 
   // ---------------------------------------------------------------------------
