@@ -115,6 +115,45 @@ export function deduplicateAssets(assets, userId) {
   return assets;
 }
 
+export const DEMO_TX_NOTES = new Set([
+  'monthly salary credit',
+  'ui design consulting',
+  'gourmet dinner & bistro',
+  'uber commute',
+  'electronics & peripherals',
+  'apartment utilities & fiber',
+  'concert & streaming subs',
+  'index mutual fund sip',
+  'weekly groceries mart'
+]);
+
+export function isDemoTransaction(tx) {
+  if (!tx) return false;
+  if (tx.is_demo || tx.isDemo) return true;
+  const id = String(tx.id || tx.sync_id || '');
+  if (id.startsWith('tx-')) return true;
+  const note = (tx.note || '').toLowerCase().trim();
+  return DEMO_TX_NOTES.has(note);
+}
+
+export function isDemoGoal(g) {
+  if (!g) return false;
+  if (g.is_demo || g.isDemo) return true;
+  const id = String(g.id || g.sync_id || '');
+  if (id.startsWith('goal-')) return true;
+  const name = (g.name || '').toLowerCase().trim();
+  return name === 'emergency reserve' || name === 'tech workspace upgrade';
+}
+
+export function isDemoAsset(a) {
+  if (!a) return false;
+  if (a.is_demo || a.isDemo) return true;
+  const id = String(a.id || a.sync_id || '');
+  if (id.startsWith('ast-')) return true;
+  const name = (a.name || '').toLowerCase().trim();
+  return name === 'primary hdfc savings' || name === 'car loan facility' || (name === 'equities portfolio' && Number(a.value) === 850000 && !a.updated_by_user);
+}
+
 function normalizeCategory(raw, docId) {
   const syncId = raw.sync_id || docId;
   let id = raw.id;
@@ -302,6 +341,11 @@ export const DbService = {
 
     StateManager.setState({ syncStatus: 'syncing', syncError: null });
 
+    // Automatically purge any polluted demo records from cloud Firestore in background
+    this.purgePollutedDemoData(userId).catch(err => {
+      console.warn('[Quantro Cleanup] Auto-purge warning:', err);
+    });
+
     // 1. Trigger immediate parallel getDocs to populate UI instantly
     this.syncNow(userId).catch(err => {
       console.warn('[Quantro Sync] Initial syncNow warning:', err.message);
@@ -360,7 +404,9 @@ export const DbService = {
 
     // 4. Transactions listener
     const unsubTransactions = onSnapshot(collection(db, 'users', userId, 'transactions'), (snapshot) => {
-      const txs = snapshot.docs.map(d => normalizeTransaction(d.data(), d.id));
+      const txs = snapshot.docs
+        .map(d => normalizeTransaction(d.data(), d.id))
+        .filter(t => !isDemoTransaction(t));
       console.log(`[Quantro Sync] Received ${txs.length} transactions from cloud for user ${userId}`);
       StateManager.setState({ 
         transactions: txs,
@@ -376,7 +422,9 @@ export const DbService = {
 
     // 5. Goals listener
     const unsubGoals = onSnapshot(collection(db, 'users', userId, 'goals'), (snapshot) => {
-      const goals = snapshot.docs.map(d => normalizeGoal(d.data(), d.id));
+      const goals = snapshot.docs
+        .map(d => normalizeGoal(d.data(), d.id))
+        .filter(g => !isDemoGoal(g));
       StateManager.setState({ 
         goals: goals,
         syncStatus: 'synced',
@@ -416,7 +464,8 @@ export const DbService = {
     // 8. Assets listener
     const unsubAssets = onSnapshot(collection(db, 'users', userId, 'assets'), (snapshot) => {
       const rawAssets = snapshot.docs.map(d => normalizeAsset(d.data(), d.id));
-      const assets = deduplicateAssets(rawAssets, userId);
+      const cleanAssets = rawAssets.filter(a => !isDemoAsset(a));
+      const assets = deduplicateAssets(cleanAssets, userId);
       StateManager.setState({ 
         assets: assets,
         syncStatus: 'synced',
@@ -490,11 +539,17 @@ export const DbService = {
       if (!catSnap.empty) {
         updates.categories = deduplicateCategories(catSnap.docs.map(d => normalizeCategory(d.data(), d.id)));
       }
-      updates.transactions = txSnap.docs.map(d => normalizeTransaction(d.data(), d.id));
-      updates.goals = goalsSnap.docs.map(d => normalizeGoal(d.data(), d.id));
+      updates.transactions = txSnap.docs
+        .map(d => normalizeTransaction(d.data(), d.id))
+        .filter(t => !isDemoTransaction(t));
+      updates.goals = goalsSnap.docs
+        .map(d => normalizeGoal(d.data(), d.id))
+        .filter(g => !isDemoGoal(g));
       updates.goalContributions = contribSnap.docs.map(d => normalizeContribution(d.data(), d.id));
       updates.categorizationRules = rulesSnap.docs.map(d => normalizeRule(d.data(), d.id));
-      const rawAssets = assetsSnap.docs.map(d => normalizeAsset(d.data(), d.id));
+      const rawAssets = assetsSnap.docs
+        .map(d => normalizeAsset(d.data(), d.id))
+        .filter(a => !isDemoAsset(a));
       updates.assets = deduplicateAssets(rawAssets, userId);
       updates.bankAccounts = bankAccountsSnap.docs.map(d => normalizeBankAccount(d.data(), d.id));
 
@@ -1524,14 +1579,14 @@ export const DbService = {
     if (!userId) return;
 
     try {
-      const localTransactions = JSON.parse(localStorage.getItem('money_manager_transactions')) || [];
-      const localGoals = JSON.parse(localStorage.getItem('money_manager_goals')) || [];
-      const localAssets = JSON.parse(localStorage.getItem('money_manager_assets')) || [];
+      const localTransactions = (JSON.parse(localStorage.getItem('money_manager_transactions')) || []).filter(tx => !isDemoTransaction(tx));
+      const localGoals = (JSON.parse(localStorage.getItem('money_manager_goals')) || []).filter(g => !isDemoGoal(g));
+      const localAssets = (JSON.parse(localStorage.getItem('money_manager_assets')) || []).filter(a => !isDemoAsset(a));
       const localSettings = JSON.parse(localStorage.getItem('money_manager_user_settings'));
 
       const userDocRef = doc(db, 'users', userId);
 
-      // Only push non-empty custom records that aren't already synced
+      // Only push non-empty custom records that aren't already synced and aren't demo
       if (localTransactions.length > 0) {
         const txPromises = localTransactions.map(tx => {
           const syncId = tx.sync_id || generateUUID();
@@ -1573,7 +1628,7 @@ export const DbService = {
       }
 
       // If user had custom monthly income in guest settings, save it if cloud settings is empty
-      if (localSettings && localSettings.monthlyIncome > 0) {
+      if (localSettings && localSettings.monthlyIncome > 0 && localSettings.sync_id !== 'demo-settings') {
         const cloudSettingsSnap = await getDocs(collection(userDocRef, 'user_settings'));
         if (cloudSettingsSnap.empty) {
           await this.seedUserSettings(userId, localSettings.monthlyIncome);
@@ -1584,6 +1639,93 @@ export const DbService = {
       StateManager.clearGuestLocalStorage();
     } catch (err) {
       console.error('Error in syncGuestDataToCloud:', err);
+    }
+  },
+
+  // ---------------------------------------------------------------------------
+  // PURGE POLLUTED DEMO DATA FROM CLOUD FIRESTORE & LOCAL STATE
+  // ---------------------------------------------------------------------------
+  async purgePollutedDemoData(userId) {
+    if (!userId) return { purged: 0, transactions: 0, goals: 0, assets: 0 };
+
+    try {
+      const userDocRef = doc(db, 'users', userId);
+
+      // 1. Scan Firestore collections
+      const [txSnap, goalsSnap, assetsSnap, settingsSnap] = await Promise.all([
+        getDocs(collection(userDocRef, 'transactions')),
+        getDocs(collection(userDocRef, 'goals')),
+        getDocs(collection(userDocRef, 'assets')),
+        getDocs(collection(userDocRef, 'user_settings'))
+      ]);
+
+      const txToDelete = [];
+      txSnap.forEach(d => {
+        const data = d.data();
+        if (isDemoTransaction({ ...data, id: d.id, sync_id: d.id })) {
+          txToDelete.push(d.id);
+        }
+      });
+
+      const goalsToDelete = [];
+      goalsSnap.forEach(d => {
+        const data = d.data();
+        if (isDemoGoal({ ...data, id: d.id, sync_id: d.id })) {
+          goalsToDelete.push(d.id);
+        }
+      });
+
+      const assetsToDelete = [];
+      assetsSnap.forEach(d => {
+        const data = d.data();
+        if (isDemoAsset({ ...data, id: d.id, sync_id: d.id })) {
+          assetsToDelete.push(d.id);
+        }
+      });
+
+      const settingsToDelete = [];
+      settingsSnap.forEach(d => {
+        const data = d.data();
+        if (data.sync_id === 'demo-settings' || data.is_demo === true) {
+          settingsToDelete.push(d.id);
+        }
+      });
+
+      // 2. Delete matching documents from Firestore in parallel
+      const deletePromises = [
+        ...txToDelete.map(id => deleteDoc(doc(userDocRef, 'transactions', id))),
+        ...goalsToDelete.map(id => deleteDoc(doc(userDocRef, 'goals', id))),
+        ...assetsToDelete.map(id => deleteDoc(doc(userDocRef, 'assets', id))),
+        ...settingsToDelete.map(id => deleteDoc(doc(userDocRef, 'user_settings', id)))
+      ];
+
+      if (deletePromises.length > 0) {
+        await Promise.all(deletePromises);
+      }
+
+      // 3. Clean in-memory state
+      StateManager.state.transactions = (StateManager.state.transactions || []).filter(t => !isDemoTransaction(t));
+      StateManager.state.goals = (StateManager.state.goals || []).filter(g => !isDemoGoal(g));
+      StateManager.state.assets = (StateManager.state.assets || []).filter(a => !isDemoAsset(a));
+
+      // 4. Wipe any remaining guest local storage keys
+      StateManager.clearGuestLocalStorage();
+      StateManager.notify();
+
+      const totalPurged = txToDelete.length + goalsToDelete.length + assetsToDelete.length + settingsToDelete.length;
+      if (totalPurged > 0) {
+        console.log(`[Quantro Cleanup] Purged ${totalPurged} demo records from cloud account ${userId}: ${txToDelete.length} txs, ${goalsToDelete.length} goals, ${assetsToDelete.length} assets.`);
+      }
+
+      return {
+        purged: totalPurged,
+        transactions: txToDelete.length,
+        goals: goalsToDelete.length,
+        assets: assetsToDelete.length
+      };
+    } catch (err) {
+      console.error('[Quantro Cleanup] Error purging demo data from cloud:', err);
+      throw err;
     }
   }
 };

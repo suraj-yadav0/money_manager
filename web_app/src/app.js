@@ -30,8 +30,10 @@ async function initApp() {
     };
 
     StateManager.state.isGuestMode = true;
+    StateManager.state.isDemoMode = true;
     StateManager.state.userSettings = {
       sync_id: 'demo-settings',
+      is_demo: true,
       monthlyIncome: 120000,
       monthly_income: 120000,
       currency: 'INR',
@@ -43,40 +45,41 @@ async function initApp() {
     };
 
     StateManager.state.categories = [
-      { id: 1, name: 'Salary', icon: 'payments', type: 'income', color: '#10b981' },
-      { id: 2, name: 'Freelance', icon: 'laptop', type: 'income', color: '#3b82f6' },
-      { id: 3, name: 'Food & Dining', icon: 'restaurant', type: 'expense', color: '#f59e0b', monthly_budget: 20000 },
-      { id: 4, name: 'Transport', icon: 'directions_car', type: 'expense', color: '#6366f1', monthly_budget: 10000 },
-      { id: 5, name: 'Shopping', icon: 'shopping_bag', type: 'expense', color: '#ec4899', monthly_budget: 15000 },
-      { id: 6, name: 'Bills & Utilities', icon: 'receipt', type: 'expense', color: '#ef4444', monthly_budget: 18000 },
-      { id: 7, name: 'Entertainment', icon: 'movie', type: 'expense', color: '#8b5cf6', monthly_budget: 8000 },
-      { id: 8, name: 'Investments', icon: 'trending_up', type: 'expense', color: '#06b6d4', monthly_budget: 30000 }
+      { id: 1, name: 'Salary', icon: 'payments', type: 'income', color: '#10b981', is_demo: true },
+      { id: 2, name: 'Freelance', icon: 'laptop', type: 'income', color: '#3b82f6', is_demo: true },
+      { id: 3, name: 'Food & Dining', icon: 'restaurant', type: 'expense', color: '#f59e0b', monthly_budget: 20000, is_demo: true },
+      { id: 4, name: 'Transport', icon: 'directions_car', type: 'expense', color: '#6366f1', monthly_budget: 10000, is_demo: true },
+      { id: 5, name: 'Shopping', icon: 'shopping_bag', type: 'expense', color: '#ec4899', monthly_budget: 15000, is_demo: true },
+      { id: 6, name: 'Bills & Utilities', icon: 'receipt', type: 'expense', color: '#ef4444', monthly_budget: 18000, is_demo: true },
+      { id: 7, name: 'Entertainment', icon: 'movie', type: 'expense', color: '#8b5cf6', monthly_budget: 8000, is_demo: true },
+      { id: 8, name: 'Investments', icon: 'trending_up', type: 'expense', color: '#06b6d4', monthly_budget: 30000, is_demo: true }
     ];
 
     StateManager.state.transactions = [
-      { id: 'tx-1', amount: 120000, type: 'income', category_id: 1, note: 'Monthly Salary Credit', timestamp: isoDate(2) },
-      { id: 'tx-2', amount: 35000, type: 'income', category_id: 2, note: 'UI Design Consulting', timestamp: isoDate(5) },
-      { id: 'tx-3', amount: 14500, type: 'expense', category_id: 3, note: 'Gourmet Dinner & Bistro', timestamp: isoDate(1) },
-      { id: 'tx-4', amount: 4200, type: 'expense', category_id: 4, note: 'Uber Commute', timestamp: isoDate(1) },
-      { id: 'tx-5', amount: 12800, type: 'expense', category_id: 5, note: 'Electronics & Peripherals', timestamp: isoDate(3) },
-      { id: 'tx-6', amount: 16500, type: 'expense', category_id: 6, note: 'Apartment Utilities & Fiber', timestamp: isoDate(4), is_recurring: true, isRecurring: true },
-      { id: 'tx-7', amount: 5400, type: 'expense', category_id: 7, note: 'Concert & Streaming Subs', timestamp: isoDate(6), is_recurring: true, isRecurring: true },
-      { id: 'tx-8', amount: 25000, type: 'expense', category_id: 8, note: 'Index Mutual Fund SIP', timestamp: isoDate(7), is_recurring: true, isRecurring: true },
-      { id: 'tx-9', amount: 3800, type: 'expense', category_id: 3, note: 'Weekly Groceries Mart', timestamp: isoDate(8) }
+      { id: 'tx-1', is_demo: true, amount: 120000, type: 'income', category_id: 1, note: 'Monthly Salary Credit', timestamp: isoDate(2) },
+      { id: 'tx-2', is_demo: true, amount: 35000, type: 'income', category_id: 2, note: 'UI Design Consulting', timestamp: isoDate(5) },
+      { id: 'tx-3', is_demo: true, amount: 14500, type: 'expense', category_id: 3, note: 'Gourmet Dinner & Bistro', timestamp: isoDate(1) },
+      { id: 'tx-4', is_demo: true, amount: 4200, type: 'expense', category_id: 4, note: 'Uber Commute', timestamp: isoDate(1) },
+      { id: 'tx-5', is_demo: true, amount: 12800, type: 'expense', category_id: 5, note: 'Electronics & Peripherals', timestamp: isoDate(3) },
+      { id: 'tx-6', is_demo: true, amount: 16500, type: 'expense', category_id: 6, note: 'Apartment Utilities & Fiber', timestamp: isoDate(4), is_recurring: true, isRecurring: true },
+      { id: 'tx-7', is_demo: true, amount: 5400, type: 'expense', category_id: 7, note: 'Concert & Streaming Subs', timestamp: isoDate(6), is_recurring: true, isRecurring: true },
+      { id: 'tx-8', is_demo: true, amount: 25000, type: 'expense', category_id: 8, note: 'Index Mutual Fund SIP', timestamp: isoDate(7), is_recurring: true, isRecurring: true },
+      { id: 'tx-9', is_demo: true, amount: 3800, type: 'expense', category_id: 3, note: 'Weekly Groceries Mart', timestamp: isoDate(8) }
     ];
 
     StateManager.state.goals = [
-      { id: 'goal-1', name: 'Emergency Reserve', target_amount: 300000, saved_amount: 225000, deadline: new Date(now.getFullYear(), now.getMonth() + 4, 1).toISOString(), is_active: true, is_completed: false },
-      { id: 'goal-2', name: 'Tech Workspace Upgrade', target_amount: 150000, saved_amount: 95000, deadline: new Date(now.getFullYear(), now.getMonth() + 2, 1).toISOString(), is_active: true, is_completed: false }
+      { id: 'goal-1', is_demo: true, name: 'Emergency Reserve', target_amount: 300000, saved_amount: 225000, deadline: new Date(now.getFullYear(), now.getMonth() + 4, 1).toISOString(), is_active: true, is_completed: false },
+      { id: 'goal-2', is_demo: true, name: 'Tech Workspace Upgrade', target_amount: 150000, saved_amount: 95000, deadline: new Date(now.getFullYear(), now.getMonth() + 2, 1).toISOString(), is_active: true, is_completed: false }
     ];
 
     StateManager.state.assets = [
-      { id: 'ast-1', name: 'Primary HDFC Savings', type: 'savings', typeLabel: 'Savings', value: 380000, is_liability: false, icon: 'account_balance' },
-      { id: 'ast-2', name: 'Equities Portfolio', type: 'investment', typeLabel: 'Investments', value: 850000, is_liability: false, icon: 'trending_up' },
-      { id: 'ast-3', name: 'Car Loan Facility', type: 'loan', typeLabel: 'Loan', value: 120000, is_liability: true, icon: 'directions_car' }
+      { id: 'ast-1', is_demo: true, name: 'Primary HDFC Savings', type: 'savings', typeLabel: 'Savings', value: 380000, is_liability: false, icon: 'account_balance' },
+      { id: 'ast-2', is_demo: true, name: 'Equities Portfolio', type: 'investment', typeLabel: 'Investments', value: 850000, is_liability: false, icon: 'trending_up' },
+      { id: 'ast-3', is_demo: true, name: 'Car Loan Facility', type: 'loan', typeLabel: 'Loan', value: 120000, is_liability: true, icon: 'directions_car' }
     ];
 
-    StateManager.saveGuestState();
+    // Demo data is strictly in-memory; wipe any guest storage keys
+    StateManager.clearGuestLocalStorage();
   }
   
   // 1. Initialize client-side SPA routing inside '#app' element
@@ -85,6 +88,9 @@ async function initApp() {
   // 2. Watch Firebase Auth state changes
   AuthService.watchAuthState(async (user) => {
     if (user) {
+      // Clear any guest/demo localStorage immediately when authenticated
+      StateManager.clearGuestLocalStorage();
+      
       // User is logged in, sync with cloud Firestore in real-time
       DbService.startSync(user.uid);
       

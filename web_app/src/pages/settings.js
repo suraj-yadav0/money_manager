@@ -148,6 +148,17 @@ export const SettingsPage = {
             <span class="material-icons" style="color: var(--text-muted);">menu_book</span>
           </div>
 
+          <!-- Purge Demo / Sample Records from Cloud (if logged in) -->
+          ${user ? `
+          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-surface-subtle); border: 1px solid var(--glass-border); padding: 16px 20px; border-radius: var(--radius-md); cursor: pointer;" id="settings-purge-demo-row">
+            <div>
+              <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">Purge Demo Records from Cloud</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Remove mock landing page sample records from your cloud database</div>
+            </div>
+            <span class="material-icons" style="color: var(--text-muted);">cleaning_services</span>
+          </div>
+          ` : ''}
+
           <!-- Reset Local Storage -->
           <div style="display: flex; align-items: center; justify-content: space-between; background: var(--error-bg); border: 1px solid rgba(255, 51, 102, 0.25); padding: 16px 20px; border-radius: var(--radius-md); cursor: pointer;" id="settings-reset-row">
             <div>
@@ -269,6 +280,21 @@ export const SettingsPage = {
     // Self-Hosting Guide modal
     document.getElementById('settings-setup-guide-row')?.addEventListener('click', () => {
       SetupGuideModal.show();
+    });
+
+    // Purge demo records from cloud
+    document.getElementById('settings-purge-demo-row')?.addEventListener('click', async () => {
+      if (!state.user) return;
+      const row = document.getElementById('settings-purge-demo-row');
+      if (row) row.style.opacity = '0.5';
+      try {
+        const res = await DbService.purgePollutedDemoData(state.user.uid);
+        alert(`Cleanup complete!\n\nPurged ${res.purged} demo records from your cloud account:\n• ${res.transactions} Transactions\n• ${res.goals} Goals\n• ${res.assets} Assets`);
+      } catch (err) {
+        alert('Cleanup failed: ' + err.message);
+      } finally {
+        if (row) row.style.opacity = '1';
+      }
     });
 
     // Reset local cache row
