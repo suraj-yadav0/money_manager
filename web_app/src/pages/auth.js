@@ -285,20 +285,127 @@ export const AuthPage = {
           </section>
         </main>
 
-        <!-- Minimalist Footer -->
-        <footer class="min-footer">
-          <div class="min-footer-inner">
-            <div class="min-footer-left">
-              <span>Quantro Finance • Local-First Architecture © 2026</span>
-            </div>
-            
-            <div class="min-footer-links">
-              <button class="min-footer-link" id="footer-demo-link">Live Demo</button>
-              <button class="min-footer-link" id="footer-guest-link">Private Mode</button>
-              <a href="https://github.com/suraj-yadav0/money_manager/releases/download/v1.0.1/quantro-v1.0.1.apk" target="_blank" rel="noopener noreferrer" class="min-footer-link">Android APK</a>
-              <button class="min-footer-link" id="footer-setup-guide-link">Self-Host</button>
-              <a href="https://github.com/suraj-yadav0/money_manager" target="_blank" rel="noopener noreferrer" class="min-footer-link">GitHub</a>
-              <button class="min-footer-link" id="footer-back-to-top">Top ↑</button>
+        <!-- Architectural Double-Bezel Footer -->
+        <footer class="site-footer">
+          <div class="site-container">
+            <div class="footer-card">
+              
+              <!-- Upper Architectural Grid -->
+              <div class="footer-grid">
+                
+                <!-- Left: Identity, Mission & Telemetry Bezel -->
+                <div class="footer-brand-col">
+                  <div class="footer-brand-header">
+                    <div class="footer-brand-badge">
+                      <span class="footer-brand-glyph">Q</span>
+                    </div>
+                    <div>
+                      <div class="footer-brand-name">Quantro</div>
+                      <div class="footer-brand-tagline">Financial Architecture</div>
+                    </div>
+                  </div>
+
+                  <p class="footer-brand-description">
+                    Private, local-first financial matrix. Engineered with client-side SQLite storage, deterministic wealth forecasting, and zero telemetry.
+                  </p>
+
+                  <!-- Double-Bezel Telemetry Capsule -->
+                  <div class="footer-engine-bezel">
+                    <div class="footer-engine-core">
+                      <div class="footer-engine-status">
+                        <span class="footer-engine-dot"></span>
+                        <span class="footer-engine-label">Engine: Drift SQLite (Active)</span>
+                      </div>
+                      <div class="footer-engine-metrics">
+                        <span class="footer-engine-tag">AES-256</span>
+                        <span class="footer-engine-tag">Zero Telemetry</span>
+                        <span class="footer-engine-tag">Offline First</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Quick Action Pills -->
+                  <div class="footer-actions-row">
+                    <a href="https://github.com/suraj-yadav0/money_manager/releases/download/v1.0.1/quantro-v1.0.1.apk" target="_blank" rel="noopener noreferrer" class="footer-action-btn">
+                      <span class="material-icons" style="font-size: 15px;">android</span>
+                      <span>Android App</span>
+                      <span class="footer-action-arrow">↗</span>
+                    </a>
+                    <button type="button" class="footer-action-btn footer-action-secondary" id="footer-setup-guide-btn">
+                      <span class="material-icons" style="font-size: 15px;">dns</span>
+                      <span>Self-Host</span>
+                    </button>
+                    <a href="https://github.com/suraj-yadav0/money_manager" target="_blank" rel="noopener noreferrer" class="footer-icon-pill" title="GitHub Repository">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                    </a>
+                  </div>
+                </div>
+
+                <!-- Right: Curated 3-Column Navigation -->
+                <div class="footer-nav-grid">
+                  
+                  <div class="footer-col">
+                    <div class="footer-col-title">PLATFORM & ACCESS</div>
+                    <div class="footer-links">
+                      <button class="footer-link footer-link-accent" id="footer-demo-link">Launch Live Demo</button>
+                      <button class="footer-link" id="footer-guest-link">Private Local Mode</button>
+                      <button class="footer-link" id="footer-signin-link">Sign In to Sync</button>
+                      <button class="footer-link" id="footer-cloud-link">Custom Firebase Config</button>
+                    </div>
+                  </div>
+
+                  <div class="footer-col">
+                    <div class="footer-col-title">ARCHITECTURE</div>
+                    <div class="footer-links">
+                      <span class="footer-link-static">Local Drift SQLite</span>
+                      <span class="footer-link-static">Deterministic Runway</span>
+                      <button class="footer-link footer-link-accent" id="footer-setup-guide-link">Self-Hosting Guide</button>
+                      <a href="https://github.com/suraj-yadav0/money_manager#readme" target="_blank" rel="noopener noreferrer" class="footer-link">Architecture Specs</a>
+                      <span class="footer-link-static">Zero External Calls</span>
+                    </div>
+                  </div>
+
+                  <div class="footer-col">
+                    <div class="footer-col-title">ECOSYSTEM</div>
+                    <div class="footer-links">
+                      <a href="https://github.com/suraj-yadav0/money_manager/releases/tag/v1.0.1" target="_blank" rel="noopener noreferrer" class="footer-link">Release v1.0.1</a>
+                      <a href="https://github.com/suraj-yadav0/money_manager/releases/download/v1.0.1/quantro-v1.0.1.apk" target="_blank" rel="noopener noreferrer" class="footer-link">Android APK</a>
+                      <a href="https://github.com/suraj-yadav0/money_manager" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub Source</a>
+                      <a href="https://github.com/suraj-yadav0/money_manager/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" class="footer-link">MIT License</a>
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+
+              <!-- Architectural Metallic Gradient Display Wordmark -->
+              <div class="footer-display-container">
+                <div class="footer-display-wrap">
+                  <span class="footer-display-wordmark">QUANTRO</span>
+                  <span class="footer-display-registered">®</span>
+                </div>
+              </div>
+
+              <!-- Lower Sub-Bar: Copyright, Security & Back-to-Top -->
+              <div class="footer-subbar">
+                <div class="footer-copyright">
+                  © 2026 Quantro Finance. All ledger data resides strictly on your local hardware.
+                </div>
+                
+                <div class="footer-subbar-right">
+                  <div class="footer-security-pill">
+                    <span class="material-icons" style="font-size: 13px;">shield</span>
+                    <span>Cryptographic Privacy Guarantee</span>
+                  </div>
+                  
+                  <button type="button" class="footer-scroll-top-btn" id="footer-back-to-top" title="Back to top">
+                    <span>Top</span>
+                    <span class="material-icons" style="font-size: 13px;">arrow_upward</span>
+                  </button>
+                </div>
+              </div>
+
             </div>
           </div>
         </footer>
@@ -449,17 +556,21 @@ export const AuthPage = {
     };
     document.getElementById('nav-signin-btn')?.addEventListener('click', scrollToAccess);
     document.getElementById('hero-signin-btn')?.addEventListener('click', scrollToAccess);
+    document.getElementById('footer-signin-link')?.addEventListener('click', scrollToAccess);
 
     // Modal Triggers
-    document.getElementById('auth-cloud-config-link')?.addEventListener('click', () => {
+    const openCloudConfig = () => {
       CloudConfigModal.show();
-    });
+    };
+    document.getElementById('auth-cloud-config-link')?.addEventListener('click', openCloudConfig);
+    document.getElementById('footer-cloud-link')?.addEventListener('click', openCloudConfig);
 
     const openSetupGuide = () => {
       SetupGuideModal.show();
     };
     document.getElementById('auth-setup-guide-link')?.addEventListener('click', openSetupGuide);
     document.getElementById('footer-setup-guide-link')?.addEventListener('click', openSetupGuide);
+    document.getElementById('footer-setup-guide-btn')?.addEventListener('click', openSetupGuide);
 
     // Back to top
     document.getElementById('footer-back-to-top')?.addEventListener('click', () => {
