@@ -85,20 +85,23 @@ class BudgetScreen extends ConsumerWidget {
           );
         },
       ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(
-          bottom: 120,
-        ), // Spacing to clear the floating nav bar
-        child: FloatingActionButton.extended(
-          heroTag: 'budget_fab',
-          onPressed: () => _showBudgetSettings(context, ref),
-          icon: const Icon(Icons.add),
-          label: const Text('Set Budget'),
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
-          elevation: 4,
-        ),
-      ),
+      floatingActionButton: (budgetAsync.asData?.value.totalBudget ?? 0) > 0
+          ? Padding(
+              padding: const EdgeInsets.only(
+                bottom: 120,
+              ), // Spacing to clear the floating nav bar
+              child: FloatingActionButton.extended(
+                heroTag: 'budget_fab',
+                onPressed: () => _showBudgetSettings(context, ref),
+                icon: const Icon(Icons.add),
+                label: const Text('Set Budget'),
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                foregroundColor:
+                    Theme.of(context).colorScheme.onPrimaryContainer,
+                elevation: 4,
+              ),
+            )
+          : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }

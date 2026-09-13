@@ -30,13 +30,30 @@ class BalanceCard extends ConsumerWidget {
         return Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            gradient: AppTheme.heroCardGradient,
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF161A26),
+                Color(0xFF0F1118),
+                Color(0xFF090A0F),
+              ],
+            ),
             borderRadius: BorderRadius.circular(26),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.12),
+              width: 1.2,
+            ),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.narutoOrange.withValues(alpha: 0.35),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
+                color: Colors.black.withValues(alpha: 0.45),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
+              ),
+              BoxShadow(
+                color: AppTheme.narutoOrange.withValues(alpha: 0.08),
+                blurRadius: 32,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -47,13 +64,13 @@ class BalanceCard extends ConsumerWidget {
                 right: -20,
                 top: -20,
                 child: Container(
-                  width: 140,
-                  height: 140,
+                  width: 160,
+                  height: 160,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        Colors.white.withValues(alpha: 0.22),
+                        AppTheme.narutoOrange.withValues(alpha: 0.14),
                         Colors.transparent,
                       ],
                     ),
@@ -64,13 +81,13 @@ class BalanceCard extends ConsumerWidget {
                 left: -30,
                 bottom: -30,
                 child: Container(
-                  width: 120,
-                  height: 120,
+                  width: 140,
+                  height: 140,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        Colors.white.withValues(alpha: 0.12),
+                        const Color(0xFF00C6FF).withValues(alpha: 0.08),
                         Colors.transparent,
                       ],
                     ),
@@ -93,12 +110,15 @@ class BalanceCard extends ConsumerWidget {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.2),
+                                color: AppTheme.narutoOrange.withValues(alpha: 0.15),
+                                border: Border.all(
+                                  color: AppTheme.narutoOrange.withValues(alpha: 0.3),
+                                ),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
                                 Icons.account_balance_wallet_rounded,
-                                color: Colors.white,
+                                color: AppTheme.narutoOrange,
                                 size: 18,
                               ),
                             ),
@@ -106,9 +126,9 @@ class BalanceCard extends ConsumerWidget {
                             Text(
                               'Net Balance',
                               style: GoogleFonts.inter(
-                                fontSize: 14,
+                                fontSize: 13.5,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.white.withValues(alpha: 0.9),
+                                color: const Color(0xFFA1A7C4),
                               ),
                             ),
                           ],
@@ -119,10 +139,10 @@ class BalanceCard extends ConsumerWidget {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
+                            color: Colors.white.withValues(alpha: 0.06),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.3),
+                              color: Colors.white.withValues(alpha: 0.15),
                               width: 1,
                             ),
                           ),
@@ -131,7 +151,7 @@ class BalanceCard extends ConsumerWidget {
                             style: GoogleFonts.inter(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: const Color(0xFFCBD5E1),
                               letterSpacing: 0.5,
                             ),
                           ),
@@ -153,7 +173,7 @@ class BalanceCard extends ConsumerWidget {
                         letterSpacing: -0.5,
                         shadows: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.15),
+                            color: Colors.black.withValues(alpha: 0.2),
                             blurRadius: 10,
                             offset: const Offset(0, 3),
                           ),
@@ -166,10 +186,16 @@ class BalanceCard extends ConsumerWidget {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 9,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.22),
+                            color: const Color(0xFF10B981).withValues(alpha: 0.16),
                             borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -177,15 +203,15 @@ class BalanceCard extends ConsumerWidget {
                               const Icon(
                                 Icons.trending_up,
                                 size: 14,
-                                color: Colors.white,
+                                color: Color(0xFF34D399),
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: 5),
                               Text(
                                 '${stats.savingsRate}% saved',
                                 style: GoogleFonts.inter(
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                                  color: const Color(0xFF34D399),
                                 ),
                               ),
                             ],
@@ -196,7 +222,7 @@ class BalanceCard extends ConsumerWidget {
                           'In selected period',
                           style: GoogleFonts.inter(
                             fontSize: 12,
-                            color: Colors.white.withValues(alpha: 0.8),
+                            color: const Color(0xFF94A3B8),
                           ),
                         ),
                       ],
@@ -207,7 +233,7 @@ class BalanceCard extends ConsumerWidget {
                     Container(
                       height: 1,
                       width: double.infinity,
-                      color: Colors.white.withValues(alpha: 0.22),
+                      color: Colors.white.withValues(alpha: 0.08),
                     ),
                     const SizedBox(height: 14),
 
@@ -221,12 +247,12 @@ class BalanceCard extends ConsumerWidget {
                               Container(
                                 padding: const EdgeInsets.all(7),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.2),
+                                  color: const Color(0xFF10B981).withValues(alpha: 0.16),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
                                   Icons.arrow_downward_rounded,
-                                  color: Color(0xFF4ADE80), // Mint green
+                                  color: Color(0xFF34D399),
                                   size: 16,
                                 ),
                               ),
@@ -239,7 +265,7 @@ class BalanceCard extends ConsumerWidget {
                                       'Period Inflow',
                                       style: GoogleFonts.inter(
                                         fontSize: 11,
-                                        color: Colors.white.withValues(alpha: 0.8),
+                                        color: const Color(0xFF94A3B8),
                                       ),
                                     ),
                                     const SizedBox(height: 1),
@@ -254,7 +280,7 @@ class BalanceCard extends ConsumerWidget {
                                         style: GoogleFonts.outfit(
                                           fontSize: 15,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.white,
+                                          color: const Color(0xFF34D399),
                                         ),
                                       ),
                                     ),
@@ -269,7 +295,7 @@ class BalanceCard extends ConsumerWidget {
                         Container(
                           width: 1,
                           height: 28,
-                          color: Colors.white.withValues(alpha: 0.22),
+                          color: Colors.white.withValues(alpha: 0.08),
                         ),
                         const SizedBox(width: 14),
 
@@ -280,12 +306,12 @@ class BalanceCard extends ConsumerWidget {
                               Container(
                                 padding: const EdgeInsets.all(7),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.2),
+                                  color: const Color(0xFFFF2A4B).withValues(alpha: 0.16),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
                                   Icons.arrow_upward_rounded,
-                                  color: Color(0xFFFFD1D1), // Soft pink/white
+                                  color: Color(0xFFF87171),
                                   size: 16,
                                 ),
                               ),
@@ -298,7 +324,7 @@ class BalanceCard extends ConsumerWidget {
                                       'Period Outflow',
                                       style: GoogleFonts.inter(
                                         fontSize: 11,
-                                        color: Colors.white.withValues(alpha: 0.8),
+                                        color: const Color(0xFF94A3B8),
                                       ),
                                     ),
                                     const SizedBox(height: 1),
@@ -313,7 +339,7 @@ class BalanceCard extends ConsumerWidget {
                                         style: GoogleFonts.outfit(
                                           fontSize: 15,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.white,
+                                          color: const Color(0xFFF87171),
                                         ),
                                       ),
                                     ),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/presentation/glass_widgets.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/icon_helper.dart';
@@ -29,7 +28,7 @@ class SmsStartupPopup extends ConsumerWidget {
 
     return pendingAsync.when(
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (err, stack) => const SizedBox.shrink(),
       data: (cards) {
         if (cards.isEmpty) {
           return const SizedBox.shrink();

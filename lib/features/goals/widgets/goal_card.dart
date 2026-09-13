@@ -83,7 +83,7 @@ class GoalCard extends StatelessWidget {
                         ),
                         Text(
                           isCompleted
-                              ? 'Goal completed! 🎉'
+                              ? 'Goal completed!'
                               : daysRemaining > 0
                               ? '$daysRemaining days left'
                               : 'Overdue',
@@ -180,17 +180,27 @@ class GoalCard extends StatelessWidget {
                 color: statusColor,
               ),
               if (showActions && !isCompleted) ...[
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: onAddContribution,
-                    icon: const Icon(Icons.add, size: 20),
-                    label: const Text('Add Money'),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    FilledButton.tonalIcon(
+                      onPressed: onAddContribution,
+                      icon: const Icon(Icons.add, size: 16),
+                      label: const Text('Add Contribution'),
+                      style: FilledButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        textStyle: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ],

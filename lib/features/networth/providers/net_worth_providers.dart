@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/database.dart';
@@ -6,17 +7,17 @@ import '../../../core/providers/app_state_provider.dart';
 
 /// Asset type enum for UI
 enum AssetType {
-  savings('savings', 'Savings', '💰', false),
-  investment('investment', 'Investments', '📈', false),
-  property('property', 'Property', '🏠', false),
-  gold('gold', 'Gold', '🥇', false),
-  loan('loan', 'Loans', '💳', true),
-  other('other', 'Other', '📦', false);
+  savings('savings', 'Savings', Icons.savings_outlined, false),
+  investment('investment', 'Investments', Icons.trending_up, false),
+  property('property', 'Property', Icons.home_outlined, false),
+  gold('gold', 'Gold', Icons.workspace_premium_outlined, false),
+  loan('loan', 'Loans', Icons.credit_card_outlined, true),
+  other('other', 'Other', Icons.category_outlined, false);
 
-  const AssetType(this.key, this.label, this.emoji, this.isLiability);
+  const AssetType(this.key, this.label, this.icon, this.isLiability);
   final String key;
   final String label;
-  final String emoji;
+  final IconData icon;
   final bool isLiability;
 
   static AssetType fromKey(String key) => AssetType.values.firstWhere(

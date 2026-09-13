@@ -98,7 +98,8 @@ class _AddAssetSheetState extends ConsumerState<AddAssetSheet> {
                 children: AssetType.values.map((type) {
                   final isSelected = _selectedType == type;
                   return ChoiceChip(
-                    label: Text('${type.emoji} ${type.label}'),
+                    avatar: Icon(type.icon, size: 16),
+                    label: Text(type.label),
                     selected: isSelected,
                     onSelected: (selected) {
                       if (selected) {

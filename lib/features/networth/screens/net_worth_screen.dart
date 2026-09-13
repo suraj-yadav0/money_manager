@@ -108,7 +108,7 @@ class NetWorthScreen extends ConsumerWidget {
                       (type) => Padding(
                         padding: const EdgeInsets.only(right: 6),
                         child: _FilterChip(
-                          label: '${type.emoji} ${type.label}',
+                          label: type.label,
                           isSelected: selectedType == type,
                           onSelected: () =>
                               ref
@@ -418,7 +418,13 @@ class _AssetCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 alignment: Alignment.center,
-                child: Text(type.emoji, style: const TextStyle(fontSize: 22)),
+                child: Icon(
+                  type.icon,
+                  size: 22,
+                  color: asset.isLiability
+                      ? AppTheme.kuramaRed
+                      : AppTheme.leafGreen,
+                ),
               ),
               const SizedBox(width: 14),
               // Name + type

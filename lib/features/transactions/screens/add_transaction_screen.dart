@@ -65,24 +65,34 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       _type = TransactionType.values.firstWhere((e) => e.name == tx.type);
       _selectedCategory = cat;
       _isRecurring = tx.isRecurring;
-      _selectedGoal = widget.transactionToEdit!.transaction.goalId != null
-          ? Goal(
-              id: widget.transactionToEdit!.transaction.goalId!,
-              name: '', // Placeholder, will be fetched or handled
-              targetAmount: 0,
-              deadline: DateTime.now(),
-              savedAmount: 0,
-              isActive: true,
-              isCompleted: false,
-              isSynced: false,
-              createdAt: DateTime.now(),
-              updatedAt: DateTime.now(),
-            )
-          : null; // Ideally fetch the goal or trust the ID
       _selectedPaymentMode =
           widget.transactionToEdit!.transaction.paymentMode ?? 'Cash';
       _selectedDate = tx.timestamp;
       _receiptImagePath = tx.receiptImagePath;
+
+      // Asynchronously resolve the linked account and goal records
+      if (tx.accountId != null) {
+        Future.microtask(() async {
+          final db = ref.read(databaseProvider);
+          final acc = await (db.select(db.bankAccounts)
+                ..where((a) => a.id.equals(tx.accountId!)))
+              .getSingleOrNull();
+          if (acc != null && mounted) {
+            setState(() => _selectedAccount = acc);
+          }
+        });
+      }
+      if (tx.goalId != null) {
+        Future.microtask(() async {
+          final db = ref.read(databaseProvider);
+          final g = await (db.select(db.goals)
+                ..where((a) => a.id.equals(tx.goalId!)))
+              .getSingleOrNull();
+          if (g != null && mounted) {
+            setState(() => _selectedGoal = g);
+          }
+        });
+      }
     } else {
       _selectedPaymentMode = 'Cash';
     }
@@ -242,6 +252,124 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     );
   }
 
+  Future<void> _confirmAndDeleteTransaction() async {
+    if (widget.transactionToEdit == null) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('Delete Transaction'),
+        content: const Text(
+          'Are you sure you want to delete this transaction? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.danger),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !mounted) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final db = ref.read(databaseProvider);
+      final item = widget.transactionToEdit!;
+
+      // Rollback bank account balance if linked
+      if (item.transaction.accountId != null) {
+        final acc = await (db.select(db.bankAccounts)
+              ..where((a) => a.id.equals(item.transaction.accountId!)))
+            .getSingleOrNull();
+        if (acc != null) {
+          final isExpense = item.transaction.type == 'expense';
+          final restoredBal = isExpense
+              ? acc.balance + item.transaction.amount
+              : acc.balance - item.transaction.amount;
+          await (db.update(db.bankAccounts)..where((a) => a.id.equals(acc.id)))
+              .write(BankAccountsCompanion(
+            balance: Value(restoredBal),
+            updatedAt: Value(DateTime.now()),
+          ));
+        }
+      }
+
+      // Rollback goal savedAmount if linked
+      if (item.transaction.goalId != null) {
+        final goal = await (db.select(db.goals)
+              ..where((g) => g.id.equals(item.transaction.goalId!)))
+            .getSingleOrNull();
+        if (goal != null) {
+          final restoredSaved = (goal.savedAmount - item.transaction.amount)
+              .clamp(0.0, double.infinity);
+          await (db.update(db.goals)..where((g) => g.id.equals(goal.id))).write(
+            GoalsCompanion(
+              savedAmount: Value(restoredSaved),
+              isCompleted: Value(restoredSaved >= goal.targetAmount),
+            ),
+          );
+        }
+      }
+
+      // Delete receipt file if present
+      if (item.transaction.receiptImagePath != null) {
+        await _deleteOldReceipt(item.transaction.receiptImagePath);
+      }
+
+      // Delete from local database
+      await (db.delete(db.transactions)
+            ..where((t) => t.id.equals(item.transaction.id)))
+          .go();
+
+      // Delete remotely from Firestore if cloud user
+      if (item.transaction.syncId != null) {
+        ref
+            .read(syncServiceProvider)
+            .deleteRemoteDoc('transactions', item.transaction.syncId);
+      }
+
+      // Refresh providers
+      ref.invalidate(dashboardStatsProvider);
+      ref.invalidate(recentTransactionsProvider);
+      ref.invalidate(allTransactionsProvider);
+      ref.invalidate(activeGoalsProvider);
+      ref.invalidate(activeGoalProvider);
+      ref.invalidate(bankAccountsStreamProvider);
+
+      final currentUser = ref.read(currentUserProvider);
+      if (currentUser != null) {
+        ref.read(syncNotifierProvider.notifier).triggerSync();
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Transaction deleted'),
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 2),
+          ),
+        );
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error deleting transaction: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _saveTransaction() async {
     if (!_formKey.currentState!.validate()) return;
     // Category is optional if a goal is selected (goal acts as the category)
@@ -281,38 +409,72 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       }
 
       if (widget.transactionToEdit != null) {
+        final oldTx = widget.transactionToEdit!.transaction;
+
+        // Revert old bank account balance impact
+        if (oldTx.accountId != null) {
+          final oldAcc = await (db.select(db.bankAccounts)
+                ..where((a) => a.id.equals(oldTx.accountId!)))
+              .getSingleOrNull();
+          if (oldAcc != null) {
+            final wasExpense = oldTx.type == 'expense';
+            final revertedBal = wasExpense
+                ? oldAcc.balance + oldTx.amount
+                : oldAcc.balance - oldTx.amount;
+            await (db.update(db.bankAccounts)
+                  ..where((a) => a.id.equals(oldAcc.id)))
+                .write(BankAccountsCompanion(
+              balance: Value(revertedBal),
+              updatedAt: Value(DateTime.now()),
+            ));
+          }
+        }
+
+        // Revert old goal savedAmount impact
+        if (oldTx.goalId != null) {
+          final oldGoal = await (db.select(db.goals)
+                ..where((g) => g.id.equals(oldTx.goalId!)))
+              .getSingleOrNull();
+          if (oldGoal != null) {
+            final revertedSaved = (oldGoal.savedAmount - oldTx.amount)
+                .clamp(0.0, double.infinity);
+            await (db.update(db.goals)..where((g) => g.id.equals(oldGoal.id)))
+                .write(GoalsCompanion(
+              savedAmount: Value(revertedSaved),
+              isCompleted: Value(revertedSaved >= oldGoal.targetAmount),
+            ));
+          }
+        }
+
         // Delete old receipt if it's being replaced
-        final oldReceiptPath =
-            widget.transactionToEdit!.transaction.receiptImagePath;
+        final oldReceiptPath = oldTx.receiptImagePath;
         if (oldReceiptPath != _receiptImagePath) {
           await _deleteOldReceipt(oldReceiptPath);
         }
 
-        // Update existing
-        await (db.update(db.transactions)..where(
-              (t) => t.id.equals(widget.transactionToEdit!.transaction.id),
-            ))
+        // Update existing transaction
+        await (db.update(db.transactions)
+              ..where((t) => t.id.equals(oldTx.id)))
             .write(
-              TransactionsCompanion(
-                amount: Value(amount),
-                type: Value(_type.name),
-                categoryId: Value(categoryId),
-                goalId: Value(_selectedGoal?.id),
-                accountId: Value(_selectedAccount?.id),
-                timestamp: Value(_selectedDate),
-                note: Value(
-                  _noteController.text.isNotEmpty ? _noteController.text : null,
-                ),
-                paymentMode: Value(_selectedPaymentMode),
-                isRecurring: Value(_isRecurring),
-                receiptImagePath: Value(_receiptImagePath),
-              ),
-            );
+          TransactionsCompanion(
+            amount: Value(amount),
+            type: Value(_type.name),
+            categoryId: Value(categoryId),
+            goalId: Value(_selectedGoal?.id),
+            accountId: Value(_selectedAccount?.id),
+            timestamp: Value(_selectedDate),
+            note: Value(
+              _noteController.text.isNotEmpty ? _noteController.text : null,
+            ),
+            paymentMode: Value(_selectedPaymentMode),
+            isRecurring: Value(_isRecurring),
+            receiptImagePath: Value(_receiptImagePath),
+            isSynced: const Value(false),
+          ),
+        );
       } else {
         // Insert new
-        await db
-            .into(db.transactions)
-            .insert(
+        await db.into(db.transactions).insert(
               TransactionsCompanion.insert(
                 amount: amount,
                 type: _type.name,
@@ -328,77 +490,77 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 receiptImagePath: Value(_receiptImagePath),
               ),
             );
+      }
 
-        // Update bank account balance if account selected
-        if (_selectedAccount != null) {
-          final newBal = _type.isExpense
-              ? _selectedAccount!.balance - amount
-              : _selectedAccount!.balance + amount;
-          await (db.update(db.bankAccounts)
-                ..where((a) => a.id.equals(_selectedAccount!.id)))
-              .write(
-            BankAccountsCompanion(
-              balance: Value(newBal),
-              updatedAt: Value(DateTime.now()),
+      // Apply new bank account balance if account selected
+      if (_selectedAccount != null) {
+        final currentAcc = await (db.select(db.bankAccounts)
+              ..where((a) => a.id.equals(_selectedAccount!.id)))
+            .getSingleOrNull() ?? _selectedAccount!;
+        final newBal = _type.isExpense
+            ? currentAcc.balance - amount
+            : currentAcc.balance + amount;
+        await (db.update(db.bankAccounts)
+              ..where((a) => a.id.equals(currentAcc.id)))
+            .write(
+          BankAccountsCompanion(
+            balance: Value(newBal),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+      }
+
+      // Update goal's savedAmount if linked to a goal
+      if (_selectedGoal != null) {
+        final goal = await (db.select(
+          db.goals,
+        )..where((g) => g.id.equals(_selectedGoal!.id))).getSingleOrNull();
+
+        if (goal != null) {
+          final newSavedAmount = goal.savedAmount + amount;
+          final isCompleted = newSavedAmount >= goal.targetAmount;
+
+          await (db.update(
+            db.goals,
+          )..where((g) => g.id.equals(_selectedGoal!.id))).write(
+            GoalsCompanion(
+              savedAmount: Value(newSavedAmount),
+              isCompleted: Value(isCompleted),
             ),
           );
         }
+        ref.invalidate(activeGoalsProvider);
+        ref.invalidate(activeGoalProvider);
+      }
 
-        // Update goal's savedAmount if linked to a goal
-        // Note: We directly update the goal instead of creating a separate contribution
-        // to avoid data duplication. The transaction itself (with goalId) is the record.
-        if (_selectedGoal != null) {
-          final goal = await (db.select(
-            db.goals,
-          )..where((g) => g.id.equals(_selectedGoal!.id))).getSingleOrNull();
-
-          if (goal != null) {
-            final newSavedAmount = goal.savedAmount + amount;
-            final isCompleted = newSavedAmount >= goal.targetAmount;
-
-            await (db.update(
-              db.goals,
-            )..where((g) => g.id.equals(_selectedGoal!.id))).write(
-              GoalsCompanion(
-                savedAmount: Value(newSavedAmount),
-                isCompleted: Value(isCompleted),
-              ),
-            );
-          }
-          // Refresh goal data
-          ref.invalidate(activeGoalsProvider);
-          ref.invalidate(activeGoalProvider);
-        }
-
-        // Update investment asset in Net Worth if category is Investment
-        if (_type == TransactionType.expense && _selectedCategory != null) {
-          final catName = _selectedCategory!.name.toLowerCase();
-          if (catName == 'investments' || catName == 'investment') {
-            final allAssets = await db.select(db.assets).get();
-            final existingAsset = allAssets
-                .where((a) =>
-                    !a.isLiability &&
-                    (a.type == 'investment' ||
-                        a.name.toLowerCase().contains('investment')))
-                .firstOrNull;
-            if (existingAsset != null) {
-              await (db.update(db.assets)..where((a) => a.id.equals(existingAsset.id)))
-                  .write(AssetsCompanion(
-                value: Value(existingAsset.value + amount),
-                updatedAt: Value(DateTime.now()),
-                isSynced: const Value(false),
-              ));
-            } else {
-              await db.into(db.assets).insert(
-                    AssetsCompanion.insert(
-                      name: 'Investments Portfolio',
-                      type: 'investment',
-                      value: amount,
-                      isLiability: const Value(false),
-                      isSynced: const Value(false),
-                    ),
-                  );
-            }
+      // Update investment asset in Net Worth if category is Investment
+      if (_type == TransactionType.expense && _selectedCategory != null) {
+        final catName = _selectedCategory!.name.toLowerCase();
+        if (catName == 'investments' || catName == 'investment') {
+          final allAssets = await db.select(db.assets).get();
+          final existingAsset = allAssets
+              .where((a) =>
+                  !a.isLiability &&
+                  (a.type == 'investment' ||
+                      a.name.toLowerCase().contains('investment')))
+              .firstOrNull;
+          if (existingAsset != null) {
+            await (db.update(db.assets)..where((a) => a.id.equals(existingAsset.id)))
+                .write(AssetsCompanion(
+              value: Value(existingAsset.value + amount),
+              updatedAt: Value(DateTime.now()),
+              isSynced: const Value(false),
+            ));
+          } else {
+            await db.into(db.assets).insert(
+                  AssetsCompanion.insert(
+                    name: 'Investments Portfolio',
+                    type: 'investment',
+                    value: amount,
+                    isLiability: const Value(false),
+                    isSynced: const Value(false),
+                  ),
+                );
           }
         }
       }
@@ -412,9 +574,11 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         );
       }
 
-      // Refresh dashboard
+      // Refresh dashboard & accounts
       ref.invalidate(dashboardStatsProvider);
       ref.invalidate(recentTransactionsProvider);
+      ref.invalidate(allTransactionsProvider);
+      ref.invalidate(bankAccountsStreamProvider);
 
       // Trigger background cloud sync if user is logged in
       final currentUser = ref.read(currentUserProvider);
@@ -453,6 +617,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             ? 'Edit Transaction'
             : (_type.isExpense ? 'Add Expense' : 'Add Income'),
         actions: [
+          if (widget.transactionToEdit != null)
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: AppTheme.danger),
+              tooltip: 'Delete Transaction',
+              onPressed: _isLoading ? null : _confirmAndDeleteTransaction,
+            ),
           TextButton(
             onPressed: _isLoading ? null : _saveTransaction,
             child: _isLoading
@@ -470,6 +640,41 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   ),
           ),
         ],
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: ElevatedButton(
+            onPressed: _isLoading ? null : _saveTransaction,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.narutoOrange,
+              foregroundColor: Colors.white,
+              minimumSize: const Size(double.infinity, 52),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              elevation: 2,
+            ),
+            child: _isLoading
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.white,
+                    ),
+                  )
+                : Text(
+                    widget.transactionToEdit != null
+                        ? 'Update Transaction'
+                        : (_type.isExpense ? 'Save Expense' : 'Save Income'),
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+          ),
+        ),
       ),
       body: Form(
         key: _formKey,
@@ -812,7 +1017,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       height: 36,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     ),
-                    error: (_, __) => const SizedBox.shrink(),
+                    error: (err, stack) => const SizedBox.shrink(),
                     data: (accounts) => Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -1027,6 +1232,28 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   minimumSize: const Size(double.infinity, 48),
                 ),
               ),
+              if (widget.transactionToEdit != null) ...[
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: _isLoading ? null : _confirmAndDeleteTransaction,
+                  icon: const Icon(Icons.delete_outline, color: AppTheme.danger),
+                  label: const Text(
+                    'Delete Transaction',
+                    style: TextStyle(
+                      color: AppTheme.danger,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 48),
+                    side: const BorderSide(color: AppTheme.danger),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 24),
             ],
           ),
         ),

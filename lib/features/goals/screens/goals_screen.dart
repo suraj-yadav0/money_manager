@@ -235,7 +235,11 @@ class _GoalsListView extends ConsumerWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('🎉', style: TextStyle(fontSize: 64)),
+            Icon(
+              Icons.emoji_events_rounded,
+              size: 64,
+              color: AppTheme.narutoOrange,
+            ),
             const SizedBox(height: 16),
             Text(
               'Goal Completed!',
