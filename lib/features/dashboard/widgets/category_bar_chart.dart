@@ -12,8 +12,13 @@ import 'chart_drilldown_sheet.dart';
 /// Tapping a bar opens a drill-down sheet with individual transactions.
 class CategoryBarChart extends ConsumerWidget {
   final String transactionType;
+  final bool wrapInCard;
 
-  const CategoryBarChart({super.key, this.transactionType = 'expense'});
+  const CategoryBarChart({
+    super.key,
+    this.transactionType = 'expense',
+    this.wrapInCard = false,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -30,40 +35,42 @@ class CategoryBarChart extends ConsumerWidget {
             : stats.incomeCategoryBreakdown;
 
         if (data.isEmpty) {
-          return Card(
-            child: Container(
-              height: 200,
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.bar_chart,
-                    size: 48,
-                    color: colorScheme.onSurfaceVariant.withAlpha(100),
+          final emptyView = Container(
+            height: 200,
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.bar_chart,
+                  size: 48,
+                  color: colorScheme.onSurfaceVariant.withAlpha(100),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  transactionType == 'expense'
+                      ? 'No expenses yet'
+                      : 'No income yet',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    transactionType == 'expense'
-                        ? 'No expenses yet'
-                        : 'No income yet',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    transactionType == 'expense'
-                        ? 'Add your first expense to see the breakdown'
-                        : 'Add your first income to see the breakdown',
-                    style: theme.textTheme.bodySmall,
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  transactionType == 'expense'
+                      ? 'Add your first expense to see the breakdown'
+                      : 'Add your first income to see the breakdown',
+                  style: theme.textTheme.bodySmall,
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
           );
+          if (wrapInCard) {
+            return Card(child: emptyView);
+          }
+          return emptyView;
         }
 
         final entries = data.entries.toList()
@@ -73,21 +80,15 @@ class CategoryBarChart extends ConsumerWidget {
         final displayEntries = entries;
         final range = ref.read(dateRangeProvider);
 
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: LayoutBuilder(
+        final chartContent = LayoutBuilder(
               builder: (context, constraints) {
-                // Calculate dynamic width based on number of entries
-                // Min width of 400 or content width (e.g. 60px per bar)
-                final minWidth = (displayEntries.length * 60.0).clamp(
-                  400.0,
+                final contentWidth = (displayEntries.length * 64.0).clamp(
+                  0.0,
                   5000.0,
                 );
-                // Use the larger of available width or calculated min width
-                final chartWidth = constraints.maxWidth > minWidth
+                final chartWidth = constraints.maxWidth > contentWidth
                     ? constraints.maxWidth
-                    : minWidth;
+                    : contentWidth;
 
                 return SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -265,9 +266,17 @@ class CategoryBarChart extends ConsumerWidget {
                   ),
                 );
               },
+            );
+
+        if (wrapInCard) {
+          return Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: chartContent,
             ),
-          ),
-        );
+          );
+        }
+        return chartContent;
       },
     );
   }

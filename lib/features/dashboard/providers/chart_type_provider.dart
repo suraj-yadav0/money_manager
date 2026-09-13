@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Available chart types for the dashboard
@@ -12,6 +13,17 @@ extension DashboardChartTypeExtension on DashboardChartType {
         return 'Bar';
       case DashboardChartType.line:
         return 'Trend';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case DashboardChartType.pie:
+        return Icons.pie_chart_outline_rounded;
+      case DashboardChartType.bar:
+        return Icons.bar_chart_rounded;
+      case DashboardChartType.line:
+        return Icons.show_chart_rounded;
     }
   }
 

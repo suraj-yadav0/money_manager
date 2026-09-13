@@ -12,8 +12,13 @@ import 'chart_drilldown_sheet.dart';
 /// Line chart showing daily spending or income trends over the selected period
 class SpendingLineChart extends ConsumerStatefulWidget {
   final String transactionType;
+  final bool wrapInCard;
 
-  const SpendingLineChart({super.key, this.transactionType = 'expense'});
+  const SpendingLineChart({
+    super.key,
+    this.transactionType = 'expense',
+    this.wrapInCard = false,
+  });
 
   @override
   ConsumerState<SpendingLineChart> createState() => _SpendingLineChartState();
@@ -64,79 +69,84 @@ class _SpendingLineChartState extends ConsumerState<SpendingLineChart> {
         }
 
         if (snapshot.hasError) {
-          return Card(
-            child: Container(
-              height: 200,
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 48,
-                    color: colorScheme.error.withAlpha(180),
+          final errorView = Container(
+            height: 200,
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: colorScheme.error.withAlpha(180),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  widget.transactionType == 'expense'
+                      ? 'Failed to load spending data'
+                      : 'Failed to load income data',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    widget.transactionType == 'expense'
-                        ? 'Failed to load spending data'
-                        : 'Failed to load income data',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
+          if (widget.wrapInCard) {
+            return Card(child: errorView);
+          }
+          return errorView;
         }
 
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Card(
-            child: Container(
-              height: 200,
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.show_chart,
-                    size: 48,
-                    color: colorScheme.onSurfaceVariant.withAlpha(100),
+          final emptyView = Container(
+            height: 200,
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.show_chart,
+                  size: 48,
+                  color: colorScheme.onSurfaceVariant.withAlpha(100),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  widget.transactionType == 'expense'
+                      ? 'No spending data'
+                      : 'No income data',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    widget.transactionType == 'expense'
-                        ? 'No spending data'
-                        : 'No income data',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
+          if (widget.wrapInCard) {
+            return Card(child: emptyView);
+          }
+          return emptyView;
         }
 
         final data = snapshot.data!;
         final maxY = data.map((d) => d.amount).reduce((a, b) => a > b ? a : b);
 
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Column(
-                children: [
-                  SizedBox(
-                    height: 350,
-                    width: (data.length * 50.0).clamp(
-                      500.0,
-                      5000.0,
-                    ), // Dynamic width
+        final chartContent = LayoutBuilder(
+          builder: (context, constraints) {
+            final contentWidth = (data.length * 48.0).clamp(0.0, 5000.0);
+            final chartWidth = constraints.maxWidth > contentWidth
+                ? constraints.maxWidth
+                : contentWidth;
+
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: 350,
+                        width: chartWidth,
                     child: LineChart(
                       LineChartData(
                         gridData: FlGridData(
@@ -337,9 +347,19 @@ class _SpendingLineChartState extends ConsumerState<SpendingLineChart> {
                   ),
                 ],
               ),
-            ),
-          ),
+            );
+          },
         );
+
+        if (widget.wrapInCard) {
+          return Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: chartContent,
+            ),
+          );
+        }
+        return chartContent;
       },
     );
   }

@@ -11,8 +11,13 @@ import 'chart_drilldown_sheet.dart';
 /// Tapping a pie slice opens a drill-down sheet with individual transactions.
 class CategoryPieChart extends ConsumerStatefulWidget {
   final String transactionType;
+  final bool wrapInCard;
 
-  const CategoryPieChart({super.key, this.transactionType = 'expense'});
+  const CategoryPieChart({
+    super.key,
+    this.transactionType = 'expense',
+    this.wrapInCard = false,
+  });
 
   @override
   ConsumerState<CategoryPieChart> createState() => _CategoryPieChartState();
@@ -36,40 +41,42 @@ class _CategoryPieChartState extends ConsumerState<CategoryPieChart> {
             : stats.incomeCategoryBreakdown;
 
         if (data.isEmpty) {
-          return Card(
-            child: Container(
-              height: 200,
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.pie_chart_outline,
-                    size: 48,
-                    color: colorScheme.onSurfaceVariant.withAlpha(100),
+          final emptyView = Container(
+            height: 200,
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.pie_chart_outline,
+                  size: 48,
+                  color: colorScheme.onSurfaceVariant.withAlpha(100),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  widget.transactionType == 'expense'
+                      ? 'No expenses yet'
+                      : 'No income yet',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    widget.transactionType == 'expense'
-                        ? 'No expenses yet'
-                        : 'No income yet',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    widget.transactionType == 'expense'
-                        ? 'Add your first expense to see the breakdown'
-                        : 'Add your first income to see the breakdown',
-                    style: theme.textTheme.bodySmall,
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  widget.transactionType == 'expense'
+                      ? 'Add your first expense to see the breakdown'
+                      : 'Add your first income to see the breakdown',
+                  style: theme.textTheme.bodySmall,
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
           );
+          if (widget.wrapInCard) {
+            return Card(child: emptyView);
+          }
+          return emptyView;
         }
 
         final entries = data.entries.toList()
@@ -77,10 +84,7 @@ class _CategoryPieChartState extends ConsumerState<CategoryPieChart> {
         final total = entries.fold<double>(0, (sum, e) => sum + e.value);
         final range = ref.read(dateRangeProvider);
 
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+        final chartContent = Column(
               children: [
                 SizedBox(
                   height: 200,
@@ -228,9 +232,17 @@ class _CategoryPieChartState extends ConsumerState<CategoryPieChart> {
                   ),
                 ),
               ],
+            );
+
+        if (widget.wrapInCard) {
+          return Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: chartContent,
             ),
-          ),
-        );
+          );
+        }
+        return chartContent;
       },
     );
   }

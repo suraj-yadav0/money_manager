@@ -4,11 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/utils/formatters.dart';
 import '../providers/dashboard_providers.dart';
-import '../providers/chart_type_provider.dart';
 import '../widgets/balance_card.dart';
-import '../widgets/category_pie_chart.dart';
-import '../widgets/category_bar_chart.dart';
-import '../widgets/spending_line_chart.dart';
+import '../widgets/analytics_card.dart';
 import '../widgets/recent_transactions.dart';
 import '../widgets/date_filter_bar.dart';
 import '../../transactions/screens/all_transactions_screen.dart';
@@ -50,8 +47,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final chartType = ref.watch(dashboardChartTypeProvider);
-    final transactionType = ref.watch(dashboardTransactionTypeProvider);
 
     // Listen for newly arrived SMS alerts to pop up immediately if user is on Homescreen
     ref.listen<int>(pendingSmsCountProvider, (prev, next) {
@@ -80,9 +75,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  _getTitle(ref),
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+                Flexible(
+                  child: Text(
+                    _getTitle(ref),
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 const SizedBox(width: 4),
                 const Icon(Icons.keyboard_arrow_down, size: 20),
@@ -133,83 +132,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               const BalanceCard(),
               const SizedBox(height: 16),
 
-              // Category Breakdown with chart type selector
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    // Transaction Type Query Selector
-                    SegmentedButton<String>(
-                      segments: const [
-                        ButtonSegment(
-                          value: 'expense',
-                          label: Text('Expense'),
-                          icon: Icon(Icons.arrow_downward),
-                        ),
-                        ButtonSegment(
-                          value: 'income',
-                          label: Text('Income'),
-                          icon: Icon(Icons.arrow_upward),
-                        ),
-                      ],
-                      selected: {transactionType},
-                      onSelectionChanged: (selected) {
-                        ref
-                                .read(dashboardTransactionTypeProvider.notifier)
-                                .state =
-                            selected.first;
-                      },
-                      style: ButtonStyle(
-                        visualDensity: VisualDensity.compact,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        padding: WidgetStateProperty.all(
-                          const EdgeInsets.symmetric(horizontal: 8),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // Chart type selector
-                    SegmentedButton<DashboardChartType>(
-                      segments: DashboardChartType.values
-                          .map(
-                            (type) => ButtonSegment(
-                              value: type,
-                              label: Text(type.label),
-                              tooltip: type.tooltip,
-                            ),
-                          )
-                          .toList(),
-                      selected: {chartType},
-                      onSelectionChanged: (selected) {
-                        ref.read(dashboardChartTypeProvider.notifier).state =
-                            selected.first;
-                      },
-                      showSelectedIcon: false,
-                      style: ButtonStyle(
-                        visualDensity: VisualDensity.compact,
-                        padding: WidgetStateProperty.all(
-                          const EdgeInsets.symmetric(horizontal: 12),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              // Dynamic chart based on selection
-              SizedBox(
-                height: chartType == DashboardChartType.pie ? 275 : 425,
-                child: _buildChart(chartType, transactionType),
-              ),
+              // Analytics Section (Card Header Controls + Chart)
+              const AnalyticsCard(),
               const SizedBox(height: 24),
 
               // Recent Transactions
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Recent Transactions',
-                    style: theme.textTheme.titleMedium,
+                  Expanded(
+                    child: Text(
+                      'Recent Transactions',
+                      style: theme.textTheme.titleMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                   TextButton(
                     onPressed: () {
@@ -233,16 +170,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildChart(DashboardChartType type, String transactionType) {
-    switch (type) {
-      case DashboardChartType.pie:
-        return CategoryPieChart(transactionType: transactionType);
-      case DashboardChartType.bar:
-        return CategoryBarChart(transactionType: transactionType);
-      case DashboardChartType.line:
-        return SpendingLineChart(transactionType: transactionType);
-    }
-  }
 
   String _getTitle(WidgetRef ref) {
     final filter = ref.watch(dashboardDateFilterProvider);
