@@ -605,6 +605,58 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
+  /// Deduplicate bank accounts with identical name and account number,
+  /// re-linking associated transactions to the canonical account.
+  Future<int> deduplicateBankAccounts() async {
+    final allAccounts = await select(bankAccounts).get();
+    if (allAccounts.isEmpty) return 0;
+
+    int removedCount = 0;
+    final Map<String, List<BankAccount>> groups = {};
+    for (final acc in allAccounts) {
+      final key = '${acc.name.trim().toLowerCase()}_${acc.accountNumberLast4 ?? ""}';
+      groups.putIfAbsent(key, () => []).add(acc);
+    }
+
+    for (final entry in groups.entries) {
+      final list = entry.value;
+      if (list.length <= 1) continue;
+
+      // Select canonical account: prefer record with non-null syncId, then latest updatedAt
+      list.sort((a, b) {
+        if (a.syncId != null && b.syncId == null) return -1;
+        if (a.syncId == null && b.syncId != null) return 1;
+        final aTime = a.updatedAt ?? DateTime(2000);
+        final bTime = b.updatedAt ?? DateTime(2000);
+        return bTime.compareTo(aTime);
+      });
+
+      final canonical = list.first;
+      for (int i = 1; i < list.length; i++) {
+        final duplicate = list[i];
+        // Re-link transactions pointing to duplicate.id -> canonical.id
+        await (update(transactions)..where((t) => t.accountId.equals(duplicate.id))).write(
+          TransactionsCompanion(accountId: Value(canonical.id)),
+        );
+        // Delete duplicate bank account row
+        await (delete(bankAccounts)..where((a) => a.id.equals(duplicate.id))).go();
+        removedCount++;
+      }
+    }
+
+    // Ensure only one default account remains
+    final defaultAccs = await (select(bankAccounts)..where((a) => a.isDefault.equals(true))).get();
+    if (defaultAccs.length > 1) {
+      for (int i = 1; i < defaultAccs.length; i++) {
+        await (update(bankAccounts)..where((a) => a.id.equals(defaultAccs[i].id))).write(
+          const BankAccountsCompanion(isDefault: Value(false)),
+        );
+      }
+    }
+
+    return removedCount;
+  }
+
   /// Seed default bank accounts
   Future<void> _seedDefaultBankAccounts() async {
     final defaultAccounts = [

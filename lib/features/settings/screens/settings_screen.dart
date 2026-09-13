@@ -16,6 +16,7 @@ import '../../dashboard/providers/dashboard_providers.dart';
 import '../../accounts/screens/bank_accounts_screen.dart';
 import '../../sms/screens/sms_card_deck_screen.dart';
 import '../../sms/providers/sms_providers.dart';
+import '../../../core/services/backup_service.dart';
 
 /// Settings screen for user preferences and monthly income
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -136,6 +137,76 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _exportBackup() async {
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Preparing backup file...'),
+          duration: Duration(seconds: 1),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      await ref.read(backupServiceProvider).exportAndShareBackup();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _importBackup() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('Restore Backup'),
+        content: const Text(
+          'Importing a backup will merge transactions, categories, bank accounts, goals, and assets into your local database. Continue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(true),
+            child: const Text('Select File'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !mounted) return;
+
+    try {
+      final stats = await ref.read(backupServiceProvider).importBackup(ref);
+      if (stats != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Backup restored: ${stats['transactions']} transactions, ${stats['categories']} categories, ${stats['bankAccounts']} accounts',
+            ),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Import failed: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 
@@ -355,17 +426,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       Icons.download_outlined,
                       color: colorScheme.primary,
                     ),
-                    title: const Text('Export Data'),
-                    subtitle: const Text('Download your transactions'),
+                    title: const Text('Export Complete Backup (JSON)'),
+                    subtitle: const Text(
+                      'Share or save all transactions, goals, accounts, and assets',
+                    ),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Export feature coming soon'),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    },
+                    onTap: _exportBackup,
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: Icon(
+                      Icons.upload_outlined,
+                      color: colorScheme.primary,
+                    ),
+                    title: const Text('Import Backup from JSON'),
+                    subtitle: const Text(
+                      'Restore database from exported JSON backup file',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: _importBackup,
                   ),
                   const Divider(height: 1),
                   ListTile(

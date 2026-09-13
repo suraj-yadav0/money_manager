@@ -7,6 +7,7 @@ import '../database/database.dart';
 /// Provides the AppDatabase instance
 final databaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
+  db.deduplicateBankAccounts();
   ref.onDispose(() => db.close());
   return db;
 });

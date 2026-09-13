@@ -515,16 +515,25 @@ class SyncService {
         final raw = doc.data();
         final syncId = (raw['sync_id'] as String?) ?? doc.id;
         final updatedAt = raw['updated_at'] != null ? parseDate(raw['updated_at']) : DateTime.now();
+        final accName = (raw['name'] as String?)?.trim() ?? 'Account';
+        final accLast4 = raw['account_number_last4'] as String?;
 
-        final existing = await (_db.select(_db.bankAccounts)..where((a) => a.syncId.equals(syncId))).getSingleOrNull();
+        final existingBySyncId = await (_db.select(_db.bankAccounts)..where((a) => a.syncId.equals(syncId))).getSingleOrNull();
+        final existingByNameAndLast4 = existingBySyncId != null
+            ? null
+            : await (_db.select(_db.bankAccounts)
+                ..where((a) => a.name.equals(accName) & (accLast4 != null ? a.accountNumberLast4.equals(accLast4) : a.accountNumberLast4.isNull())))
+                .getSingleOrNull();
+
+        final existing = existingBySyncId ?? existingByNameAndLast4;
 
         if (existing == null) {
           await _db.into(_db.bankAccounts).insert(
                 BankAccountsCompanion.insert(
                   syncId: Value(syncId),
-                  name: raw['name'] as String? ?? 'Account',
+                  name: accName,
                   bankName: raw['bank_name'] as String? ?? 'Bank',
-                  accountNumberLast4: Value(raw['account_number_last4'] as String?),
+                  accountNumberLast4: Value(accLast4),
                   accountType: Value(raw['account_type'] as String? ?? 'savings'),
                   balance: Value((raw['balance'] as num? ?? 0).toDouble()),
                   colorHex: Value(raw['color_hex'] as String?),
@@ -535,12 +544,13 @@ class SyncService {
                 ),
               );
           totalDownloaded++;
-        } else if (updatedAt.isAfter(existing.updatedAt ?? DateTime(2000))) {
+        } else {
           await (_db.update(_db.bankAccounts)..where((a) => a.id.equals(existing.id))).write(
             BankAccountsCompanion(
-              name: Value(raw['name'] as String? ?? existing.name),
+              syncId: Value(syncId),
+              name: Value(accName),
               bankName: Value(raw['bank_name'] as String? ?? existing.bankName),
-              accountNumberLast4: Value(raw['account_number_last4'] as String?),
+              accountNumberLast4: Value(accLast4 ?? existing.accountNumberLast4),
               accountType: Value(raw['account_type'] as String? ?? existing.accountType),
               balance: Value((raw['balance'] as num? ?? existing.balance).toDouble()),
               colorHex: Value(raw['color_hex'] as String? ?? existing.colorHex),
@@ -551,6 +561,7 @@ class SyncService {
           );
         }
       }
+      await _db.deduplicateBankAccounts();
     } catch (e) {
       debugPrint('Error pulling bank_accounts: $e');
     }
