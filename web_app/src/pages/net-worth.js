@@ -10,6 +10,8 @@ Chart.register(...registerables);
 
 let trajectoryChartInstance = null;
 let allocationChartInstance = null;
+let projectionChartInstance = null;
+let structureChartInstance = null;
 
 const categoryIcons = {
   savings: 'account_balance',
@@ -25,6 +27,7 @@ const categoryIcons = {
 export const NetWorthPage = {
   selectedTimeframe: '6M',
   selectedAllocationView: 'class',
+  selectedProjectionHorizon: '10Y',
 
   getTotals(state) {
     const assets = state.assets || [];
@@ -472,8 +475,55 @@ export const NetWorthPage = {
 
             <!-- Dynamic Donut Chart & Legend -->
             <div id="nw-allocation-content" style="display: flex; flex-direction: column; flex: 1; justify-content: center;"></div>
+        </div>
+
+        <!-- Forward Wealth Intelligence & Capital Structure Grid -->
+        <div class="nw-charts-grid" style="margin-top: 2px;">
+          <!-- 1. Compound Wealth Growth Simulator -->
+          <div class="fintech-card nw-chart-card">
+            <div class="card-header">
+              <div class="card-title">
+                <span class="material-icons">auto_graph</span>
+                <span>Compound Wealth Simulator</span>
+              </div>
+              <div class="card-header-actions">
+                <div class="filter-group" style="padding: 2px;" id="nw-projection-horizon-group">
+                  <button class="filter-chip ${this.selectedProjectionHorizon === '5Y' ? 'active' : ''}" data-horizon="5Y">5 Years</button>
+                  <button class="filter-chip ${this.selectedProjectionHorizon === '10Y' ? 'active' : ''}" data-horizon="10Y">10 Years</button>
+                  <button class="filter-chip ${this.selectedProjectionHorizon === '20Y' ? 'active' : ''}" data-horizon="20Y">20 Years</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dynamic Projection Metric Badges -->
+            <div id="nw-projection-metrics" class="nw-stats-bar" style="grid-template-columns: repeat(3, 1fr);"></div>
+
+            <div style="position: relative; height: 260px; width: 100%; max-width: 100%; min-width: 0; overflow: hidden;">
+              <canvas id="networth-projection-canvas"></canvas>
+            </div>
           </div>
 
+          <!-- 2. Capital Structure & Liquidity Coverage -->
+          <div class="fintech-card nw-chart-card">
+            <div class="card-header">
+              <div class="card-title">
+                <span class="material-icons">account_balance_wallet</span>
+                <span>Capital Structure & Liquidity Runway</span>
+              </div>
+              <div class="card-header-actions">
+                <span class="kpi-badge neutral" id="nw-runway-badge" style="font-size: 11px; font-weight: 600;">
+                  Calculating runway...
+                </span>
+              </div>
+            </div>
+
+            <!-- Dynamic Liquidity Metric Bar -->
+            <div id="nw-structure-metrics" class="nw-stats-bar" style="grid-template-columns: repeat(3, 1fr);"></div>
+
+            <div style="position: relative; height: 260px; width: 100%; max-width: 100%; min-width: 0; overflow: hidden;">
+              <canvas id="networth-structure-canvas"></canvas>
+            </div>
+          </div>
         </div>
 
         <!-- Assets & Liabilities Holdings Detail Grid -->
@@ -674,12 +724,25 @@ export const NetWorthPage = {
       });
     });
 
+    // Projection horizon selector
+    const horizonChips = document.querySelectorAll('#nw-projection-horizon-group [data-horizon]');
+    horizonChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        const horizon = chip.getAttribute('data-horizon');
+        this.selectedProjectionHorizon = horizon;
+        horizonChips.forEach(c => c.classList.toggle('active', c === chip));
+        this.renderWealthProjectionChart(state);
+      });
+    });
+
     this.renderCharts(state);
   },
 
   renderCharts(state) {
     this.renderTrajectoryChart(state);
     this.renderAllocationChart(state);
+    this.renderWealthProjectionChart(state);
+    this.renderCapitalStructureChart(state);
   },
 
   renderTrajectoryChart(state) {
@@ -1015,6 +1078,320 @@ export const NetWorthPage = {
           allocationChartInstance.update();
         }
       });
+    });
+  },
+
+  renderWealthProjectionChart(state) {
+    const canvas = document.getElementById('networth-projection-canvas');
+    if (!canvas) return;
+
+    if (projectionChartInstance) {
+      projectionChartInstance.destroy();
+      projectionChartInstance = null;
+    }
+
+    const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
+    const isLight = isLightTheme(activeTheme);
+    const themeObj = getTheme(activeTheme);
+    const primaryColor = themeObj.primary || (isLight ? '#0F172A' : '#FFFFFF');
+    const textColor = isLight ? '#475569' : '#94A3B8';
+    const gridColor = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
+    const tooltipBg = isLight ? '#FFFFFF' : (themeObj.surface || '#11141E');
+    const tooltipTitle = isLight ? '#0F172A' : (themeObj.primary || '#FFFFFF');
+    const tooltipBorder = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)';
+
+    const totals = this.getTotals(state);
+    const currentPrincipal = Math.max(0, totals.netWorth);
+
+    // Compute monthly net savings contribution
+    const trajectory = this.getTrajectoryData(state, '6M');
+    let avgMonthlySavings = 0;
+    if (trajectory && trajectory.summary && trajectory.summary.avgMonthlyGain > 0) {
+      avgMonthlySavings = trajectory.summary.avgMonthlyGain;
+    } else {
+      const monthlyIncome = state.userSettings?.monthlyIncome || 0;
+      avgMonthlySavings = monthlyIncome > 0 ? monthlyIncome * 0.2 : 1000;
+    }
+
+    const horizon = this.selectedProjectionHorizon || '10Y';
+    const maxYears = horizon === '5Y' ? 5 : horizon === '20Y' ? 20 : 10;
+    const yearPoints = [];
+    const step = maxYears === 20 ? 2 : 1;
+    for (let y = 0; y <= maxYears; y += step) {
+      yearPoints.push(y);
+    }
+
+    const calculateFv = (principal, annualRate, monthlyPmt, years) => {
+      if (years === 0) return principal;
+      const rm = annualRate / 12;
+      const n = years * 12;
+      return Math.round(principal * Math.pow(1 + rm, n) + monthlyPmt * ((Math.pow(1 + rm, n) - 1) / rm));
+    };
+
+    const labels = yearPoints.map(y => (y === 0 ? 'Now' : `Yr ${y}`));
+    const conservativeData = yearPoints.map(y => calculateFv(currentPrincipal, 0.06, avgMonthlySavings, y));
+    const balancedData = yearPoints.map(y => calculateFv(currentPrincipal, 0.10, avgMonthlySavings, y));
+    const aggressiveData = yearPoints.map(y => calculateFv(currentPrincipal, 0.14, avgMonthlySavings, y));
+
+    const finalConservative = conservativeData[conservativeData.length - 1];
+    const finalBalanced = balancedData[balancedData.length - 1];
+    const finalAggressive = aggressiveData[aggressiveData.length - 1];
+
+    const metricsEl = document.getElementById('nw-projection-metrics');
+    if (metricsEl) {
+      metricsEl.innerHTML = `
+        <div class="nw-stat-cell">
+          <span class="nw-stat-cell-label">Conservative (6% p.a.)</span>
+          <span class="nw-stat-cell-value" style="color: var(--text-secondary);">${Formatters.compactCurrency(finalConservative)}</span>
+        </div>
+        <div class="nw-stat-cell">
+          <span class="nw-stat-cell-label">Balanced (10% p.a.)</span>
+          <span class="nw-stat-cell-value" style="color: ${primaryColor};">${Formatters.compactCurrency(finalBalanced)}</span>
+        </div>
+        <div class="nw-stat-cell">
+          <span class="nw-stat-cell-label">Accelerated (14% p.a.)</span>
+          <span class="nw-stat-cell-value" style="color: var(--success);">${Formatters.compactCurrency(finalAggressive)}</span>
+        </div>
+      `;
+    }
+
+    projectionChartInstance = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Accelerated (14%)',
+            data: aggressiveData,
+            borderColor: isLight ? '#16A34A' : '#10B981',
+            backgroundColor: isLight ? 'rgba(22, 163, 74, 0.08)' : 'rgba(16, 185, 129, 0.08)',
+            borderWidth: 2,
+            borderDash: [5, 4],
+            pointRadius: 3,
+            pointHoverRadius: 6,
+            tension: 0.3
+          },
+          {
+            label: 'Balanced (10%)',
+            data: balancedData,
+            borderColor: primaryColor,
+            backgroundColor: hexToRgba(primaryColor, 0.15),
+            fill: true,
+            borderWidth: 2.5,
+            pointRadius: 4,
+            pointHoverRadius: 7,
+            tension: 0.3
+          },
+          {
+            label: 'Conservative (6%)',
+            data: conservativeData,
+            borderColor: isLight ? '#64748B' : '#94A3B8',
+            borderWidth: 1.8,
+            borderDash: [2, 2],
+            pointRadius: 3,
+            pointHoverRadius: 6,
+            tension: 0.3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' } }
+          },
+          y: {
+            grid: { color: gridColor },
+            ticks: {
+              color: textColor,
+              font: { family: 'JetBrains Mono', size: 10 },
+              callback: (v) => Formatters.compactCurrency(v)
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            align: 'end',
+            labels: {
+              boxWidth: 10,
+              boxHeight: 10,
+              usePointStyle: true,
+              pointStyle: 'circle',
+              color: textColor,
+              font: { family: 'Plus Jakarta Sans', size: 10.5 }
+            }
+          },
+          tooltip: {
+            backgroundColor: tooltipBg,
+            titleColor: tooltipTitle,
+            bodyColor: textColor,
+            borderColor: tooltipBorder,
+            borderWidth: 1,
+            padding: 10,
+            callbacks: {
+              label: (ctx) => `${ctx.dataset.label}: ${Formatters.currency(ctx.parsed.y)}`
+            }
+          }
+        }
+      }
+    });
+  },
+
+  renderCapitalStructureChart(state) {
+    const canvas = document.getElementById('networth-structure-canvas');
+    if (!canvas) return;
+
+    if (structureChartInstance) {
+      structureChartInstance.destroy();
+      structureChartInstance = null;
+    }
+
+    const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
+    const isLight = isLightTheme(activeTheme);
+    const themeObj = getTheme(activeTheme);
+    const primaryColor = themeObj.primary || (isLight ? '#0F172A' : '#FFFFFF');
+    const textColor = isLight ? '#475569' : '#94A3B8';
+    const gridColor = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
+    const tooltipBg = isLight ? '#FFFFFF' : (themeObj.surface || '#11141E');
+    const tooltipTitle = isLight ? '#0F172A' : (themeObj.primary || '#FFFFFF');
+    const tooltipBorder = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)';
+
+    const bankAccounts = state.bankAccounts || [];
+    const assets = state.assets || [];
+
+    // Liquid reserves: checking, savings, cash
+    let liquidReserves = 0;
+    let investmentPortfolios = 0;
+    let tangibleAssets = 0;
+    let shortTermDebt = 0;
+    let longTermDebt = 0;
+
+    bankAccounts.forEach(acc => {
+      const bal = Number(acc.balance || 0);
+      const accType = (acc.account_type || acc.accountType || '').toLowerCase();
+      if (accType === 'credit_card') {
+        shortTermDebt += Math.abs(bal);
+      } else {
+        liquidReserves += Math.max(0, bal);
+      }
+    });
+
+    assets.forEach(a => {
+      const val = Math.abs(Number(a.value || 0));
+      const isLiab = a.is_liability || a.isLiability;
+      const type = (a.type || '').toLowerCase();
+      if (isLiab) {
+        if (type === 'credit_card') {
+          shortTermDebt += val;
+        } else {
+          longTermDebt += val;
+        }
+      } else {
+        if (['investment', 'crypto'].includes(type)) {
+          investmentPortfolios += val;
+        } else if (['savings', 'cash', 'checking'].includes(type)) {
+          liquidReserves += val;
+        } else {
+          tangibleAssets += val;
+        }
+      }
+    });
+
+    // Calculate monthly expense run rate from past 3 months
+    const now = new Date();
+    const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+    const recentExpenses = (state.transactions || [])
+      .filter(t => t.type === 'expense' && new Date(t.timestamp) >= threeMonthsAgo)
+      .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+    const monthlyBurn = recentExpenses > 0 ? recentExpenses / 3 : (state.userSettings?.monthlyIncome ? state.userSettings.monthlyIncome * 0.7 : 2000);
+
+    const runwayMonths = monthlyBurn > 0 ? (liquidReserves / monthlyBurn).toFixed(1) : '∞';
+
+    const runwayBadge = document.getElementById('nw-runway-badge');
+    if (runwayBadge) {
+      runwayBadge.innerHTML = `
+        <span class="material-icons" style="font-size: 13px; margin-right: 3px;">timer</span>
+        <span>${runwayMonths} Mos Liquid Runway</span>
+      `;
+      runwayBadge.className = `kpi-badge ${Number(runwayMonths) >= 6 ? 'positive' : Number(runwayMonths) >= 3 ? 'neutral' : 'negative'}`;
+    }
+
+    const metricsEl = document.getElementById('nw-structure-metrics');
+    if (metricsEl) {
+      metricsEl.innerHTML = `
+        <div class="nw-stat-cell">
+          <span class="nw-stat-cell-label">Liquid Buffer</span>
+          <span class="nw-stat-cell-value" style="color: var(--success);">${Formatters.currency(liquidReserves)}</span>
+        </div>
+        <div class="nw-stat-cell">
+          <span class="nw-stat-cell-label">Capital Assets</span>
+          <span class="nw-stat-cell-value" style="color: ${primaryColor};">${Formatters.currency(investmentPortfolios + tangibleAssets)}</span>
+        </div>
+        <div class="nw-stat-cell">
+          <span class="nw-stat-cell-label">Debt Exposure</span>
+          <span class="nw-stat-cell-value" style="color: var(--error);">${Formatters.currency(shortTermDebt + longTermDebt)}</span>
+        </div>
+      `;
+    }
+
+    structureChartInstance = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: ['Liquid Buffer', 'Investments', 'Tangible Fixed', 'Short-Term Debt', 'Long-Term Debt'],
+        datasets: [{
+          label: 'Capital Volume',
+          data: [liquidReserves, investmentPortfolios, tangibleAssets, shortTermDebt, longTermDebt],
+          backgroundColor: [
+            isLight ? '#16A34A' : '#10B981',
+            primaryColor,
+            hexToRgba(primaryColor, 0.45),
+            isLight ? '#DC2626' : '#F43F5E',
+            isLight ? 'rgba(220, 38, 38, 0.5)' : 'rgba(244, 63, 94, 0.5)'
+          ],
+          borderRadius: 6,
+          maxBarThickness: 34
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: tooltipBg,
+            titleColor: tooltipTitle,
+            bodyColor: textColor,
+            borderColor: tooltipBorder,
+            borderWidth: 1,
+            padding: 10,
+            callbacks: {
+              label: (ctx) => `Amount: ${Formatters.currency(ctx.parsed.y)}`
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 10.5, weight: '600' } }
+          },
+          y: {
+            grid: { color: gridColor },
+            ticks: {
+              color: textColor,
+              font: { family: 'JetBrains Mono', size: 10 },
+              callback: (v) => Formatters.compactCurrency(v)
+            }
+          }
+        }
+      }
     });
   },
 
