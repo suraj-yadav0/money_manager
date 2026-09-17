@@ -26,6 +26,10 @@ export function formatAuthError(error) {
       return 'Please enter a valid email address.';
     case 'auth/popup-closed-by-user':
       return 'Google sign-in popup was closed before completing.';
+    case 'auth/popup-blocked':
+      return 'Sign-in popup was blocked by your browser. Please allow popups for this site.';
+    case 'auth/unauthorized-domain':
+      return 'This web domain is not authorized in Firebase Console. Add it under Authentication > Settings > Authorized domains.';
     case 'auth/network-request-failed':
       return 'Network error. Please check your internet connection and try again.';
     case 'auth/too-many-requests':

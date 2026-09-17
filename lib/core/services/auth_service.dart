@@ -60,6 +60,7 @@ class AuthService {
   }
 
   static final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId: kIsWeb ? '277150463102-2nve9qflhf00urksfbe290rpkm5gsv4f.apps.googleusercontent.com' : null,
     serverClientId: '277150463102-2nve9qflhf00urksfbe290rpkm5gsv4f.apps.googleusercontent.com',
   );
 
@@ -67,6 +68,31 @@ class AuthService {
   Future<bool> signInWithGoogle() async {
     final auth = _requireFirebase();
     try {
+      if (kIsWeb) {
+        final googleProvider = GoogleAuthProvider();
+        googleProvider.setCustomParameters({'prompt': 'select_account'});
+        try {
+          final userCredential = await auth.signInWithPopup(googleProvider);
+          if (userCredential.user == null) return false;
+          await setGuestMode(false);
+          return true;
+        } on FirebaseAuthException catch (e) {
+          if (e.code == 'popup-closed-by-user' || e.code == 'cancelled-popup-request') {
+            return false;
+          }
+          if (e.code == 'popup-blocked') {
+            await auth.signInWithRedirect(googleProvider);
+            return true;
+          }
+          if (e.code == 'unauthorized-domain') {
+            throw Exception(
+              'Domain not authorized in Firebase Console. Add this domain under Authentication > Settings > Authorized domains.',
+            );
+          }
+          rethrow;
+        }
+      }
+
       final googleUser = await _googleSignIn.signIn();
       if (googleUser == null) return false;
 
@@ -106,6 +132,13 @@ class AuthService {
   Future<void> signOut() async {
     if (FirebaseConfig.isConfigured && auth != null) {
       await auth!.signOut();
+      if (!kIsWeb) {
+        try {
+          await _googleSignIn.signOut();
+        } catch (e) {
+          debugPrint('Google sign out error: $e');
+        }
+      }
     }
     // Note: signing out does not force guest mode automatically; user goes to AuthScreen
     await setGuestMode(false);

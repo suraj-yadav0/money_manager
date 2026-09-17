@@ -88,6 +88,7 @@ try {
   authInstance = getAuth(appInstance);
   dbInstance = getFirestore(appInstance);
   googleAuthProviderInstance = new GoogleAuthProvider();
+  googleAuthProviderInstance.setCustomParameters({ prompt: 'select_account' });
 } catch (err) {
   console.warn('Firebase initialization note: offline/local mode will be used.', err);
 }

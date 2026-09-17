@@ -1,9 +1,5 @@
-import 'dart:io';
-
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as p;
+import 'package:drift_flutter/drift_flutter.dart';
 
 part 'database.g.dart';
 
@@ -186,8 +182,8 @@ class SmsTransactions extends Table {
   ],
 )
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
-  AppDatabase.forTesting(QueryExecutor e) : super(e);
+  AppDatabase() : super(driftDatabase(name: 'money_manager'));
+  AppDatabase.forTesting(super.e);
 
   @override
   int get schemaVersion => 10;
@@ -707,12 +703,4 @@ class AppDatabase extends _$AppDatabase {
   Future<void> _createDefaultUserSettings() async {
     await into(userSettings).insert(UserSettingsCompanion.insert());
   }
-}
-
-LazyDatabase _openConnection() {
-  return LazyDatabase(() async {
-    final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'money_manager.sqlite'));
-    return NativeDatabase.createInBackground(file);
-  });
 }

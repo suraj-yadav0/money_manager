@@ -106,7 +106,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     final authService = ref.read(authServiceProvider);
 
     try {
-      await authService.signInWithGoogle();
+      final success = await authService.signInWithGoogle();
+      if (!success) return;
       final db = ref.read(databaseProvider);
       await db.into(db.userSettings).insertOnConflictUpdate(
         UserSettingsCompanion(
