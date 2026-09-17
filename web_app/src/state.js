@@ -1,12 +1,16 @@
 /* Reactive App State Management and Offline LocalStorage Fallbacks */
 
+import { getTheme, isLightTheme } from './utils/theme.js';
+
 class AppStateManager {
   constructor() {
     this.listeners = new Set();
+    this.lastDarkTheme = 'dark';
     
-    // Default Initial State
+    // Initial State Structure
     this.state = {
-      user: null,               // Firebase User object
+      // Auth & Mode State
+      user: null,               // Firebase User Object or null
       isGuestMode: false,       // Offline Local-Only Mode
       navIndex: 0,              // Current view (0=Home, 1=Budget, 2=NetWorth, 3=Goals)
       dateFilter: 'thisMonth',  // Selected date filter (thisWeek, lastWeek, thisMonth, lastMonth, thisYear, allTime)
@@ -29,8 +33,8 @@ class AppStateManager {
       assets: [],
       bankAccounts: [],
 
-      // Theme State ('dark' | 'light')
-      theme: localStorage.getItem('money_manager_theme') || localStorage.getItem('quantro_theme') || 'dark',
+      // Theme State (supported theme IDs from ColorSchemes)
+      theme: localStorage.getItem('money_manager_theme') || localStorage.getItem('quantro_theme') || (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'),
 
       // Cloud Sync Metadata
       syncStatus: 'idle',        // 'idle' | 'syncing' | 'synced' | 'error'
@@ -40,24 +44,51 @@ class AppStateManager {
     
     // Apply theme on load
     document.documentElement.setAttribute('data-theme', this.state.theme);
+    this.updateMetaThemeColor(this.state.theme);
 
     this.loadGuestState();
   }
 
+  // Update browser mobile toolbar color
+  updateMetaThemeColor(themeId) {
+    if (typeof document === 'undefined') return;
+    const scheme = getTheme(themeId);
+    const metaTag = document.getElementById('meta-theme-color') || document.querySelector('meta[name="theme-color"]');
+    if (metaTag && scheme?.bg) {
+      metaTag.setAttribute('content', scheme.bg);
+    }
+  }
+
   // Set Theme
   setTheme(theme) {
-    this.state.theme = theme;
-    localStorage.setItem('money_manager_theme', theme);
-    localStorage.setItem('quantro_theme', theme);
-    document.documentElement.setAttribute('data-theme', theme);
+    const validTheme = getTheme(theme)?.id || 'dark';
+    this.state.theme = validTheme;
+    localStorage.setItem('money_manager_theme', validTheme);
+    localStorage.setItem('quantro_theme', validTheme);
+    document.documentElement.setAttribute('data-theme', validTheme);
+    this.updateMetaThemeColor(validTheme);
+    if (!isLightTheme(validTheme)) {
+      this.lastDarkTheme = validTheme;
+    }
+    if (this.state.userSettings) {
+      this.state.userSettings.theme = validTheme;
+      if (this.state.isGuestMode) {
+        this.saveGuestState();
+      }
+    }
     this.notify();
   }
 
   // Toggle Theme
   toggleTheme() {
     const current = document.documentElement.getAttribute('data-theme') || this.state.theme || 'dark';
-    const nextTheme = current === 'dark' ? 'light' : 'dark';
-    this.setTheme(nextTheme);
+    const isLight = isLightTheme(current);
+    if (isLight) {
+      this.setTheme(this.lastDarkTheme || 'dark');
+    } else {
+      this.lastDarkTheme = current;
+      this.setTheme('light');
+    }
   }
 
   // Register listener for state changes

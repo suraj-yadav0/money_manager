@@ -8,12 +8,14 @@ import { Router } from '../router.js';
 import { CloudConfigModal } from './cloud-config-modal.js';
 import { SetupGuideModal } from './setup-guide-modal.js';
 import { isUsingCustomFirebase, getActiveProjectId } from '../firebase-config.js';
+import { ColorSchemes, getTheme, isLightTheme } from '../utils/theme.js';
 
 export const SettingsPage = {
   isSaving: false,
   isSyncing: false,
   incomeInputVal: '',
   selectedCurrency: 'INR',
+  initialTheme: null,
 
   render(state) {
     const user = state.user;
@@ -36,8 +38,13 @@ export const SettingsPage = {
       else lastSyncLabel = Formatters.time(state.lastSyncedAt);
     }
 
+    if (this.initialTheme === null) {
+      this.initialTheme = state.theme || 'dark';
+    }
+    const currentTheme = getTheme(state.theme);
+
     return `
-      <div class="modern-modal-dialog animate-scale-up" style="max-width: 580px;">
+      <div class="modern-modal-dialog animate-scale-up" style="max-width: 660px;">
         <div class="modal-header">
           <div class="modal-title">
             <span class="material-icons" style="color: var(--primary);">settings</span>
@@ -87,16 +94,50 @@ export const SettingsPage = {
             </div>
           </div>
 
-          <!-- Appearance / Theme Preference -->
-          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-surface-subtle); border: 1px solid var(--glass-border); padding: 16px 20px; border-radius: var(--radius-md);">
-            <div>
-              <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">Interface Theme</div>
-              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Current: ${state.theme === 'light' ? 'Crisp Light Mode' : 'Midnight Obsidian Dark Mode'}</div>
+          <!-- Appearance & Color Scheme Selector -->
+          <div style="background: var(--bg-surface-subtle); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: 20px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+              <div>
+                <div style="font-weight: 700; font-size: 15px; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                  <span class="material-icons" style="font-size: 18px; color: var(--primary);">palette</span>
+                  <span>Website Color Scheme & Look</span>
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                  Active: <strong style="color: var(--text-primary);">${currentTheme.name}</strong> (${currentTheme.badge}) • Instant live preview
+                </div>
+              </div>
+              <button class="btn-secondary" id="settings-theme-quick-toggle" style="padding: 6px 14px; font-size: 12.5px;">
+                <span class="material-icons" style="font-size: 15px;">${isLightTheme(state.theme) ? 'dark_mode' : 'light_mode'}</span>
+                <span>${isLightTheme(state.theme) ? 'Switch to Dark' : 'Switch to Light'}</span>
+              </button>
             </div>
-            <button class="btn-secondary" id="settings-theme-toggle-btn" style="padding: 7px 16px; font-size: 13px;">
-              <span class="material-icons" style="font-size: 16px;">${state.theme === 'light' ? 'dark_mode' : 'light_mode'}</span>
-              Switch to ${state.theme === 'light' ? 'Dark' : 'Light'}
-            </button>
+
+            <div class="theme-selector-grid">
+              ${ColorSchemes.map(scheme => {
+                const isActive = (state.theme || 'dark') === scheme.id;
+                return `
+                  <div class="theme-card ${isActive ? 'active' : ''}" data-theme-id="${scheme.id}" title="Activate ${scheme.name}">
+                    <div class="theme-card-header">
+                      <div class="theme-swatch-strip">
+                        <span class="theme-swatch-dot" style="background: ${scheme.bg}; border: 1px solid rgba(255,255,255,0.2);"></span>
+                        <span class="theme-swatch-dot" style="background: ${scheme.surface}; border: 1px solid rgba(255,255,255,0.2);"></span>
+                        <span class="theme-swatch-dot" style="background: ${scheme.primary}; box-shadow: 0 0 6px ${scheme.primary}66;"></span>
+                      </div>
+                      <span class="theme-mode-tag">${scheme.badge}</span>
+                    </div>
+                    <div class="theme-card-body">
+                      <div class="theme-card-title">
+                        <span>${scheme.name}</span>
+                        <div class="theme-card-check">
+                          <span class="material-icons">${isActive ? 'check_circle' : 'radio_button_unchecked'}</span>
+                        </div>
+                      </div>
+                      <div class="theme-card-desc">${scheme.description}</div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
           </div>
 
           <!-- Monthly Income Baseline -->
@@ -179,16 +220,36 @@ export const SettingsPage = {
   },
 
   bindEvents(state) {
-    // Close button
-    document.getElementById('settings-close-btn')?.addEventListener('click', () => {
+    // Close & Cancel buttons
+    const resetAndClose = (revertTheme = false) => {
+      if (revertTheme && this.initialTheme && this.initialTheme !== state.theme) {
+        StateManager.setTheme(this.initialTheme);
+      }
+      this.initialTheme = null;
+      this.incomeInputVal = '';
       Router.closeOverlay();
+    };
+
+    document.getElementById('settings-close-btn')?.addEventListener('click', () => {
+      resetAndClose(false);
     });
     document.getElementById('settings-cancel-btn')?.addEventListener('click', () => {
-      Router.closeOverlay();
+      resetAndClose(true);
     });
 
-    // Theme toggle button
-    document.getElementById('settings-theme-toggle-btn')?.addEventListener('click', () => {
+    // Theme selector card interactions
+    const themeCards = document.querySelectorAll('.theme-card');
+    themeCards.forEach(card => {
+      card.addEventListener('click', () => {
+        const themeId = card.getAttribute('data-theme-id');
+        if (themeId) {
+          StateManager.setTheme(themeId);
+        }
+      });
+    });
+
+    // Quick theme toggle button
+    document.getElementById('settings-theme-quick-toggle')?.addEventListener('click', () => {
       StateManager.toggleTheme();
     });
 
@@ -197,8 +258,11 @@ export const SettingsPage = {
       const incomeVal = parseFloat(document.getElementById('settings-income-field')?.value) || 0;
       await DbService.saveUserSettings({
         monthlyIncome: incomeVal,
-        isOnboarded: true
+        isOnboarded: true,
+        theme: StateManager.state.theme
       });
+      this.initialTheme = null;
+      this.incomeInputVal = '';
       Router.closeOverlay();
       StateManager.notify();
     });

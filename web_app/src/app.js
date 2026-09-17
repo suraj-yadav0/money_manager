@@ -9,11 +9,13 @@ import { StateManager } from './state.js';
 import { AuthService } from './auth.js';
 import { DbService } from './db.js';
 import { Router } from './router.js';
+import { getTheme } from './utils/theme.js';
 
 // Setup theme switcher baseline (default: dark theme)
 function initializeTheme() {
   const savedTheme = localStorage.getItem('money_manager_theme') || localStorage.getItem('quantro_theme') || 'dark';
-  document.documentElement.setAttribute('data-theme', savedTheme);
+  const theme = getTheme(savedTheme).id;
+  document.documentElement.setAttribute('data-theme', theme);
 }
 
 // Initialise Application
