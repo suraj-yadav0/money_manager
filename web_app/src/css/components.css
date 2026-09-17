@@ -503,10 +503,8 @@ select optgroup {
   font-size: 14px;
 }
 
-[data-theme="light"] select.form-control,
-[data-theme="light"] select,
-[data-theme="nordic"] select.form-control,
-[data-theme="nordic"] select {
+:is([data-theme="light"], [data-theme="nordic"], [data-theme="sandstone"], [data-theme="sage"], [data-theme="lavender"], [data-theme="terracotta"], [data-theme="slate"]) select.form-control,
+:is([data-theme="light"], [data-theme="nordic"], [data-theme="sandstone"], [data-theme="sage"], [data-theme="lavender"], [data-theme="terracotta"], [data-theme="slate"]) select {
   background-color: var(--bg-surface);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat !important;
@@ -515,10 +513,8 @@ select optgroup {
   color: var(--text-primary);
 }
 
-[data-theme="light"] select option,
-[data-theme="light"] select optgroup,
-[data-theme="nordic"] select option,
-[data-theme="nordic"] select optgroup {
+:is([data-theme="light"], [data-theme="nordic"], [data-theme="sandstone"], [data-theme="sage"], [data-theme="lavender"], [data-theme="terracotta"], [data-theme="slate"]) select option,
+:is([data-theme="light"], [data-theme="nordic"], [data-theme="sandstone"], [data-theme="sage"], [data-theme="lavender"], [data-theme="terracotta"], [data-theme="slate"]) select optgroup {
   background-color: var(--bg-surface) !important;
   color: var(--text-primary) !important;
 }
@@ -667,8 +663,7 @@ select optgroup {
   border: 1px solid var(--glass-border);
 }
 
-[data-theme="light"] .theme-swatch-strip,
-[data-theme="nordic"] .theme-swatch-strip {
+:is([data-theme="light"], [data-theme="nordic"], [data-theme="sandstone"], [data-theme="sage"], [data-theme="lavender"], [data-theme="terracotta"], [data-theme="slate"]) .theme-swatch-strip {
   background: rgba(0, 0, 0, 0.05);
 }
 
@@ -742,7 +737,10 @@ select optgroup {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  width: 230px;
+  width: 240px;
+  max-height: 390px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--bg-surface-elevated);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);

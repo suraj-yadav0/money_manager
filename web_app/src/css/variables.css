@@ -458,3 +458,253 @@
   --grid-line: rgba(37, 99, 235, 0.035);
   --radial-glow: rgba(37, 99, 235, 0.05);
 }
+
+/* 9. Dune Sandstone */
+[data-theme="sandstone"] {
+  color-scheme: light;
+  --bg-main: #FBF9F5;
+  --bg-surface: #F4EFEA;
+  --bg-surface-elevated: #ECE5DE;
+  --bg-surface-subtle: rgba(180, 83, 9, 0.05);
+  --bg-surface-hover: rgba(180, 83, 9, 0.09);
+  --bg-header: rgba(251, 249, 245, 0.94);
+
+  --glass-bg: rgba(244, 239, 234, 0.92);
+  --glass-border: #E5DDD3;
+  --glass-border-hover: #D5C9BC;
+  --glass-border-focus: rgba(180, 83, 9, 0.4);
+  --modal-backdrop: rgba(41, 37, 36, 0.45);
+
+  --primary: #B45309;
+  --primary-light: #D97706;
+  --primary-dark: #92400E;
+  --primary-glow: rgba(180, 83, 9, 0.22);
+  --primary-gradient: linear-gradient(180deg, #D97706 0%, #B45309 100%);
+  --primary-gradient-hover: linear-gradient(180deg, #F59E0B 0%, #D97706 100%);
+
+  --secondary: #78716C;
+  --secondary-glow: rgba(180, 83, 9, 0.05);
+  --indigo: #B45309;
+  --indigo-glow: rgba(180, 83, 9, 0.05);
+
+  --success: #15803D;
+  --success-bg: rgba(21, 128, 61, 0.08);
+  --error: #DC2626;
+  --error-bg: rgba(220, 38, 38, 0.06);
+  --warning: #D97706;
+  --warning-bg: rgba(217, 119, 6, 0.08);
+  --info: #B45309;
+  --info-bg: rgba(180, 83, 9, 0.07);
+
+  --text-primary: #292524;
+  --text-secondary: #57534E;
+  --text-muted: #78716C;
+  --text-inverse: #FFFFFF;
+
+  --shadow-sm: 0 1px 3px rgba(41, 37, 36, 0.04), 0 1px 2px rgba(41, 37, 36, 0.02);
+  --shadow-md: 0 4px 16px -2px rgba(41, 37, 36, 0.06), 0 2px 6px -1px rgba(41, 37, 36, 0.03);
+  --shadow-lg: 0 12px 32px -4px rgba(41, 37, 36, 0.08), 0 4px 12px -2px rgba(41, 37, 36, 0.04);
+  --card-top-glow: linear-gradient(90deg, transparent 0%, rgba(180, 83, 9, 0.16) 50%, transparent 100%);
+  --grid-line: rgba(120, 80, 40, 0.045);
+  --radial-glow: rgba(180, 83, 9, 0.07);
+}
+
+/* 10. Botanical Sage */
+[data-theme="sage"] {
+  color-scheme: light;
+  --bg-main: #F3F8F5;
+  --bg-surface: #E9F2EC;
+  --bg-surface-elevated: #DDEBE1;
+  --bg-surface-subtle: rgba(5, 150, 105, 0.06);
+  --bg-surface-hover: rgba(5, 150, 105, 0.1);
+  --bg-header: rgba(243, 248, 245, 0.94);
+
+  --glass-bg: rgba(233, 242, 236, 0.92);
+  --glass-border: #CFE2D5;
+  --glass-border-hover: #BED5C6;
+  --glass-border-focus: rgba(5, 150, 105, 0.4);
+  --modal-backdrop: rgba(6, 78, 59, 0.4);
+
+  --primary: #059669;
+  --primary-light: #10B981;
+  --primary-dark: #047857;
+  --primary-glow: rgba(5, 150, 105, 0.22);
+  --primary-gradient: linear-gradient(180deg, #10B981 0%, #059669 100%);
+  --primary-gradient-hover: linear-gradient(180deg, #34D399 0%, #10B981 100%);
+
+  --secondary: #4B6B5D;
+  --secondary-glow: rgba(5, 150, 105, 0.05);
+  --indigo: #059669;
+  --indigo-glow: rgba(5, 150, 105, 0.05);
+
+  --success: #059669;
+  --success-bg: rgba(5, 150, 105, 0.08);
+  --error: #E11D48;
+  --error-bg: rgba(225, 29, 72, 0.06);
+  --warning: #D97706;
+  --warning-bg: rgba(217, 119, 6, 0.08);
+  --info: #059669;
+  --info-bg: rgba(5, 150, 105, 0.07);
+
+  --text-primary: #064E3B;
+  --text-secondary: #065F46;
+  --text-muted: #4B6B5D;
+  --text-inverse: #FFFFFF;
+
+  --shadow-sm: 0 1px 3px rgba(6, 78, 59, 0.04), 0 1px 2px rgba(6, 78, 59, 0.02);
+  --shadow-md: 0 4px 16px -2px rgba(6, 78, 59, 0.06), 0 2px 6px -1px rgba(6, 78, 59, 0.03);
+  --shadow-lg: 0 12px 32px -4px rgba(6, 78, 59, 0.08), 0 4px 12px -2px rgba(6, 78, 59, 0.04);
+  --card-top-glow: linear-gradient(90deg, transparent 0%, rgba(5, 150, 105, 0.16) 50%, transparent 100%);
+  --grid-line: rgba(6, 78, 59, 0.045);
+  --radial-glow: rgba(5, 150, 105, 0.07);
+}
+
+/* 11. French Lavender */
+[data-theme="lavender"] {
+  color-scheme: light;
+  --bg-main: #F8F7FC;
+  --bg-surface: #F0EEF9;
+  --bg-surface-elevated: #E6E2F5;
+  --bg-surface-subtle: rgba(124, 58, 237, 0.05);
+  --bg-surface-hover: rgba(124, 58, 237, 0.09);
+  --bg-header: rgba(248, 247, 252, 0.94);
+
+  --glass-bg: rgba(240, 238, 249, 0.92);
+  --glass-border: #DDD8F0;
+  --glass-border-hover: #CDC6E7;
+  --glass-border-focus: rgba(124, 58, 237, 0.4);
+  --modal-backdrop: rgba(30, 21, 42, 0.45);
+
+  --primary: #7C3AED;
+  --primary-light: #8B5CF6;
+  --primary-dark: #6D28D9;
+  --primary-glow: rgba(124, 58, 237, 0.22);
+  --primary-gradient: linear-gradient(180deg, #8B5CF6 0%, #7C3AED 100%);
+  --primary-gradient-hover: linear-gradient(180deg, #A78BFA 0%, #8B5CF6 100%);
+
+  --secondary: #6B7280;
+  --secondary-glow: rgba(124, 58, 237, 0.05);
+  --indigo: #7C3AED;
+  --indigo-glow: rgba(124, 58, 237, 0.05);
+
+  --success: #10B981;
+  --success-bg: rgba(16, 185, 129, 0.08);
+  --error: #EF4444;
+  --error-bg: rgba(239, 68, 68, 0.06);
+  --warning: #F59E0B;
+  --warning-bg: rgba(245, 158, 11, 0.08);
+  --info: #7C3AED;
+  --info-bg: rgba(124, 58, 237, 0.07);
+
+  --text-primary: #1E152A;
+  --text-secondary: #5B4E75;
+  --text-muted: #7C7094;
+  --text-inverse: #FFFFFF;
+
+  --shadow-sm: 0 1px 3px rgba(30, 21, 42, 0.04), 0 1px 2px rgba(30, 21, 42, 0.02);
+  --shadow-md: 0 4px 16px -2px rgba(30, 21, 42, 0.06), 0 2px 6px -1px rgba(30, 21, 42, 0.03);
+  --shadow-lg: 0 12px 32px -4px rgba(30, 21, 42, 0.08), 0 4px 12px -2px rgba(30, 21, 42, 0.04);
+  --card-top-glow: linear-gradient(90deg, transparent 0%, rgba(124, 58, 237, 0.16) 50%, transparent 100%);
+  --grid-line: rgba(124, 58, 237, 0.04);
+  --radial-glow: rgba(124, 58, 237, 0.07);
+}
+
+/* 12. Riviera Coral */
+[data-theme="terracotta"] {
+  color-scheme: light;
+  --bg-main: #FCF8F7;
+  --bg-surface: #F8ECE9;
+  --bg-surface-elevated: #EFE0DC;
+  --bg-surface-subtle: rgba(225, 29, 72, 0.05);
+  --bg-surface-hover: rgba(225, 29, 72, 0.09);
+  --bg-header: rgba(252, 248, 247, 0.94);
+
+  --glass-bg: rgba(248, 236, 233, 0.92);
+  --glass-border: #EED7D2;
+  --glass-border-hover: #E3C3BC;
+  --glass-border-focus: rgba(225, 29, 72, 0.4);
+  --modal-backdrop: rgba(39, 20, 25, 0.45);
+
+  --primary: #E11D48;
+  --primary-light: #F43F5E;
+  --primary-dark: #BE123C;
+  --primary-glow: rgba(225, 29, 72, 0.22);
+  --primary-gradient: linear-gradient(180deg, #F43F5E 0%, #E11D48 100%);
+  --primary-gradient-hover: linear-gradient(180deg, #FB7185 0%, #F43F5E 100%);
+
+  --secondary: #6B7280;
+  --secondary-glow: rgba(225, 29, 72, 0.05);
+  --indigo: #E11D48;
+  --indigo-glow: rgba(225, 29, 72, 0.05);
+
+  --success: #10B981;
+  --success-bg: rgba(16, 185, 129, 0.08);
+  --error: #BE123C;
+  --error-bg: rgba(190, 18, 60, 0.06);
+  --warning: #D97706;
+  --warning-bg: rgba(217, 119, 6, 0.08);
+  --info: #E11D48;
+  --info-bg: rgba(225, 29, 72, 0.07);
+
+  --text-primary: #271419;
+  --text-secondary: #684B52;
+  --text-muted: #8E7077;
+  --text-inverse: #FFFFFF;
+
+  --shadow-sm: 0 1px 3px rgba(39, 20, 25, 0.04), 0 1px 2px rgba(39, 20, 25, 0.02);
+  --shadow-md: 0 4px 16px -2px rgba(39, 20, 25, 0.06), 0 2px 6px -1px rgba(39, 20, 25, 0.03);
+  --shadow-lg: 0 12px 32px -4px rgba(39, 20, 25, 0.08), 0 4px 12px -2px rgba(39, 20, 25, 0.04);
+  --card-top-glow: linear-gradient(90deg, transparent 0%, rgba(225, 29, 72, 0.16) 50%, transparent 100%);
+  --grid-line: rgba(225, 29, 72, 0.04);
+  --radial-glow: rgba(225, 29, 72, 0.07);
+}
+
+/* 13. Platinum Slate */
+[data-theme="slate"] {
+  color-scheme: light;
+  --bg-main: #F8FAFC;
+  --bg-surface: #EDF2F7;
+  --bg-surface-elevated: #E2E8F0;
+  --bg-surface-subtle: rgba(2, 132, 199, 0.05);
+  --bg-surface-hover: rgba(2, 132, 199, 0.09);
+  --bg-header: rgba(248, 250, 252, 0.94);
+
+  --glass-bg: rgba(237, 242, 247, 0.92);
+  --glass-border: #D6E0EA;
+  --glass-border-hover: #C3D1E0;
+  --glass-border-focus: rgba(2, 132, 199, 0.4);
+  --modal-backdrop: rgba(15, 23, 42, 0.45);
+
+  --primary: #0284C7;
+  --primary-light: #0EA5E9;
+  --primary-dark: #0369A1;
+  --primary-glow: rgba(2, 132, 199, 0.22);
+  --primary-gradient: linear-gradient(180deg, #0EA5E9 0%, #0284C7 100%);
+  --primary-gradient-hover: linear-gradient(180deg, #38BDF8 0%, #0EA5E9 100%);
+
+  --secondary: #64748B;
+  --secondary-glow: rgba(2, 132, 199, 0.05);
+  --indigo: #0284C7;
+  --indigo-glow: rgba(2, 132, 199, 0.05);
+
+  --success: #10B981;
+  --success-bg: rgba(16, 185, 129, 0.08);
+  --error: #EF4444;
+  --error-bg: rgba(239, 68, 68, 0.06);
+  --warning: #F59E0B;
+  --warning-bg: rgba(245, 158, 11, 0.08);
+  --info: #0284C7;
+  --info-bg: rgba(2, 132, 199, 0.07);
+
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
+  --text-inverse: #FFFFFF;
+
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+  --shadow-md: 0 4px 16px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+  --shadow-lg: 0 12px 32px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+  --card-top-glow: linear-gradient(90deg, transparent 0%, rgba(2, 132, 199, 0.16) 50%, transparent 100%);
+  --grid-line: rgba(15, 23, 42, 0.04);
+  --radial-glow: rgba(2, 132, 199, 0.07);
+}

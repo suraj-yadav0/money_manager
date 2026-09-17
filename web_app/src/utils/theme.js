@@ -86,6 +86,61 @@ export const ColorSchemes = [
     surface: '#FFFFFF',
     bg: '#F4F7FB',
     palette: ['#2563EB', '#3B82F6', '#60A5FA', '#1D4ED8', '#1E40AF', '#93C5FD', '#BFDBFE']
+  },
+  {
+    id: 'sandstone',
+    name: 'Dune Sandstone',
+    mode: 'light',
+    badge: 'Light',
+    description: 'Warm desert linen with rich espresso ink and amber bronze accents',
+    primary: '#B45309',
+    surface: '#F4EFEA',
+    bg: '#FBF9F5',
+    palette: ['#B45309', '#D97706', '#F59E0B', '#78350F', '#A16207', '#CA8A04', '#EAB308']
+  },
+  {
+    id: 'sage',
+    name: 'Botanical Sage',
+    mode: 'light',
+    badge: 'Light',
+    description: 'Crisp herbal eucalyptus with rich pine ink and mint accents',
+    primary: '#059669',
+    surface: '#E9F2EC',
+    bg: '#F3F8F5',
+    palette: ['#059669', '#10B981', '#047857', '#34D399', '#065F46', '#6EE7B7', '#022C22']
+  },
+  {
+    id: 'lavender',
+    name: 'French Lavender',
+    mode: 'light',
+    badge: 'Light',
+    description: 'Airy lilac alabaster with deep plum ink and electric iris accents',
+    primary: '#7C3AED',
+    surface: '#F0EEF9',
+    bg: '#F8F7FC',
+    palette: ['#7C3AED', '#8B5CF6', '#6D28D9', '#A78BFA', '#5B21B6', '#C4B5FD', '#4C1D95']
+  },
+  {
+    id: 'terracotta',
+    name: 'Riviera Coral',
+    mode: 'light',
+    badge: 'Light',
+    description: 'Sun-drenched warm stucco with crimson noir ink and coral accents',
+    primary: '#E11D48',
+    surface: '#F8ECE9',
+    bg: '#FCF8F7',
+    palette: ['#E11D48', '#F43F5E', '#BE123C', '#FB7185', '#9F1239', '#FDA4AF', '#881337']
+  },
+  {
+    id: 'slate',
+    name: 'Platinum Slate',
+    mode: 'light',
+    badge: 'Light',
+    description: 'Precision Swiss monochrome slate with sharp cobalt cyan accents',
+    primary: '#0284C7',
+    surface: '#EDF2F7',
+    bg: '#F8FAFC',
+    palette: ['#0284C7', '#0EA5E9', '#0369A1', '#38BDF8', '#075985', '#7DD3FC', '#0C4A6E']
   }
 ];
 

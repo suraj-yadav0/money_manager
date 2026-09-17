@@ -5,7 +5,6 @@ import { getTheme, isLightTheme } from './utils/theme.js';
 class AppStateManager {
   constructor() {
     this.listeners = new Set();
-    this.lastDarkTheme = 'dark';
     
     // Initial State Structure
     this.state = {
@@ -41,6 +40,9 @@ class AppStateManager {
       lastSyncedAt: null,       // ISO timestamp of last successful sync
       syncError: null
     };
+
+    this.lastDarkTheme = isLightTheme(this.state.theme) ? 'dark' : this.state.theme;
+    this.lastLightTheme = isLightTheme(this.state.theme) ? this.state.theme : 'light';
     
     // Apply theme on load
     document.documentElement.setAttribute('data-theme', this.state.theme);
@@ -67,7 +69,9 @@ class AppStateManager {
     localStorage.setItem('quantro_theme', validTheme);
     document.documentElement.setAttribute('data-theme', validTheme);
     this.updateMetaThemeColor(validTheme);
-    if (!isLightTheme(validTheme)) {
+    if (isLightTheme(validTheme)) {
+      this.lastLightTheme = validTheme;
+    } else {
       this.lastDarkTheme = validTheme;
     }
     if (this.state.userSettings) {
@@ -84,10 +88,11 @@ class AppStateManager {
     const current = document.documentElement.getAttribute('data-theme') || this.state.theme || 'dark';
     const isLight = isLightTheme(current);
     if (isLight) {
+      this.lastLightTheme = current;
       this.setTheme(this.lastDarkTheme || 'dark');
     } else {
       this.lastDarkTheme = current;
-      this.setTheme('light');
+      this.setTheme(this.lastLightTheme || 'light');
     }
   }
 

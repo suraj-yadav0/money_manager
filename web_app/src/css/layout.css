@@ -579,9 +579,8 @@
   transition: opacity var(--transition-smooth);
 }
 
-[data-theme="light"] .footer-display-wordmark,
-[data-theme="nordic"] .footer-display-wordmark {
-  background: linear-gradient(180deg, #0F172A 0%, rgba(15, 23, 42, 0.45) 60%, rgba(15, 23, 42, 0.12) 100%);
+:is([data-theme="light"], [data-theme="nordic"], [data-theme="sandstone"], [data-theme="sage"], [data-theme="lavender"], [data-theme="terracotta"], [data-theme="slate"]) .footer-display-wordmark {
+  background: linear-gradient(180deg, var(--text-primary) 0%, rgba(15, 23, 42, 0.45) 60%, rgba(15, 23, 42, 0.12) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   filter: none;
