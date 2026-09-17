@@ -1252,19 +1252,19 @@
 }
 
 .min-nav-btn:hover {
-  color: #FFFFFF;
-  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  background: var(--bg-surface-hover);
 }
 
 .min-nav-btn-solid {
-  background: #FFFFFF;
-  color: #000000;
+  background: var(--primary);
+  color: var(--text-inverse);
   font-weight: 700;
 }
 
 .min-nav-btn-solid:hover {
-  background: #E2E8F0;
-  color: #000000;
+  background: var(--primary-hover);
+  color: var(--text-inverse);
 }
 
 /* Centered Editorial Hero */
@@ -1301,7 +1301,7 @@
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 1.08;
-  color: #FFFFFF;
+  color: var(--text-primary);
   margin-bottom: 20px;
 }
 
@@ -1335,12 +1335,12 @@
 }
 
 .min-cta-primary {
-  background: #FFFFFF;
-  color: #000000;
+  background: var(--primary);
+  color: var(--text-inverse);
 }
 
 .min-cta-primary:hover {
-  background: #E2E8F0;
+  background: var(--primary-hover);
   transform: translateY(-1px);
 }
 
@@ -1364,11 +1364,11 @@
 }
 
 .min-preview-box {
-  background: #111215;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-surface);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: 0 24px 60px -15px rgba(0, 0, 0, 0.7);
+  box-shadow: var(--shadow-xl);
   position: relative;
 }
 
@@ -1550,7 +1550,7 @@
   font-size: 22px;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: #FFFFFF;
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
@@ -1560,11 +1560,11 @@
 }
 
 .min-auth-card {
-  background: #111215;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-surface);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: 32px 28px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-xl);
   position: relative;
 }
 

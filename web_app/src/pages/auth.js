@@ -4,6 +4,7 @@ import { AuthService } from '../auth.js';
 import { DbService } from '../db.js';
 import { CloudConfigModal } from './cloud-config-modal.js';
 import { SetupGuideModal } from './setup-guide-modal.js';
+import { ColorSchemes, isLightTheme } from '../utils/theme.js';
 
 export const AuthPage = {
   isSignUp: false,
@@ -31,6 +32,27 @@ export const AuthPage = {
             </a>
 
             <div class="min-header-actions">
+              <div class="theme-dropdown-wrapper">
+                <button class="min-nav-btn" id="landing-palette-btn" title="Choose Color Scheme" aria-label="Choose Color Scheme" style="padding: 8px 10px;">
+                  <span class="material-icons" style="font-size: 16px;">palette</span>
+                </button>
+                <div class="theme-dropdown-menu" id="landing-palette-menu">
+                  <div class="theme-dropdown-header">Color Scheme</div>
+                  ${ColorSchemes.map(s => `
+                    <button type="button" class="theme-dropdown-item ${s.id === state.theme ? 'active' : ''}" data-landing-scheme-id="${s.id}">
+                      <span class="theme-dropdown-dot" style="background: ${s.primary};"></span>
+                      <span class="theme-dropdown-name">${s.name}</span>
+                      <span class="theme-dropdown-badge">${s.badge}</span>
+                      ${s.id === state.theme ? '<span class="material-icons theme-dropdown-check">check</span>' : ''}
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+
+              <button class="min-nav-btn" id="landing-theme-toggle-btn" title="Toggle Light / Dark Mode" style="padding: 8px 10px;">
+                <span class="material-icons" style="font-size: 16px;">${isLightTheme(state.theme) ? 'dark_mode' : 'light_mode'}</span>
+              </button>
+
               <button class="min-nav-btn" id="nav-signin-btn">
                 <span>Sign In</span>
               </button>
@@ -583,6 +605,37 @@ export const AuthPage = {
     document.getElementById('auth-setup-guide-link')?.addEventListener('click', openSetupGuide);
     document.getElementById('footer-setup-guide-link')?.addEventListener('click', openSetupGuide);
     document.getElementById('footer-setup-guide-btn')?.addEventListener('click', openSetupGuide);
+
+    // Theme controls in landing header
+    const landingPaletteBtn = document.getElementById('landing-palette-btn');
+    const landingPaletteMenu = document.getElementById('landing-palette-menu');
+    if (landingPaletteBtn && landingPaletteMenu) {
+      landingPaletteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        landingPaletteMenu.classList.toggle('open');
+      });
+
+      landingPaletteMenu.querySelectorAll('[data-landing-scheme-id]').forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const schemeId = item.getAttribute('data-landing-scheme-id');
+          if (schemeId) {
+            StateManager.setTheme(schemeId);
+            landingPaletteMenu.classList.remove('open');
+          }
+        });
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!landingPaletteMenu.contains(e.target) && e.target !== landingPaletteBtn) {
+          landingPaletteMenu.classList.remove('open');
+        }
+      });
+    }
+
+    document.getElementById('landing-theme-toggle-btn')?.addEventListener('click', () => {
+      StateManager.toggleTheme();
+    });
 
     // Back to top
     document.getElementById('footer-back-to-top')?.addEventListener('click', () => {

@@ -12,6 +12,7 @@ import { CalendarPage } from './pages/calendar.js';
 import { AllTransactionsPage } from './pages/all-transactions.js';
 import { SetupGuideModal } from './pages/setup-guide-modal.js';
 import { DbService } from './db.js';
+import { ColorSchemes, isLightTheme } from './utils/theme.js';
 
 export const Router = {
   targetElement: null,
@@ -162,8 +163,25 @@ export const Router = {
                   </div>
                 `}
 
+                <div class="theme-dropdown-wrapper">
+                  <button class="btn-icon" id="header-palette-btn" title="Choose Color Scheme" aria-label="Choose Color Scheme">
+                    <span class="material-icons" style="font-size: 18px;">palette</span>
+                  </button>
+                  <div class="theme-dropdown-menu" id="header-palette-menu">
+                    <div class="theme-dropdown-header">Color Scheme</div>
+                    ${ColorSchemes.map(s => `
+                      <button type="button" class="theme-dropdown-item ${s.id === state.theme ? 'active' : ''}" data-scheme-id="${s.id}">
+                        <span class="theme-dropdown-dot" style="background: ${s.primary};"></span>
+                        <span class="theme-dropdown-name">${s.name}</span>
+                        <span class="theme-dropdown-badge">${s.badge}</span>
+                        ${s.id === state.theme ? '<span class="material-icons theme-dropdown-check">check</span>' : ''}
+                      </button>
+                    `).join('')}
+                  </div>
+                </div>
+
                 <button class="btn-icon" id="header-theme-btn" title="Toggle Light / Dark Mode">
-                  <span class="material-icons" style="font-size: 18px;">${state.theme === 'light' ? 'dark_mode' : 'light_mode'}</span>
+                  <span class="material-icons" style="font-size: 18px;">${isLightTheme(state.theme) ? 'dark_mode' : 'light_mode'}</span>
                 </button>
 
                 <button class="btn-primary" id="header-add-tx-btn">
@@ -406,6 +424,33 @@ export const Router = {
         AddTransactionModal.show(null);
       });
     });
+
+    // Theme palette dropdown in header
+    const paletteBtn = document.getElementById('header-palette-btn');
+    const paletteMenu = document.getElementById('header-palette-menu');
+    if (paletteBtn && paletteMenu) {
+      paletteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        paletteMenu.classList.toggle('open');
+      });
+
+      paletteMenu.querySelectorAll('[data-scheme-id]').forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const schemeId = item.getAttribute('data-scheme-id');
+          if (schemeId) {
+            StateManager.setTheme(schemeId);
+            paletteMenu.classList.remove('open');
+          }
+        });
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!paletteMenu.contains(e.target) && e.target !== paletteBtn) {
+          paletteMenu.classList.remove('open');
+        }
+      });
+    }
 
     // Theme toggle button in header
     document.getElementById('header-theme-btn')?.addEventListener('click', () => {
