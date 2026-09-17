@@ -25,17 +25,21 @@ export const IconHelper = {
     return iconMap[iconName] || 'category';
   },
 
-  // Emojis for Asset types
-  getAssetEmoji(type) {
-    const emojiMap = {
-      'savings': '💰',
-      'investment': '📈',
-      'property': '🏠',
-      'gold': '🥇',
-      'loan': '💳',
-      'other': '📦'
+  // Icons for Asset types
+  getAssetIcon(type) {
+    const iconMap = {
+      'savings': 'savings',
+      'investment': 'trending_up',
+      'property': 'home',
+      'gold': 'workspace_premium',
+      'loan': 'credit_card',
+      'other': 'inventory_2'
     };
-    return emojiMap[type] || '📦';
+    return iconMap[type] || 'inventory_2';
+  },
+
+  getAssetEmoji(type) {
+    return this.getAssetIcon(type);
   },
 
   // Asset Labels
