@@ -6,6 +6,7 @@ import { Formatters } from '../utils/formatters.js';
 import { IconHelper, findCategory, isInvestmentCategory, isCapitalAllocation } from '../utils/icons.js';
 import { Router } from '../router.js';
 import { reconcileGoalSavedAmounts, reconcileInvestmentAssets } from '../db.js';
+import { getTheme, isLightTheme, getThemePalette, hexToRgba } from '../utils/theme.js';
 
 // Register Chart.js
 Chart.register(...registerables);
@@ -23,7 +24,7 @@ export const DashboardPage = {
     const isLight = activeTheme === 'light';
     const stats = this.calculateStats(state);
     const recentTx = this.getRecentTransactions(state);
-    const topCategories = this.getTopCategories(state, stats.totalExpenses, isLight);
+    const topCategories = this.getTopCategories(state, stats.totalExpenses, activeTheme);
     const activeGoals = state.goals.filter(g => g.is_active !== false && !g.is_completed).slice(0, 2);
 
     return `
@@ -519,7 +520,7 @@ export const DashboardPage = {
       .slice(0, 6);
   },
 
-  getTopCategories(state, totalExpenses, isLight = false) {
+  getTopCategories(state, totalExpenses, themeId = 'dark') {
     if (!totalExpenses || totalExpenses <= 0) return [];
 
     const categoryMap = {};
@@ -540,9 +541,7 @@ export const DashboardPage = {
       categoryMap[name].count += 1;
     }
 
-    const colorsDark = ['#FFFFFF', '#E2E8F0', '#CBD5E1', '#94A3B8', '#64748B', '#475569', '#334155'];
-    const colorsLight = ['#0F172A', '#334155', '#475569', '#64748B', '#94A3B8', '#CBD5E1', '#E2E8F0'];
-    const palette = isLight ? colorsLight : colorsDark;
+    const palette = getThemePalette(themeId);
 
     const sorted = Object.values(categoryMap).sort((a, b) => b.amount - a.amount);
     
@@ -769,9 +768,9 @@ export const DashboardPage = {
 
     // Category breakdown row hover sync & drill down
     const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
-    const isLight = activeTheme === 'light';
+    const isLight = isLightTheme(activeTheme);
     const stats = this.calculateStats(state);
-    const topCats = this.getTopCategories(state, stats.totalExpenses, isLight);
+    const topCats = this.getTopCategories(state, stats.totalExpenses, activeTheme);
 
     const catRows = document.querySelectorAll('#dashboard-category-list .category-breakdown-row');
     catRows.forEach(row => {
@@ -828,11 +827,13 @@ export const DashboardPage = {
     }
 
     const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
-    const isLight = activeTheme === 'light';
+    const isLight = isLightTheme(activeTheme);
+    const themeObj = getTheme(activeTheme);
+    const primaryColor = themeObj.primary || (isLight ? '#0F172A' : '#FFFFFF');
     const textColor = isLight ? '#475569' : '#94A3B8';
     const gridColor = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
-    const tooltipBg = isLight ? '#FFFFFF' : '#11141E';
-    const tooltipTitle = isLight ? '#0F172A' : '#FFFFFF';
+    const tooltipBg = isLight ? '#FFFFFF' : (themeObj.surface || '#11141E');
+    const tooltipTitle = isLight ? '#0F172A' : (themeObj.primary || '#FFFFFF');
     const tooltipBorder = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)';
 
     const range = DateRangeHelper.getDateRange(state.dateFilter);
@@ -932,7 +933,7 @@ export const DashboardPage = {
 
     if (this.cashFlowViewMode === 'trajectory') {
       const gradientInflows = cashFlowCtx.getContext('2d').createLinearGradient(0, 0, 0, 240);
-      gradientInflows.addColorStop(0, isLight ? 'rgba(15, 23, 42, 0.12)' : 'rgba(255, 255, 255, 0.15)');
+      gradientInflows.addColorStop(0, hexToRgba(primaryColor, isLight ? 0.14 : 0.24));
       gradientInflows.addColorStop(1, 'transparent');
 
       const gradientOutflows = cashFlowCtx.getContext('2d').createLinearGradient(0, 0, 0, 240);
@@ -947,14 +948,14 @@ export const DashboardPage = {
             {
               label: 'Inflows',
               data: incomeCumulative,
-              borderColor: isLight ? '#0F172A' : '#FFFFFF',
+              borderColor: primaryColor,
               backgroundColor: gradientInflows,
               borderWidth: 2,
               tension: 0.35,
               fill: true,
               pointRadius: labels.length > 15 ? 0 : 3.5,
               pointHoverRadius: 6,
-              pointBackgroundColor: isLight ? '#0F172A' : '#FFFFFF'
+              pointBackgroundColor: primaryColor
             },
             {
               label: 'Outflows',
@@ -1022,7 +1023,7 @@ export const DashboardPage = {
       };
     } else if (this.cashFlowViewMode === 'net') {
       const netBarColors = dailyNetList.map(net => {
-        if (net >= 0) return isLight ? '#0F172A' : '#FFFFFF';
+        if (net >= 0) return primaryColor;
         return 'rgba(239, 68, 68, 0.85)';
       });
 
@@ -1102,7 +1103,7 @@ export const DashboardPage = {
             {
               label: 'Inflows',
               data: dailyIncomeList,
-              backgroundColor: isLight ? '#0F172A' : '#FFFFFF',
+              backgroundColor: primaryColor,
               borderRadius: 4,
               maxBarThickness: 16
             },
@@ -1179,9 +1180,9 @@ export const DashboardPage = {
     }
 
     const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
-    const isLight = activeTheme === 'light';
+    const isLight = isLightTheme(activeTheme);
     const stats = this.calculateStats(state);
-    const topCats = this.getTopCategories(state, stats.totalExpenses, isLight);
+    const topCats = this.getTopCategories(state, stats.totalExpenses, activeTheme);
 
     if (topCats.length > 0) {
       const labels = topCats.map(c => c.name);

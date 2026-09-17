@@ -4,6 +4,7 @@ import { StateManager } from '../state.js';
 import { DbService, reconcileInvestmentAssets } from '../db.js';
 import { Formatters } from '../utils/formatters.js';
 import { IconHelper, findCategory } from '../utils/icons.js';
+import { getTheme, isLightTheme, getThemePalette, hexToRgba } from '../utils/theme.js';
 
 Chart.register(...registerables);
 
@@ -149,11 +150,8 @@ export const NetWorthPage = {
     const { totalAssets, totalLiabilities, netWorth, debtRatio } = totals;
 
     const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
-    const isLight = activeTheme === 'light';
-
-    const colorsDark = ['#FFFFFF', '#E2E8F0', '#CBD5E1', '#94A3B8', '#64748B', '#475569', '#334155'];
-    const colorsLight = ['#0F172A', '#334155', '#475569', '#64748B', '#94A3B8', '#CBD5E1', '#E2E8F0'];
-    const palette = isLight ? colorsLight : colorsDark;
+    const isLight = isLightTheme(activeTheme);
+    const palette = getThemePalette(activeTheme);
 
     if (viewType === 'solvency') {
       const equity = Math.max(0, netWorth);
@@ -723,17 +721,19 @@ export const NetWorthPage = {
     }
 
     const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
-    const isLight = activeTheme === 'light';
+    const isLight = isLightTheme(activeTheme);
+    const themeObj = getTheme(activeTheme);
+    const primaryColor = themeObj.primary || (isLight ? '#0F172A' : '#FFFFFF');
     const textColor = isLight ? '#475569' : '#94A3B8';
     const gridColor = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
-    const tooltipBg = isLight ? '#FFFFFF' : '#11141E';
-    const tooltipTitle = isLight ? '#0F172A' : '#FFFFFF';
+    const tooltipBg = isLight ? '#FFFFFF' : (themeObj.surface || '#11141E');
+    const tooltipTitle = isLight ? '#0F172A' : (themeObj.primary || '#FFFFFF');
     const tooltipBorder = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)';
-    const lineColor = isLight ? '#0F172A' : '#FFFFFF';
+    const lineColor = primaryColor;
 
     const ctx = canvas.getContext('2d');
     const gradient = ctx.createLinearGradient(0, 0, 0, 240);
-    gradient.addColorStop(0, isLight ? 'rgba(15, 23, 42, 0.12)' : 'rgba(255, 255, 255, 0.15)');
+    gradient.addColorStop(0, hexToRgba(primaryColor, isLight ? 0.14 : 0.22));
     gradient.addColorStop(1, 'transparent');
 
     const allIdentical = trajectory.values.length > 0 &&
@@ -898,10 +898,11 @@ export const NetWorthPage = {
     if (!canvas) return;
 
     const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
-    const isLight = activeTheme === 'light';
+    const isLight = isLightTheme(activeTheme);
+    const themeObj = getTheme(activeTheme);
     const textColor = isLight ? '#475569' : '#94A3B8';
-    const tooltipBg = isLight ? '#FFFFFF' : '#11141E';
-    const tooltipTitle = isLight ? '#0F172A' : '#FFFFFF';
+    const tooltipBg = isLight ? '#FFFFFF' : (themeObj.surface || '#11141E');
+    const tooltipTitle = isLight ? '#0F172A' : (themeObj.primary || '#FFFFFF');
     const tooltipBorder = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)';
 
     allocationChartInstance = new Chart(canvas, {

@@ -4,6 +4,7 @@ import { StateManager } from '../state.js';
 import { Formatters } from '../utils/formatters.js';
 import { IconHelper, findCategory } from '../utils/icons.js';
 import { DbService } from '../db.js';
+import { getTheme, isLightTheme, getThemePalette } from '../utils/theme.js';
 
 Chart.register(...registerables);
 
@@ -16,7 +17,7 @@ export const AllTransactionsPage = {
   activeDateFilter: null, // string or null
   searchQuery: '',
 
-  getCategoryBreakdown(transactions, categories, activeType, isLight) {
+  getCategoryBreakdown(transactions, categories, activeType, themeId = 'dark') {
     const categoryMap = {};
     let totalTarget = 0;
 
@@ -36,9 +37,7 @@ export const AllTransactionsPage = {
       }
     });
 
-    const colorsDark = ['#FFFFFF', '#E2E8F0', '#CBD5E1', '#94A3B8', '#64748B', '#475569', '#334155'];
-    const colorsLight = ['#0F172A', '#334155', '#475569', '#64748B', '#94A3B8', '#CBD5E1', '#E2E8F0'];
-    const palette = isLight ? colorsLight : colorsDark;
+    const palette = getThemePalette(themeId);
 
     const sorted = Object.values(categoryMap).sort((a, b) => b.amount - a.amount);
     const items = sorted.map((c, idx) => ({
@@ -114,10 +113,10 @@ export const AllTransactionsPage = {
 
   render(state) {
     const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
-    const isLight = activeTheme === 'light';
+    const isLight = isLightTheme(activeTheme);
 
     const list = this.getFilteredTransactions(state);
-    const categoryBreakdown = this.getCategoryBreakdown(state.transactions, state.categories, this.activeTypeFilter, isLight);
+    const categoryBreakdown = this.getCategoryBreakdown(state.transactions, state.categories, this.activeTypeFilter, activeTheme);
 
     // Calculate totals on current filtered set
     let ledgerIncome = 0;
@@ -354,11 +353,13 @@ export const AllTransactionsPage = {
 
   renderCharts(state) {
     const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
-    const isLight = activeTheme === 'light';
+    const isLight = isLightTheme(activeTheme);
+    const themeObj = getTheme(activeTheme);
+    const primaryColor = themeObj.primary || (isLight ? '#0F172A' : '#FFFFFF');
     const textColor = isLight ? '#475569' : '#94A3B8';
     const gridColor = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
-    const tooltipBg = isLight ? '#FFFFFF' : '#11141E';
-    const tooltipTitle = isLight ? '#0F172A' : '#FFFFFF';
+    const tooltipBg = isLight ? '#FFFFFF' : (themeObj.surface || '#11141E');
+    const tooltipTitle = isLight ? '#0F172A' : (themeObj.primary || '#FFFFFF');
     const tooltipBorder = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)';
 
     // 1. Category Donut Chart
@@ -369,7 +370,7 @@ export const AllTransactionsPage = {
         ledgerCategoryChartInstance = null;
       }
 
-      const breakdown = this.getCategoryBreakdown(state.transactions, state.categories, this.activeTypeFilter, isLight);
+      const breakdown = this.getCategoryBreakdown(state.transactions, state.categories, this.activeTypeFilter, activeTheme);
       if (breakdown.items.length > 0) {
         ledgerCategoryChartInstance = new Chart(catCanvas, {
           type: 'doughnut',
@@ -465,8 +466,8 @@ export const AllTransactionsPage = {
 
       const timeline = this.getTimelineData(state.transactions);
       if (timeline.labels.length > 0) {
-        const barColor = isLight ? '#0F172A' : '#FFFFFF';
-        const barHoverColor = isLight ? '#334155' : '#CBD5E1';
+        const barColor = primaryColor;
+        const barHoverColor = themeObj.palette[1] || primaryColor;
 
         ledgerTimelineChartInstance = new Chart(timelineCanvas, {
           type: 'bar',
@@ -585,10 +586,10 @@ export const AllTransactionsPage = {
 
   updateLedgerView(state) {
     const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
-    const isLight = activeTheme === 'light';
+    const isLight = isLightTheme(activeTheme);
 
     const list = this.getFilteredTransactions(state);
-    const categoryBreakdown = this.getCategoryBreakdown(state.transactions, state.categories, this.activeTypeFilter, isLight);
+    const categoryBreakdown = this.getCategoryBreakdown(state.transactions, state.categories, this.activeTypeFilter, activeTheme);
 
     // Calculate totals on current filtered set
     let ledgerIncome = 0;
