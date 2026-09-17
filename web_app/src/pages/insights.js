@@ -1,7 +1,14 @@
 /* Modern AI Financial Intelligence & Wealth Matrix Insights Module */
+import { Chart, registerables } from 'chart.js';
 import { StateManager } from '../state.js';
 import { Formatters } from '../utils/formatters.js';
 import { findCategory, isInvestmentCategory } from '../utils/icons.js';
+import { getTheme, isLightTheme, getThemePalette, hexToRgba } from '../utils/theme.js';
+
+Chart.register(...registerables);
+
+let healthRadarChartInstance = null;
+let allocationComparisonChartInstance = null;
 
 export const InsightsPage = {
   activeCategoryFilter: 'all', // 'all', 'wealth', 'budget', 'solvency'
@@ -149,6 +156,43 @@ export const InsightsPage = {
             </div>
           </div>
 
+        </div>
+
+        <!-- Interactive Diagnostics & Visual Comparison -->
+        <div class="insights-charts-grid">
+          <!-- 5-Pillar Financial Health Radar Chart -->
+          <div class="fintech-card">
+            <div class="card-header">
+              <div class="card-title">
+                <span class="material-icons">radar</span>
+                <span>Financial Equilibrium Radar</span>
+              </div>
+              <span class="kpi-badge positive" style="font-size: 11px; font-weight: 700;">Score ${analysis.healthScore}/100</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+              Multi-axis diagnostic assessing solvency, runway, savings velocity, and spending discipline.
+            </div>
+            <div style="position: relative; height: 280px; width: 100%;">
+              <canvas id="health-radar-chart-canvas"></canvas>
+            </div>
+          </div>
+
+          <!-- 50/30/20 Target vs Actual Comparison Chart -->
+          <div class="fintech-card">
+            <div class="card-header">
+              <div class="card-title">
+                <span class="material-icons">donut_small</span>
+                <span>50/30/20 Benchmark Comparison</span>
+              </div>
+              <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">Actual vs Target</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+              Direct visual alignment between the gold-standard 50/30/20 formula and your actual cash allocation.
+            </div>
+            <div style="position: relative; height: 280px; width: 100%;">
+              <canvas id="allocation-comparison-chart-canvas"></canvas>
+            </div>
+          </div>
         </div>
 
         <!-- Filter Chips Bar -->
@@ -575,6 +619,215 @@ export const InsightsPage = {
         this.activeCategoryFilter = chip.getAttribute('data-type-filter');
         StateManager.notify();
       });
+    });
+
+    // Render interactive charts
+    this.renderCharts(state);
+  },
+
+  renderCharts(state) {
+    this.renderHealthRadarChart(state);
+    this.renderAllocationComparisonChart(state);
+  },
+
+  renderHealthRadarChart(state) {
+    const canvas = document.getElementById('health-radar-chart-canvas');
+    if (!canvas) return;
+
+    if (healthRadarChartInstance) {
+      healthRadarChartInstance.destroy();
+      healthRadarChartInstance = null;
+    }
+
+    const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
+    const isLight = isLightTheme(activeTheme);
+    const themeObj = getTheme(activeTheme);
+    const primaryColor = themeObj.primary || (isLight ? '#0F172A' : '#FFFFFF');
+    const textColor = isLight ? '#475569' : '#94A3B8';
+    const gridColor = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)';
+    const tooltipBg = isLight ? '#FFFFFF' : (themeObj.surface || '#11141E');
+    const tooltipTitle = isLight ? '#0F172A' : (themeObj.primary || '#FFFFFF');
+    const tooltipBorder = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)';
+
+    const analysis = this.analyzeFinances(state);
+    const s = analysis.scores;
+
+    const wealthScore = Math.min(100, Math.round((s.wealthRate / 35) * 100));
+    const budgetScore = Math.min(100, Math.round((s.budgetControl / 25) * 100));
+    const solvencyScore = Math.min(100, Math.round((s.solvency / 20) * 100));
+    const runwayScore = Math.min(100, Math.round((s.runway / 20) * 100));
+    const disciplineScore = Math.min(100, Math.round(analysis.healthScore));
+
+    const labels = [
+      'Wealth Velocity',
+      'Budget Discipline',
+      'Debt Solvency',
+      'Runway Cushion',
+      'Capital Quality'
+    ];
+    const data = [wealthScore, budgetScore, solvencyScore, runwayScore, disciplineScore];
+
+    healthRadarChartInstance = new Chart(canvas, {
+      type: 'radar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Health Equilibrium',
+          data,
+          backgroundColor: hexToRgba(primaryColor, 0.2),
+          borderColor: primaryColor,
+          borderWidth: 2,
+          pointBackgroundColor: primaryColor,
+          pointBorderColor: isLight ? '#FFFFFF' : '#111215',
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          r: {
+            min: 0,
+            max: 100,
+            ticks: {
+              display: false,
+              stepSize: 25
+            },
+            grid: {
+              color: gridColor
+            },
+            angleLines: {
+              color: gridColor
+            },
+            pointLabels: {
+              color: textColor,
+              font: {
+                family: 'Plus Jakarta Sans',
+                size: 11,
+                weight: '600'
+              }
+            }
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: tooltipBg,
+            titleColor: tooltipTitle,
+            bodyColor: textColor,
+            borderColor: tooltipBorder,
+            borderWidth: 1,
+            padding: 10,
+            callbacks: {
+              label: (ctx) => `${ctx.label}: ${ctx.raw}/100`
+            }
+          }
+        }
+      }
+    });
+  },
+
+  renderAllocationComparisonChart(state) {
+    const canvas = document.getElementById('allocation-comparison-chart-canvas');
+    if (!canvas) return;
+
+    if (allocationComparisonChartInstance) {
+      allocationComparisonChartInstance.destroy();
+      allocationComparisonChartInstance = null;
+    }
+
+    const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
+    const isLight = isLightTheme(activeTheme);
+    const themeObj = getTheme(activeTheme);
+    const primaryColor = themeObj.primary || (isLight ? '#0F172A' : '#FFFFFF');
+    const textColor = isLight ? '#475569' : '#94A3B8';
+    const gridColor = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
+    const tooltipBg = isLight ? '#FFFFFF' : (themeObj.surface || '#11141E');
+    const tooltipTitle = isLight ? '#0F172A' : (themeObj.primary || '#FFFFFF');
+    const tooltipBorder = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)';
+
+    const analysis = this.analyzeFinances(state);
+    const labels = ['Needs (Essentials)', 'Wants (Lifestyle)', 'Wealth (Investments)'];
+    const actualData = [analysis.needsPct, analysis.wantsPct, analysis.wealthPct];
+    const targetData = [50, 30, 20];
+
+    const actualColors = [
+      primaryColor,
+      isLight ? '#D97706' : '#F59E0B',
+      isLight ? '#16A34A' : '#10B981'
+    ];
+
+    allocationComparisonChartInstance = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Actual Share (%)',
+            data: actualData,
+            backgroundColor: actualColors,
+            borderRadius: 5,
+            maxBarThickness: 28
+          },
+          {
+            label: 'Target Benchmark (%)',
+            data: targetData,
+            backgroundColor: isLight ? 'rgba(15, 23, 42, 0.12)' : 'rgba(255, 255, 255, 0.12)',
+            borderColor: isLight ? 'rgba(15, 23, 42, 0.3)' : 'rgba(255, 255, 255, 0.3)',
+            borderWidth: 1,
+            borderRadius: 5,
+            maxBarThickness: 28
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: {
+              color: textColor,
+              font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' }
+            }
+          },
+          y: {
+            min: 0,
+            max: Math.max(100, ...actualData) > 100 ? undefined : 100,
+            grid: { color: gridColor },
+            ticks: {
+              color: textColor,
+              font: { family: 'JetBrains Mono', size: 10 },
+              callback: (v) => `${v}%`
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            align: 'end',
+            labels: {
+              boxWidth: 10,
+              boxHeight: 10,
+              color: textColor,
+              font: { family: 'Plus Jakarta Sans', size: 11 }
+            }
+          },
+          tooltip: {
+            backgroundColor: tooltipBg,
+            titleColor: tooltipTitle,
+            bodyColor: textColor,
+            borderColor: tooltipBorder,
+            borderWidth: 1,
+            padding: 10,
+            callbacks: {
+              label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y}%`
+            }
+          }
+        }
+      }
     });
   }
 };
