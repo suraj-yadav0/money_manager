@@ -1,8 +1,15 @@
 /* Modern Savings Goals & Milestones Module */
+import { Chart, registerables } from 'chart.js';
 import { StateManager } from '../state.js';
 import { DbService, reconcileGoalSavedAmounts } from '../db.js';
 import { Formatters } from '../utils/formatters.js';
 import { findCategory } from '../utils/icons.js';
+import { getTheme, isLightTheme, getThemePalette, hexToRgba } from '../utils/theme.js';
+
+Chart.register(...registerables);
+
+let goalsProgressChartInstance = null;
+let goalsDistributionChartInstance = null;
 
 export const GoalsPage = {
   activeGoalFilter: 'active', // 'active', 'completed', 'archived'
@@ -102,6 +109,45 @@ export const GoalsPage = {
             <button class="filter-chip ${this.activeGoalFilter === 'archived' ? 'active' : ''}" data-status="archived">Archived</button>
           </div>
         </div>
+
+        <!-- Interactive Goals Visualizations -->
+        ${goals.length > 0 ? `
+          <div class="goals-charts-grid" style="margin-bottom: 24px;">
+            <!-- Goal Targets Progress Bar Chart -->
+            <div class="fintech-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <span class="material-icons">track_changes</span>
+                  <span>Capital Accumulation Horizon</span>
+                </div>
+                <span class="kpi-badge positive" style="font-size: 11px; font-weight: 700;">${overallProgress}% Funded</span>
+              </div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+                Visual scale of current capital saved against target funding milestones.
+              </div>
+              <div style="position: relative; height: 260px; width: 100%;">
+                <canvas id="goals-progress-chart-canvas"></canvas>
+              </div>
+            </div>
+
+            <!-- Goal Capital Allocation Donut -->
+            <div class="fintech-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <span class="material-icons">pie_chart</span>
+                  <span>Milestone Portfolio Share</span>
+                </div>
+                <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">Saved Capital</span>
+              </div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+                Distribution of accumulated milestone wealth across your life targets.
+              </div>
+              <div style="position: relative; height: 260px; width: 100%;">
+                <canvas id="goals-distribution-chart-canvas"></canvas>
+              </div>
+            </div>
+          </div>
+        ` : ''}
 
         <!-- Goals Cards Grid -->
         ${goals.length === 0 ? `
@@ -242,6 +288,183 @@ export const GoalsPage = {
         const goal = state.goals.find(g => (syncId && g.sync_id === syncId) || (localId && String(g.id) === String(localId)));
         if (goal) this.showContributionHistoryModal(goal, state.goalContributions);
       });
+    });
+
+    // Render interactive charts
+    this.renderCharts(state);
+  },
+
+  renderCharts(state) {
+    this.renderGoalsProgressChart(state);
+    this.renderGoalsDistributionChart(state);
+  },
+
+  renderGoalsProgressChart(state) {
+    const canvas = document.getElementById('goals-progress-chart-canvas');
+    if (!canvas) return;
+
+    if (goalsProgressChartInstance) {
+      goalsProgressChartInstance.destroy();
+      goalsProgressChartInstance = null;
+    }
+
+    const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
+    const isLight = isLightTheme(activeTheme);
+    const themeObj = getTheme(activeTheme);
+    const primaryColor = themeObj.primary || (isLight ? '#0F172A' : '#FFFFFF');
+    const textColor = isLight ? '#475569' : '#94A3B8';
+    const gridColor = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
+    const tooltipBg = isLight ? '#FFFFFF' : (themeObj.surface || '#11141E');
+    const tooltipTitle = isLight ? '#0F172A' : (themeObj.primary || '#FFFFFF');
+    const tooltipBorder = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)';
+
+    const goals = this.getFilteredGoals(state);
+    if (goals.length === 0) return;
+
+    const labels = goals.map(g => g.name);
+    const savedData = goals.map(g => Number(g.savedAmount || g.saved_amount || 0));
+    const remainingData = goals.map(g => {
+      const target = Number(g.targetAmount || g.target_amount || 0);
+      const saved = Number(g.savedAmount || g.saved_amount || 0);
+      return Math.max(0, target - saved);
+    });
+
+    goalsProgressChartInstance = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Saved Capital',
+            data: savedData,
+            backgroundColor: isLight ? '#16A34A' : '#10B981',
+            borderRadius: 4,
+            maxBarThickness: 18
+          },
+          {
+            label: 'Remaining to Target',
+            data: remainingData,
+            backgroundColor: isLight ? 'rgba(15, 23, 42, 0.12)' : 'rgba(255, 255, 255, 0.12)',
+            borderColor: isLight ? 'rgba(15, 23, 42, 0.25)' : 'rgba(255, 255, 255, 0.25)',
+            borderWidth: 1,
+            borderRadius: 4,
+            maxBarThickness: 18
+          }
+        ]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            stacked: true,
+            grid: { color: gridColor },
+            ticks: {
+              color: textColor,
+              font: { family: 'JetBrains Mono', size: 10 },
+              callback: (v) => Formatters.compactCurrency(v)
+            }
+          },
+          y: {
+            stacked: true,
+            grid: { display: false },
+            ticks: {
+              color: textColor,
+              font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' }
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            align: 'end',
+            labels: {
+              boxWidth: 10,
+              boxHeight: 10,
+              color: textColor,
+              font: { family: 'Plus Jakarta Sans', size: 11 }
+            }
+          },
+          tooltip: {
+            backgroundColor: tooltipBg,
+            titleColor: tooltipTitle,
+            bodyColor: textColor,
+            borderColor: tooltipBorder,
+            borderWidth: 1,
+            padding: 10,
+            callbacks: {
+              label: (ctx) => `${ctx.dataset.label}: ${Formatters.currency(ctx.parsed.x)}`
+            }
+          }
+        }
+      }
+    });
+  },
+
+  renderGoalsDistributionChart(state) {
+    const canvas = document.getElementById('goals-distribution-chart-canvas');
+    if (!canvas) return;
+
+    if (goalsDistributionChartInstance) {
+      goalsDistributionChartInstance.destroy();
+      goalsDistributionChartInstance = null;
+    }
+
+    const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
+    const isLight = isLightTheme(activeTheme);
+    const themeObj = getTheme(activeTheme);
+    const palette = getThemePalette(activeTheme);
+    const textColor = isLight ? '#475569' : '#94A3B8';
+    const tooltipBg = isLight ? '#FFFFFF' : (themeObj.surface || '#11141E');
+    const tooltipTitle = isLight ? '#0F172A' : (themeObj.primary || '#FFFFFF');
+    const tooltipBorder = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)';
+
+    const goals = this.getFilteredGoals(state);
+    if (goals.length === 0) return;
+
+    const labels = goals.map(g => g.name);
+    const data = goals.map(g => Number(g.savedAmount || g.saved_amount || 0));
+    const totalSaved = data.reduce((s, v) => s + v, 0);
+
+    const bgColors = goals.map((g, i) => palette[i % palette.length]);
+
+    goalsDistributionChartInstance = new Chart(canvas, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{
+          data: totalSaved > 0 ? data : [1],
+          backgroundColor: totalSaved > 0 ? bgColors : [isLight ? '#E2E8F0' : '#1E293B'],
+          borderWidth: 0,
+          hoverOffset: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '68%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: tooltipBg,
+            titleColor: tooltipTitle,
+            bodyColor: textColor,
+            borderColor: tooltipBorder,
+            borderWidth: 1,
+            padding: 10,
+            callbacks: {
+              label: (ctx) => {
+                if (totalSaved === 0) return 'No funds allocated yet';
+                const val = ctx.parsed;
+                const pct = totalSaved > 0 ? ((val / totalSaved) * 100).toFixed(1) : 0;
+                return `${ctx.label}: ${Formatters.currency(val)} (${pct}%)`;
+              }
+            }
+          }
+        }
+      }
     });
   },
 
