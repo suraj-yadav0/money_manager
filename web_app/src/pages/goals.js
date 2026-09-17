@@ -106,7 +106,7 @@ export const GoalsPage = {
         <!-- Goals Cards Grid -->
         ${goals.length === 0 ? `
           <div class="fintech-card" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
-            <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--bg-surface-subtle); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
               <span class="material-icons" style="font-size: 28px; opacity: 0.5;">savings</span>
             </div>
             <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">No goals found in this view</div>
@@ -518,7 +518,7 @@ export const GoalsPage = {
           ${combinedEntries.length === 0 ? `
             <div style="text-align: center; padding: 32px 0; color: var(--text-muted); font-size: 13px;">No deposits or linked transactions recorded for this goal yet.</div>
           ` : combinedEntries.map(c => `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: var(--radius-md);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: var(--bg-surface-subtle); border: 1px solid var(--glass-border); border-radius: var(--radius-md);">
               <div>
                 <div style="font-weight: 700; font-size: 15px; color: var(--success);">+${Formatters.currency(c.amount)}</div>
                 <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">${c.note}</div>

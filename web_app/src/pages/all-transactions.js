@@ -309,7 +309,7 @@ export const AllTransactionsPage = {
         <div class="fintech-card" style="padding: 16px 20px;" id="ledger-card-body">
           ${list.length === 0 ? `
             <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
-              <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+              <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--bg-surface-subtle); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
                 <span class="material-icons" style="font-size: 28px; opacity: 0.5;">search_off</span>
               </div>
               <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">No matching transactions found</div>
@@ -699,7 +699,7 @@ export const AllTransactionsPage = {
       if (list.length === 0) {
         listCardBody.innerHTML = `
           <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
-            <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--bg-surface-subtle); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
               <span class="material-icons" style="font-size: 28px; opacity: 0.5;">search_off</span>
             </div>
             <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">No matching transactions found</div>

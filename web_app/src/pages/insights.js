@@ -76,17 +76,17 @@ export const InsightsPage = {
               <div>
                 <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">
                   <span>Debt Solvency</span>
-                  <span style="font-weight: 700; color: #a855f7;">${analysis.scores.solvency}/20</span>
+                  <span style="font-weight: 700; color: var(--indigo);">${analysis.scores.solvency}/20</span>
                 </div>
                 <div class="progress-track" style="height: 4px;">
-                  <div class="progress-bar-fill" style="width: ${(analysis.scores.solvency / 20) * 100}%; background: #a855f7;"></div>
+                  <div class="progress-bar-fill" style="width: ${(analysis.scores.solvency / 20) * 100}%; background: var(--indigo);"></div>
                 </div>
               </div>
 
               <div>
                 <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">
                   <span>Runway Cushion</span>
-                  <span style="font-weight: 700; color: #f59e0b;">${analysis.scores.runway}/20</span>
+                  <span style="font-weight: 700; color: var(--warning);">${analysis.scores.runway}/20</span>
                 </div>
                 <div class="progress-track" style="height: 4px;">
                   <div class="progress-bar-fill warning" style="width: ${(analysis.scores.runway / 20) * 100}%;"></div>
@@ -101,7 +101,7 @@ export const InsightsPage = {
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                 <span style="font-size: 14px; font-weight: 700; color: var(--text-primary);">50/30/20 Capital Allocation Matrix</span>
                 <span style="font-size: 12px; font-weight: 700; color: ${analysis.wealthPct >= 20 ? 'var(--success)' : 'var(--text-muted)'};">
-                  ${analysis.wealthPct >= 20 ? '🎉 Wealth Target Beaten!' : 'Target: 20%+ Wealth'}
+                  ${analysis.wealthPct >= 20 ? 'Wealth Target Beaten' : 'Target: 20%+ Wealth'}
                 </span>
               </div>
               <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Needs (50%) • Wants (30%) • Wealth & Investments (20%+)</p>
@@ -126,7 +126,7 @@ export const InsightsPage = {
 
                 <div class="alloc-legend-item">
                   <div style="font-size: 12px; font-weight: 700; color: var(--text-primary);">
-                    <span class="alloc-dot" style="background: #f59e0b;"></span>Wants (${analysis.wantsPct}%)
+                    <span class="alloc-dot" style="background: var(--warning);"></span>Wants (${analysis.wantsPct}%)
                   </div>
                   <div style="font-size: 13px; font-weight: 800; color: var(--text-secondary); margin-left: 14px;">
                     ${Formatters.currency(analysis.wantsAmount)}
@@ -144,7 +144,7 @@ export const InsightsPage = {
               </div>
             </div>
 
-            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 10px 14px; border-radius: var(--radius-md); font-size: 12px; color: var(--text-secondary);">
+            <div style="background: var(--bg-surface-subtle); border: 1px solid var(--glass-border); padding: 10px 14px; border-radius: var(--radius-md); font-size: 12px; color: var(--text-secondary);">
               <b>Allocation Verdict:</b> ${analysis.allocationVerdict}
             </div>
           </div>
@@ -174,7 +174,7 @@ export const InsightsPage = {
         <!-- Insights List Feed -->
         ${filteredInsights.length === 0 ? `
           <div class="fintech-card" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
-            <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--bg-surface-subtle); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
               <span class="material-icons" style="font-size: 28px; opacity: 0.5;">check_circle</span>
             </div>
             <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">No alerts in this category</div>
@@ -217,8 +217,8 @@ export const InsightsPage = {
                     </div>
                     <div class="insight-desc">${item.description}</div>
                     ${item.tip ? `
-                      <div class="insight-tip" style="${isPraise ? 'border-left-color: var(--success); background: rgba(0, 229, 153, 0.05);' : ''}">
-                        <b>${isPraise ? '💡 Wealth Acceleration Strategy:' : '💡 Actionable Strategy:'}</b> ${item.tip}
+                      <div class="insight-tip" style="${isPraise ? 'border-left-color: var(--success); background: var(--success-bg);' : ''}">
+                        <b>${isPraise ? 'Wealth Acceleration Strategy:' : 'Actionable Strategy:'}</b> ${item.tip}
                       </div>
                     ` : ''}
                   </div>
@@ -539,11 +539,11 @@ export const InsightsPage = {
 
     let allocationVerdict = 'Optimal 50/30/20 balance. High wealth allocation and lean living costs.';
     if (wealthPct >= 30) {
-      allocationVerdict = `🔥 Supercharged Wealth Velocity! You are routing ${wealthPct}% of your money into assets and compounding investments.`;
+      allocationVerdict = `Supercharged Wealth Velocity: You are routing ${wealthPct}% of your money into assets and compounding investments.`;
     } else if (wealthPct >= 20) {
-      allocationVerdict = `✅ Golden Rule Met! ${wealthPct}% allocated to wealth creation exceeds standard 20% financial independence targets.`;
+      allocationVerdict = `Target Met: ${wealthPct}% allocated to wealth creation exceeds standard 20% financial independence targets.`;
     } else if (wantsPct > 45) {
-      allocationVerdict = `⚠️ Discretionary Wants (${wantsPct}%) are higher than recommended. Shift 10% into automated investments.`;
+      allocationVerdict = `Caution: Discretionary Wants (${wantsPct}%) are higher than recommended. Shift 10% into automated investments.`;
     }
 
     return {

@@ -391,7 +391,7 @@ export const AddTransactionModal = {
     pills.forEach(pill => {
       const catId = pill.getAttribute('data-cat-id');
       const isSelected = String(catId) === String(selectedCatId);
-      pill.style.background = isSelected ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255,255,255,0.03)';
+      pill.style.background = isSelected ? 'var(--primary-glow)' : 'var(--bg-surface-subtle)';
       pill.style.borderColor = isSelected ? 'var(--primary)' : 'var(--glass-border)';
       const icon = pill.querySelector('.material-icons');
       if (icon) icon.style.color = isSelected ? 'var(--primary)' : 'var(--text-muted)';

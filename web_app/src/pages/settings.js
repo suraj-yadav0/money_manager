@@ -119,9 +119,9 @@ export const SettingsPage = {
                   <div class="theme-card ${isActive ? 'active' : ''}" data-theme-id="${scheme.id}" title="Activate ${scheme.name}">
                     <div class="theme-card-header">
                       <div class="theme-swatch-strip">
-                        <span class="theme-swatch-dot" style="background: ${scheme.bg}; border: 1px solid rgba(255,255,255,0.2);"></span>
-                        <span class="theme-swatch-dot" style="background: ${scheme.surface}; border: 1px solid rgba(255,255,255,0.2);"></span>
-                        <span class="theme-swatch-dot" style="background: ${scheme.primary}; box-shadow: 0 0 6px ${scheme.primary}66;"></span>
+                        <span class="theme-swatch-dot" style="background: ${scheme.bg}; border: 1px solid var(--glass-border);"></span>
+                        <span class="theme-swatch-dot" style="background: ${scheme.surface}; border: 1px solid var(--glass-border);"></span>
+                        <span class="theme-swatch-dot" style="background: ${scheme.primary}; box-shadow: 0 0 6px ${scheme.primary}66; border: 1px solid var(--glass-border);"></span>
                       </div>
                       <span class="theme-mode-tag">${scheme.badge}</span>
                     </div>
@@ -201,7 +201,7 @@ export const SettingsPage = {
           ` : ''}
 
           <!-- Reset Local Storage -->
-          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--error-bg); border: 1px solid rgba(255, 51, 102, 0.25); padding: 16px 20px; border-radius: var(--radius-md); cursor: pointer;" id="settings-reset-row">
+          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--error-bg); border: 1px solid var(--glass-border); padding: 16px 20px; border-radius: var(--radius-md); cursor: pointer;" id="settings-reset-row">
             <div>
               <div style="font-weight: 700; font-size: 15px; color: var(--error);">Reset Local Cache</div>
               <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Purge local browser cache without affecting cloud data</div>

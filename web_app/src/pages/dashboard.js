@@ -218,7 +218,7 @@ export const DashboardPage = {
 
               ${recentTx.length === 0 ? `
                 <div style="text-align: center; padding: 48px 20px; color: var(--text-muted);">
-                  <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                  <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--bg-surface-subtle); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
                     <span class="material-icons" style="font-size: 28px; opacity: 0.5;">receipt</span>
                   </div>
                   <div style="font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">No transactions recorded yet</div>
@@ -300,7 +300,7 @@ export const DashboardPage = {
             <!-- Financial Intelligence Advice Card -->
             <div class="fintech-card">
               <div style="display: flex; gap: 14px; align-items: flex-start;">
-                <div class="tx-icon-box" style="width: 36px; height: 36px; border-radius: 8px; background: rgba(255, 255, 255, 0.08); color: var(--text-primary);">
+                <div class="tx-icon-box" style="width: 36px; height: 36px; border-radius: 8px; background: var(--bg-surface-subtle); border: 1px solid var(--glass-border); color: var(--text-primary);">
                   <span class="material-icons" style="font-size: 18px;">insights</span>
                 </div>
                 <div>

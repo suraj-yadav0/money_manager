@@ -90,7 +90,7 @@ export const BudgetPage = {
             <div class="kpi-card">
               <div class="kpi-top">
                 <span class="kpi-label">Monthly Budget Pool</span>
-                <div class="kpi-icon-box" style="background: rgba(16, 185, 129, 0.12); color: var(--primary);">
+                <div class="kpi-icon-box" style="background: var(--success-bg); color: var(--success);">
                   <span class="material-icons" style="font-size: 20px;">account_balance_wallet</span>
                 </div>
               </div>
@@ -105,7 +105,7 @@ export const BudgetPage = {
             <div class="kpi-card">
               <div class="kpi-top">
                 <span class="kpi-label">Total Spent in Period</span>
-                <div class="kpi-icon-box" style="background: rgba(244, 63, 94, 0.12); color: var(--error);">
+                <div class="kpi-icon-box" style="background: var(--error-bg); color: var(--error);">
                   <span class="material-icons" style="font-size: 20px;">shopping_bag</span>
                 </div>
               </div>
@@ -120,7 +120,7 @@ export const BudgetPage = {
             <div class="kpi-card">
               <div class="kpi-top">
                 <span class="kpi-label">Remaining Margin</span>
-                <div class="kpi-icon-box" style="background: ${stats.totalRemaining >= 0 ? 'rgba(56, 189, 248, 0.12)' : 'rgba(244, 63, 94, 0.12)'}; color: ${stats.totalRemaining >= 0 ? 'var(--secondary)' : 'var(--error)'};">
+                <div class="kpi-icon-box" style="background: ${stats.totalRemaining >= 0 ? 'var(--secondary-glow)' : 'var(--error-bg)'}; color: ${stats.totalRemaining >= 0 ? 'var(--secondary)' : 'var(--error)'};">
                   <span class="material-icons" style="font-size: 20px;">savings</span>
                 </div>
               </div>
@@ -137,7 +137,7 @@ export const BudgetPage = {
             <div class="kpi-card">
               <div class="kpi-top">
                 <span class="kpi-label">Daily Safe Allowance</span>
-                <div class="kpi-icon-box" style="background: rgba(99, 102, 241, 0.12); color: var(--indigo);">
+                <div class="kpi-icon-box" style="background: var(--indigo-glow); color: var(--indigo);">
                   <span class="material-icons" style="font-size: 20px;">today</span>
                 </div>
               </div>
@@ -153,7 +153,7 @@ export const BudgetPage = {
 
         <!-- Smart Budget Recommendations Banner (if any) -->
         ${suggestionEntries.length > 0 ? `
-          <div class="fintech-card" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.08) 0%, rgba(99, 102, 241, 0.04) 100%); border-color: rgba(56, 189, 248, 0.25);">
+          <div class="fintech-card" style="background: var(--bg-surface-subtle); border-color: var(--glass-border-hover);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
               <span class="material-icons" style="color: var(--secondary); font-size: 22px;">tips_and_updates</span>
               <span style="font-weight: 700; font-size: 16px; color: var(--text-primary);">Smart Budget Recommendations (3-Month Prior Average)</span>
@@ -164,7 +164,7 @@ export const BudgetPage = {
                 const currentBudget = Number(cat ? (cat.monthly_budget || cat.monthlyBudget || 0) : 0);
                 if (currentBudget === avg) return '';
                 return `
-                  <div style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 8px 14px; border-radius: var(--radius-md); display: flex; align-items: center; gap: 12px;">
+                  <div style="background: var(--bg-surface-subtle); border: 1px solid var(--glass-border); padding: 8px 14px; border-radius: var(--radius-md); display: flex; align-items: center; gap: 12px;">
                     <span style="font-size: 13px; color: var(--text-secondary);">Set <b>${catName}</b> to <b>${Formatters.currency(avg)}</b></span>
                     <button class="btn-primary apply-suggestion-btn" 
                             style="padding: 4px 12px; font-size: 12px;"
@@ -191,7 +191,7 @@ export const BudgetPage = {
 
           ${stats.categoryStats.length === 0 ? `
             <div class="fintech-card" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
-              <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+              <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--bg-surface-subtle); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
                 <span class="material-icons" style="font-size: 28px; opacity: 0.5;">pie_chart_outline</span>
               </div>
               <div style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">No category budgets assigned yet</div>

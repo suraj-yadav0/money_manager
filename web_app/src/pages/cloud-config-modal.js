@@ -109,14 +109,14 @@ export const CloudConfigModal = {
 
           <!-- Alert messages -->
           ${this.errorMessage ? `
-            <div style="background: var(--error-bg); border: 1px solid rgba(244, 63, 94, 0.3); color: #FDA4AF; padding: 10px 14px; border-radius: var(--radius-md); font-size: 12.5px; display: flex; align-items: center; gap: 8px;">
+            <div style="background: var(--error-bg); border: 1px solid var(--glass-border); color: var(--error); padding: 10px 14px; border-radius: var(--radius-md); font-size: 12.5px; display: flex; align-items: center; gap: 8px;">
               <span class="material-icons" style="font-size: 16px; color: var(--error);">error_outline</span>
               <span>${this.errorMessage}</span>
             </div>
           ` : ''}
 
           ${this.successMessage ? `
-            <div style="background: var(--success-bg); border: 1px solid rgba(16, 185, 129, 0.3); color: #86EFAC; padding: 10px 14px; border-radius: var(--radius-md); font-size: 12.5px; display: flex; align-items: center; gap: 8px;">
+            <div style="background: var(--success-bg); border: 1px solid var(--glass-border); color: var(--success); padding: 10px 14px; border-radius: var(--radius-md); font-size: 12.5px; display: flex; align-items: center; gap: 8px;">
               <span class="material-icons" style="font-size: 16px; color: var(--success);">check_circle</span>
               <span>${this.successMessage}</span>
             </div>

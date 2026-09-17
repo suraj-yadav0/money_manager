@@ -21,14 +21,14 @@ export const OnboardingPage = {
     return `
       <div class="onboarding-container animate-fade-in" style="min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; padding: 40px 20px;">
         <div style="display: flex; justify-content: flex-end;">
-          <button class="btn btn-outline" id="welcome-signin-link" style="width: auto; padding: 6px 14px; font-size: 13px; border-color: rgba(255,255,255,0.15);">
+          <button class="btn btn-outline" id="welcome-signin-link" style="width: auto; padding: 6px 14px; font-size: 13px; border: 1px solid var(--glass-border);">
             <span class="material-icons" style="font-size: 16px; margin-right: 4px;">login</span> Sign In
           </button>
         </div>
         
         <div style="text-align: center;">
-          <div class="onboarding-logo" style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary) 0%, #FF8C42 100%); border-radius: 24px; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; box-shadow: 0 12px 30px rgba(255, 95, 31, 0.35);">
-            <span class="material-icons" style="font-size: 48px; color: #FFF;">account_balance_wallet</span>
+          <div class="onboarding-logo" style="width: 80px; height: 80px; background: var(--primary); border-radius: 24px; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; box-shadow: 0 12px 30px var(--primary-glow);">
+            <span class="material-icons" style="font-size: 48px; color: var(--text-inverse);">account_balance_wallet</span>
           </div>
           <h1 class="onboarding-title" style="font-size: 32px; font-weight: 800; margin-bottom: 12px;">Welcome to<br>Money Manager</h1>
           <p class="onboarding-desc" style="color: var(--text-secondary); font-size: 15px; line-height: 1.5;">Take full control of your finances.<br>Know exactly where your money goes.</p>
@@ -59,7 +59,7 @@ export const OnboardingPage = {
           
           <div style="position: relative; display: flex; align-items: center; justify-content: center;">
             <span style="font-size: 32px; font-weight: 700; color: var(--primary); margin-right: 8px;">₹</span>
-            <input type="number" class="onboarding-income-input" id="income-field" placeholder="50000" value="${this.incomeInputVal}" style="font-size: 36px; font-weight: 700; width: 220px; text-align: center; border-bottom: 2px solid var(--primary); background: transparent; color: #FFF;">
+            <input type="number" class="onboarding-income-input" id="income-field" placeholder="50000" value="${this.incomeInputVal}" style="font-size: 36px; font-weight: 700; width: 220px; text-align: center; border-bottom: 2px solid var(--primary); background: transparent; color: var(--text-primary);">
           </div>
           <div id="income-error-msg" style="color: var(--error); text-align: center; font-size: 13px; margin-top: 16px; display: none;">Please enter a valid amount.</div>
         </div>
@@ -77,7 +77,7 @@ export const OnboardingPage = {
       <div class="onboarding-container animate-fade-in" style="min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; padding: 40px 20px;">
         <div></div>
         <div style="text-align: center;">
-          <div style="width: 90px; height: 90px; background: rgba(255, 95, 31, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; border: 1px solid rgba(255, 95, 31, 0.3);">
+          <div style="width: 90px; height: 90px; background: var(--primary-glow); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; border: 1px solid var(--primary);">
             <span class="material-icons" style="font-size: 46px; color: var(--primary);">done</span>
           </div>
           <h2 style="font-size: 28px; font-weight: 700; margin-bottom: 16px;">You're all set!</h2>
