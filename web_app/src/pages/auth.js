@@ -105,8 +105,8 @@ export const AuthPage = {
                 <div class="min-preview-chip">
                   <span>DRIFT SQLITE // AES-256 CLIENT ENCRYPTED</span>
                 </div>
-                <div class="min-pulse-indicator" style="font-size: 10px; font-family: var(--font-mono); color: #4ADE80;">
-                  <span class="min-eyebrow-dot" style="width: 5px; height: 5px;"></span>
+                <div class="min-pulse-indicator" style="font-size: 10px; font-family: var(--font-mono); color: var(--success); display: inline-flex; align-items: center; gap: 5px;">
+                  <span class="min-eyebrow-dot" style="width: 6px; height: 6px;"></span>
                   <span>ACTIVE</span>
                 </div>
               </div>
@@ -117,8 +117,8 @@ export const AuthPage = {
                     <div class="min-metric-label">Net Reserve</div>
                     <div class="min-metric-number">₹2,48,500</div>
                     <div class="min-metric-meta">
-                      <span class="material-icons" style="font-size: 13px; color: var(--text-primary);">trending_up</span>
-                      <span style="color: var(--text-primary);">+14.2% MoM</span>
+                      <span class="material-icons" style="font-size: 13px; color: var(--success);">trending_up</span>
+                      <span style="color: var(--success); font-weight: 600;">+14.2% MoM</span>
                     </div>
                   </div>
 
@@ -126,7 +126,7 @@ export const AuthPage = {
                     <div class="min-metric-label">Daily Burn Velocity</div>
                     <div class="min-metric-number">₹1,180</div>
                     <div class="min-metric-meta">
-                      <span class="material-icons" style="font-size: 13px;">check_circle</span>
+                      <span class="material-icons" style="font-size: 13px; color: var(--text-secondary);">check_circle</span>
                       <span>Within Target</span>
                     </div>
                   </div>
@@ -135,7 +135,7 @@ export const AuthPage = {
                     <div class="min-metric-label">Projected Runway</div>
                     <div class="min-metric-number">18.4 <span style="font-size: 14px; font-weight: 500; color: var(--text-muted);">Mos</span></div>
                     <div class="min-metric-meta">
-                      <span class="material-icons" style="font-size: 13px;">savings</span>
+                      <span class="material-icons" style="font-size: 13px; color: var(--text-secondary);">savings</span>
                       <span>SIP Capital Protected</span>
                     </div>
                   </div>
@@ -150,13 +150,13 @@ export const AuthPage = {
                   <svg class="min-chart-svg" viewBox="0 0 760 70" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <defs>
                       <linearGradient id="minCurveGrad" x1="0" y1="0" x2="0" y2="70" gradientUnits="userSpaceOnUse">
-                        <stop stop-color="#FFFFFF" stop-opacity="0.18"/>
-                        <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.0"/>
+                        <stop stop-color="var(--primary)" stop-opacity="0.22"/>
+                        <stop offset="1" stop-color="var(--primary)" stop-opacity="0.0"/>
                       </linearGradient>
                     </defs>
                     <path d="M0 58 Q 120 54, 220 42 T 440 28 T 620 16 T 760 8 L 760 70 L 0 70 Z" fill="url(#minCurveGrad)"/>
-                    <path d="M0 58 Q 120 54, 220 42 T 440 28 T 620 16 T 760 8" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/>
-                    <circle cx="760" cy="8" r="4" fill="#FFFFFF" />
+                    <path d="M0 58 Q 120 54, 220 42 T 440 28 T 620 16 T 760 8" stroke="var(--primary)" stroke-width="2.4" stroke-linecap="round"/>
+                    <circle cx="760" cy="8" r="4.5" fill="var(--primary)" />
                   </svg>
                 </div>
               </div>
