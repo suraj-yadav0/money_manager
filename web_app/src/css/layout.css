@@ -233,6 +233,22 @@
   align-items: flex-start;
 }
 
+.analytics-charts-grid,
+.budget-charts-grid,
+.goals-charts-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 24px;
+  align-items: stretch;
+}
+
+.insights-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: stretch;
+}
+
 /* ==========================================================================
    ENKY-INSPIRED EDITORIAL HERO FOOTER
 /* ==========================================================================
@@ -678,9 +694,13 @@
 
 /* Medium Tablets & Laptops (< 1080px) */
 @media (max-width: 1080px) {
-  .dashboard-split-grid {
+  .dashboard-split-grid,
+  .analytics-charts-grid,
+  .budget-charts-grid,
+  .insights-charts-grid,
+  .goals-charts-grid {
     grid-template-columns: 1fr;
-    gap: 24px;
+    gap: 20px;
   }
 }
 

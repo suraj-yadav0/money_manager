@@ -13,6 +13,8 @@ Chart.register(...registerables);
 
 let cashFlowChartInstance = null;
 let categoryChartInstance = null;
+let monthlyTrendChartInstance = null;
+let dayOfWeekChartInstance = null;
 
 export const DashboardPage = {
   cashFlowViewMode: 'trajectory', // 'trajectory', 'net', 'daily'
@@ -323,6 +325,47 @@ export const DashboardPage = {
               </div>
             </div>
 
+          </div>
+        </div>
+
+        <!-- Behavioral & Historical Analytics Section -->
+        <div class="analytics-charts-grid">
+          <!-- 6-Month Income vs Expense Trend -->
+          <div class="fintech-card">
+            <div class="card-header">
+              <div class="card-title">
+                <span class="material-icons">bar_chart</span>
+                <span>Financial Trajectory & Momentum</span>
+              </div>
+              <div class="card-header-actions">
+                <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">Historical Trend</span>
+              </div>
+            </div>
+            <div class="cf-mini-summary" style="margin-bottom: 12px; font-size: 12px; color: var(--text-muted);">
+              Track monthly income velocity, burn rate, and capital retention trends over time.
+            </div>
+            <div style="position: relative; height: 260px; width: 100%; max-width: 100%; min-width: 0;">
+              <canvas id="monthly-trend-chart-canvas"></canvas>
+            </div>
+          </div>
+
+          <!-- Day-of-Week Spending Heatmap / Velocity -->
+          <div class="fintech-card">
+            <div class="card-header">
+              <div class="card-title">
+                <span class="material-icons">view_week</span>
+                <span>Day-of-Week Spending Velocity</span>
+              </div>
+              <div class="card-header-actions">
+                <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">Daily Habits</span>
+              </div>
+            </div>
+            <div class="cf-mini-summary" style="margin-bottom: 12px; font-size: 12px; color: var(--text-muted);">
+              Identify which days of the week experience the highest discretionary outflow.
+            </div>
+            <div style="position: relative; height: 260px; width: 100%; max-width: 100%; min-width: 0;">
+              <canvas id="day-of-week-chart-canvas"></canvas>
+            </div>
           </div>
         </div>
       </div>
@@ -815,6 +858,8 @@ export const DashboardPage = {
   renderCharts(state) {
     this.renderCashFlowChart(state);
     this.renderCategoryChart(state);
+    this.renderMonthlyTrendChart(state);
+    this.renderDayOfWeekChart(state);
   },
 
   renderCashFlowChart(state) {
@@ -1254,6 +1299,228 @@ export const DashboardPage = {
         });
       });
     }
+  },
+
+  renderMonthlyTrendChart(state) {
+    const canvas = document.getElementById('monthly-trend-chart-canvas');
+    if (!canvas) return;
+
+    if (monthlyTrendChartInstance) {
+      monthlyTrendChartInstance.destroy();
+      monthlyTrendChartInstance = null;
+    }
+
+    const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
+    const isLight = isLightTheme(activeTheme);
+    const themeObj = getTheme(activeTheme);
+    const primaryColor = themeObj.primary || (isLight ? '#0F172A' : '#FFFFFF');
+    const textColor = isLight ? '#475569' : '#94A3B8';
+    const gridColor = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
+    const tooltipBg = isLight ? '#FFFFFF' : (themeObj.surface || '#11141E');
+    const tooltipTitle = isLight ? '#0F172A' : (themeObj.primary || '#FFFFFF');
+    const tooltipBorder = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)';
+
+    const now = new Date();
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({
+        label: d.toLocaleDateString('en-US', { month: 'short' }),
+        start: new Date(d.getFullYear(), d.getMonth(), 1),
+        end: new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999)
+      });
+    }
+
+    const txList = state.transactions || [];
+    const incomeData = [];
+    const expenseData = [];
+    const netSavingsData = [];
+
+    months.forEach(m => {
+      const inMonth = txList.filter(t => {
+        const ts = new Date(t.timestamp);
+        return ts >= m.start && ts <= m.end;
+      });
+      const inc = inMonth.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount || 0), 0);
+      const exp = inMonth.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount || 0), 0);
+      incomeData.push(inc);
+      expenseData.push(exp);
+      netSavingsData.push(inc - exp);
+    });
+
+    const labels = months.map(m => m.label);
+
+    monthlyTrendChartInstance = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            type: 'line',
+            label: 'Net Savings',
+            data: netSavingsData,
+            borderColor: primaryColor,
+            backgroundColor: hexToRgba(primaryColor, 0.15),
+            borderWidth: 2.5,
+            pointBackgroundColor: primaryColor,
+            pointBorderColor: isLight ? '#FFFFFF' : '#111215',
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            tension: 0.3,
+            order: 1
+          },
+          {
+            type: 'bar',
+            label: 'Income',
+            data: incomeData,
+            backgroundColor: isLight ? 'rgba(22, 163, 74, 0.8)' : 'rgba(34, 197, 94, 0.75)',
+            hoverBackgroundColor: isLight ? '#16A34A' : '#22C55E',
+            borderRadius: 5,
+            order: 2
+          },
+          {
+            type: 'bar',
+            label: 'Expenses',
+            data: expenseData,
+            backgroundColor: isLight ? 'rgba(220, 38, 38, 0.75)' : 'rgba(244, 63, 94, 0.75)',
+            hoverBackgroundColor: isLight ? '#DC2626' : '#F43F5E',
+            borderRadius: 5,
+            order: 3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' } }
+          },
+          y: {
+            grid: { color: gridColor },
+            ticks: {
+              color: textColor,
+              font: { family: 'JetBrains Mono', size: 10 },
+              callback: (v) => Formatters.compactCurrency(v)
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            align: 'end',
+            labels: {
+              boxWidth: 10,
+              boxHeight: 10,
+              usePointStyle: true,
+              pointStyle: 'circle',
+              color: textColor,
+              font: { family: 'Plus Jakarta Sans', size: 11 }
+            }
+          },
+          tooltip: {
+            backgroundColor: tooltipBg,
+            titleColor: tooltipTitle,
+            bodyColor: textColor,
+            borderColor: tooltipBorder,
+            borderWidth: 1,
+            padding: 10,
+            callbacks: {
+              label: (ctx) => `${ctx.dataset.label}: ${Formatters.currency(ctx.parsed.y)}`
+            }
+          }
+        }
+      }
+    });
+  },
+
+  renderDayOfWeekChart(state) {
+    const canvas = document.getElementById('day-of-week-chart-canvas');
+    if (!canvas) return;
+
+    if (dayOfWeekChartInstance) {
+      dayOfWeekChartInstance.destroy();
+      dayOfWeekChartInstance = null;
+    }
+
+    const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
+    const isLight = isLightTheme(activeTheme);
+    const themeObj = getTheme(activeTheme);
+    const primaryColor = themeObj.primary || (isLight ? '#0F172A' : '#FFFFFF');
+    const textColor = isLight ? '#475569' : '#94A3B8';
+    const gridColor = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
+    const tooltipBg = isLight ? '#FFFFFF' : (themeObj.surface || '#11141E');
+    const tooltipTitle = isLight ? '#0F172A' : (themeObj.primary || '#FFFFFF');
+    const tooltipBorder = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)';
+
+    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const dayTotals = [0, 0, 0, 0, 0, 0, 0];
+
+    const txList = (state.transactions || []).filter(t => t.type === 'expense');
+    txList.forEach(t => {
+      const d = new Date(t.timestamp);
+      const dayIdx = (d.getDay() + 6) % 7;
+      dayTotals[dayIdx] += Number(t.amount || 0);
+    });
+
+    const maxVal = Math.max(...dayTotals);
+    const backgroundColors = dayTotals.map(val => {
+      if (val === 0) return isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)';
+      if (val === maxVal && maxVal > 0) return primaryColor;
+      return hexToRgba(primaryColor, 0.35);
+    });
+
+    dayOfWeekChartInstance = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: dayNames,
+        datasets: [{
+          label: 'Total Spent',
+          data: dayTotals,
+          backgroundColor: backgroundColors,
+          borderRadius: 6,
+          maxBarThickness: 32
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: tooltipBg,
+            titleColor: tooltipTitle,
+            bodyColor: textColor,
+            borderColor: tooltipBorder,
+            borderWidth: 1,
+            padding: 10,
+            callbacks: {
+              label: (ctx) => `Spent: ${Formatters.currency(ctx.parsed.y)}`
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' } }
+          },
+          y: {
+            grid: { color: gridColor },
+            ticks: {
+              color: textColor,
+              font: { family: 'JetBrains Mono', size: 10 },
+              callback: (v) => Formatters.compactCurrency(v)
+            }
+          }
+        }
+      }
+    });
   },
 
   showCategoryDrillDown(cat, state) {
