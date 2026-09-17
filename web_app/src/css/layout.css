@@ -231,6 +231,7 @@
   grid-template-columns: 1.75fr 1.25fr;
   gap: 28px;
   align-items: flex-start;
+  min-width: 0;
 }
 
 .analytics-charts-grid,
@@ -240,6 +241,7 @@
   grid-template-columns: 1.5fr 1fr;
   gap: 24px;
   align-items: stretch;
+  min-width: 0;
 }
 
 .insights-charts-grid {
@@ -247,6 +249,17 @@
   grid-template-columns: 1fr 1fr;
   gap: 24px;
   align-items: stretch;
+  min-width: 0;
+}
+
+/* Prevent grid children from overflowing their tracks */
+.dashboard-split-grid > *,
+.analytics-charts-grid > *,
+.budget-charts-grid > *,
+.goals-charts-grid > *,
+.insights-charts-grid > * {
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* ==========================================================================

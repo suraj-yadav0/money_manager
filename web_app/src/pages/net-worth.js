@@ -475,6 +475,7 @@ export const NetWorthPage = {
 
             <!-- Dynamic Donut Chart & Legend -->
             <div id="nw-allocation-content" style="display: flex; flex-direction: column; flex: 1; justify-content: center;"></div>
+          </div>
         </div>
 
         <!-- Forward Wealth Intelligence & Capital Structure Grid -->

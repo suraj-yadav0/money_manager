@@ -843,11 +843,71 @@
   grid-template-columns: 1.75fr 1.25fr;
   gap: 24px;
   align-items: stretch;
+  min-width: 0;
 }
 
-@media (max-width: 1024px) {
+.nw-charts-grid > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 1080px) {
   .nw-charts-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .asset-card {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .asset-card-icon-box {
+    width: 34px;
+    height: 34px;
+  }
+
+  .asset-card-icon-box .material-icons {
+    font-size: 16px;
+  }
+
+  .asset-card-name {
+    font-size: 13px;
+  }
+
+  .asset-card-value {
+    font-size: 13.5px;
+  }
+
+  .asset-card-right {
+    gap: 6px;
+  }
+
+  .asset-card-actions .btn-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .asset-card-actions .btn-icon .material-icons {
+    font-size: 14px;
+  }
+
+  .nw-stats-bar {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  .nw-stat-item {
+    min-width: 90px;
+  }
+
+  .nw-stat-label {
+    font-size: 10px;
+  }
+
+  .nw-stat-val {
+    font-size: 12.5px;
   }
 }
 
