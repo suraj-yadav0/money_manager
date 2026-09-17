@@ -46,6 +46,7 @@
   gap: 8px;
   flex-wrap: wrap;
   min-width: 0;
+  flex-shrink: 0;
 }
 
 .card-title {
@@ -56,6 +57,8 @@
   align-items: center;
   gap: 12px;
   letter-spacing: -0.02em;
+  min-width: 0;
+  flex: 1;
 }
 
 .card-title .material-icons {

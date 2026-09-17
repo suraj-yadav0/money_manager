@@ -31,7 +31,7 @@ export const DashboardPage = {
     const activeGoals = state.goals.filter(g => g.is_active !== false && !g.is_completed).slice(0, 2);
 
     return `
-      <div class="animate-fade-in">
+      <div class="animate-fade-in" style="display: flex; flex-direction: column; gap: 28px;">
         <!-- Hero Command Bar -->
         <section class="hero-section">
           <div class="hero-command-bar">
@@ -276,9 +276,9 @@ export const DashboardPage = {
                 <div class="tx-icon-box" style="width: 36px; height: 36px; border-radius: 8px; background: var(--bg-surface-subtle); border: 1px solid var(--glass-border); color: var(--text-primary);">
                   <span class="material-icons" style="font-size: 18px;">insights</span>
                 </div>
-                <div>
+                <div style="min-width: 0; flex: 1;">
                   <div style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 3px;">Smart Wealth Intelligence</div>
-                  <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+                  <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; overflow-wrap: anywhere;">
                     ${(() => {
                       const totalInvested = (state.transactions || [])
                         .filter(t => t.type === 'expense' && isInvestmentCategory(state.categories, t.categoryId || t.category_id))
