@@ -1,4 +1,4 @@
-/* Pure Single-Tone Minimalist Design System (Zero Traffic-Light Clutter) */
+/* Pure Minimalist Theme Architecture & Color System */
 
 :root {
   color-scheme: dark;
@@ -22,11 +22,11 @@
   --primary: #FFFFFF;
   --primary-light: #F4F4F5;
   --primary-dark: #E4E4E7;
-  --primary-glow: rgba(255, 255, 255, 0.1);
+  --primary-glow: rgba(255, 255, 255, 0.12);
   --primary-gradient: linear-gradient(180deg, #FFFFFF 0%, #E4E4E7 100%);
   --primary-gradient-hover: linear-gradient(180deg, #FFFFFF 0%, #F4F4F5 100%);
 
-  /* Neutral Status Badges & Accents (Zero Color Clash) */
+  /* Status Badges & Accents */
   --secondary: #94A3B8;
   --secondary-glow: rgba(255, 255, 255, 0.06);
   --indigo: #94A3B8;
@@ -65,6 +65,8 @@
   --shadow-md: 0 4px 16px -2px rgba(0, 0, 0, 0.5), 0 2px 6px -1px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 12px 36px -6px rgba(0, 0, 0, 0.6), 0 4px 12px -2px rgba(0, 0, 0, 0.4);
   --card-top-glow: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.08) 50%, transparent 100%);
+  --grid-line: rgba(255, 255, 255, 0.035);
+  --radial-glow: rgba(255, 255, 255, 0.04);
 
   /* Transitions */
   --transition-fast: 0.15s cubic-bezier(0.16, 1, 0.3, 1);
@@ -75,7 +77,54 @@
   --container-max: 1360px;
 }
 
-/* Light Mode (Pure Single-Tone Studio White & Obsidian) */
+/* 1. Obsidian Minimal (Default Dark) */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg-main: #090A0C;
+  --bg-surface: #111215;
+  --bg-surface-elevated: #1A1B20;
+  --bg-surface-subtle: rgba(255, 255, 255, 0.04);
+  --bg-surface-hover: rgba(255, 255, 255, 0.075);
+  --bg-header: rgba(9, 10, 12, 0.88);
+
+  --glass-bg: rgba(17, 18, 21, 0.88);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.16);
+  --glass-border-focus: rgba(255, 255, 255, 0.35);
+  --modal-backdrop: rgba(4, 5, 6, 0.85);
+
+  --primary: #FFFFFF;
+  --primary-light: #F4F4F5;
+  --primary-dark: #E4E4E7;
+  --primary-glow: rgba(255, 255, 255, 0.12);
+  --primary-gradient: linear-gradient(180deg, #FFFFFF 0%, #E4E4E7 100%);
+  --primary-gradient-hover: linear-gradient(180deg, #FFFFFF 0%, #F4F4F5 100%);
+
+  --secondary: #94A3B8;
+  --secondary-glow: rgba(255, 255, 255, 0.06);
+  --indigo: #94A3B8;
+  --indigo-glow: rgba(255, 255, 255, 0.06);
+
+  --success: #FFFFFF;
+  --success-bg: rgba(255, 255, 255, 0.06);
+  --error: #94A3B8;
+  --error-bg: rgba(255, 255, 255, 0.04);
+  --warning: #CBD5E1;
+  --warning-bg: rgba(255, 255, 255, 0.05);
+  --info: #94A3B8;
+  --info-bg: rgba(255, 255, 255, 0.04);
+
+  --text-primary: #FFFFFF;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --text-inverse: #090A0C;
+
+  --card-top-glow: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.08) 50%, transparent 100%);
+  --grid-line: rgba(255, 255, 255, 0.035);
+  --radial-glow: rgba(255, 255, 255, 0.04);
+}
+
+/* 2. Studio Light */
 [data-theme="light"] {
   color-scheme: light;
   --bg-main: #FFFFFF;
@@ -121,4 +170,291 @@
   --shadow-md: 0 4px 16px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
   --shadow-lg: 0 12px 32px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
   --card-top-glow: linear-gradient(90deg, transparent 0%, rgba(15, 23, 42, 0.03) 50%, transparent 100%);
+  --grid-line: rgba(15, 23, 42, 0.035);
+  --radial-glow: rgba(15, 23, 42, 0.03);
+}
+
+/* 3. Alpine Emerald */
+[data-theme="emerald"] {
+  color-scheme: dark;
+  --bg-main: #060F0C;
+  --bg-surface: #0C1A15;
+  --bg-surface-elevated: #132620;
+  --bg-surface-subtle: rgba(16, 185, 129, 0.06);
+  --bg-surface-hover: rgba(16, 185, 129, 0.12);
+  --bg-header: rgba(6, 15, 12, 0.9);
+
+  --glass-bg: rgba(12, 26, 21, 0.9);
+  --glass-border: rgba(16, 185, 129, 0.16);
+  --glass-border-hover: rgba(16, 185, 129, 0.35);
+  --glass-border-focus: rgba(52, 211, 153, 0.6);
+  --modal-backdrop: rgba(3, 8, 6, 0.88);
+
+  --primary: #10B981;
+  --primary-light: #34D399;
+  --primary-dark: #059669;
+  --primary-glow: rgba(16, 185, 129, 0.3);
+  --primary-gradient: linear-gradient(180deg, #34D399 0%, #10B981 100%);
+  --primary-gradient-hover: linear-gradient(180deg, #6EE7B7 0%, #34D399 100%);
+
+  --secondary: #6EE7B7;
+  --secondary-glow: rgba(16, 185, 129, 0.08);
+  --indigo: #6EE7B7;
+  --indigo-glow: rgba(16, 185, 129, 0.08);
+
+  --success: #10B981;
+  --success-bg: rgba(16, 185, 129, 0.12);
+  --error: #FB7185;
+  --error-bg: rgba(251, 113, 133, 0.08);
+  --warning: #FBBF24;
+  --warning-bg: rgba(251, 191, 36, 0.08);
+  --info: #34D399;
+  --info-bg: rgba(52, 211, 153, 0.08);
+
+  --text-primary: #F0FDF4;
+  --text-secondary: #A7F3D0;
+  --text-muted: #6EE7B7;
+  --text-inverse: #022C22;
+
+  --card-top-glow: linear-gradient(90deg, transparent 0%, rgba(16, 185, 129, 0.3) 50%, transparent 100%);
+  --grid-line: rgba(16, 185, 129, 0.045);
+  --radial-glow: rgba(16, 185, 129, 0.08);
+}
+
+/* 4. Midnight Cobalt */
+[data-theme="sapphire"] {
+  color-scheme: dark;
+  --bg-main: #060B14;
+  --bg-surface: #0C1527;
+  --bg-surface-elevated: #13203B;
+  --bg-surface-subtle: rgba(56, 189, 248, 0.06);
+  --bg-surface-hover: rgba(56, 189, 248, 0.12);
+  --bg-header: rgba(6, 11, 20, 0.9);
+
+  --glass-bg: rgba(12, 21, 39, 0.9);
+  --glass-border: rgba(56, 189, 248, 0.16);
+  --glass-border-hover: rgba(56, 189, 248, 0.35);
+  --glass-border-focus: rgba(96, 165, 250, 0.6);
+  --modal-backdrop: rgba(3, 6, 12, 0.88);
+
+  --primary: #38BDF8;
+  --primary-light: #7DD3FC;
+  --primary-dark: #0284C7;
+  --primary-glow: rgba(56, 189, 248, 0.3);
+  --primary-gradient: linear-gradient(180deg, #7DD3FC 0%, #38BDF8 100%);
+  --primary-gradient-hover: linear-gradient(180deg, #BAE6FD 0%, #7DD3FC 100%);
+
+  --secondary: #7DD3FC;
+  --secondary-glow: rgba(56, 189, 248, 0.08);
+  --indigo: #60A5FA;
+  --indigo-glow: rgba(96, 165, 250, 0.08);
+
+  --success: #38BDF8;
+  --success-bg: rgba(56, 189, 248, 0.12);
+  --error: #FB7185;
+  --error-bg: rgba(251, 113, 133, 0.08);
+  --warning: #FBBF24;
+  --warning-bg: rgba(251, 191, 36, 0.08);
+  --info: #60A5FA;
+  --info-bg: rgba(96, 165, 250, 0.08);
+
+  --text-primary: #F0F9FF;
+  --text-secondary: #BAE6FD;
+  --text-muted: #7DD3FC;
+  --text-inverse: #082F49;
+
+  --card-top-glow: linear-gradient(90deg, transparent 0%, rgba(56, 189, 248, 0.3) 50%, transparent 100%);
+  --grid-line: rgba(56, 189, 248, 0.045);
+  --radial-glow: rgba(56, 189, 248, 0.08);
+}
+
+/* 5. Cyber Violet */
+[data-theme="amethyst"] {
+  color-scheme: dark;
+  --bg-main: #0B0714;
+  --bg-surface: #140E24;
+  --bg-surface-elevated: #1E1536;
+  --bg-surface-subtle: rgba(168, 85, 247, 0.06);
+  --bg-surface-hover: rgba(168, 85, 247, 0.12);
+  --bg-header: rgba(11, 7, 20, 0.9);
+
+  --glass-bg: rgba(20, 14, 36, 0.9);
+  --glass-border: rgba(168, 85, 247, 0.16);
+  --glass-border-hover: rgba(168, 85, 247, 0.35);
+  --glass-border-focus: rgba(192, 132, 252, 0.6);
+  --modal-backdrop: rgba(6, 3, 12, 0.88);
+
+  --primary: #A855F7;
+  --primary-light: #C084FC;
+  --primary-dark: #7E22CE;
+  --primary-glow: rgba(168, 85, 247, 0.3);
+  --primary-gradient: linear-gradient(180deg, #C084FC 0%, #A855F7 100%);
+  --primary-gradient-hover: linear-gradient(180deg, #E9D5FF 0%, #C084FC 100%);
+
+  --secondary: #C084FC;
+  --secondary-glow: rgba(168, 85, 247, 0.08);
+  --indigo: #C084FC;
+  --indigo-glow: rgba(168, 85, 247, 0.08);
+
+  --success: #C084FC;
+  --success-bg: rgba(168, 85, 247, 0.12);
+  --error: #FB7185;
+  --error-bg: rgba(251, 113, 133, 0.08);
+  --warning: #FBBF24;
+  --warning-bg: rgba(251, 191, 36, 0.08);
+  --info: #C084FC;
+  --info-bg: rgba(192, 132, 252, 0.08);
+
+  --text-primary: #FAF5FF;
+  --text-secondary: #E9D5FF;
+  --text-muted: #C084FC;
+  --text-inverse: #1E0836;
+
+  --card-top-glow: linear-gradient(90deg, transparent 0%, rgba(168, 85, 247, 0.3) 50%, transparent 100%);
+  --grid-line: rgba(168, 85, 247, 0.045);
+  --radial-glow: rgba(168, 85, 247, 0.08);
+}
+
+/* 6. Solar Gold */
+[data-theme="amber"] {
+  color-scheme: dark;
+  --bg-main: #0E0B07;
+  --bg-surface: #19140D;
+  --bg-surface-elevated: #261F14;
+  --bg-surface-subtle: rgba(245, 158, 11, 0.06);
+  --bg-surface-hover: rgba(245, 158, 11, 0.12);
+  --bg-header: rgba(14, 11, 7, 0.9);
+
+  --glass-bg: rgba(25, 20, 13, 0.9);
+  --glass-border: rgba(245, 158, 11, 0.16);
+  --glass-border-hover: rgba(245, 158, 11, 0.35);
+  --glass-border-focus: rgba(251, 191, 36, 0.6);
+  --modal-backdrop: rgba(8, 6, 3, 0.88);
+
+  --primary: #F59E0B;
+  --primary-light: #FBBF24;
+  --primary-dark: #D97706;
+  --primary-glow: rgba(245, 158, 11, 0.3);
+  --primary-gradient: linear-gradient(180deg, #FBBF24 0%, #F59E0B 100%);
+  --primary-gradient-hover: linear-gradient(180deg, #FDE68A 0%, #FBBF24 100%);
+
+  --secondary: #FDE68A;
+  --secondary-glow: rgba(245, 158, 11, 0.08);
+  --indigo: #FBBF24;
+  --indigo-glow: rgba(245, 158, 11, 0.08);
+
+  --success: #F59E0B;
+  --success-bg: rgba(245, 158, 11, 0.12);
+  --error: #FB7185;
+  --error-bg: rgba(251, 113, 133, 0.08);
+  --warning: #FBBF24;
+  --warning-bg: rgba(251, 191, 36, 0.08);
+  --info: #FBBF24;
+  --info-bg: rgba(251, 191, 36, 0.08);
+
+  --text-primary: #FFFBEB;
+  --text-secondary: #FDE68A;
+  --text-muted: #FCD34D;
+  --text-inverse: #451A03;
+
+  --card-top-glow: linear-gradient(90deg, transparent 0%, rgba(245, 158, 11, 0.3) 50%, transparent 100%);
+  --grid-line: rgba(245, 158, 11, 0.045);
+  --radial-glow: rgba(245, 158, 11, 0.08);
+}
+
+/* 7. Crimson Noir */
+[data-theme="rose"] {
+  color-scheme: dark;
+  --bg-main: #0F070A;
+  --bg-surface: #1B0D13;
+  --bg-surface-elevated: #28141C;
+  --bg-surface-subtle: rgba(244, 63, 94, 0.06);
+  --bg-surface-hover: rgba(244, 63, 94, 0.12);
+  --bg-header: rgba(15, 7, 10, 0.9);
+
+  --glass-bg: rgba(27, 13, 19, 0.9);
+  --glass-border: rgba(244, 63, 94, 0.16);
+  --glass-border-hover: rgba(244, 63, 94, 0.35);
+  --glass-border-focus: rgba(251, 113, 133, 0.6);
+  --modal-backdrop: rgba(8, 3, 5, 0.88);
+
+  --primary: #F43F5E;
+  --primary-light: #FB7185;
+  --primary-dark: #E11D48;
+  --primary-glow: rgba(244, 63, 94, 0.3);
+  --primary-gradient: linear-gradient(180deg, #FB7185 0%, #F43F5E 100%);
+  --primary-gradient-hover: linear-gradient(180deg, #FECDD3 0%, #FB7185 100%);
+
+  --secondary: #FECDD3;
+  --secondary-glow: rgba(244, 63, 94, 0.08);
+  --indigo: #FB7185;
+  --indigo-glow: rgba(244, 63, 94, 0.08);
+
+  --success: #FB7185;
+  --success-bg: rgba(244, 63, 94, 0.12);
+  --error: #FB7185;
+  --error-bg: rgba(251, 113, 133, 0.08);
+  --warning: #FBBF24;
+  --warning-bg: rgba(251, 191, 36, 0.08);
+  --info: #FB7185;
+  --info-bg: rgba(251, 113, 133, 0.08);
+
+  --text-primary: #FFF1F2;
+  --text-secondary: #FECDD3;
+  --text-muted: #FDA4AF;
+  --text-inverse: #FFFFFF;
+
+  --card-top-glow: linear-gradient(90deg, transparent 0%, rgba(244, 63, 94, 0.3) 50%, transparent 100%);
+  --grid-line: rgba(244, 63, 94, 0.045);
+  --radial-glow: rgba(244, 63, 94, 0.08);
+}
+
+/* 8. Nordic Mist */
+[data-theme="nordic"] {
+  color-scheme: light;
+  --bg-main: #F4F7FB;
+  --bg-surface: #FFFFFF;
+  --bg-surface-elevated: #E8EFF7;
+  --bg-surface-subtle: rgba(37, 99, 235, 0.04);
+  --bg-surface-hover: rgba(37, 99, 235, 0.08);
+  --bg-header: rgba(244, 247, 251, 0.92);
+
+  --glass-bg: rgba(255, 255, 255, 0.94);
+  --glass-border: #DCE5F0;
+  --glass-border-hover: #CBD9EA;
+  --glass-border-focus: rgba(37, 99, 235, 0.4);
+  --modal-backdrop: rgba(15, 23, 42, 0.5);
+
+  --primary: #2563EB;
+  --primary-light: #3B82F6;
+  --primary-dark: #1D4ED8;
+  --primary-glow: rgba(37, 99, 235, 0.2);
+  --primary-gradient: linear-gradient(180deg, #3B82F6 0%, #2563EB 100%);
+  --primary-gradient-hover: linear-gradient(180deg, #60A5FA 0%, #3B82F6 100%);
+
+  --secondary: #64748B;
+  --secondary-glow: rgba(37, 99, 235, 0.05);
+  --indigo: #3B82F6;
+  --indigo-glow: rgba(37, 99, 235, 0.05);
+
+  --success: #2563EB;
+  --success-bg: rgba(37, 99, 235, 0.08);
+  --error: #DC2626;
+  --error-bg: rgba(220, 38, 38, 0.06);
+  --warning: #D97706;
+  --warning-bg: rgba(217, 119, 6, 0.06);
+  --info: #2563EB;
+  --info-bg: rgba(37, 99, 235, 0.06);
+
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
+  --text-inverse: #FFFFFF;
+
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+  --shadow-md: 0 4px 16px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+  --shadow-lg: 0 12px 32px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+  --card-top-glow: linear-gradient(90deg, transparent 0%, rgba(37, 99, 235, 0.12) 50%, transparent 100%);
+  --grid-line: rgba(37, 99, 235, 0.035);
+  --radial-glow: rgba(37, 99, 235, 0.05);
 }
