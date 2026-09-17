@@ -1,9 +1,16 @@
 /* Modern Budget Planning & Allocations Module */
+import { Chart, registerables } from 'chart.js';
 import { StateManager } from '../state.js';
 import { DbService } from '../db.js';
 import { DateRangeHelper } from '../utils/date-range.js';
 import { Formatters } from '../utils/formatters.js';
 import { IconHelper, findCategory } from '../utils/icons.js';
+import { getTheme, isLightTheme, getThemePalette, hexToRgba } from '../utils/theme.js';
+
+Chart.register(...registerables);
+
+let budgetVarianceChartInstance = null;
+let budgetDistributionChartInstance = null;
 
 export const BudgetPage = {
   currentDate: new Date(),
@@ -176,6 +183,45 @@ export const BudgetPage = {
                   </div>
                 `;
               }).filter(Boolean).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Interactive Budget Visualizations -->
+        ${stats.categoryStats.length > 0 ? `
+          <div class="budget-charts-grid" style="margin-bottom: 24px;">
+            <!-- Budget vs Actual Variance Bar Chart -->
+            <div class="fintech-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <span class="material-icons">compare_arrows</span>
+                  <span>Budget vs Actual Outflow</span>
+                </div>
+                <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">Pacing Variance</span>
+              </div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+                Direct visual comparison between planned monthly ceiling and realized category expense.
+              </div>
+              <div style="position: relative; height: 260px; width: 100%;">
+                <canvas id="budget-variance-chart-canvas"></canvas>
+              </div>
+            </div>
+
+            <!-- Budget Pool Allocation Donut -->
+            <div class="fintech-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <span class="material-icons">pie_chart</span>
+                  <span>Budget Pool Distribution</span>
+                </div>
+                <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">Share of Cap</span>
+              </div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+                Breakdown of how your total monthly budget pool is apportioned across categories.
+              </div>
+              <div style="position: relative; height: 260px; width: 100%;">
+                <canvas id="budget-distribution-chart-canvas"></canvas>
+              </div>
             </div>
           </div>
         ` : ''}
@@ -435,6 +481,182 @@ export const BudgetPage = {
         const current = parseFloat(btn.getAttribute('data-current-budget')) || 0;
         this.showSingleBudgetModal(syncId, localId, name, current);
       });
+    });
+
+    // Render interactive charts
+    this.renderCharts(state);
+  },
+
+  renderCharts(state) {
+    this.renderVarianceChart(state);
+    this.renderDistributionChart(state);
+  },
+
+  renderVarianceChart(state) {
+    const canvas = document.getElementById('budget-variance-chart-canvas');
+    if (!canvas) return;
+
+    if (budgetVarianceChartInstance) {
+      budgetVarianceChartInstance.destroy();
+      budgetVarianceChartInstance = null;
+    }
+
+    const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
+    const isLight = isLightTheme(activeTheme);
+    const themeObj = getTheme(activeTheme);
+    const textColor = isLight ? '#475569' : '#94A3B8';
+    const gridColor = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
+    const tooltipBg = isLight ? '#FFFFFF' : (themeObj.surface || '#11141E');
+    const tooltipTitle = isLight ? '#0F172A' : (themeObj.primary || '#FFFFFF');
+    const tooltipBorder = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)';
+
+    const stats = this.calculateBudgetStats(state);
+    const catStats = stats.categoryStats.slice(0, 7);
+
+    if (catStats.length === 0) return;
+
+    const labels = catStats.map(c => c.name);
+    const spentData = catStats.map(c => c.spent);
+    const budgetData = catStats.map(c => c.budget);
+
+    const spentColors = catStats.map(c => {
+      if (c.percentUsed > 100) return isLight ? '#DC2626' : '#F43F5E';
+      if (c.percentUsed > 80) return isLight ? '#D97706' : '#F59E0B';
+      return isLight ? '#16A34A' : '#10B981';
+    });
+
+    budgetVarianceChartInstance = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Actual Spent',
+            data: spentData,
+            backgroundColor: spentColors,
+            borderRadius: 4,
+            maxBarThickness: 16
+          },
+          {
+            label: 'Budget Cap',
+            data: budgetData,
+            backgroundColor: isLight ? 'rgba(15, 23, 42, 0.12)' : 'rgba(255, 255, 255, 0.12)',
+            borderColor: isLight ? 'rgba(15, 23, 42, 0.25)' : 'rgba(255, 255, 255, 0.25)',
+            borderWidth: 1,
+            borderRadius: 4,
+            maxBarThickness: 16
+          }
+        ]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            grid: { color: gridColor },
+            ticks: {
+              color: textColor,
+              font: { family: 'JetBrains Mono', size: 10 },
+              callback: (v) => Formatters.compactCurrency(v)
+            }
+          },
+          y: {
+            grid: { display: false },
+            ticks: {
+              color: textColor,
+              font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' }
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            align: 'end',
+            labels: {
+              boxWidth: 10,
+              boxHeight: 10,
+              color: textColor,
+              font: { family: 'Plus Jakarta Sans', size: 11 }
+            }
+          },
+          tooltip: {
+            backgroundColor: tooltipBg,
+            titleColor: tooltipTitle,
+            bodyColor: textColor,
+            borderColor: tooltipBorder,
+            borderWidth: 1,
+            padding: 10,
+            callbacks: {
+              label: (ctx) => `${ctx.dataset.label}: ${Formatters.currency(ctx.parsed.x)}`
+            }
+          }
+        }
+      }
+    });
+  },
+
+  renderDistributionChart(state) {
+    const canvas = document.getElementById('budget-distribution-chart-canvas');
+    if (!canvas) return;
+
+    if (budgetDistributionChartInstance) {
+      budgetDistributionChartInstance.destroy();
+      budgetDistributionChartInstance = null;
+    }
+
+    const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
+    const isLight = isLightTheme(activeTheme);
+    const themeObj = getTheme(activeTheme);
+    const palette = getThemePalette(activeTheme);
+    const textColor = isLight ? '#475569' : '#94A3B8';
+    const tooltipBg = isLight ? '#FFFFFF' : (themeObj.surface || '#11141E');
+    const tooltipTitle = isLight ? '#0F172A' : (themeObj.primary || '#FFFFFF');
+    const tooltipBorder = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)';
+
+    const stats = this.calculateBudgetStats(state);
+    if (stats.categoryStats.length === 0) return;
+
+    const labels = stats.categoryStats.map(c => c.name);
+    const data = stats.categoryStats.map(c => c.budget);
+    const bgColors = stats.categoryStats.map((c, i) => palette[i % palette.length]);
+
+    budgetDistributionChartInstance = new Chart(canvas, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{
+          data,
+          backgroundColor: bgColors,
+          borderWidth: 0,
+          hoverOffset: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '68%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: tooltipBg,
+            titleColor: tooltipTitle,
+            bodyColor: textColor,
+            borderColor: tooltipBorder,
+            borderWidth: 1,
+            padding: 10,
+            callbacks: {
+              label: (ctx) => {
+                const val = ctx.parsed;
+                const total = stats.totalBudget;
+                const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                return `${ctx.label}: ${Formatters.currency(val)} (${pct}%)`;
+              }
+            }
+          }
+        }
+      }
     });
   },
 
