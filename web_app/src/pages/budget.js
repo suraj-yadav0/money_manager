@@ -14,6 +14,7 @@ let budgetDistributionChartInstance = null;
 
 export const BudgetPage = {
   currentDate: new Date(),
+  varianceFilter: 'all', // 'all', 'atRisk'
 
   render(state) {
     const targetDate = this.currentDate || new Date();
@@ -197,10 +198,18 @@ export const BudgetPage = {
                   <span class="material-icons">compare_arrows</span>
                   <span>Budget vs Actual Outflow</span>
                 </div>
-                <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">Pacing Variance</span>
+                <div class="card-header-actions">
+                  <div class="filter-group" style="margin: 0;" id="budget-variance-filter-group">
+                    <button class="filter-chip ${this.varianceFilter === 'all' ? 'active' : ''}" data-variance-filter="all" style="padding: 3px 8px; font-size: 11px;">All</button>
+                    <button class="filter-chip ${this.varianceFilter === 'atRisk' ? 'active' : ''}" data-variance-filter="atRisk" style="padding: 3px 8px; font-size: 11px;">At-Risk (&gt;80%)</button>
+                  </div>
+                  <span class="kpi-badge neutral drilldown-hint" style="font-size: 11px; font-weight: 600;" title="Click bar to drill down">
+                    <span class="material-icons" style="font-size: 12px; margin-right: 2px;">touch_app</span><span class="hint-text">Drill down</span>
+                  </span>
+                </div>
               </div>
               <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
-                Direct visual comparison between planned monthly ceiling and realized category expense.
+                Direct visual comparison between planned monthly ceiling and realized category expense. Click bar to inspect.
               </div>
               <div style="position: relative; height: 260px; width: 100%;">
                 <canvas id="budget-variance-chart-canvas"></canvas>
@@ -214,10 +223,14 @@ export const BudgetPage = {
                   <span class="material-icons">pie_chart</span>
                   <span>Budget Pool Distribution</span>
                 </div>
-                <span class="kpi-badge neutral" style="font-size: 11px; font-weight: 600;">Share of Cap</span>
+                <div class="card-header-actions">
+                  <span class="kpi-badge neutral drilldown-hint" style="font-size: 11px; font-weight: 600;" title="Click slice to drill down">
+                    <span class="material-icons" style="font-size: 12px; margin-right: 2px;">touch_app</span><span class="hint-text">Drill down</span>
+                  </span>
+                </div>
               </div>
               <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
-                Breakdown of how your total monthly budget pool is apportioned across categories.
+                Breakdown of how your total monthly budget pool is apportioned across categories. Click slice to inspect.
               </div>
               <div style="position: relative; height: 260px; width: 100%;">
                 <canvas id="budget-distribution-chart-canvas"></canvas>
@@ -483,6 +496,34 @@ export const BudgetPage = {
       });
     });
 
+    // Variance filter buttons
+    document.querySelectorAll('#budget-variance-filter-group [data-variance-filter]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const filter = btn.getAttribute('data-variance-filter');
+        if (this.varianceFilter !== filter) {
+          this.varianceFilter = filter;
+          document.querySelectorAll('#budget-variance-filter-group [data-variance-filter]').forEach(b => {
+            b.classList.toggle('active', b.getAttribute('data-variance-filter') === filter);
+          });
+          this.renderVarianceChart(state);
+        }
+      });
+    });
+
+    // Budget card click to drill down
+    document.querySelectorAll('.budget-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('button')) return;
+        const catName = card.querySelector('.budget-cat-name span')?.textContent?.trim();
+        const stats = this.calculateBudgetStats(state);
+        const cat = stats.categoryStats.find(c => c.name === catName);
+        if (cat) {
+          this.showBudgetCategoryDrillDown(cat, state);
+        }
+      });
+    });
+
     // Render interactive charts
     this.renderCharts(state);
   },
@@ -511,9 +552,31 @@ export const BudgetPage = {
     const tooltipBorder = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)';
 
     const stats = this.calculateBudgetStats(state);
-    const catStats = stats.categoryStats.slice(0, 7);
+    let catStats = stats.categoryStats;
+    if (this.varianceFilter === 'atRisk') {
+      catStats = catStats.filter(c => c.percentUsed >= 80);
+    }
+    catStats = catStats.slice(0, 7);
 
-    if (catStats.length === 0) return;
+    if (catStats.length === 0) {
+      budgetVarianceChartInstance = new Chart(canvas, {
+        type: 'bar',
+        data: {
+          labels: ['No At-Risk Categories'],
+          datasets: [{
+            label: 'Actual Spent',
+            data: [0],
+            backgroundColor: isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } }
+        }
+      });
+      return;
+    }
 
     const labels = catStats.map(c => c.name);
     const spentData = catStats.map(c => c.spent);
@@ -552,6 +615,19 @@ export const BudgetPage = {
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
+        onHover: (event, elements) => {
+          if (event.native && event.native.target) {
+            event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+          }
+        },
+        onClick: (event, elements) => {
+          if (!elements || !elements.length) return;
+          const idx = elements[0].index;
+          const cat = catStats[idx];
+          if (cat) {
+            this.showBudgetCategoryDrillDown(cat, state);
+          }
+        },
         scales: {
           x: {
             grid: { color: gridColor },
@@ -637,6 +713,19 @@ export const BudgetPage = {
         responsive: true,
         maintainAspectRatio: false,
         cutout: '68%',
+        onHover: (event, elements) => {
+          if (event.native && event.native.target) {
+            event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+          }
+        },
+        onClick: (event, elements) => {
+          if (!elements || !elements.length) return;
+          const idx = elements[0].index;
+          const cat = stats.categoryStats[idx];
+          if (cat) {
+            this.showBudgetCategoryDrillDown(cat, state);
+          }
+        },
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -657,6 +746,160 @@ export const BudgetPage = {
           }
         }
       }
+    });
+  },
+
+  showBudgetCategoryDrillDown(catStat, state) {
+    const targetDate = this.currentDate || new Date();
+    const monthName = targetDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const startOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+    const endOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    const categoryTransactions = (state.transactions || [])
+      .filter(t => {
+        if (t.type !== 'expense') return false;
+        const ts = new Date(t.timestamp);
+        if (ts < startOfMonth || ts > endOfMonth) return false;
+        const c = findCategory(state.categories, t.categoryId || t.category_id);
+        const name = c ? c.name : 'Other';
+        return name.toLowerCase() === catStat.name.toLowerCase();
+      })
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    const totalSpent = categoryTransactions.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+    const txCount = categoryTransactions.length;
+    const remaining = catStat.budget - totalSpent;
+    const percentUsed = catStat.budget > 0 ? Math.round((totalSpent / catStat.budget) * 100) : 0;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay active';
+    overlay.innerHTML = `
+      <div class="modern-modal-dialog drilldown-dialog animate-scale-up">
+        <div class="modal-header" style="margin-bottom: 18px; padding-bottom: 14px;">
+          <div class="modal-title" style="font-size: 18px;">
+            <div class="tx-icon-box" style="width: 38px; height: 38px; border-radius: var(--radius-sm); background: var(--bg-surface-elevated); border: 1px solid var(--glass-border); color: var(--primary);">
+              <span class="material-icons" style="font-size: 20px;">${IconHelper.getMaterialIcon(catStat.icon)}</span>
+            </div>
+            <div>
+              <div style="color: var(--text-primary); font-weight: 800;">${catStat.name} Budget Pacing</div>
+              <div style="font-size: 12px; font-weight: 500; color: var(--text-muted); margin-top: 2px;">
+                ${monthName} • ${txCount} ${txCount === 1 ? 'expense' : 'expenses'}
+              </div>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="budget-drilldown-close-btn" aria-label="Close">
+            <span class="material-icons" style="font-size: 18px;">close</span>
+          </button>
+        </div>
+
+        <div class="drilldown-summary-grid">
+          <div class="drilldown-stat-card">
+            <div class="drilldown-stat-label">Realized Outflow</div>
+            <div class="drilldown-stat-value" style="color: ${totalSpent > catStat.budget ? 'var(--error)' : 'var(--text-primary)'};">${Formatters.currency(totalSpent)}</div>
+          </div>
+          <div class="drilldown-stat-card">
+            <div class="drilldown-stat-label">Budget Ceiling</div>
+            <div class="drilldown-stat-value" style="color: var(--text-primary);">${Formatters.currency(catStat.budget)}</div>
+          </div>
+          <div class="drilldown-stat-card">
+            <div class="drilldown-stat-label">Utilization / Margin</div>
+            <div class="drilldown-stat-value" style="color: ${remaining >= 0 ? 'var(--success)' : 'var(--error)'};">${percentUsed}% (${remaining >= 0 ? `${Formatters.currency(remaining)} left` : `${Formatters.currency(Math.abs(remaining))} over`})</div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <div style="font-size: 13px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 6px;">
+            <span class="material-icons" style="font-size: 16px; color: var(--primary);">receipt_long</span>
+            <span>Recorded Expenses in ${monthName}</span>
+          </div>
+          <span style="font-size: 11.5px; color: var(--text-muted);">Click row to edit</span>
+        </div>
+
+        <div class="drilldown-tx-list">
+          ${categoryTransactions.length === 0 ? `
+            <div style="text-align: center; padding: 40px 16px; color: var(--text-muted); font-size: 13px;">
+              No expenses recorded in ${catStat.name} during ${monthName}.
+            </div>
+          ` : categoryTransactions.map(tx => {
+            const d = new Date(tx.timestamp);
+            const dateStr = d.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
+            const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            const dayNum = d.getDate();
+            const monthStr = d.toLocaleDateString('en-US', { month: 'short' });
+
+            return `
+              <div class="drilldown-tx-row" data-sync-id="${tx.sync_id || ''}" data-id="${tx.id || ''}">
+                <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                  <div class="drilldown-date-badge">
+                    <span class="drilldown-date-day">${dayNum}</span>
+                    <span class="drilldown-date-month">${monthStr}</span>
+                  </div>
+                  <div style="min-width: 0;">
+                    <div style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                      ${tx.note || catStat.name}
+                    </div>
+                    <div style="font-size: 11.5px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; margin-top: 2px;">
+                      <span>${dateStr} • ${timeStr}</span>
+                      ${tx.paymentMode ? `<span class="tx-tag" style="font-size: 10px; padding: 1px 6px;">${tx.paymentMode}</span>` : ''}
+                    </div>
+                  </div>
+                </div>
+                <div style="text-align: right; flex-shrink: 0; margin-left: 12px;">
+                  <div style="font-size: 14.5px; font-weight: 800; color: var(--error);">
+                    -${Formatters.currency(tx.amount)}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--glass-border);">
+          <button class="btn-ghost" id="budget-drilldown-edit-btn" style="font-size: 12.5px;">
+            <span class="material-icons" style="font-size: 16px;">tune</span> Adjust Budget Cap
+          </button>
+          <button class="btn-secondary" id="budget-drilldown-dismiss-btn" style="width: auto; padding: 8px 18px; font-size: 12.5px;">
+            Done
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const closeModal = () => {
+      if (document.body.contains(overlay)) {
+        overlay.classList.remove('active');
+        setTimeout(() => overlay.remove(), 200);
+      }
+    };
+
+    overlay.querySelector('#budget-drilldown-close-btn')?.addEventListener('click', closeModal);
+    overlay.querySelector('#budget-drilldown-dismiss-btn')?.addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal();
+    });
+
+    overlay.querySelector('#budget-drilldown-edit-btn')?.addEventListener('click', () => {
+      closeModal();
+      const cat = state.categories.find(c => c.name === catStat.name);
+      if (cat) {
+        this.showSingleBudgetModal(cat.sync_id || '', cat.id || '', cat.name, catStat.budget);
+      }
+    });
+
+    overlay.querySelectorAll('.drilldown-tx-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const syncId = row.getAttribute('data-sync-id');
+        const localId = row.getAttribute('data-id');
+        const tx = state.transactions.find(t => (syncId && t.sync_id === syncId) || (localId && String(t.id) === String(localId)));
+        if (tx) {
+          closeModal();
+          import('./add-transaction.js').then(({ AddTransactionModal }) => {
+            AddTransactionModal.show(tx);
+          });
+        }
+      });
     });
   },
 
