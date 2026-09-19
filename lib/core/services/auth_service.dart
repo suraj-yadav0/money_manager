@@ -117,10 +117,52 @@ class AuthService {
     }
   }
 
+  /// Check if user has password authentication provider
+  bool get isPasswordUser {
+    final user = currentUser;
+    if (user == null) return false;
+    return user.providerData.any((p) => p.providerId == 'password');
+  }
+
   /// Send password reset email
   Future<void> resetPassword(String email) async {
     final auth = _requireFirebase();
     await auth.sendPasswordResetEmail(email: email.trim());
+  }
+
+  /// Verify password reset code received from email link
+  Future<String> verifyPasswordResetCode(String code) async {
+    final auth = _requireFirebase();
+    return await auth.verifyPasswordResetCode(code);
+  }
+
+  /// Confirm password reset with new password using code from email
+  Future<void> confirmPasswordReset({
+    required String code,
+    required String newPassword,
+  }) async {
+    final auth = _requireFirebase();
+    await auth.confirmPasswordReset(
+      code: code,
+      newPassword: newPassword,
+    );
+  }
+
+  /// Change password for currently logged-in user
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final user = currentUser;
+    if (user == null || user.email == null) {
+      throw Exception('No authenticated user found.');
+    }
+    final credential = EmailAuthProvider.credential(
+      email: user.email!,
+      password: currentPassword,
+    );
+    await user.reauthenticateWithCredential(credential);
+    await user.updatePassword(newPassword);
   }
 
   /// Enable or disable Guest Mode

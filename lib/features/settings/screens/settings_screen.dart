@@ -515,6 +515,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               children: [
                 if (user != null) ...[
                   OutlinedButton.icon(
+                    icon: const Icon(Icons.password, size: 16),
+                    label: const Text('Password'),
+                    onPressed: () => _showChangePasswordDialog(context),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
                     icon: syncState.status == SyncStatus.syncing
                         ? const SizedBox(
                             width: 14,
@@ -557,6 +563,309 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                 ],
               ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showChangePasswordDialog(BuildContext context) async {
+    final authService = ref.read(authServiceProvider);
+    final isPasswordUser = authService.isPasswordUser;
+    final userEmail = authService.currentUser?.email ?? '';
+
+    if (!isPasswordUser) {
+      return showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: const Color(0xFF1E1E2C),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              const Icon(Icons.security, color: Colors.amber, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                'Account Security',
+                style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'You are currently signed in with Google ($userEmail). Your authentication is managed by your Google account.',
+                style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'To also sign in using email and password, you can request a password setup email.',
+                style: GoogleFonts.inter(color: Colors.white60, fontSize: 12),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close', style: TextStyle(color: Colors.white60)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: () async {
+                try {
+                  await authService.resetPassword(userEmail);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Password setup link sent to $userEmail'),
+                        backgroundColor: Colors.green,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error: ${e.toString()}'),
+                        backgroundColor: Colors.redAccent,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                }
+              },
+              child: const Text('Send Setup Email'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final currentPwdController = TextEditingController();
+    final newPwdController = TextEditingController();
+    final confirmPwdController = TextEditingController();
+    bool isUpdating = false;
+    String? dialogError;
+    bool obscureCurrent = true;
+    bool obscureNew = true;
+
+    return showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: const Color(0xFF1E1E2C),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              const Icon(Icons.password, color: Colors.amber, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                'Change Password',
+                style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Update the password for $userEmail',
+                  style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
+                ),
+                const SizedBox(height: 16),
+                if (dialogError != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline, color: Colors.redAccent, size: 16),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            dialogError!,
+                            style: GoogleFonts.inter(color: Colors.redAccent, fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                TextField(
+                  controller: currentPwdController,
+                  obscureText: obscureCurrent,
+                  style: const TextStyle(color: Colors.white),
+                  enabled: !isUpdating,
+                  decoration: InputDecoration(
+                    labelText: 'Current Password',
+                    labelStyle: const TextStyle(color: Colors.white60),
+                    prefixIcon: const Icon(Icons.lock_outline, color: Colors.white60),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscureCurrent ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                        color: Colors.white60,
+                        size: 20,
+                      ),
+                      onPressed: () => setDialogState(() => obscureCurrent = !obscureCurrent),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.05),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: newPwdController,
+                  obscureText: obscureNew,
+                  style: const TextStyle(color: Colors.white),
+                  enabled: !isUpdating,
+                  decoration: InputDecoration(
+                    labelText: 'New Password',
+                    labelStyle: const TextStyle(color: Colors.white60),
+                    prefixIcon: const Icon(Icons.lock_reset, color: Colors.white60),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscureNew ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                        color: Colors.white60,
+                        size: 20,
+                      ),
+                      onPressed: () => setDialogState(() => obscureNew = !obscureNew),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.05),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: confirmPwdController,
+                  obscureText: obscureNew,
+                  style: const TextStyle(color: Colors.white),
+                  enabled: !isUpdating,
+                  decoration: InputDecoration(
+                    labelText: 'Confirm New Password',
+                    labelStyle: const TextStyle(color: Colors.white60),
+                    prefixIcon: const Icon(Icons.check, color: Colors.white60),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.05),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: isUpdating
+                        ? null
+                        : () async {
+                            try {
+                              await authService.resetPassword(userEmail);
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Password reset link sent to $userEmail'),
+                                    backgroundColor: Colors.green,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              setDialogState(() {
+                                dialogError = e.toString().replaceAll('Exception:', '').trim();
+                              });
+                            }
+                          },
+                    child: Text(
+                      'Forgot current password?',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: isUpdating ? null : () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: Colors.white60)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: isUpdating
+                  ? null
+                  : () async {
+                      final currentPwd = currentPwdController.text;
+                      final newPwd = newPwdController.text;
+                      final confirmPwd = confirmPwdController.text;
+
+                      if (currentPwd.isEmpty) {
+                        setDialogState(() => dialogError = 'Please enter your current password.');
+                        return;
+                      }
+                      if (newPwd.length < 6) {
+                        setDialogState(() => dialogError = 'New password must be at least 6 characters.');
+                        return;
+                      }
+                      if (newPwd != confirmPwd) {
+                        setDialogState(() => dialogError = 'New passwords do not match.');
+                        return;
+                      }
+
+                      setDialogState(() {
+                        isUpdating = true;
+                        dialogError = null;
+                      });
+
+                      try {
+                        await authService.changePassword(
+                          currentPassword: currentPwd,
+                          newPassword: newPwd,
+                        );
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Password updated successfully!'),
+                              backgroundColor: Colors.green,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        setDialogState(() {
+                          isUpdating = false;
+                          dialogError = e.toString().replaceAll('Exception:', '').trim();
+                        });
+                      }
+                    },
+              child: isUpdating
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text('Update Password'),
             ),
           ],
         ),

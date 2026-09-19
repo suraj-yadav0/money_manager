@@ -136,70 +136,128 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   Future<void> _showForgotPasswordDialog() async {
     final resetEmailController = TextEditingController(text: _emailController.text);
+    bool isSending = false;
+    String? dialogError;
+
     return showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E2C),
-        title: Text(
-          'Reset Password',
-          style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Enter your registered email address to receive password reset instructions.',
-              style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: resetEmailController,
-              keyboardType: TextInputType.emailAddress,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'Email Address',
-                labelStyle: const TextStyle(color: Colors.white60),
-                filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.05),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: const Color(0xFF1E1E2C),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              const Icon(Icons.lock_reset, color: Colors.amber, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                'Reset Password',
+                style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
               ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Enter your registered email address to receive password reset instructions.',
+                style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
+              ),
+              const SizedBox(height: 16),
+              if (dialogError != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.redAccent, size: 16),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          dialogError!,
+                          style: GoogleFonts.inter(color: Colors.redAccent, fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              TextField(
+                controller: resetEmailController,
+                keyboardType: TextInputType.emailAddress,
+                style: const TextStyle(color: Colors.white),
+                enabled: !isSending,
+                decoration: InputDecoration(
+                  labelText: 'Email Address',
+                  labelStyle: const TextStyle(color: Colors.white60),
+                  prefixIcon: const Icon(Icons.email_outlined, color: Colors.white60),
+                  filled: true,
+                  fillColor: Colors.white.withValues(alpha: 0.05),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: isSending ? null : () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: Colors.white60)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: isSending
+                  ? null
+                  : () async {
+                      final email = resetEmailController.text.trim();
+                      if (email.isEmpty || !email.contains('@')) {
+                        setDialogState(() {
+                          dialogError = 'Please enter a valid email address.';
+                        });
+                        return;
+                      }
+
+                      setDialogState(() {
+                        isSending = true;
+                        dialogError = null;
+                      });
+
+                      try {
+                        await ref.read(authServiceProvider).resetPassword(email);
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Password reset link sent to $email'),
+                              backgroundColor: Colors.green,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        setDialogState(() {
+                          isSending = false;
+                          dialogError = e.toString().replaceAll('Exception:', '').trim();
+                        });
+                      }
+                    },
+              child: isSending
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text('Send Link'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white60)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-            ),
-            onPressed: () async {
-              if (resetEmailController.text.trim().isNotEmpty) {
-                try {
-                  await ref.read(authServiceProvider).resetPassword(resetEmailController.text);
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Password reset email sent!'),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: ${e.toString()}')),
-                    );
-                  }
-                }
-              }
-            },
-            child: const Text('Send Email'),
-          ),
-        ],
       ),
     );
   }
