@@ -1,0 +1,68 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test-flutter:
+    name: Flutter Analyze & Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Java (JDK 17)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Run Dart Analysis on Auth & Settings
+        run: flutter analyze lib/core/services/auth_service.dart lib/features/auth/screens/auth_screen.dart lib/features/settings/screens/settings_screen.dart
+
+      - name: Run Flutter Unit Tests
+        run: flutter test test/password_reset_auth_test.dart test/insights_engine_test.dart test/sms_parser_test.dart test/database_and_sms_service_test.dart
+
+  test-web-app:
+    name: Web App Tests & Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: web_app/package-lock.json
+
+      - name: Install Web App Dependencies
+        working-directory: web_app
+        run: npm ci
+
+      - name: Run Web App Unit Tests
+        working-directory: web_app
+        run: npm test
+
+      - name: Build Web App Production Assets
+        working-directory: web_app
+        run: npm run build
