@@ -11,10 +11,6 @@ Private, local-first financial intelligence engine. Automated bank SMS parsing, 
 
 <sub>Click the preview above to watch the full launch video with audio.</sub>
 
----
-
-![Quantro Interface Overview](assets/quantro_preview_mockup.png)
-
 ## Features
 
 - **Local-First Ledger**: Stores all accounts, transactions, and budgets locally in SQLite via Drift ORM with full offline query performance.
