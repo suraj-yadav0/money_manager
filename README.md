@@ -1,78 +1,121 @@
-# Quantro - Smart Finance Manager
+# Quantro — Private Financial Intelligence
 
-Quantro is a private, local-first personal finance platform featuring an Android application and a responsive web client. It provides real-time income and expense tracking, automated SMS transaction detection, category budget limits, net worth calculation, and savings goals without cloud dependencies.
+[![CI](https://github.com/suraj-yadav0/money_manager/actions/workflows/ci.yml/badge.svg)](https://github.com/suraj-yadav0/money_manager/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Latest Release](https://img.shields.io/github/v/release/suraj-yadav0/money_manager?color=10b981&label=Release)](https://github.com/suraj-yadav0/money_manager/releases)
+[![Flutter](https://img.shields.io/badge/Flutter-3.24+-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
+[![Architecture](https://img.shields.io/badge/Architecture-Local--First%20%2F%20Drift%20SQLite-10b981)](#architecture--security)
+
+Quantro is a private, local-first financial intelligence engine designed for total personal financial autonomy. It pairs a Flutter Android client with a standalone, responsive web application to deliver real-time expense tracking, automated bank SMS parsing, deterministic runway forecasting, and capital solvency tracking without cloud dependencies.
 
 [![Quantro Launch Video](assets/brag.gif)](assets/brag.mp4)
 
-<sub>Click the preview above to watch the full video with audio.</sub>
-
-![Quantro Desktop and Mobile Preview](assets/quantro_preview_mockup.png)
-
-## Download & Releases
-
-### Android Application
-Download the latest pre-compiled universal APK from GitHub Releases:
-- **Latest Release:** [Quantro v1.0.1](https://github.com/suraj-yadav0/money_manager/releases/tag/v1.0.1)
-- **Direct APK Download:** [quantro-v1.0.1.apk](https://github.com/suraj-yadav0/money_manager/releases/download/v1.0.1/quantro-v1.0.1.apk)
-
-Compatible with Android 8.0+ (ARM64, ARMv7, x86_64).
+<sub>Click the preview above to watch the full launch video with audio.</sub>
 
 ---
 
-## Core Features
+![Quantro Interface Overview](assets/quantro_preview_mockup.png)
 
-- **Automated SMS Parsing:** Instantly captures debit and credit alerts from bank SMS notifications without manual entry.
-- **Local-First Privacy:** All financial records are stored locally on your device in an embedded SQLite database using Drift ORM.
-- **Visual Analytics:** Interactive category spending donut charts, daily spend velocity, and cash flow trajectory.
-- **Budget Pacing:** Monthly category budget limits with pacing warnings and progress tracks.
-- **Net Worth Tracking:** Asset and liability ledger with capital solvency ratio and timeline snapshots.
-- **Savings Goals:** Multi-stage goal tracking with milestone deadlines and linked contribution transactions.
-- **Responsive Web Client:** Standalone single-tone web application (`web_app/`) with support for local LAN hosting, private local mode, and custom Firebase sync.
-- **Biometric Security:** Optional fingerprint and Face ID authentication via local hardware.
+---
+
+## Download & Releases
+
+### Android Client
+Download pre-compiled universal release builds from GitHub Releases:
+- **Latest Release:** [Quantro v1.0.1](https://github.com/suraj-yadav0/money_manager/releases/tag/v1.0.1)
+- **Direct APK:** [quantro-v1.0.1.apk](https://github.com/suraj-yadav0/money_manager/releases/download/v1.0.1/quantro-v1.0.1.apk)
+- **Compatibility:** Android 8.0+ (ARM64, ARMv7, x86_64)
+
+---
+
+## Core Capabilities
+
+- **Automated SMS Parsing:** Ingests bank debit and credit SMS alerts locally on Android to eliminate manual transaction logging.
+- **Local-First Drift SQLite:** All accounts, transactions, and categories persist on-device using Drift ORM with full offline query performance.
+- **Deterministic Runway Forecasting:** Computes survival timelines based on liquid reserves and rolling 30-day burn velocity.
+- **Capital Solvency & Net Worth:** Real-time tracking of assets, liabilities, and debt-to-asset ratios.
+- **Multi-Platform Web Client:** Standalone single-tone web application (`web_app/`) for desktop and LAN access with zero framework bloat.
+- **Client-Side Encryption:** Optional cloud backup uses AES-256-GCM encryption with keys derived on-device via PBKDF2.
+- **Hardware Biometrics:** Fingerprint and biometric lock support via local system hardware APIs.
+- **Zero Telemetry:** No user tracking, analytics pings, or data monetization.
+
+---
+
+## Architecture & Security
+
+```
++-------------------------------------------------------------------------+
+|                              Quantro Client                             |
+|                                                                         |
+|  +--------------------+  +---------------------+  +------------------+  |
+|  |   Android Client   |  | Standalone Web App  |  |  Desktop Client  |  |
+|  |     (Flutter)      |  |    (Vite / JS)      |  |  (Linux/macOS)   |  |
+|  +---------+----------+  +----------+----------+  +--------+---------+  |
+|            |                        |                      |            |
+|            +-------------------+----+----------------------+            |
+|                                |                                        |
+|                                v                                        |
+|             +--------------------------------------+                    |
+|             |          Local-First Engine          |                    |
+|             |  - Drift SQLite (Embedded DB)        |                    |
+|             |  - Deterministic Financial Math      |                    |
+|             |  - SMS Categorization Heuristics     |                    |
+|             +------------------+-------------------+                    |
+|                                |                                        |
+|                                v                                        |
+|             +--------------------------------------+                    |
+|             |       Client-Side Encryption         |                    |
+|             |  - AES-256-GCM Payload Cipher        |                    |
+|             |  - PBKDF2 Key Stretching             |                    |
+|             |  - Zero-Knowledge Multi-Device Sync  |                    |
+|             +--------------------------------------+                    |
++-------------------------------------------------------------------------+
+```
 
 ---
 
 ## Tech Stack
 
-| Component | Technology | Description |
+| Domain | Technology | Implementation |
 |---|---|---|
-| Mobile Framework | Flutter (Dart 3) | Cross-platform client for Android, iOS, Desktop |
-| State Management | Flutter Riverpod | Reactive state and data caching |
-| Database | SQLite via Drift | Type-safe local database with migrations |
-| Web Application | Vanilla JS + Vite | Responsive single-tone web client |
-| Web Charts | Chart.js | Interactive donut, bar, and trajectory visualizations |
-| Containerization | Docker + Nginx | Production multi-stage build for local network self-hosting |
+| Mobile Client | Flutter (Dart 3) | Cross-platform client for Android, Linux, macOS, Windows |
+| State Management | Flutter Riverpod | Reactive state tree and cached computed providers |
+| Local Database | Drift SQLite | Type-safe embedded SQL database with migrations |
+| Web Application | Vanilla JS + Vite | Lightweight responsive client for browser and LAN |
+| Visualizations | Chart.js & Custom SVG | Trajectory forecasts, burn rate curves, and spending donuts |
+| Containerization | Docker + Nginx | Multi-stage production container for local self-hosting |
+| Testing | package:test, Vitest | Comprehensive unit and integration test suites |
 
 ---
 
-## Quick Start
+## Getting Started
 
 ### 1. Mobile Application (Flutter)
 
 #### Prerequisites
 - Flutter SDK >= 3.24.0
-- Android SDK (for Android builds) or Xcode (for macOS/iOS)
+- Android SDK (for Android builds) or desktop toolchains (Linux/macOS/Windows)
 
-#### Setup & Run
+#### Setup & Execution
 ```bash
 # Clone the repository
 git clone https://github.com/suraj-yadav0/money_manager.git
 cd money_manager
 
-# Install dependencies
+# Install Dart dependencies
 flutter pub get
 
-# Generate Drift database and Riverpod models
+# Generate Drift code and Riverpod providers
 dart run build_runner build --delete-conflicting-outputs
 
-# Run on a connected Android device or emulator
-flutter run -d android
+# Launch on connected device
+flutter run
 ```
 
-#### Build Release APK
+#### Build Production APK
 ```bash
 flutter build apk --release
-# Output: build/app/outputs/flutter-apk/app-release.apk
+# Artifact: build/app/outputs/flutter-apk/app-release.apk
 ```
 
 ---
@@ -86,7 +129,7 @@ The web client runs independently and can be hosted locally on your network for 
 cd web_app
 npm install
 npm run dev
-# Accessible at http://localhost:5173
+# Default port: http://localhost:5173
 ```
 
 #### Production Build & Host
@@ -96,30 +139,34 @@ npm run host
 # Accessible across LAN at http://<host-ip>:5173
 ```
 
-#### Docker Self-Hosting (Recommended for Home Servers)
+#### Docker Self-Hosting
 From the repository root:
 ```bash
 docker compose up -d --build
-# Accessible at http://localhost:8080
+# Default endpoint: http://localhost:8080
 ```
 
 ---
 
-## Testing & Quality
+## Testing & Quality Assurance
 
-### Run Flutter Test Suite
+### Flutter Test Suite
 ```bash
+# Run unit and integration tests
 flutter test
-```
 
-### Static Analysis
-```bash
+# Run static analysis
 flutter analyze
 ```
 
-### Web Build Validation
+### Web Client Test Suite
 ```bash
 cd web_app
+
+# Run auth and state unit tests
+npm test
+
+# Verify production build
 npm run build
 ```
 
@@ -130,37 +177,39 @@ npm run build
 ```
 money_manager/
 ├── lib/
-│   ├── main.dart                  # Mobile app entry point
-│   ├── core/                      # Shared theme, database, navigation, and utilities
+│   ├── main.dart                  # Flutter entry point
+│   ├── core/                      # Core infrastructure
 │   │   ├── database/              # Drift schema definitions and queries
-│   │   ├── navigation/            # Shell and routing navigation
-│   │   └── theme/                 # Design tokens and styling
-│   └── features/                  # Feature-driven modules
-│       ├── dashboard/             # Cash flow and overview screens
-│       ├── transactions/          # Transaction ledger and SMS categorization
-│       ├── budget/                # Category caps and budget tracking
-│       ├── goals/                 # Savings milestones and contributions
-│       └── networth/              # Asset/liability holdings and solvency
-├── web_app/                       # Responsive web client (Vite, JS, CSS)
+│   │   ├── navigation/            # Shell routing and navigation state
+│   │   ├── services/              # Auth, SMS parsing, and secure storage
+│   │   └── theme/                 # Design tokens and theme system
+│   └── features/                  # Domain modules
+│       ├── dashboard/             # Cash flow, runway, and liquidity views
+│       ├── transactions/          # Transaction ledger and SMS review deck
+│       ├── budget/                # Category limits and burn pacing
+│       ├── goals/                 # Milestone savings targets
+│       ├── networth/              # Asset/liability holdings and solvency
+│       ├── auth/                  # Authentication and password recovery
+│       └── settings/              # Application settings and bank configuration
+├── web_app/                       # Standalone web client
 │   ├── src/
-│   │   ├── pages/                 # Web page views (Dashboard, Ledger, Budget, Net Worth)
-│   │   └── css/                   # Responsive styling and design system
-│   └── Dockerfile                 # Multi-stage production Nginx container
-├── test/                          # Unit and integration test suites
-└── docker-compose.yml             # Self-hosting Docker composition
+│   │   ├── auth.js                # Web session and password reset logic
+│   │   ├── pages/                 # Dashboard, Ledger, Budget, and Modals
+│   │   └── css/                   # Design tokens and responsive styles
+│   ├── Dockerfile                 # Multi-stage production Nginx container
+│   └── package.json               # Web dependencies and test scripts
+├── assets/                        # Video, previews, and application assets
+├── test/                          # Flutter unit and widget tests
+├── docker-compose.yml             # Local self-hosting configuration
+├── CONTRIBUTING.md                # Development and submission guidelines
+├── SECURITY.md                    # Vulnerability reporting and encryption architecture
+└── LICENSE                        # MIT License
 ```
 
 ---
 
-## Contributing
+## Community & Guidelines
 
-1. Fork the repository and create a feature branch (`git checkout -b feature/improvement`).
-2. Make your modifications and verify all tests pass (`flutter test` and `npm run build`).
-3. Commit your changes with clear, concise messages.
-4. Submit a pull request to `main`.
-
----
-
-## License
-
-This project is licensed under the MIT License.
+- **Contributing:** Please read [CONTRIBUTING.md](CONTRIBUTING.md) for branch conventions, code style, and PR requirements.
+- **Security:** Please review [SECURITY.md](SECURITY.md) for vulnerability disclosure procedures.
+- **License:** Distributed under the [MIT License](LICENSE).
