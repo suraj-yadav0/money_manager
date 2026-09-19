@@ -2,6 +2,8 @@
 
 Quantro is a private, local-first personal finance platform featuring an Android application and a responsive web client. It provides real-time income and expense tracking, automated SMS transaction detection, category budget limits, net worth calculation, and savings goals without cloud dependencies.
 
+<video src="assets/brag.mp4" poster="assets/brag.jpg" controls="controls" muted="muted" width="100%"></video>
+
 ![Quantro Desktop and Mobile Preview](assets/quantro_preview_mockup.png)
 
 ## Download & Releases

@@ -56,4 +56,5 @@ key.properties
 # Local Agent Workspace Config
 .agents/
 .zcode/
+brag-output/
 
