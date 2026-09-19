@@ -4,6 +4,7 @@ import { AuthService } from '../auth.js';
 import { DbService } from '../db.js';
 import { CloudConfigModal } from './cloud-config-modal.js';
 import { SetupGuideModal } from './setup-guide-modal.js';
+import { ForgotPasswordModal } from './forgot-password-modal.js';
 import { ColorSchemes, isLightTheme } from '../utils/theme.js';
 
 export const AuthPage = {
@@ -461,28 +462,11 @@ export const AuthPage = {
     });
 
     // Forgot Password
-    document.getElementById('auth-forgot-pwd')?.addEventListener('click', async (e) => {
+    document.getElementById('auth-forgot-pwd')?.addEventListener('click', (e) => {
       e.preventDefault();
       const emailField = document.getElementById('auth-email-input');
       const emailVal = emailField ? emailField.value.trim() : this.emailInput.trim();
-
-      if (!emailVal || emailVal.indexOf('@') === -1) {
-        this.errorMessage = 'Please enter your email address in the field above to reset password.';
-        this.successMessage = null;
-        StateManager.notify();
-        return;
-      }
-
-      try {
-        await AuthService.resetPassword(emailVal);
-        this.successMessage = `Password reset instructions sent to ${emailVal}.`;
-        this.errorMessage = null;
-        StateManager.notify();
-      } catch (err) {
-        this.errorMessage = err.message || 'Could not send password reset email.';
-        this.successMessage = null;
-        StateManager.notify();
-      }
+      ForgotPasswordModal.show(emailVal);
     });
 
     // Submit Auth

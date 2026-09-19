@@ -7,6 +7,7 @@ import { AppConstants } from '../utils/constants.js';
 import { Router } from '../router.js';
 import { CloudConfigModal } from './cloud-config-modal.js';
 import { SetupGuideModal } from './setup-guide-modal.js';
+import { ChangePasswordModal } from './change-password-modal.js';
 import { isUsingCustomFirebase, getActiveProjectId } from '../firebase-config.js';
 import { ColorSchemes, getTheme, isLightTheme } from '../utils/theme.js';
 
@@ -79,6 +80,10 @@ export const SettingsPage = {
                 <span>${isCustom ? 'Manage Custom Cloud' : 'Configure Custom Cloud'}</span>
               </button>
               ${user ? `
+                <button class="btn-ghost" id="settings-change-pwd-btn" style="padding: 7px 14px; font-size: 12.5px;">
+                  <span class="material-icons" style="font-size: 15px;">password</span>
+                  <span>Security & Password</span>
+                </button>
                 <button class="btn-secondary" id="settings-sync-now-btn" ${this.isSyncing ? 'disabled' : ''} style="padding: 7px 16px; font-size: 13px;">
                   <span class="material-icons ${this.isSyncing ? 'animate-spin' : ''}" style="font-size: 16px;">sync</span>
                   ${this.isSyncing ? 'Syncing...' : 'Sync Now'}
@@ -292,6 +297,11 @@ export const SettingsPage = {
         await AuthService.signOut();
         Router.closeOverlay();
       }
+    });
+
+    // Change password modal
+    document.getElementById('settings-change-pwd-btn')?.addEventListener('click', () => {
+      ChangePasswordModal.show();
     });
 
     // Connect cloud account

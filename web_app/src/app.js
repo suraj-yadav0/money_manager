@@ -9,6 +9,7 @@ import { StateManager } from './state.js';
 import { AuthService } from './auth.js';
 import { DbService } from './db.js';
 import { Router } from './router.js';
+import { ResetPasswordModal } from './pages/reset-password-modal.js';
 import { getTheme } from './utils/theme.js';
 
 // Setup theme switcher baseline (default: dark theme)
@@ -86,6 +87,13 @@ async function initApp() {
   
   // 1. Initialize client-side SPA routing inside '#app' element
   Router.init('#app');
+
+  // Check for password reset mode and oobCode in URL from email link
+  const mode = urlParams.get('mode');
+  const oobCode = urlParams.get('oobCode');
+  if (mode === 'resetPassword' && oobCode) {
+    ResetPasswordModal.show(oobCode);
+  }
 
   // 2. Watch Firebase Auth state changes
   AuthService.watchAuthState(async (user) => {

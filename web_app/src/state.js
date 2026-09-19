@@ -2,6 +2,31 @@
 
 import { getTheme, isLightTheme } from './utils/theme.js';
 
+export const safeStorage = {
+  getItem(key) {
+    try {
+      if (typeof localStorage !== 'undefined' && typeof localStorage.getItem === 'function') {
+        return localStorage.getItem(key);
+      }
+    } catch (_) {}
+    return null;
+  },
+  setItem(key, val) {
+    try {
+      if (typeof localStorage !== 'undefined' && typeof localStorage.setItem === 'function') {
+        localStorage.setItem(key, val);
+      }
+    } catch (_) {}
+  },
+  removeItem(key) {
+    try {
+      if (typeof localStorage !== 'undefined' && typeof localStorage.removeItem === 'function') {
+        localStorage.removeItem(key);
+      }
+    } catch (_) {}
+  }
+};
+
 class AppStateManager {
   constructor() {
     this.listeners = new Set();
@@ -33,7 +58,7 @@ class AppStateManager {
       bankAccounts: [],
 
       // Theme State (supported theme IDs from ColorSchemes)
-      theme: localStorage.getItem('money_manager_theme') || localStorage.getItem('quantro_theme') || (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'),
+      theme: safeStorage.getItem('money_manager_theme') || safeStorage.getItem('quantro_theme') || (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'),
 
       // Cloud Sync Metadata
       syncStatus: 'idle',        // 'idle' | 'syncing' | 'synced' | 'error'
@@ -45,8 +70,10 @@ class AppStateManager {
     this.lastLightTheme = isLightTheme(this.state.theme) ? this.state.theme : 'light';
     
     // Apply theme on load
-    document.documentElement.setAttribute('data-theme', this.state.theme);
-    this.updateMetaThemeColor(this.state.theme);
+    if (typeof document !== 'undefined' && document.documentElement) {
+      document.documentElement.setAttribute('data-theme', this.state.theme);
+      this.updateMetaThemeColor(this.state.theme);
+    }
 
     this.loadGuestState();
   }
@@ -65,10 +92,12 @@ class AppStateManager {
   setTheme(theme) {
     const validTheme = getTheme(theme)?.id || 'dark';
     this.state.theme = validTheme;
-    localStorage.setItem('money_manager_theme', validTheme);
-    localStorage.setItem('quantro_theme', validTheme);
-    document.documentElement.setAttribute('data-theme', validTheme);
-    this.updateMetaThemeColor(validTheme);
+    safeStorage.setItem('money_manager_theme', validTheme);
+    safeStorage.setItem('quantro_theme', validTheme);
+    if (typeof document !== 'undefined' && document.documentElement) {
+      document.documentElement.setAttribute('data-theme', validTheme);
+      this.updateMetaThemeColor(validTheme);
+    }
     if (isLightTheme(validTheme)) {
       this.lastLightTheme = validTheme;
     } else {
@@ -85,7 +114,7 @@ class AppStateManager {
 
   // Toggle Theme
   toggleTheme() {
-    const current = document.documentElement.getAttribute('data-theme') || this.state.theme || 'dark';
+    const current = (typeof document !== 'undefined' && document.documentElement ? document.documentElement.getAttribute('data-theme') : null) || this.state.theme || 'dark';
     const isLight = isLightTheme(current);
     if (isLight) {
       this.lastLightTheme = current;
@@ -122,33 +151,33 @@ class AppStateManager {
 
   // Load from LocalStorage if user was in guest mode
   loadGuestState() {
-    const isGuest = localStorage.getItem('quantro_is_guest_mode') === 'true';
+    const isGuest = safeStorage.getItem('quantro_is_guest_mode') === 'true';
     this.state.isGuestMode = isGuest;
 
     if (isGuest && !this.state.user) {
       try {
-        const savedSettings = localStorage.getItem('money_manager_user_settings');
+        const savedSettings = safeStorage.getItem('money_manager_user_settings');
         if (savedSettings) this.state.userSettings = JSON.parse(savedSettings);
         
-        const savedTx = localStorage.getItem('money_manager_transactions');
+        const savedTx = safeStorage.getItem('money_manager_transactions');
         if (savedTx) this.state.transactions = JSON.parse(savedTx);
         
-        const savedCats = localStorage.getItem('money_manager_categories');
+        const savedCats = safeStorage.getItem('money_manager_categories');
         if (savedCats) this.state.categories = JSON.parse(savedCats);
         
-        const savedGoals = localStorage.getItem('money_manager_goals');
+        const savedGoals = safeStorage.getItem('money_manager_goals');
         if (savedGoals) this.state.goals = JSON.parse(savedGoals);
         
-        const savedContribs = localStorage.getItem('money_manager_goal_contributions');
+        const savedContribs = safeStorage.getItem('money_manager_goal_contributions');
         if (savedContribs) this.state.goalContributions = JSON.parse(savedContribs);
         
-        const savedRules = localStorage.getItem('money_manager_categorization_rules');
+        const savedRules = safeStorage.getItem('money_manager_categorization_rules');
         if (savedRules) this.state.categorizationRules = JSON.parse(savedRules);
         
-        const savedAssets = localStorage.getItem('money_manager_assets');
+        const savedAssets = safeStorage.getItem('money_manager_assets');
         if (savedAssets) this.state.assets = JSON.parse(savedAssets);
         
-        const savedBankAccs = localStorage.getItem('money_manager_bank_accounts');
+        const savedBankAccs = safeStorage.getItem('money_manager_bank_accounts');
         if (savedBankAccs) this.state.bankAccounts = JSON.parse(savedBankAccs);
       } catch (err) {
         console.error('Error loading guest state from localStorage:', err);
@@ -161,14 +190,14 @@ class AppStateManager {
     if (!this.state.isGuestMode || this.state.user) return;
     
     try {
-      localStorage.setItem('money_manager_user_settings', JSON.stringify(this.state.userSettings));
-      localStorage.setItem('money_manager_transactions', JSON.stringify(this.state.transactions));
-      localStorage.setItem('money_manager_categories', JSON.stringify(this.state.categories));
-      localStorage.setItem('money_manager_goals', JSON.stringify(this.state.goals));
-      localStorage.setItem('money_manager_goal_contributions', JSON.stringify(this.state.goalContributions));
-      localStorage.setItem('money_manager_categorization_rules', JSON.stringify(this.state.categorizationRules));
-      localStorage.setItem('money_manager_assets', JSON.stringify(this.state.assets));
-      localStorage.setItem('money_manager_bank_accounts', JSON.stringify(this.state.bankAccounts));
+      safeStorage.setItem('money_manager_user_settings', JSON.stringify(this.state.userSettings));
+      safeStorage.setItem('money_manager_transactions', JSON.stringify(this.state.transactions));
+      safeStorage.setItem('money_manager_categories', JSON.stringify(this.state.categories));
+      safeStorage.setItem('money_manager_goals', JSON.stringify(this.state.goals));
+      safeStorage.setItem('money_manager_goal_contributions', JSON.stringify(this.state.goalContributions));
+      safeStorage.setItem('money_manager_categorization_rules', JSON.stringify(this.state.categorizationRules));
+      safeStorage.setItem('money_manager_assets', JSON.stringify(this.state.assets));
+      safeStorage.setItem('money_manager_bank_accounts', JSON.stringify(this.state.bankAccounts));
     } catch (err) {
       console.error('Error saving guest state to localStorage:', err);
     }
@@ -176,7 +205,7 @@ class AppStateManager {
 
   // Turn on guest mode
   enableGuestMode() {
-    localStorage.setItem('quantro_is_guest_mode', 'true');
+    safeStorage.setItem('quantro_is_guest_mode', 'true');
     this.state.isGuestMode = true;
     this.loadGuestState();
     this.notify();
@@ -184,22 +213,22 @@ class AppStateManager {
 
   // Turn off guest mode
   disableGuestMode() {
-    localStorage.setItem('quantro_is_guest_mode', 'false');
+    safeStorage.setItem('quantro_is_guest_mode', 'false');
     this.state.isGuestMode = false;
     this.notify();
   }
 
   // Clear ONLY the local guest storage keys without wiping in-memory state for logged-in users
   clearGuestLocalStorage() {
-    localStorage.removeItem('money_manager_user_settings');
-    localStorage.removeItem('money_manager_transactions');
-    localStorage.removeItem('money_manager_categories');
-    localStorage.removeItem('money_manager_goals');
-    localStorage.removeItem('money_manager_goal_contributions');
-    localStorage.removeItem('money_manager_categorization_rules');
-    localStorage.removeItem('money_manager_assets');
-    localStorage.removeItem('money_manager_bank_accounts');
-    localStorage.removeItem('quantro_is_guest_mode');
+    safeStorage.removeItem('money_manager_user_settings');
+    safeStorage.removeItem('money_manager_transactions');
+    safeStorage.removeItem('money_manager_categories');
+    safeStorage.removeItem('money_manager_goals');
+    safeStorage.removeItem('money_manager_goal_contributions');
+    safeStorage.removeItem('money_manager_categorization_rules');
+    safeStorage.removeItem('money_manager_assets');
+    safeStorage.removeItem('money_manager_bank_accounts');
+    safeStorage.removeItem('quantro_is_guest_mode');
     this.state.isGuestMode = false;
   }
 
@@ -252,22 +281,22 @@ class AppStateManager {
       if (Array.isArray(this.state.goals) && this.state.goals.some(isReal)) return true;
       if (Array.isArray(this.state.assets) && this.state.assets.some(isReal)) return true;
 
-      const txStr = localStorage.getItem('money_manager_transactions');
+      const txStr = safeStorage.getItem('money_manager_transactions');
       if (txStr) {
         const txs = JSON.parse(txStr);
         if (Array.isArray(txs) && txs.some(isReal)) return true;
       }
-      const goalStr = localStorage.getItem('money_manager_goals');
+      const goalStr = safeStorage.getItem('money_manager_goals');
       if (goalStr) {
         const goals = JSON.parse(goalStr);
         if (Array.isArray(goals) && goals.some(isReal)) return true;
       }
-      const assetStr = localStorage.getItem('money_manager_assets');
+      const assetStr = safeStorage.getItem('money_manager_assets');
       if (assetStr) {
         const assets = JSON.parse(assetStr);
         if (Array.isArray(assets) && assets.some(isReal)) return true;
       }
-      const accStr = localStorage.getItem('money_manager_bank_accounts');
+      const accStr = safeStorage.getItem('money_manager_bank_accounts');
       if (accStr) {
         const accs = JSON.parse(accStr);
         if (Array.isArray(accs) && accs.length > 0) return true;
