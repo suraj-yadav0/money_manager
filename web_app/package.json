@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "host": "vite preview --host 0.0.0.0 --port 5173"
+    "host": "vite preview --host 0.0.0.0 --port 5173",
+    "test": "node --test src/auth.test.js"
   },
   "devDependencies": {
     "vite": "^8.2.0"
