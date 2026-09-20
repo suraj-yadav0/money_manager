@@ -5,6 +5,7 @@ import { DateRangeHelper } from '../utils/date-range.js';
 import { Formatters } from '../utils/formatters.js';
 import { IconHelper, findCategory, isInvestmentCategory, isCapitalAllocation } from '../utils/icons.js';
 import { Router } from '../router.js';
+import { NetWorthPage } from './net-worth.js';
 import { reconcileGoalSavedAmounts, reconcileInvestmentAssets } from '../db.js';
 import { getTheme, isLightTheme, getThemePalette, hexToRgba } from '../utils/theme.js';
 
@@ -29,6 +30,7 @@ export const DashboardPage = {
     const stats = this.calculateStats(state);
     const recentTx = this.getRecentTransactions(state);
     const activeGoals = state.goals.filter(g => g.is_active !== false && !g.is_completed).slice(0, 2);
+    const cardBillAlerts = this.getCardBillAlerts(state);
 
     return `
       <div class="animate-fade-in" style="display: flex; flex-direction: column; gap: 28px;">
@@ -61,6 +63,9 @@ export const DashboardPage = {
               </button>
             </div>
           </div>
+
+          <!-- Credit Card Bill Alerts -->
+          ${this.renderCardBillAlerts(cardBillAlerts)}
 
           <!-- 4 Asymmetrical Bento KPI Stat Cards -->
           <div class="kpi-grid">
@@ -540,6 +545,90 @@ export const DashboardPage = {
       .slice(0, 6);
   },
 
+  getCardBillAlerts(state) {
+    const cards = (state.bankAccounts || []).filter(acc => 
+      acc.account_type === 'credit_card' || 
+      acc.accountType === 'credit_card' ||
+      acc.account_type === 'Credit Card' || 
+      acc.accountType === 'Credit Card'
+    );
+    
+    const alerts = [];
+    const today = new Date();
+    const todayDay = today.getDate();
+
+    for (const card of cards) {
+      const notifyEnabled = card.auto_notify_bill !== false && card.autoNotifyBill !== false;
+      if (!notifyEnabled) continue;
+
+      const billingDay = Number(card.billing_cycle_day || card.billingCycleDay || 0);
+      const dueDay = Number(card.payment_due_day || card.paymentDueDay || 0);
+      const debt = Number(card.balance || 0);
+      const cardName = card.name || card.bank_name || 'Credit Card';
+      const lastBill = Number(card.last_bill_amount || card.lastBillAmount || debt);
+
+      if (billingDay > 0 && (todayDay === billingDay || todayDay === billingDay + 1)) {
+        alerts.push({
+          type: 'statement',
+          card,
+          title: `Statement Generated: ${cardName}`,
+          message: `Bill generated for ${cardName}. Total due: ${Formatters.currency(lastBill > 0 ? lastBill : debt)}${dueDay > 0 ? ` (Due on day ${dueDay})` : ''}.`,
+          severity: 'info'
+        });
+        continue;
+      }
+
+      if (dueDay > 0 && debt > 0) {
+        let daysUntilDue = dueDay - todayDay;
+        if (daysUntilDue < 0) {
+          const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+          daysUntilDue = (daysInMonth - todayDay) + dueDay;
+        }
+
+        if (daysUntilDue >= 0 && daysUntilDue <= 3) {
+          alerts.push({
+            type: 'due',
+            card,
+            title: `Payment Due: ${cardName}`,
+            message: daysUntilDue === 0
+              ? `Payment of ${Formatters.currency(debt)} for ${cardName} is due today!`
+              : `Payment of ${Formatters.currency(debt)} for ${cardName} is due in ${daysUntilDue} day${daysUntilDue > 1 ? 's' : ''}!`,
+            severity: 'warning'
+          });
+        }
+      }
+    }
+
+    return alerts;
+  },
+
+  renderCardBillAlerts(alerts) {
+    if (!alerts || alerts.length === 0) return '';
+
+    return `
+      <div class="card-bill-alerts-container" style="display: flex; flex-direction: column; gap: 10px; margin-top: 14px;">
+        ${alerts.map(a => `
+          <div class="card-bill-alert" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 18px; border-radius: var(--radius-md); background: ${a.severity === 'warning' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(59, 130, 246, 0.1)'}; border: 1px solid ${a.severity === 'warning' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(59, 130, 246, 0.3)'};">
+            <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+              <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; background: ${a.severity === 'warning' ? 'rgba(239, 68, 68, 0.18)' : 'rgba(59, 130, 246, 0.18)'}; color: ${a.severity === 'warning' ? 'var(--error)' : 'var(--primary)'}; flex-shrink: 0;">
+                <span class="material-icons" style="font-size: 20px;">${a.severity === 'warning' ? 'notification_important' : 'receipt'}</span>
+              </div>
+              <div style="min-width: 0;">
+                <div style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${a.title}</div>
+                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">${a.message}</div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+              <button class="btn-primary btn-sm alert-pay-bill-btn" data-card-id="${a.card.sync_id || a.card.id}" style="padding: 6px 14px; font-size: 12px; height: 32px; border-radius: var(--radius-sm);">
+                Pay Bill
+              </button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  },
+
   renderCategoryCardBody(state) {
     const activeTheme = document.documentElement.getAttribute('data-theme') || state.theme || 'dark';
     const stats = this.calculateStats(state);
@@ -815,6 +904,18 @@ export const DashboardPage = {
           import('./add-transaction.js').then(({ AddTransactionModal }) => {
             AddTransactionModal.show(tx);
           });
+        }
+      });
+    });
+
+    // Credit card bill alert CTA
+    document.querySelectorAll('.alert-pay-bill-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const cardId = btn.getAttribute('data-card-id');
+        const card = (state.bankAccounts || []).find(a => String(a.sync_id || a.id) === String(cardId));
+        if (card) {
+          NetWorthPage.showPayBillModal(card);
         }
       });
     });

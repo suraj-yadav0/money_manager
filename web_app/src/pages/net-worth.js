@@ -337,6 +337,10 @@ export const NetWorthPage = {
           icon: 'credit_card',
           value: Math.abs(Number(acc.balance || 0)),
           isBank: true,
+          isCreditCard: true,
+          creditLimit: Number(acc.credit_limit || acc.creditLimit || 0),
+          billingCycleDay: acc.billing_cycle_day || acc.billingCycleDay,
+          paymentDueDay: acc.payment_due_day || acc.paymentDueDay,
           sync_id: acc.sync_id || '',
           id: acc.id || ''
         })),
@@ -347,7 +351,8 @@ export const NetWorthPage = {
           value: Math.abs(Number(a.value || 0)),
           typeLabel: formatTypeLabel(a.type || 'loan'),
           icon: categoryIcons[a.type] || 'request_quote',
-          isBank: false
+          isBank: false,
+          isCreditCard: false
         }))
     ];
 
@@ -362,9 +367,14 @@ export const NetWorthPage = {
               <p class="hero-subtitle">Holistic balance sheet evaluation, capital assets, investment portfolios, and liability exposure.</p>
             </div>
             
-            <button class="btn-primary" id="add-asset-btn" style="align-self: flex-start;">
-              <span class="material-icons" style="font-size: 18px;">add</span> Add Asset / Debt
-            </button>
+            <div style="display: flex; gap: 8px; align-self: flex-start; flex-wrap: wrap;">
+              <button class="btn-secondary" id="paste-statement-btn" style="display: flex; align-items: center; gap: 6px; padding: 10px 16px;">
+                <span class="material-icons" style="font-size: 18px;">content_paste</span> Paste Statement
+              </button>
+              <button class="btn-primary" id="add-asset-btn" style="display: flex; align-items: center; gap: 6px; padding: 10px 18px;">
+                <span class="material-icons" style="font-size: 18px;">add</span> Add Asset / Debt
+              </button>
+            </div>
           </div>
 
           <!-- Net Worth KPI Stat Cards -->
@@ -602,15 +612,21 @@ export const NetWorthPage = {
                     </div>
                     <div class="asset-card-info">
                       <div class="asset-card-name" title="${a.name}">${a.name}</div>
-                      <div class="asset-card-meta">
+                      <div class="asset-card-meta" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
                         <span class="asset-category-pill">${a.typeLabel}</span>
                         ${a.isBank ? `<span class="asset-account-pill">Card</span>` : ''}
+                        ${a.creditLimit > 0 ? `<span style="font-size: 11px; color: #10B981; font-weight: 600;">Avail: ₹${Math.max(0, a.creditLimit - a.value).toLocaleString()}</span>` : ''}
                       </div>
                     </div>
                   </div>
                   <div class="asset-card-right">
-                    <div class="asset-card-value" style="color: var(--text-secondary);">${Formatters.currency(a.value)}</div>
-                    <div class="asset-card-actions">
+                    <div class="asset-card-value" style="color: var(--error); font-weight: 800;">${Formatters.currency(a.value)}</div>
+                    <div class="asset-card-actions" style="display: flex; gap: 6px; align-items: center;">
+                      ${a.isCreditCard && a.value > 0 ? `
+                        <button class="btn-primary pay-card-bill-btn" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" style="padding: 4px 10px; font-size: 11px; height: 28px; line-height: 1; border-radius: var(--radius-sm);">
+                          Pay Bill
+                        </button>
+                      ` : ''}
                       <button class="btn-icon btn-icon-sm edit-holding-btn" data-is-bank="${a.isBank ? 'true' : 'false'}" data-sync-id="${a.sync_id || ''}" data-id="${a.id || ''}" title="Edit holding">
                         <span class="material-icons" style="font-size: 16px;">edit</span>
                       </button>
@@ -638,6 +654,24 @@ export const NetWorthPage = {
   bindEvents(state) {
     document.getElementById('add-asset-btn')?.addEventListener('click', () => {
       this.showAddAssetModal();
+    });
+
+    document.getElementById('paste-statement-btn')?.addEventListener('click', () => {
+      this.showPasteStatementModal();
+    });
+
+    document.querySelectorAll('.pay-card-bill-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const syncId = btn.getAttribute('data-sync-id');
+        const localId = btn.getAttribute('data-id');
+        const bankAcc = (state.bankAccounts || []).find(a => 
+          (syncId && String(a.sync_id) === String(syncId)) || (localId && String(a.id) === String(localId))
+        );
+        if (bankAcc) {
+          this.showPayBillModal(bankAcc);
+        }
+      });
     });
 
     const deleteBtns = document.querySelectorAll('.delete-asset-btn');
@@ -1478,6 +1512,28 @@ export const NetWorthPage = {
           `).join('')}
         </div>
 
+        <!-- Credit Card Specific Details -->
+        <div id="add-asset-cc-fields" style="display: none; padding: 14px; background: var(--bg-surface-subtle); border-radius: var(--radius-md); border: 1px solid var(--glass-border); margin-bottom: 20px;">
+          <div style="font-size: 12px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+            <span class="material-icons" style="font-size: 16px; color: var(--primary);">credit_card</span>
+            <span>Credit Card Configuration</span>
+          </div>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-size: 11.5px; margin-bottom: 4px;">Total Credit Limit (₹)</label>
+            <input type="number" class="form-control" id="add-asset-cc-limit" placeholder="50000" value="50000" style="font-size: 13px;">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+              <label class="form-label" style="font-size: 11.5px; margin-bottom: 4px;">Statement Day (1-31)</label>
+              <input type="number" min="1" max="31" class="form-control" id="add-asset-cc-cycle" placeholder="1" value="1" style="font-size: 13px;">
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="font-size: 11.5px; margin-bottom: 4px;">Payment Due Day (1-31)</label>
+              <input type="number" min="1" max="31" class="form-control" id="add-asset-cc-due" placeholder="20" value="20" style="font-size: 13px;">
+            </div>
+          </div>
+        </div>
+
         <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--glass-border);">
           <button class="btn-secondary" id="modal-cancel-asset" style="width: auto; padding: 10px 20px;">Cancel</button>
           <button class="btn-primary" id="modal-submit-asset" style="width: auto; padding: 10px 22px;">Save Record</button>
@@ -1538,6 +1594,16 @@ export const NetWorthPage = {
           const text = p.querySelector('span:last-child');
           if (text) text.style.color = active ? 'var(--text-primary)' : 'var(--text-secondary)';
         });
+
+        const ccFields = overlay.querySelector('#add-asset-cc-fields');
+        if (selectedType === 'credit_card') {
+          isLiability = true;
+          liabilityBtn?.classList.add('active');
+          assetBtn?.classList.remove('active');
+          if (ccFields) ccFields.style.display = 'block';
+        } else {
+          if (ccFields) ccFields.style.display = 'none';
+        }
       });
     });
 
@@ -1556,13 +1622,36 @@ export const NetWorthPage = {
         return;
       }
 
-      await DbService.addAsset({
-        name,
-        value: val,
-        isLiability,
-        is_liability: isLiability,
-        type: selectedType
-      });
+      if (selectedType === 'credit_card') {
+        const creditLimit = parseFloat(overlay.querySelector('#add-asset-cc-limit')?.value) || 50000;
+        const billingCycleDay = parseInt(overlay.querySelector('#add-asset-cc-cycle')?.value, 10) || 1;
+        const paymentDueDay = parseInt(overlay.querySelector('#add-asset-cc-due')?.value, 10) || 20;
+
+        await DbService.addBankAccount({
+          name,
+          bank_name: name,
+          account_type: 'credit_card',
+          balance: val,
+          credit_limit: creditLimit,
+          billing_cycle_day: billingCycleDay,
+          payment_due_day: paymentDueDay
+        });
+      } else if (selectedType === 'savings' && !isLiability) {
+        await DbService.addBankAccount({
+          name,
+          bank_name: name,
+          account_type: 'savings',
+          balance: val
+        });
+      } else {
+        await DbService.addAsset({
+          name,
+          value: val,
+          isLiability,
+          is_liability: isLiability,
+          type: selectedType
+        });
+      }
 
       closeModal();
       StateManager.notify();
@@ -1823,6 +1912,24 @@ export const NetWorthPage = {
           `).join('')}
         </div>
 
+        <!-- Credit Card Specific Limit & Cycle Settings -->
+        <div id="edit-bank-credit-fields" style="display: ${selectedType === 'credit_card' ? 'block' : 'none'}; margin-bottom: 20px; background: var(--bg-surface-subtle); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--glass-border);">
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="margin-bottom: 6px; font-size: 12px;">Total Card Limit (₹)</label>
+            <input type="number" class="form-control" id="edit-bank-limit-field" value="${account.credit_limit || account.creditLimit || ''}" placeholder="e.g. 100000">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="margin-bottom: 6px; font-size: 12px;">Statement Day (1-31)</label>
+              <input type="number" min="1" max="31" class="form-control" id="edit-bank-billing-day-field" value="${account.billing_cycle_day || account.billingCycleDay || ''}" placeholder="1-31">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="margin-bottom: 6px; font-size: 12px;">Payment Due Day (1-31)</label>
+              <input type="number" min="1" max="31" class="form-control" id="edit-bank-due-day-field" value="${account.payment_due_day || account.paymentDueDay || ''}" placeholder="1-31">
+            </div>
+          </div>
+        </div>
+
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--glass-border);">
           <button class="btn-ghost" id="edit-bank-delete-btn" style="color: var(--error); padding: 10px 14px; font-size: 13px;">
             <span class="material-icons" style="font-size: 16px;">delete_outline</span> Delete
@@ -1858,9 +1965,14 @@ export const NetWorthPage = {
     });
 
     const typePills = overlay.querySelectorAll('.edit-bank-type-pill');
+    const creditFields = overlay.querySelector('#edit-bank-credit-fields');
+
     typePills.forEach(pill => {
       pill.addEventListener('click', () => {
         selectedType = pill.getAttribute('data-type');
+        if (creditFields) {
+          creditFields.style.display = selectedType === 'credit_card' ? 'block' : 'none';
+        }
         typePills.forEach(p => {
           const active = p === pill;
           p.style.background = active ? 'var(--bg-surface-elevated)' : 'var(--bg-surface-subtle)';
@@ -1895,14 +2007,244 @@ export const NetWorthPage = {
         return;
       }
 
+      const limitVal = parseFloat(overlay.querySelector('#edit-bank-limit-field')?.value);
+      const billingDayVal = parseInt(overlay.querySelector('#edit-bank-billing-day-field')?.value, 10);
+      const dueDayVal = parseInt(overlay.querySelector('#edit-bank-due-day-field')?.value, 10);
+
       await DbService.updateBankAccount(account.sync_id || account.id, {
         name,
         balance: rawVal,
         account_type: selectedType,
-        accountType: selectedType
+        accountType: selectedType,
+        credit_limit: !isNaN(limitVal) ? limitVal : null,
+        creditLimit: !isNaN(limitVal) ? limitVal : null,
+        billing_cycle_day: !isNaN(billingDayVal) ? billingDayVal : null,
+        billingCycleDay: !isNaN(billingDayVal) ? billingDayVal : null,
+        payment_due_day: !isNaN(dueDayVal) ? dueDayVal : null,
+        paymentDueDay: !isNaN(dueDayVal) ? dueDayVal : null,
       });
 
       closeModal();
+    });
+  },
+
+  showPayBillModal(account) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay active';
+    const state = StateManager.state;
+    const debt = Math.abs(Number(account.balance || 0));
+    const limit = Number(account.credit_limit || account.creditLimit || 0);
+    const available = limit > 0 ? Math.max(0, limit - debt) : 0;
+    const sourceAccounts = (state.bankAccounts || []).filter(a => (a.account_type !== 'credit_card' && a.accountType !== 'credit_card'));
+
+    overlay.innerHTML = `
+      <div class="modern-modal-dialog animate-scale-up" style="max-width: 460px; padding: 30px;">
+        <div class="modal-header" style="margin-bottom: 20px;">
+          <div class="modal-title">
+            <span class="material-icons" style="color: var(--primary); font-size: 24px;">payments</span>
+            <span>Pay Credit Card Bill</span>
+          </div>
+          <button class="modal-close-btn" id="modal-close-pay-bill" aria-label="Close">
+            <span class="material-icons" style="font-size: 20px;">close</span>
+          </button>
+        </div>
+
+        <div style="background: var(--bg-surface-subtle); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--glass-border); margin-bottom: 20px;">
+          <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">${account.name}</div>
+          <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+            <div>
+              <div style="font-size: 11px; color: var(--text-muted);">Current Debt</div>
+              <div style="font-size: 16px; font-weight: 800; color: var(--error);">₹${debt.toLocaleString()}</div>
+            </div>
+            <div>
+              <div style="font-size: 11px; color: var(--text-muted);">Available Limit</div>
+              <div style="font-size: 16px; font-weight: 800; color: #10B981;">${limit > 0 ? `₹${available.toLocaleString()}` : 'N/A'}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label class="form-label" style="margin-bottom: 6px;">Payment Amount (₹)</label>
+          <div style="position: relative;">
+            <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-weight: 700; color: var(--text-muted);">₹</span>
+            <input type="number" class="form-control" id="pay-bill-amount-field" value="${debt}" style="padding-left: 32px; font-size: 16px; font-weight: 700;">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 24px;">
+          <label class="form-label" style="margin-bottom: 6px;">Pay From Account</label>
+          <select class="form-control" id="pay-bill-source-select">
+            ${sourceAccounts.map(a => `
+              <option value="${a.sync_id || a.id}">
+                ${a.name} (₹${Number(a.balance || 0).toLocaleString()})
+              </option>
+            `).join('')}
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button class="btn-secondary" id="pay-bill-cancel-btn" style="padding: 10px 18px;">Cancel</button>
+          <button class="btn-primary" id="pay-bill-confirm-btn" style="padding: 10px 22px;">Confirm & Clear Debt</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+    const closeModal = () => { if (document.body.contains(overlay)) document.body.removeChild(overlay); };
+    overlay.querySelector('#modal-close-pay-bill')?.addEventListener('click', closeModal);
+    overlay.querySelector('#pay-bill-cancel-btn')?.addEventListener('click', closeModal);
+
+    overlay.querySelector('#pay-bill-confirm-btn')?.addEventListener('click', async () => {
+      const payAmount = parseFloat(overlay.querySelector('#pay-bill-amount-field').value);
+      const sourceId = overlay.querySelector('#pay-bill-source-select').value;
+      if (isNaN(payAmount) || payAmount <= 0) {
+        alert('Please enter a valid payment amount.');
+        return;
+      }
+      const sourceAcc = sourceAccounts.find(a => String(a.sync_id || a.id) === String(sourceId));
+      if (!sourceAcc) {
+        alert('Please select a source account.');
+        return;
+      }
+
+      // 1. Deduct funds from source account
+      const newSourceBal = Number(sourceAcc.balance || 0) - payAmount;
+      await DbService.updateBankAccount(sourceAcc.sync_id || sourceAcc.id, { balance: newSourceBal });
+
+      // 2. Deduct debt from credit card
+      const newDebt = Math.max(0, debt - payAmount);
+      await DbService.updateBankAccount(account.sync_id || account.id, { balance: newDebt });
+
+      // 3. Add transfer transaction
+      await DbService.addTransaction({
+        amount: payAmount,
+        type: 'transfer',
+        payment_mode: 'Transfer',
+        paymentMode: 'Transfer',
+        note: `Credit Card Bill Payment: ${account.name}`,
+        account_id: sourceAcc.sync_id || sourceAcc.id,
+        accountId: sourceAcc.sync_id || sourceAcc.id,
+        timestamp: new Date().toISOString()
+      });
+
+      closeModal();
+      this.render();
+    });
+  },
+
+  showPasteStatementModal() {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay active';
+    overlay.innerHTML = `
+      <div class="modern-modal-dialog animate-scale-up" style="max-width: 480px; padding: 28px;">
+        <div class="modal-header" style="margin-bottom: 18px;">
+          <div class="modal-title">
+            <span class="material-icons" style="color: var(--primary); font-size: 24px;">content_paste</span>
+            <span>Paste SMS / Bill Statement</span>
+          </div>
+          <button class="modal-close-btn" id="modal-close-paste" aria-label="Close">
+            <span class="material-icons" style="font-size: 20px;">close</span>
+          </button>
+        </div>
+
+        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 14px;">
+          Paste your credit card statement SMS or email text below to automatically extract your bill amount, card number, and due date.
+        </p>
+
+        <textarea class="form-control" id="paste-statement-text" rows="4" placeholder="e.g. Statement for HDFC Bank Credit Card ending 1234. Total Amt Due: Rs 24,500.00, Due Date: 15-Mar-2026." style="resize: vertical; font-size: 13px; margin-bottom: 14px;"></textarea>
+
+        <div id="paste-parsed-preview" style="display: none; background: var(--bg-surface-subtle); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--glass-border); margin-bottom: 16px;">
+          <div style="font-size: 12px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">Detected Details:</div>
+          <div id="paste-parsed-details" style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;"></div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+          <button class="btn-secondary" id="paste-cancel-btn">Cancel</button>
+          <button class="btn-primary" id="paste-apply-btn" disabled>Apply to Card</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+    const closeModal = () => { if (document.body.contains(overlay)) document.body.removeChild(overlay); };
+    overlay.querySelector('#modal-close-paste')?.addEventListener('click', closeModal);
+    overlay.querySelector('#paste-cancel-btn')?.addEventListener('click', closeModal);
+
+    const textarea = overlay.querySelector('#paste-statement-text');
+    const preview = overlay.querySelector('#paste-parsed-preview');
+    const details = overlay.querySelector('#paste-parsed-details');
+    const applyBtn = overlay.querySelector('#paste-apply-btn');
+    let parsedData = null;
+
+    textarea.addEventListener('input', () => {
+      const text = textarea.value.trim();
+      if (!text) {
+        preview.style.display = 'none';
+        applyBtn.disabled = true;
+        return;
+      }
+
+      // Regex parser in JS matching Dart parser
+      const totalMatch = text.match(/(?:total\s*(?:amt\s*)?due|total\s*due\s*(?:is|:)?|due\s*amt|amount\s*due)\s*[:\s-]*\s*(?:rs\.?|inr|₹)?\s*([\d,]+(?:\.\d{1,2})?)/i) ||
+                         text.match(/(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d{1,2})?)/i);
+      const cardMatch = text.match(/(?:card|ending with|ending in|ending)\s*(?:no\.?)?\s*[:\s]*[*xX]*([0-9]{3,4})/i) ||
+                        text.match(/[*xX]{2,}([0-9]{3,4})/);
+      const dueMatch = text.match(/(?:due\s*date|pay\s*by|before|payment\s*due\s*date)\s*(?:is|:)?\s*(\d{1,2}[-/\.](?:[A-Za-z]{3}|\d{1,2})[-/\.]\d{2,4})/i);
+
+      let bankName = 'Credit Card';
+      if (/hdfc/i.test(text)) bankName = 'HDFC Bank';
+      else if (/icici/i.test(text)) bankName = 'ICICI Bank';
+      else if (/sbi/i.test(text)) bankName = 'State Bank of India';
+      else if (/axis/i.test(text)) bankName = 'Axis Bank';
+      else if (/kotak/i.test(text)) bankName = 'Kotak Bank';
+
+      const totalDue = totalMatch ? parseFloat(totalMatch[1].replace(/,/g, '')) : null;
+      const cardLast4 = cardMatch ? cardMatch[1] : null;
+      const dueDate = dueMatch ? dueMatch[1] : null;
+
+      if (totalDue) {
+        parsedData = { totalDue, cardLast4, dueDate, bankName };
+        preview.style.display = 'block';
+        details.innerHTML = `
+          <div><strong>Bank:</strong> ${bankName}</div>
+          ${cardLast4 ? `<div><strong>Card Last 4:</strong> •••• ${cardLast4}</div>` : ''}
+          <div><strong>Total Due:</strong> ₹${totalDue.toLocaleString()}</div>
+          ${dueDate ? `<div><strong>Due Date:</strong> ${dueDate}</div>` : ''}
+        `;
+        applyBtn.disabled = false;
+      } else {
+        preview.style.display = 'none';
+        applyBtn.disabled = true;
+      }
+    });
+
+    applyBtn.addEventListener('click', async () => {
+      if (!parsedData) return;
+      const state = StateManager.state;
+      let target = (state.bankAccounts || []).find(a => 
+        (a.account_type === 'credit_card' || a.accountType === 'credit_card') &&
+        ((parsedData.cardLast4 && (a.account_number_last4 === parsedData.cardLast4 || a.accountNumberLast4 === parsedData.cardLast4)) ||
+         a.name.toLowerCase().includes(parsedData.bankName.toLowerCase()))
+      );
+
+      if (target) {
+        await DbService.updateBankAccount(target.sync_id || target.id, {
+          balance: parsedData.totalDue,
+          last_bill_amount: parsedData.totalDue
+        });
+      } else {
+        await DbService.addBankAccount({
+          name: `${parsedData.bankName} ${parsedData.cardLast4 ? '•••• ' + parsedData.cardLast4 : 'Credit Card'}`,
+          bank_name: parsedData.bankName,
+          account_number_last4: parsedData.cardLast4,
+          account_type: 'credit_card',
+          balance: parsedData.totalDue,
+          last_bill_amount: parsedData.totalDue,
+          credit_limit: 50000
+        });
+      }
+      closeModal();
+      this.render();
     });
   },
 

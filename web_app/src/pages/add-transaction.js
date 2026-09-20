@@ -158,13 +158,18 @@ export const AddTransactionModal = {
                 <option value="">No Account Linked</option>
                 ${(state.bankAccounts || []).map(acc => {
                   const isSelected = String(this.activeTx?.accountId || this.activeTx?.account_id) === String(acc.sync_id || acc.id);
+                  const isCC = acc.account_type === 'credit_card' || acc.accountType === 'credit_card' || acc.account_type === 'Credit Card' || acc.accountType === 'Credit Card';
+                  const balanceText = isCC 
+                    ? `Avail: ₹${Math.max(0, (acc.credit_limit || acc.creditLimit || 0) - (acc.balance || 0)).toLocaleString()}`
+                    : `₹${(acc.balance || 0).toLocaleString()}`;
                   return `
                     <option value="${acc.sync_id || acc.id}" ${isSelected ? 'selected' : ''}>
-                      ${acc.name} (${acc.bank_name || 'Bank'}) • ₹${(acc.balance || 0).toLocaleString()}
+                      ${acc.name} (${acc.bank_name || (isCC ? 'Card' : 'Bank')}) • ${balanceText}
                     </option>
                   `;
                 }).join('')}
               </select>
+              <div id="tx-credit-limit-info" style="display: none; margin-top: 8px;"></div>
             </div>
           ` : ''}
 
@@ -263,10 +268,15 @@ export const AddTransactionModal = {
 
     // Amount Steppers & Preset Addition Chips
     const amountInput = document.getElementById('tx-amount-input');
+    amountInput?.addEventListener('input', () => {
+      this.updateCreditCardLimitNotice();
+    });
+
     document.getElementById('tx-amount-minus')?.addEventListener('click', () => {
       if (amountInput) {
         const cur = parseFloat(amountInput.value) || 0;
         amountInput.value = Math.max(0, cur - 500);
+        this.updateCreditCardLimitNotice();
       }
     });
 
@@ -274,6 +284,7 @@ export const AddTransactionModal = {
       if (amountInput) {
         const cur = parseFloat(amountInput.value) || 0;
         amountInput.value = cur + 500;
+        this.updateCreditCardLimitNotice();
       }
     });
 
@@ -284,6 +295,7 @@ export const AddTransactionModal = {
           const cur = parseFloat(amountInput.value) || 0;
           const total = cur + delta;
           amountInput.value = total % 1 === 0 ? total : total.toFixed(2);
+          this.updateCreditCardLimitNotice();
         }
       });
     });
@@ -305,8 +317,30 @@ export const AddTransactionModal = {
       pill.addEventListener('click', () => {
         this.paymentMode = pill.getAttribute('data-mode') || 'Cash';
         modePills.forEach(p => p.classList.toggle('active', p === pill));
+
+        if (this.paymentMode === 'Credit Card') {
+          const accountSelect = document.getElementById('tx-account-select');
+          if (accountSelect && !accountSelect.value) {
+            const firstCC = (StateManager.state.bankAccounts || []).find(a => 
+              a.account_type === 'credit_card' || a.accountType === 'credit_card' ||
+              a.account_type === 'Credit Card' || a.accountType === 'Credit Card'
+            );
+            if (firstCC) {
+              accountSelect.value = firstCC.sync_id || firstCC.id;
+            }
+          }
+        }
+        this.updateCreditCardLimitNotice();
       });
     });
+
+    // Bank Account Select Change
+    document.getElementById('tx-account-select')?.addEventListener('change', () => {
+      this.updateCreditCardLimitNotice();
+    });
+
+    // Initial limit notice check
+    this.updateCreditCardLimitNotice();
 
     // Save Button
     document.getElementById('tx-save-btn')?.addEventListener('click', async () => {
@@ -337,6 +371,27 @@ export const AddTransactionModal = {
         const cleanCatId = /^\d+$/.test(String(this.selectedCategoryId)) ? parseInt(this.selectedCategoryId, 10) : (this.selectedCategoryId || 1);
         const cleanGoalId = goalId ? (/^\d+$/.test(String(goalId)) ? parseInt(goalId, 10) : goalId) : null;
         const cleanAccountId = accountId ? (/^\d+$/.test(String(accountId)) ? parseInt(accountId, 10) : accountId) : null;
+
+        const selectedAcc = (StateManager.state.bankAccounts || []).find(a => String(a.sync_id || a.id) === String(cleanAccountId));
+        const isCC = selectedAcc && (
+          selectedAcc.account_type === 'credit_card' || selectedAcc.accountType === 'credit_card' ||
+          selectedAcc.account_type === 'Credit Card' || selectedAcc.accountType === 'Credit Card'
+        );
+        if (isCC && this.selectedType === 'expense') {
+          const limit = Number(selectedAcc.credit_limit || selectedAcc.creditLimit || 0);
+          const debt = Number(selectedAcc.balance || 0);
+          const available = Math.max(0, limit - debt);
+          if (amount > available) {
+            const proceed = confirm(`Transaction amount (₹${amount.toLocaleString()}) exceeds the available credit limit of ₹${available.toLocaleString()}. Proceed anyway?`);
+            if (!proceed) {
+              if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.textContent = this.activeTx ? 'Update Record' : 'Record Transaction';
+              }
+              return;
+            }
+          }
+        }
 
         const txPayload = {
           amount,
@@ -398,6 +453,58 @@ export const AddTransactionModal = {
       const text = pill.querySelector('span:last-child');
       if (text) text.style.color = isSelected ? 'var(--text-primary)' : 'var(--text-secondary)';
     });
+  },
+
+  updateCreditCardLimitNotice() {
+    const accountSelect = document.getElementById('tx-account-select');
+    const infoEl = document.getElementById('tx-credit-limit-info');
+    if (!accountSelect || !infoEl) return;
+
+    const selectedAccId = accountSelect.value;
+    const state = StateManager.state;
+    const acc = (state.bankAccounts || []).find(a => String(a.sync_id || a.id) === String(selectedAccId));
+
+    const isCreditCard = acc && (
+      acc.account_type === 'credit_card' ||
+      acc.accountType === 'credit_card' ||
+      acc.account_type === 'Credit Card' ||
+      acc.accountType === 'Credit Card'
+    );
+
+    if (!isCreditCard) {
+      infoEl.style.display = 'none';
+      infoEl.innerHTML = '';
+      return;
+    }
+
+    const limit = Number(acc.credit_limit || acc.creditLimit || 0);
+    const debt = Number(acc.balance || 0);
+    const available = Math.max(0, limit - debt);
+    const amount = parseFloat(document.getElementById('tx-amount-input')?.value) || 0;
+    const isExpense = this.selectedType === 'expense';
+    const exceedsLimit = isExpense && amount > available;
+
+    infoEl.style.display = 'block';
+    infoEl.innerHTML = `
+      <div style="padding: 10px 12px; border-radius: var(--radius-sm); font-size: 12px; line-height: 1.4; background: ${exceedsLimit ? 'rgba(239, 68, 68, 0.1)' : 'var(--bg-surface-subtle)'}; border: 1px solid ${exceedsLimit ? 'rgba(239, 68, 68, 0.35)' : 'var(--glass-border)'}; color: ${exceedsLimit ? 'var(--error)' : 'var(--text-secondary)'};">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${exceedsLimit ? '4px' : '0'};">
+          <span style="display: flex; align-items: center; gap: 5px; font-weight: 600;">
+            <span class="material-icons" style="font-size: 15px; color: ${exceedsLimit ? 'var(--error)' : 'var(--primary)'};">
+              ${exceedsLimit ? 'warning' : 'credit_card'}
+            </span>
+            <span>Available Credit: ₹${available.toLocaleString()} / ₹${limit.toLocaleString()}</span>
+          </span>
+          <span style="font-size: 11px; font-weight: 600; color: ${debt > 0 ? 'var(--error)' : 'var(--text-muted)'};">
+            Debt: ₹${debt.toLocaleString()}
+          </span>
+        </div>
+        ${exceedsLimit ? `
+          <div style="font-size: 11.5px; font-weight: 600; color: var(--error);">
+            Warning: Transaction amount (₹${amount.toLocaleString()}) exceeds available credit limit by ₹${(amount - available).toLocaleString()}.
+          </div>
+        ` : ''}
+      </div>
+    `;
   },
 
   close() {

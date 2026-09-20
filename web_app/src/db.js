@@ -160,6 +160,14 @@ function normalizeCategory(raw, docId) {
 function normalizeBankAccount(raw, docId) {
   const syncId = raw.sync_id || docId;
   const isDefault = raw.is_default !== undefined ? Boolean(raw.is_default) : Boolean(raw.isDefault);
+  const creditLimit = raw.credit_limit !== undefined ? Number(raw.credit_limit) : (raw.creditLimit !== undefined ? Number(raw.creditLimit) : null);
+  const billingCycleDay = raw.billing_cycle_day !== undefined ? Number(raw.billing_cycle_day) : (raw.billingCycleDay !== undefined ? Number(raw.billingCycleDay) : null);
+  const paymentDueDay = raw.payment_due_day !== undefined ? Number(raw.payment_due_day) : (raw.paymentDueDay !== undefined ? Number(raw.paymentDueDay) : null);
+  const gracePeriodDays = Number(raw.grace_period_days || raw.gracePeriodDays || 20);
+  const lastBillAmount = raw.last_bill_amount !== undefined ? Number(raw.last_bill_amount) : (raw.lastBillAmount !== undefined ? Number(raw.lastBillAmount) : null);
+  const lastBillDate = raw.last_bill_date || raw.lastBillDate ? parseTimestamp(raw.last_bill_date || raw.lastBillDate) : null;
+  const minAmountDue = raw.min_amount_due !== undefined ? Number(raw.min_amount_due) : (raw.minAmountDue !== undefined ? Number(raw.minAmountDue) : null);
+  const autoNotifyBill = raw.auto_notify_bill !== undefined ? Boolean(raw.auto_notify_bill) : (raw.autoNotifyBill !== undefined ? Boolean(raw.autoNotifyBill) : true);
 
   return {
     ...raw,
@@ -173,6 +181,22 @@ function normalizeBankAccount(raw, docId) {
     account_type: raw.account_type || raw.accountType || 'savings',
     accountType: raw.account_type || raw.accountType || 'savings',
     balance: Number(raw.balance || 0),
+    credit_limit: creditLimit,
+    creditLimit: creditLimit,
+    billing_cycle_day: billingCycleDay,
+    billingCycleDay: billingCycleDay,
+    payment_due_day: paymentDueDay,
+    paymentDueDay: paymentDueDay,
+    grace_period_days: gracePeriodDays,
+    gracePeriodDays: gracePeriodDays,
+    last_bill_amount: lastBillAmount,
+    lastBillAmount: lastBillAmount,
+    last_bill_date: lastBillDate,
+    lastBillDate: lastBillDate,
+    min_amount_due: minAmountDue,
+    minAmountDue: minAmountDue,
+    auto_notify_bill: autoNotifyBill,
+    autoNotifyBill: autoNotifyBill,
     color_hex: raw.color_hex || raw.colorHex || null,
     colorHex: raw.color_hex || raw.colorHex || null,
     is_default: isDefault,
@@ -995,7 +1019,17 @@ export const DbService = {
         const oldAcc = accounts.find(a => (a.sync_id && String(a.sync_id) === targetId) || String(a.id) === targetId);
         if (oldAcc) {
           const oldAmount = Number(oldTx.amount || 0);
-          const rollbackBal = oldTx.type === 'income' ? oldAcc.balance - oldAmount : oldAcc.balance + oldAmount;
+          const isCredit = oldAcc.account_type === 'credit_card' || oldAcc.accountType === 'credit_card';
+          let rollbackBal;
+          if (isCredit) {
+            rollbackBal = oldTx.type === 'expense'
+              ? Math.max(0, Number(oldAcc.balance || 0) - oldAmount)
+              : Number(oldAcc.balance || 0) + oldAmount;
+          } else {
+            rollbackBal = oldTx.type === 'income'
+              ? Number(oldAcc.balance || 0) - oldAmount
+              : Number(oldAcc.balance || 0) + oldAmount;
+          }
           await this.updateBankAccount(oldAcc.sync_id || oldAcc.id, { balance: rollbackBal });
         }
       }
@@ -1006,7 +1040,17 @@ export const DbService = {
         const newAcc = accounts.find(a => (a.sync_id && String(a.sync_id) === targetId) || String(a.id) === targetId);
         if (newAcc) {
           const newAmount = Number(newTx.amount || 0);
-          const appliedBal = newTx.type === 'income' ? newAcc.balance + newAmount : newAcc.balance - newAmount;
+          const isCredit = newAcc.account_type === 'credit_card' || newAcc.accountType === 'credit_card';
+          let appliedBal;
+          if (isCredit) {
+            appliedBal = newTx.type === 'expense'
+              ? Number(newAcc.balance || 0) + newAmount
+              : Math.max(0, Number(newAcc.balance || 0) - newAmount);
+          } else {
+            appliedBal = newTx.type === 'income'
+              ? Number(newAcc.balance || 0) + newAmount
+              : Number(newAcc.balance || 0) - newAmount;
+          }
           await this.updateBankAccount(newAcc.sync_id || newAcc.id, { balance: appliedBal });
         }
       }
@@ -1019,6 +1063,15 @@ export const DbService = {
     try {
       const isGuest = StateManager.state.isGuestMode && !StateManager.state.user;
       const syncId = accountData.sync_id || generateUUID();
+      const creditLimit = accountData.credit_limit !== undefined ? Number(accountData.credit_limit) : (accountData.creditLimit !== undefined ? Number(accountData.creditLimit) : null);
+      const billingCycleDay = accountData.billing_cycle_day !== undefined ? Number(accountData.billing_cycle_day) : (accountData.billingCycleDay !== undefined ? Number(accountData.billingCycleDay) : null);
+      const paymentDueDay = accountData.payment_due_day !== undefined ? Number(accountData.payment_due_day) : (accountData.paymentDueDay !== undefined ? Number(accountData.paymentDueDay) : null);
+      const gracePeriodDays = Number(accountData.grace_period_days || accountData.gracePeriodDays || 20);
+      const lastBillAmount = accountData.last_bill_amount !== undefined ? Number(accountData.last_bill_amount) : (accountData.lastBillAmount !== undefined ? Number(accountData.lastBillAmount) : null);
+      const lastBillDate = accountData.last_bill_date || accountData.lastBillDate ? parseTimestamp(accountData.last_bill_date || accountData.lastBillDate) : null;
+      const minAmountDue = accountData.min_amount_due !== undefined ? Number(accountData.min_amount_due) : (accountData.minAmountDue !== undefined ? Number(accountData.minAmountDue) : null);
+      const autoNotifyBill = accountData.auto_notify_bill !== undefined ? Boolean(accountData.auto_notify_bill) : (accountData.autoNotifyBill !== undefined ? Boolean(accountData.autoNotifyBill) : true);
+
       const newAccount = {
         ...accountData,
         sync_id: syncId,
@@ -1031,6 +1084,22 @@ export const DbService = {
         account_type: accountData.account_type || accountData.accountType || 'savings',
         accountType: accountData.account_type || accountData.accountType || 'savings',
         balance: Number(accountData.balance || 0),
+        credit_limit: creditLimit,
+        creditLimit: creditLimit,
+        billing_cycle_day: billingCycleDay,
+        billingCycleDay: billingCycleDay,
+        payment_due_day: paymentDueDay,
+        paymentDueDay: paymentDueDay,
+        grace_period_days: gracePeriodDays,
+        gracePeriodDays: gracePeriodDays,
+        last_bill_amount: lastBillAmount,
+        lastBillAmount: lastBillAmount,
+        last_bill_date: lastBillDate,
+        lastBillDate: lastBillDate,
+        min_amount_due: minAmountDue,
+        minAmountDue: minAmountDue,
+        auto_notify_bill: autoNotifyBill,
+        autoNotifyBill: autoNotifyBill,
         color_hex: accountData.color_hex || accountData.colorHex || null,
         colorHex: accountData.color_hex || accountData.colorHex || null,
         is_default: Boolean(accountData.is_default || accountData.isDefault),
