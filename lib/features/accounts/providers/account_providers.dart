@@ -66,6 +66,14 @@ class AccountNotifier extends StateNotifier<AsyncValue<void>> {
     String? last4,
     String accountType = 'savings',
     double balance = 0.0,
+    double? creditLimit,
+    int? billingCycleDay,
+    int? paymentDueDay,
+    int gracePeriodDays = 20,
+    double? lastBillAmount,
+    DateTime? lastBillDate,
+    double? minAmountDue,
+    bool autoNotifyBill = true,
     String? colorHex,
     bool isDefault = false,
   }) async {
@@ -87,6 +95,14 @@ class AccountNotifier extends StateNotifier<AsyncValue<void>> {
               accountNumberLast4: Value(last4),
               accountType: Value(accountType),
               balance: Value(balance),
+              creditLimit: Value(creditLimit),
+              billingCycleDay: Value(billingCycleDay),
+              paymentDueDay: Value(paymentDueDay),
+              gracePeriodDays: Value(gracePeriodDays),
+              lastBillAmount: Value(lastBillAmount),
+              lastBillDate: Value(lastBillDate),
+              minAmountDue: Value(minAmountDue),
+              autoNotifyBill: Value(autoNotifyBill),
               colorHex: Value(colorHex),
               isDefault: Value(isDefault),
             ),
@@ -105,6 +121,14 @@ class AccountNotifier extends StateNotifier<AsyncValue<void>> {
     String? last4,
     String accountType = 'savings',
     double balance = 0.0,
+    double? creditLimit,
+    int? billingCycleDay,
+    int? paymentDueDay,
+    int gracePeriodDays = 20,
+    double? lastBillAmount,
+    DateTime? lastBillDate,
+    double? minAmountDue,
+    bool autoNotifyBill = true,
     String? colorHex,
     bool isDefault = false,
   }) async {
@@ -126,11 +150,91 @@ class AccountNotifier extends StateNotifier<AsyncValue<void>> {
           accountNumberLast4: Value(last4),
           accountType: Value(accountType),
           balance: Value(balance),
+          creditLimit: Value(creditLimit),
+          billingCycleDay: Value(billingCycleDay),
+          paymentDueDay: Value(paymentDueDay),
+          gracePeriodDays: Value(gracePeriodDays),
+          lastBillAmount: Value(lastBillAmount),
+          lastBillDate: Value(lastBillDate),
+          minAmountDue: Value(minAmountDue),
+          autoNotifyBill: Value(autoNotifyBill),
           colorHex: Value(colorHex),
           isDefault: Value(isDefault),
           updatedAt: Value(DateTime.now()),
         ),
       );
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
+  }
+
+  Future<void> recordBillPayment({
+    required int creditCardAccountId,
+    required int fromAccountId,
+    required double amount,
+    String? note,
+  }) async {
+    state = const AsyncLoading();
+    try {
+      final db = ref.read(databaseProvider);
+
+      final cc = await (db.select(db.bankAccounts)
+            ..where((a) => a.id.equals(creditCardAccountId)))
+          .getSingleOrNull();
+      final fromAcc = await (db.select(db.bankAccounts)
+            ..where((a) => a.id.equals(fromAccountId)))
+          .getSingleOrNull();
+
+      if (cc == null || fromAcc == null) {
+        throw Exception('Account not found');
+      }
+
+      // Deduct funds from source account
+      final newFromBalance = fromAcc.balance - amount;
+      await (db.update(db.bankAccounts)..where((a) => a.id.equals(fromAcc.id)))
+          .write(
+        BankAccountsCompanion(
+          balance: Value(newFromBalance),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+
+      // Deduct debt from credit card account
+      final newDebt = (cc.balance - amount).clamp(0.0, double.infinity);
+      final newLastBill = cc.lastBillAmount != null
+          ? (cc.lastBillAmount! - amount).clamp(0.0, double.infinity)
+          : null;
+
+      await (db.update(db.bankAccounts)..where((a) => a.id.equals(cc.id))).write(
+        BankAccountsCompanion(
+          balance: Value(newDebt),
+          lastBillAmount: Value(newLastBill),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+
+      // Find or fallback to Bills & Utilities category
+      final billCat = await (db.select(db.categories)
+            ..where((c) => c.name.equals('Bills & Utilities'))
+            ..limit(1))
+          .getSingleOrNull() ??
+          await (db.select(db.categories)..limit(1)).getSingle();
+
+      // Record transaction as transfer so it settles liability without double counting as category expense
+      await db.into(db.transactions).insert(
+            TransactionsCompanion.insert(
+              amount: amount,
+              type: 'transfer',
+              categoryId: billCat.id,
+              accountId: Value(fromAcc.id),
+              timestamp: DateTime.now(),
+              paymentMode: const Value('Transfer'),
+              note: Value(note ?? 'Credit Card Bill Payment: ${cc.name}'),
+            ),
+          );
+
       state = const AsyncData(null);
     } catch (e, st) {
       state = AsyncError(e, st);

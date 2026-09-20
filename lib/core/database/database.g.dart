@@ -1298,6 +1298,99 @@ class $BankAccountsTable extends BankAccounts
     requiredDuringInsert: false,
     defaultValue: const Constant(0.0),
   );
+  static const VerificationMeta _creditLimitMeta = const VerificationMeta(
+    'creditLimit',
+  );
+  @override
+  late final GeneratedColumn<double> creditLimit = GeneratedColumn<double>(
+    'credit_limit',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _billingCycleDayMeta = const VerificationMeta(
+    'billingCycleDay',
+  );
+  @override
+  late final GeneratedColumn<int> billingCycleDay = GeneratedColumn<int>(
+    'billing_cycle_day',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _paymentDueDayMeta = const VerificationMeta(
+    'paymentDueDay',
+  );
+  @override
+  late final GeneratedColumn<int> paymentDueDay = GeneratedColumn<int>(
+    'payment_due_day',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _gracePeriodDaysMeta = const VerificationMeta(
+    'gracePeriodDays',
+  );
+  @override
+  late final GeneratedColumn<int> gracePeriodDays = GeneratedColumn<int>(
+    'grace_period_days',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(20),
+  );
+  static const VerificationMeta _lastBillAmountMeta = const VerificationMeta(
+    'lastBillAmount',
+  );
+  @override
+  late final GeneratedColumn<double> lastBillAmount = GeneratedColumn<double>(
+    'last_bill_amount',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastBillDateMeta = const VerificationMeta(
+    'lastBillDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastBillDate = GeneratedColumn<DateTime>(
+    'last_bill_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _minAmountDueMeta = const VerificationMeta(
+    'minAmountDue',
+  );
+  @override
+  late final GeneratedColumn<double> minAmountDue = GeneratedColumn<double>(
+    'min_amount_due',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _autoNotifyBillMeta = const VerificationMeta(
+    'autoNotifyBill',
+  );
+  @override
+  late final GeneratedColumn<bool> autoNotifyBill = GeneratedColumn<bool>(
+    'auto_notify_bill',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("auto_notify_bill" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
   static const VerificationMeta _colorHexMeta = const VerificationMeta(
     'colorHex',
   );
@@ -1372,6 +1465,14 @@ class $BankAccountsTable extends BankAccounts
     accountNumberLast4,
     accountType,
     balance,
+    creditLimit,
+    billingCycleDay,
+    paymentDueDay,
+    gracePeriodDays,
+    lastBillAmount,
+    lastBillDate,
+    minAmountDue,
+    autoNotifyBill,
     colorHex,
     isDefault,
     isSynced,
@@ -1437,6 +1538,78 @@ class $BankAccountsTable extends BankAccounts
       context.handle(
         _balanceMeta,
         balance.isAcceptableOrUnknown(data['balance']!, _balanceMeta),
+      );
+    }
+    if (data.containsKey('credit_limit')) {
+      context.handle(
+        _creditLimitMeta,
+        creditLimit.isAcceptableOrUnknown(
+          data['credit_limit']!,
+          _creditLimitMeta,
+        ),
+      );
+    }
+    if (data.containsKey('billing_cycle_day')) {
+      context.handle(
+        _billingCycleDayMeta,
+        billingCycleDay.isAcceptableOrUnknown(
+          data['billing_cycle_day']!,
+          _billingCycleDayMeta,
+        ),
+      );
+    }
+    if (data.containsKey('payment_due_day')) {
+      context.handle(
+        _paymentDueDayMeta,
+        paymentDueDay.isAcceptableOrUnknown(
+          data['payment_due_day']!,
+          _paymentDueDayMeta,
+        ),
+      );
+    }
+    if (data.containsKey('grace_period_days')) {
+      context.handle(
+        _gracePeriodDaysMeta,
+        gracePeriodDays.isAcceptableOrUnknown(
+          data['grace_period_days']!,
+          _gracePeriodDaysMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_bill_amount')) {
+      context.handle(
+        _lastBillAmountMeta,
+        lastBillAmount.isAcceptableOrUnknown(
+          data['last_bill_amount']!,
+          _lastBillAmountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_bill_date')) {
+      context.handle(
+        _lastBillDateMeta,
+        lastBillDate.isAcceptableOrUnknown(
+          data['last_bill_date']!,
+          _lastBillDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('min_amount_due')) {
+      context.handle(
+        _minAmountDueMeta,
+        minAmountDue.isAcceptableOrUnknown(
+          data['min_amount_due']!,
+          _minAmountDueMeta,
+        ),
+      );
+    }
+    if (data.containsKey('auto_notify_bill')) {
+      context.handle(
+        _autoNotifyBillMeta,
+        autoNotifyBill.isAcceptableOrUnknown(
+          data['auto_notify_bill']!,
+          _autoNotifyBillMeta,
+        ),
       );
     }
     if (data.containsKey('color_hex')) {
@@ -1506,6 +1679,38 @@ class $BankAccountsTable extends BankAccounts
         DriftSqlType.double,
         data['${effectivePrefix}balance'],
       )!,
+      creditLimit: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}credit_limit'],
+      ),
+      billingCycleDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}billing_cycle_day'],
+      ),
+      paymentDueDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}payment_due_day'],
+      ),
+      gracePeriodDays: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}grace_period_days'],
+      )!,
+      lastBillAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}last_bill_amount'],
+      ),
+      lastBillDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_bill_date'],
+      ),
+      minAmountDue: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}min_amount_due'],
+      ),
+      autoNotifyBill: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}auto_notify_bill'],
+      )!,
       colorHex: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}color_hex'],
@@ -1543,6 +1748,14 @@ class BankAccount extends DataClass implements Insertable<BankAccount> {
   final String? accountNumberLast4;
   final String accountType;
   final double balance;
+  final double? creditLimit;
+  final int? billingCycleDay;
+  final int? paymentDueDay;
+  final int gracePeriodDays;
+  final double? lastBillAmount;
+  final DateTime? lastBillDate;
+  final double? minAmountDue;
+  final bool autoNotifyBill;
   final String? colorHex;
   final bool isDefault;
   final bool isSynced;
@@ -1556,6 +1769,14 @@ class BankAccount extends DataClass implements Insertable<BankAccount> {
     this.accountNumberLast4,
     required this.accountType,
     required this.balance,
+    this.creditLimit,
+    this.billingCycleDay,
+    this.paymentDueDay,
+    required this.gracePeriodDays,
+    this.lastBillAmount,
+    this.lastBillDate,
+    this.minAmountDue,
+    required this.autoNotifyBill,
     this.colorHex,
     required this.isDefault,
     required this.isSynced,
@@ -1576,6 +1797,26 @@ class BankAccount extends DataClass implements Insertable<BankAccount> {
     }
     map['account_type'] = Variable<String>(accountType);
     map['balance'] = Variable<double>(balance);
+    if (!nullToAbsent || creditLimit != null) {
+      map['credit_limit'] = Variable<double>(creditLimit);
+    }
+    if (!nullToAbsent || billingCycleDay != null) {
+      map['billing_cycle_day'] = Variable<int>(billingCycleDay);
+    }
+    if (!nullToAbsent || paymentDueDay != null) {
+      map['payment_due_day'] = Variable<int>(paymentDueDay);
+    }
+    map['grace_period_days'] = Variable<int>(gracePeriodDays);
+    if (!nullToAbsent || lastBillAmount != null) {
+      map['last_bill_amount'] = Variable<double>(lastBillAmount);
+    }
+    if (!nullToAbsent || lastBillDate != null) {
+      map['last_bill_date'] = Variable<DateTime>(lastBillDate);
+    }
+    if (!nullToAbsent || minAmountDue != null) {
+      map['min_amount_due'] = Variable<double>(minAmountDue);
+    }
+    map['auto_notify_bill'] = Variable<bool>(autoNotifyBill);
     if (!nullToAbsent || colorHex != null) {
       map['color_hex'] = Variable<String>(colorHex);
     }
@@ -1601,6 +1842,26 @@ class BankAccount extends DataClass implements Insertable<BankAccount> {
           : Value(accountNumberLast4),
       accountType: Value(accountType),
       balance: Value(balance),
+      creditLimit: creditLimit == null && nullToAbsent
+          ? const Value.absent()
+          : Value(creditLimit),
+      billingCycleDay: billingCycleDay == null && nullToAbsent
+          ? const Value.absent()
+          : Value(billingCycleDay),
+      paymentDueDay: paymentDueDay == null && nullToAbsent
+          ? const Value.absent()
+          : Value(paymentDueDay),
+      gracePeriodDays: Value(gracePeriodDays),
+      lastBillAmount: lastBillAmount == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastBillAmount),
+      lastBillDate: lastBillDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastBillDate),
+      minAmountDue: minAmountDue == null && nullToAbsent
+          ? const Value.absent()
+          : Value(minAmountDue),
+      autoNotifyBill: Value(autoNotifyBill),
       colorHex: colorHex == null && nullToAbsent
           ? const Value.absent()
           : Value(colorHex),
@@ -1628,6 +1889,14 @@ class BankAccount extends DataClass implements Insertable<BankAccount> {
       ),
       accountType: serializer.fromJson<String>(json['accountType']),
       balance: serializer.fromJson<double>(json['balance']),
+      creditLimit: serializer.fromJson<double?>(json['creditLimit']),
+      billingCycleDay: serializer.fromJson<int?>(json['billingCycleDay']),
+      paymentDueDay: serializer.fromJson<int?>(json['paymentDueDay']),
+      gracePeriodDays: serializer.fromJson<int>(json['gracePeriodDays']),
+      lastBillAmount: serializer.fromJson<double?>(json['lastBillAmount']),
+      lastBillDate: serializer.fromJson<DateTime?>(json['lastBillDate']),
+      minAmountDue: serializer.fromJson<double?>(json['minAmountDue']),
+      autoNotifyBill: serializer.fromJson<bool>(json['autoNotifyBill']),
       colorHex: serializer.fromJson<String?>(json['colorHex']),
       isDefault: serializer.fromJson<bool>(json['isDefault']),
       isSynced: serializer.fromJson<bool>(json['isSynced']),
@@ -1646,6 +1915,14 @@ class BankAccount extends DataClass implements Insertable<BankAccount> {
       'accountNumberLast4': serializer.toJson<String?>(accountNumberLast4),
       'accountType': serializer.toJson<String>(accountType),
       'balance': serializer.toJson<double>(balance),
+      'creditLimit': serializer.toJson<double?>(creditLimit),
+      'billingCycleDay': serializer.toJson<int?>(billingCycleDay),
+      'paymentDueDay': serializer.toJson<int?>(paymentDueDay),
+      'gracePeriodDays': serializer.toJson<int>(gracePeriodDays),
+      'lastBillAmount': serializer.toJson<double?>(lastBillAmount),
+      'lastBillDate': serializer.toJson<DateTime?>(lastBillDate),
+      'minAmountDue': serializer.toJson<double?>(minAmountDue),
+      'autoNotifyBill': serializer.toJson<bool>(autoNotifyBill),
       'colorHex': serializer.toJson<String?>(colorHex),
       'isDefault': serializer.toJson<bool>(isDefault),
       'isSynced': serializer.toJson<bool>(isSynced),
@@ -1662,6 +1939,14 @@ class BankAccount extends DataClass implements Insertable<BankAccount> {
     Value<String?> accountNumberLast4 = const Value.absent(),
     String? accountType,
     double? balance,
+    Value<double?> creditLimit = const Value.absent(),
+    Value<int?> billingCycleDay = const Value.absent(),
+    Value<int?> paymentDueDay = const Value.absent(),
+    int? gracePeriodDays,
+    Value<double?> lastBillAmount = const Value.absent(),
+    Value<DateTime?> lastBillDate = const Value.absent(),
+    Value<double?> minAmountDue = const Value.absent(),
+    bool? autoNotifyBill,
     Value<String?> colorHex = const Value.absent(),
     bool? isDefault,
     bool? isSynced,
@@ -1677,6 +1962,20 @@ class BankAccount extends DataClass implements Insertable<BankAccount> {
         : this.accountNumberLast4,
     accountType: accountType ?? this.accountType,
     balance: balance ?? this.balance,
+    creditLimit: creditLimit.present ? creditLimit.value : this.creditLimit,
+    billingCycleDay: billingCycleDay.present
+        ? billingCycleDay.value
+        : this.billingCycleDay,
+    paymentDueDay: paymentDueDay.present
+        ? paymentDueDay.value
+        : this.paymentDueDay,
+    gracePeriodDays: gracePeriodDays ?? this.gracePeriodDays,
+    lastBillAmount: lastBillAmount.present
+        ? lastBillAmount.value
+        : this.lastBillAmount,
+    lastBillDate: lastBillDate.present ? lastBillDate.value : this.lastBillDate,
+    minAmountDue: minAmountDue.present ? minAmountDue.value : this.minAmountDue,
+    autoNotifyBill: autoNotifyBill ?? this.autoNotifyBill,
     colorHex: colorHex.present ? colorHex.value : this.colorHex,
     isDefault: isDefault ?? this.isDefault,
     isSynced: isSynced ?? this.isSynced,
@@ -1696,6 +1995,30 @@ class BankAccount extends DataClass implements Insertable<BankAccount> {
           ? data.accountType.value
           : this.accountType,
       balance: data.balance.present ? data.balance.value : this.balance,
+      creditLimit: data.creditLimit.present
+          ? data.creditLimit.value
+          : this.creditLimit,
+      billingCycleDay: data.billingCycleDay.present
+          ? data.billingCycleDay.value
+          : this.billingCycleDay,
+      paymentDueDay: data.paymentDueDay.present
+          ? data.paymentDueDay.value
+          : this.paymentDueDay,
+      gracePeriodDays: data.gracePeriodDays.present
+          ? data.gracePeriodDays.value
+          : this.gracePeriodDays,
+      lastBillAmount: data.lastBillAmount.present
+          ? data.lastBillAmount.value
+          : this.lastBillAmount,
+      lastBillDate: data.lastBillDate.present
+          ? data.lastBillDate.value
+          : this.lastBillDate,
+      minAmountDue: data.minAmountDue.present
+          ? data.minAmountDue.value
+          : this.minAmountDue,
+      autoNotifyBill: data.autoNotifyBill.present
+          ? data.autoNotifyBill.value
+          : this.autoNotifyBill,
       colorHex: data.colorHex.present ? data.colorHex.value : this.colorHex,
       isDefault: data.isDefault.present ? data.isDefault.value : this.isDefault,
       isSynced: data.isSynced.present ? data.isSynced.value : this.isSynced,
@@ -1714,6 +2037,14 @@ class BankAccount extends DataClass implements Insertable<BankAccount> {
           ..write('accountNumberLast4: $accountNumberLast4, ')
           ..write('accountType: $accountType, ')
           ..write('balance: $balance, ')
+          ..write('creditLimit: $creditLimit, ')
+          ..write('billingCycleDay: $billingCycleDay, ')
+          ..write('paymentDueDay: $paymentDueDay, ')
+          ..write('gracePeriodDays: $gracePeriodDays, ')
+          ..write('lastBillAmount: $lastBillAmount, ')
+          ..write('lastBillDate: $lastBillDate, ')
+          ..write('minAmountDue: $minAmountDue, ')
+          ..write('autoNotifyBill: $autoNotifyBill, ')
           ..write('colorHex: $colorHex, ')
           ..write('isDefault: $isDefault, ')
           ..write('isSynced: $isSynced, ')
@@ -1732,6 +2063,14 @@ class BankAccount extends DataClass implements Insertable<BankAccount> {
     accountNumberLast4,
     accountType,
     balance,
+    creditLimit,
+    billingCycleDay,
+    paymentDueDay,
+    gracePeriodDays,
+    lastBillAmount,
+    lastBillDate,
+    minAmountDue,
+    autoNotifyBill,
     colorHex,
     isDefault,
     isSynced,
@@ -1749,6 +2088,14 @@ class BankAccount extends DataClass implements Insertable<BankAccount> {
           other.accountNumberLast4 == this.accountNumberLast4 &&
           other.accountType == this.accountType &&
           other.balance == this.balance &&
+          other.creditLimit == this.creditLimit &&
+          other.billingCycleDay == this.billingCycleDay &&
+          other.paymentDueDay == this.paymentDueDay &&
+          other.gracePeriodDays == this.gracePeriodDays &&
+          other.lastBillAmount == this.lastBillAmount &&
+          other.lastBillDate == this.lastBillDate &&
+          other.minAmountDue == this.minAmountDue &&
+          other.autoNotifyBill == this.autoNotifyBill &&
           other.colorHex == this.colorHex &&
           other.isDefault == this.isDefault &&
           other.isSynced == this.isSynced &&
@@ -1764,6 +2111,14 @@ class BankAccountsCompanion extends UpdateCompanion<BankAccount> {
   final Value<String?> accountNumberLast4;
   final Value<String> accountType;
   final Value<double> balance;
+  final Value<double?> creditLimit;
+  final Value<int?> billingCycleDay;
+  final Value<int?> paymentDueDay;
+  final Value<int> gracePeriodDays;
+  final Value<double?> lastBillAmount;
+  final Value<DateTime?> lastBillDate;
+  final Value<double?> minAmountDue;
+  final Value<bool> autoNotifyBill;
   final Value<String?> colorHex;
   final Value<bool> isDefault;
   final Value<bool> isSynced;
@@ -1777,6 +2132,14 @@ class BankAccountsCompanion extends UpdateCompanion<BankAccount> {
     this.accountNumberLast4 = const Value.absent(),
     this.accountType = const Value.absent(),
     this.balance = const Value.absent(),
+    this.creditLimit = const Value.absent(),
+    this.billingCycleDay = const Value.absent(),
+    this.paymentDueDay = const Value.absent(),
+    this.gracePeriodDays = const Value.absent(),
+    this.lastBillAmount = const Value.absent(),
+    this.lastBillDate = const Value.absent(),
+    this.minAmountDue = const Value.absent(),
+    this.autoNotifyBill = const Value.absent(),
     this.colorHex = const Value.absent(),
     this.isDefault = const Value.absent(),
     this.isSynced = const Value.absent(),
@@ -1791,6 +2154,14 @@ class BankAccountsCompanion extends UpdateCompanion<BankAccount> {
     this.accountNumberLast4 = const Value.absent(),
     this.accountType = const Value.absent(),
     this.balance = const Value.absent(),
+    this.creditLimit = const Value.absent(),
+    this.billingCycleDay = const Value.absent(),
+    this.paymentDueDay = const Value.absent(),
+    this.gracePeriodDays = const Value.absent(),
+    this.lastBillAmount = const Value.absent(),
+    this.lastBillDate = const Value.absent(),
+    this.minAmountDue = const Value.absent(),
+    this.autoNotifyBill = const Value.absent(),
     this.colorHex = const Value.absent(),
     this.isDefault = const Value.absent(),
     this.isSynced = const Value.absent(),
@@ -1806,6 +2177,14 @@ class BankAccountsCompanion extends UpdateCompanion<BankAccount> {
     Expression<String>? accountNumberLast4,
     Expression<String>? accountType,
     Expression<double>? balance,
+    Expression<double>? creditLimit,
+    Expression<int>? billingCycleDay,
+    Expression<int>? paymentDueDay,
+    Expression<int>? gracePeriodDays,
+    Expression<double>? lastBillAmount,
+    Expression<DateTime>? lastBillDate,
+    Expression<double>? minAmountDue,
+    Expression<bool>? autoNotifyBill,
     Expression<String>? colorHex,
     Expression<bool>? isDefault,
     Expression<bool>? isSynced,
@@ -1821,6 +2200,14 @@ class BankAccountsCompanion extends UpdateCompanion<BankAccount> {
         'account_number_last4': accountNumberLast4,
       if (accountType != null) 'account_type': accountType,
       if (balance != null) 'balance': balance,
+      if (creditLimit != null) 'credit_limit': creditLimit,
+      if (billingCycleDay != null) 'billing_cycle_day': billingCycleDay,
+      if (paymentDueDay != null) 'payment_due_day': paymentDueDay,
+      if (gracePeriodDays != null) 'grace_period_days': gracePeriodDays,
+      if (lastBillAmount != null) 'last_bill_amount': lastBillAmount,
+      if (lastBillDate != null) 'last_bill_date': lastBillDate,
+      if (minAmountDue != null) 'min_amount_due': minAmountDue,
+      if (autoNotifyBill != null) 'auto_notify_bill': autoNotifyBill,
       if (colorHex != null) 'color_hex': colorHex,
       if (isDefault != null) 'is_default': isDefault,
       if (isSynced != null) 'is_synced': isSynced,
@@ -1837,6 +2224,14 @@ class BankAccountsCompanion extends UpdateCompanion<BankAccount> {
     Value<String?>? accountNumberLast4,
     Value<String>? accountType,
     Value<double>? balance,
+    Value<double?>? creditLimit,
+    Value<int?>? billingCycleDay,
+    Value<int?>? paymentDueDay,
+    Value<int>? gracePeriodDays,
+    Value<double?>? lastBillAmount,
+    Value<DateTime?>? lastBillDate,
+    Value<double?>? minAmountDue,
+    Value<bool>? autoNotifyBill,
     Value<String?>? colorHex,
     Value<bool>? isDefault,
     Value<bool>? isSynced,
@@ -1851,6 +2246,14 @@ class BankAccountsCompanion extends UpdateCompanion<BankAccount> {
       accountNumberLast4: accountNumberLast4 ?? this.accountNumberLast4,
       accountType: accountType ?? this.accountType,
       balance: balance ?? this.balance,
+      creditLimit: creditLimit ?? this.creditLimit,
+      billingCycleDay: billingCycleDay ?? this.billingCycleDay,
+      paymentDueDay: paymentDueDay ?? this.paymentDueDay,
+      gracePeriodDays: gracePeriodDays ?? this.gracePeriodDays,
+      lastBillAmount: lastBillAmount ?? this.lastBillAmount,
+      lastBillDate: lastBillDate ?? this.lastBillDate,
+      minAmountDue: minAmountDue ?? this.minAmountDue,
+      autoNotifyBill: autoNotifyBill ?? this.autoNotifyBill,
       colorHex: colorHex ?? this.colorHex,
       isDefault: isDefault ?? this.isDefault,
       isSynced: isSynced ?? this.isSynced,
@@ -1883,6 +2286,30 @@ class BankAccountsCompanion extends UpdateCompanion<BankAccount> {
     if (balance.present) {
       map['balance'] = Variable<double>(balance.value);
     }
+    if (creditLimit.present) {
+      map['credit_limit'] = Variable<double>(creditLimit.value);
+    }
+    if (billingCycleDay.present) {
+      map['billing_cycle_day'] = Variable<int>(billingCycleDay.value);
+    }
+    if (paymentDueDay.present) {
+      map['payment_due_day'] = Variable<int>(paymentDueDay.value);
+    }
+    if (gracePeriodDays.present) {
+      map['grace_period_days'] = Variable<int>(gracePeriodDays.value);
+    }
+    if (lastBillAmount.present) {
+      map['last_bill_amount'] = Variable<double>(lastBillAmount.value);
+    }
+    if (lastBillDate.present) {
+      map['last_bill_date'] = Variable<DateTime>(lastBillDate.value);
+    }
+    if (minAmountDue.present) {
+      map['min_amount_due'] = Variable<double>(minAmountDue.value);
+    }
+    if (autoNotifyBill.present) {
+      map['auto_notify_bill'] = Variable<bool>(autoNotifyBill.value);
+    }
     if (colorHex.present) {
       map['color_hex'] = Variable<String>(colorHex.value);
     }
@@ -1911,6 +2338,14 @@ class BankAccountsCompanion extends UpdateCompanion<BankAccount> {
           ..write('accountNumberLast4: $accountNumberLast4, ')
           ..write('accountType: $accountType, ')
           ..write('balance: $balance, ')
+          ..write('creditLimit: $creditLimit, ')
+          ..write('billingCycleDay: $billingCycleDay, ')
+          ..write('paymentDueDay: $paymentDueDay, ')
+          ..write('gracePeriodDays: $gracePeriodDays, ')
+          ..write('lastBillAmount: $lastBillAmount, ')
+          ..write('lastBillDate: $lastBillDate, ')
+          ..write('minAmountDue: $minAmountDue, ')
+          ..write('autoNotifyBill: $autoNotifyBill, ')
           ..write('colorHex: $colorHex, ')
           ..write('isDefault: $isDefault, ')
           ..write('isSynced: $isSynced, ')
@@ -7269,6 +7704,14 @@ typedef $$BankAccountsTableCreateCompanionBuilder =
       Value<String?> accountNumberLast4,
       Value<String> accountType,
       Value<double> balance,
+      Value<double?> creditLimit,
+      Value<int?> billingCycleDay,
+      Value<int?> paymentDueDay,
+      Value<int> gracePeriodDays,
+      Value<double?> lastBillAmount,
+      Value<DateTime?> lastBillDate,
+      Value<double?> minAmountDue,
+      Value<bool> autoNotifyBill,
       Value<String?> colorHex,
       Value<bool> isDefault,
       Value<bool> isSynced,
@@ -7284,6 +7727,14 @@ typedef $$BankAccountsTableUpdateCompanionBuilder =
       Value<String?> accountNumberLast4,
       Value<String> accountType,
       Value<double> balance,
+      Value<double?> creditLimit,
+      Value<int?> billingCycleDay,
+      Value<int?> paymentDueDay,
+      Value<int> gracePeriodDays,
+      Value<double?> lastBillAmount,
+      Value<DateTime?> lastBillDate,
+      Value<double?> minAmountDue,
+      Value<bool> autoNotifyBill,
       Value<String?> colorHex,
       Value<bool> isDefault,
       Value<bool> isSynced,
@@ -7381,6 +7832,46 @@ class $$BankAccountsTableFilterComposer
 
   ColumnFilters<double> get balance => $composableBuilder(
     column: $table.balance,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get creditLimit => $composableBuilder(
+    column: $table.creditLimit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get billingCycleDay => $composableBuilder(
+    column: $table.billingCycleDay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get paymentDueDay => $composableBuilder(
+    column: $table.paymentDueDay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get gracePeriodDays => $composableBuilder(
+    column: $table.gracePeriodDays,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get lastBillAmount => $composableBuilder(
+    column: $table.lastBillAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastBillDate => $composableBuilder(
+    column: $table.lastBillDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get minAmountDue => $composableBuilder(
+    column: $table.minAmountDue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get autoNotifyBill => $composableBuilder(
+    column: $table.autoNotifyBill,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7504,6 +7995,46 @@ class $$BankAccountsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get creditLimit => $composableBuilder(
+    column: $table.creditLimit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get billingCycleDay => $composableBuilder(
+    column: $table.billingCycleDay,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get paymentDueDay => $composableBuilder(
+    column: $table.paymentDueDay,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get gracePeriodDays => $composableBuilder(
+    column: $table.gracePeriodDays,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get lastBillAmount => $composableBuilder(
+    column: $table.lastBillAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastBillDate => $composableBuilder(
+    column: $table.lastBillDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get minAmountDue => $composableBuilder(
+    column: $table.minAmountDue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get autoNotifyBill => $composableBuilder(
+    column: $table.autoNotifyBill,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get colorHex => $composableBuilder(
     column: $table.colorHex,
     builder: (column) => ColumnOrderings(column),
@@ -7563,6 +8094,46 @@ class $$BankAccountsTableAnnotationComposer
 
   GeneratedColumn<double> get balance =>
       $composableBuilder(column: $table.balance, builder: (column) => column);
+
+  GeneratedColumn<double> get creditLimit => $composableBuilder(
+    column: $table.creditLimit,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get billingCycleDay => $composableBuilder(
+    column: $table.billingCycleDay,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get paymentDueDay => $composableBuilder(
+    column: $table.paymentDueDay,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get gracePeriodDays => $composableBuilder(
+    column: $table.gracePeriodDays,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get lastBillAmount => $composableBuilder(
+    column: $table.lastBillAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastBillDate => $composableBuilder(
+    column: $table.lastBillDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get minAmountDue => $composableBuilder(
+    column: $table.minAmountDue,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get autoNotifyBill => $composableBuilder(
+    column: $table.autoNotifyBill,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get colorHex =>
       $composableBuilder(column: $table.colorHex, builder: (column) => column);
@@ -7668,6 +8239,14 @@ class $$BankAccountsTableTableManager
                 Value<String?> accountNumberLast4 = const Value.absent(),
                 Value<String> accountType = const Value.absent(),
                 Value<double> balance = const Value.absent(),
+                Value<double?> creditLimit = const Value.absent(),
+                Value<int?> billingCycleDay = const Value.absent(),
+                Value<int?> paymentDueDay = const Value.absent(),
+                Value<int> gracePeriodDays = const Value.absent(),
+                Value<double?> lastBillAmount = const Value.absent(),
+                Value<DateTime?> lastBillDate = const Value.absent(),
+                Value<double?> minAmountDue = const Value.absent(),
+                Value<bool> autoNotifyBill = const Value.absent(),
                 Value<String?> colorHex = const Value.absent(),
                 Value<bool> isDefault = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
@@ -7681,6 +8260,14 @@ class $$BankAccountsTableTableManager
                 accountNumberLast4: accountNumberLast4,
                 accountType: accountType,
                 balance: balance,
+                creditLimit: creditLimit,
+                billingCycleDay: billingCycleDay,
+                paymentDueDay: paymentDueDay,
+                gracePeriodDays: gracePeriodDays,
+                lastBillAmount: lastBillAmount,
+                lastBillDate: lastBillDate,
+                minAmountDue: minAmountDue,
+                autoNotifyBill: autoNotifyBill,
                 colorHex: colorHex,
                 isDefault: isDefault,
                 isSynced: isSynced,
@@ -7696,6 +8283,14 @@ class $$BankAccountsTableTableManager
                 Value<String?> accountNumberLast4 = const Value.absent(),
                 Value<String> accountType = const Value.absent(),
                 Value<double> balance = const Value.absent(),
+                Value<double?> creditLimit = const Value.absent(),
+                Value<int?> billingCycleDay = const Value.absent(),
+                Value<int?> paymentDueDay = const Value.absent(),
+                Value<int> gracePeriodDays = const Value.absent(),
+                Value<double?> lastBillAmount = const Value.absent(),
+                Value<DateTime?> lastBillDate = const Value.absent(),
+                Value<double?> minAmountDue = const Value.absent(),
+                Value<bool> autoNotifyBill = const Value.absent(),
                 Value<String?> colorHex = const Value.absent(),
                 Value<bool> isDefault = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
@@ -7709,6 +8304,14 @@ class $$BankAccountsTableTableManager
                 accountNumberLast4: accountNumberLast4,
                 accountType: accountType,
                 balance: balance,
+                creditLimit: creditLimit,
+                billingCycleDay: billingCycleDay,
+                paymentDueDay: paymentDueDay,
+                gracePeriodDays: gracePeriodDays,
+                lastBillAmount: lastBillAmount,
+                lastBillDate: lastBillDate,
+                minAmountDue: minAmountDue,
+                autoNotifyBill: autoNotifyBill,
                 colorHex: colorHex,
                 isDefault: isDefault,
                 isSynced: isSynced,

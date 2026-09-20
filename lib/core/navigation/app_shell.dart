@@ -9,7 +9,9 @@ import '../../features/transactions/screens/add_transaction_screen.dart';
 import '../../features/transactions/services/recurring_service.dart';
 import '../../features/sms/providers/sms_providers.dart';
 import '../presentation/glass_widgets.dart';
+import '../providers/app_state_provider.dart';
 import '../providers/auth_providers.dart';
+import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
 
 /// Main app shell with floating vibrant navigation dock
@@ -38,7 +40,18 @@ class _AppShellState extends ConsumerState<AppShell> {
       _processRecurringTransactions();
       _scanSmsInbox();
       _triggerCloudSync();
+      _checkCreditCardBillReminders();
     });
+  }
+
+  Future<void> _checkCreditCardBillReminders() async {
+    try {
+      final db = ref.read(databaseProvider);
+      final accounts = await db.select(db.bankAccounts).get();
+      await ref.read(notificationServiceProvider).checkAndNotifyCards(accounts);
+    } catch (e) {
+      debugPrint('Error checking credit card bill reminders: $e');
+    }
   }
 
   Future<void> _scanSmsInbox() async {

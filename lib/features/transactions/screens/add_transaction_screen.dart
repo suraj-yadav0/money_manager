@@ -291,9 +291,17 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             .getSingleOrNull();
         if (acc != null) {
           final isExpense = item.transaction.type == 'expense';
-          final restoredBal = isExpense
-              ? acc.balance + item.transaction.amount
-              : acc.balance - item.transaction.amount;
+          final isCredit = acc.accountType == 'credit_card';
+          final double restoredBal;
+          if (isCredit) {
+            restoredBal = isExpense
+                ? (acc.balance - item.transaction.amount).clamp(0.0, double.infinity)
+                : acc.balance + item.transaction.amount;
+          } else {
+            restoredBal = isExpense
+                ? acc.balance + item.transaction.amount
+                : acc.balance - item.transaction.amount;
+          }
           await (db.update(db.bankAccounts)..where((a) => a.id.equals(acc.id)))
               .write(BankAccountsCompanion(
             balance: Value(restoredBal),
@@ -418,9 +426,17 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               .getSingleOrNull();
           if (oldAcc != null) {
             final wasExpense = oldTx.type == 'expense';
-            final revertedBal = wasExpense
-                ? oldAcc.balance + oldTx.amount
-                : oldAcc.balance - oldTx.amount;
+            final isCredit = oldAcc.accountType == 'credit_card';
+            final double revertedBal;
+            if (isCredit) {
+              revertedBal = wasExpense
+                  ? (oldAcc.balance - oldTx.amount).clamp(0.0, double.infinity)
+                  : oldAcc.balance + oldTx.amount;
+            } else {
+              revertedBal = wasExpense
+                  ? oldAcc.balance + oldTx.amount
+                  : oldAcc.balance - oldTx.amount;
+            }
             await (db.update(db.bankAccounts)
                   ..where((a) => a.id.equals(oldAcc.id)))
                 .write(BankAccountsCompanion(
@@ -497,9 +513,18 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         final currentAcc = await (db.select(db.bankAccounts)
               ..where((a) => a.id.equals(_selectedAccount!.id)))
             .getSingleOrNull() ?? _selectedAccount!;
-        final newBal = _type.isExpense
-            ? currentAcc.balance - amount
-            : currentAcc.balance + amount;
+        final isCredit = currentAcc.accountType == 'credit_card';
+        final double newBal;
+        if (isCredit) {
+          // Credit card: expense accumulates debt; income/refund clears debt
+          newBal = _type.isExpense
+              ? currentAcc.balance + amount
+              : (currentAcc.balance - amount).clamp(0.0, double.infinity);
+        } else {
+          newBal = _type.isExpense
+              ? currentAcc.balance - amount
+              : currentAcc.balance + amount;
+        }
         await (db.update(db.bankAccounts)
               ..where((a) => a.id.equals(currentAcc.id)))
             .write(

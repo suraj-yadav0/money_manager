@@ -128,6 +128,16 @@ class BankAccounts extends Table {
   TextColumn get accountType =>
       text().withDefault(const Constant('savings'))(); // 'savings' | 'current' | 'credit_card' | 'wallet'
   RealColumn get balance => real().withDefault(const Constant(0.0))();
+  RealColumn get creditLimit => real().nullable()();
+  IntColumn get billingCycleDay => integer().nullable()(); // Day of month (1-31)
+  IntColumn get paymentDueDay => integer().nullable()(); // Day of month (1-31)
+  IntColumn get gracePeriodDays =>
+      integer().withDefault(const Constant(20))();
+  RealColumn get lastBillAmount => real().nullable()();
+  DateTimeColumn get lastBillDate => dateTime().nullable()();
+  RealColumn get minAmountDue => real().nullable()();
+  BoolColumn get autoNotifyBill =>
+      boolean().withDefault(const Constant(true))();
   TextColumn get colorHex => text().nullable()(); // Color hex string
   BoolColumn get isDefault =>
       boolean().withDefault(const Constant(false))();
@@ -186,7 +196,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration {
@@ -289,6 +299,25 @@ class AppDatabase extends _$AppDatabase {
             'ALTER TABLE transactions ADD COLUMN account_id INTEGER REFERENCES bank_accounts(id)',
           );
           await _seedDefaultBankAccounts();
+        }
+        if (from < 11) {
+          // Add credit card limit, billing cycle, and statement columns
+          await customStatement(
+              'ALTER TABLE bank_accounts ADD COLUMN credit_limit REAL');
+          await customStatement(
+              'ALTER TABLE bank_accounts ADD COLUMN billing_cycle_day INTEGER');
+          await customStatement(
+              'ALTER TABLE bank_accounts ADD COLUMN payment_due_day INTEGER');
+          await customStatement(
+              'ALTER TABLE bank_accounts ADD COLUMN grace_period_days INTEGER NOT NULL DEFAULT 20');
+          await customStatement(
+              'ALTER TABLE bank_accounts ADD COLUMN last_bill_amount REAL');
+          await customStatement(
+              'ALTER TABLE bank_accounts ADD COLUMN last_bill_date INTEGER');
+          await customStatement(
+              'ALTER TABLE bank_accounts ADD COLUMN min_amount_due REAL');
+          await customStatement(
+              'ALTER TABLE bank_accounts ADD COLUMN auto_notify_bill INTEGER NOT NULL DEFAULT 1');
         }
       },
     );
@@ -680,6 +709,9 @@ class AppDatabase extends _$AppDatabase {
         accountNumberLast4: const Value('4001'),
         accountType: const Value('credit_card'),
         balance: const Value(0.0),
+        creditLimit: const Value(50000.0),
+        billingCycleDay: const Value(15),
+        paymentDueDay: const Value(5),
         colorHex: const Value('#E53935'),
         isDefault: const Value(false),
       ),

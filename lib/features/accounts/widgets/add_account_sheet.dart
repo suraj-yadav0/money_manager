@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/database/database.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/utils/formatters.dart';
 import '../providers/account_providers.dart';
 
 class AddAccountSheet extends ConsumerStatefulWidget {
@@ -23,10 +22,14 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
   final _bankNameController = TextEditingController();
   final _last4Controller = TextEditingController();
   final _balanceController = TextEditingController();
+  final _creditLimitController = TextEditingController();
+  final _billingCycleDayController = TextEditingController();
+  final _paymentDueDayController = TextEditingController();
 
   String _accountType = 'savings';
   String _selectedColor = '#FF5F1F';
   bool _isDefault = false;
+  bool _autoNotifyBill = true;
   bool _isLoading = false;
 
   final List<String> _popularBanks = [
@@ -63,10 +66,23 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
       _accountType = acc.accountType;
       _selectedColor = acc.colorHex ?? '#FF5F1F';
       _isDefault = acc.isDefault;
+      if (acc.creditLimit != null) {
+        _creditLimitController.text = acc.creditLimit!.toStringAsFixed(0);
+      }
+      if (acc.billingCycleDay != null) {
+        _billingCycleDayController.text = acc.billingCycleDay!.toString();
+      }
+      if (acc.paymentDueDay != null) {
+        _paymentDueDayController.text = acc.paymentDueDay!.toString();
+      }
+      _autoNotifyBill = acc.autoNotifyBill;
     } else {
       _bankNameController.text = 'HDFC Bank';
       _nameController.text = 'HDFC Savings';
       _balanceController.text = '0';
+      _creditLimitController.text = '50000';
+      _billingCycleDayController.text = '15';
+      _paymentDueDayController.text = '5';
     }
   }
 
@@ -76,6 +92,9 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
     _bankNameController.dispose();
     _last4Controller.dispose();
     _balanceController.dispose();
+    _creditLimitController.dispose();
+    _billingCycleDayController.dispose();
+    _paymentDueDayController.dispose();
     super.dispose();
   }
 
@@ -87,6 +106,15 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
     try {
       final balance = double.tryParse(_balanceController.text.replaceAll(',', '')) ?? 0.0;
       final last4 = _last4Controller.text.trim().isEmpty ? null : _last4Controller.text.trim();
+      final creditLimit = _accountType == 'credit_card'
+          ? double.tryParse(_creditLimitController.text.replaceAll(',', ''))
+          : null;
+      final billingCycleDay = _accountType == 'credit_card'
+          ? int.tryParse(_billingCycleDayController.text.trim())
+          : null;
+      final paymentDueDay = _accountType == 'credit_card'
+          ? int.tryParse(_paymentDueDayController.text.trim())
+          : null;
 
       if (widget.accountToEdit != null) {
         await ref.read(accountNotifierProvider.notifier).updateAccount(
@@ -96,6 +124,10 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
               last4: last4,
               accountType: _accountType,
               balance: balance,
+              creditLimit: creditLimit,
+              billingCycleDay: billingCycleDay,
+              paymentDueDay: paymentDueDay,
+              autoNotifyBill: _autoNotifyBill,
               colorHex: _selectedColor,
               isDefault: _isDefault,
             );
@@ -106,6 +138,10 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
               last4: last4,
               accountType: _accountType,
               balance: balance,
+              creditLimit: creditLimit,
+              billingCycleDay: billingCycleDay,
+              paymentDueDay: paymentDueDay,
+              autoNotifyBill: _autoNotifyBill,
               colorHex: _selectedColor,
               isDefault: _isDefault,
             );
@@ -269,7 +305,9 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
                       decoration: InputDecoration(
-                        labelText: 'Current Balance (₹)',
+                        labelText: _accountType == 'credit_card'
+                            ? 'Current Debt / Outstanding (₹)'
+                            : 'Current Balance (₹)',
                         prefixText: '₹ ',
                         prefixIcon: const Icon(Icons.currency_rupee),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -280,6 +318,95 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
                 ],
               ),
               const SizedBox(height: 16),
+
+              if (_accountType == 'credit_card') ...[
+                // Card Limit
+                TextFormField(
+                  controller: _creditLimitController,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
+                  decoration: InputDecoration(
+                    labelText: 'Total Card Limit (₹)',
+                    prefixText: '₹ ',
+                    prefixIcon: const Icon(Icons.speed),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    filled: true,
+                  ),
+                  validator: (val) {
+                    if (_accountType == 'credit_card' && (val == null || val.trim().isEmpty)) {
+                      return 'Enter total card limit';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Statement Date & Due Date Row
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _billingCycleDayController,
+                        keyboardType: TextInputType.number,
+                        maxLength: 2,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        decoration: InputDecoration(
+                          labelText: 'Statement Day',
+                          hintText: '1-31',
+                          counterText: '',
+                          prefixIcon: const Icon(Icons.calendar_month_outlined),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          filled: true,
+                        ),
+                        validator: (val) {
+                          if (_accountType == 'credit_card') {
+                            final d = int.tryParse(val ?? '');
+                            if (d == null || d < 1 || d > 31) return '1-31';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _paymentDueDayController,
+                        keyboardType: TextInputType.number,
+                        maxLength: 2,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        decoration: InputDecoration(
+                          labelText: 'Due Day',
+                          hintText: '1-31',
+                          counterText: '',
+                          prefixIcon: const Icon(Icons.event_available_outlined),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          filled: true,
+                        ),
+                        validator: (val) {
+                          if (_accountType == 'credit_card') {
+                            final d = int.tryParse(val ?? '');
+                            if (d == null || d < 1 || d > 31) return '1-31';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Auto-Notify on Bill & Due Dates',
+                      style: TextStyle(fontSize: 14)),
+                  subtitle: const Text(
+                      'Receive notifications when bill generates and before due date',
+                      style: TextStyle(fontSize: 12)),
+                  value: _autoNotifyBill,
+                  onChanged: (val) => setState(() => _autoNotifyBill = val),
+                ),
+                const SizedBox(height: 12),
+              ],
 
               // Color Selection
               Text('Account Color', style: theme.textTheme.labelMedium),
