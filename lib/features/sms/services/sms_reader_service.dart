@@ -121,6 +121,19 @@ class SmsReaderService {
           continue;
         }
 
+        // 0. Check if it's a Credit Card bill statement
+        final billStmt = SmsParserEngine.parseBillStatement(
+          id: id,
+          sender: sender,
+          body: body,
+          timestamp: timestamp,
+        );
+        if (billStmt != null) {
+          await _processBillStatement(billStmt, allAccounts);
+          newFoundCount++;
+          continue;
+        }
+
         final parsed = SmsParserEngine.parse(
           id: id,
           sender: sender,
@@ -381,9 +394,14 @@ class SmsReaderService {
 
       if (account != null) {
         // If the bank SMS contained the definitive post-transaction balance, use it directly
+        final isCredit = account.accountType == 'credit_card';
         final double newBalance;
-        if (smsTx.balance != null && smsTx.balance! > 0) {
+        if (smsTx.balance != null && smsTx.balance! > 0 && !isCredit) {
           newBalance = smsTx.balance!;
+        } else if (isCredit) {
+          newBalance = smsTx.type == 'expense'
+              ? account.balance + finalAmount
+              : (account.balance - finalAmount).clamp(0.0, double.infinity);
         } else {
           newBalance = smsTx.type == 'income'
               ? account.balance + finalAmount
@@ -478,5 +496,71 @@ class SmsReaderService {
         transactionId: Value(null),
       ),
     );
+  }
+
+  Future<void> _processBillStatement(
+    ParsedSmsBillStatement stmt,
+    List<BankAccount> allAccounts,
+  ) async {
+    BankAccount? matchedCard;
+    if (stmt.cardLast4 != null) {
+      for (final a in allAccounts) {
+        if (a.accountType == 'credit_card' && a.accountNumberLast4 == stmt.cardLast4) {
+          matchedCard = a;
+          break;
+        }
+      }
+    }
+    if (matchedCard == null && stmt.bankName != null) {
+      final stmtBank = stmt.bankName!.toLowerCase();
+      for (final a in allAccounts) {
+        if (a.accountType == 'credit_card' &&
+            (a.bankName.toLowerCase().contains(stmtBank) ||
+                stmtBank.contains(a.bankName.toLowerCase()))) {
+          matchedCard = a;
+          break;
+        }
+      }
+    }
+
+    if (matchedCard == null) {
+      final bankName = stmt.bankName ?? 'Credit Card';
+      final createdId = await db.into(db.bankAccounts).insert(
+            BankAccountsCompanion.insert(
+              name: '$bankName ${stmt.cardLast4 != null ? "••${stmt.cardLast4}" : ""}',
+              bankName: bankName,
+              accountNumberLast4: Value(stmt.cardLast4),
+              accountType: const Value('credit_card'),
+              balance: Value(stmt.totalDue),
+              lastBillAmount: Value(stmt.totalDue),
+              lastBillDate: Value(stmt.timestamp),
+              minAmountDue: Value(stmt.minDue),
+              paymentDueDay: Value(stmt.dueDate?.day),
+              billingCycleDay: Value(stmt.timestamp.day),
+              creditLimit: const Value(50000.0),
+              isDefault: const Value(false),
+            ),
+          );
+      final newCard = await (db.select(db.bankAccounts)
+            ..where((a) => a.id.equals(createdId)))
+          .getSingleOrNull();
+      if (newCard != null) {
+        allAccounts.add(newCard);
+      }
+    } else {
+      final card = matchedCard;
+      await (db.update(db.bankAccounts)..where((a) => a.id.equals(card.id)))
+          .write(
+        BankAccountsCompanion(
+          balance: Value(stmt.totalDue),
+          lastBillAmount: Value(stmt.totalDue),
+          lastBillDate: Value(stmt.timestamp),
+          minAmountDue: Value(stmt.minDue),
+          paymentDueDay: Value(stmt.dueDate?.day ?? card.paymentDueDay),
+          billingCycleDay: Value(stmt.timestamp.day),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+    }
   }
 }

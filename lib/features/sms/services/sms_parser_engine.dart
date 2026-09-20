@@ -44,6 +44,43 @@ class ParsedSmsTransaction {
       };
 }
 
+/// Represents a parsed credit card bill statement from an SMS
+class ParsedSmsBillStatement {
+  final String smsId;
+  final String sender;
+  final String rawBody;
+  final double totalDue;
+  final double? minDue;
+  final DateTime? dueDate;
+  final String? bankName;
+  final String? cardLast4;
+  final DateTime timestamp;
+
+  const ParsedSmsBillStatement({
+    required this.smsId,
+    required this.sender,
+    required this.rawBody,
+    required this.totalDue,
+    this.minDue,
+    this.dueDate,
+    this.bankName,
+    this.cardLast4,
+    required this.timestamp,
+  });
+
+  Map<String, dynamic> toMap() => {
+        'smsId': smsId,
+        'sender': sender,
+        'rawBody': rawBody,
+        'totalDue': totalDue,
+        'minDue': minDue,
+        'dueDate': dueDate?.toIso8601String(),
+        'bankName': bankName,
+        'cardLast4': cardLast4,
+        'timestamp': timestamp.toIso8601String(),
+      };
+}
+
 /// Intelligent parser for financial SMS messages from banks, UPI apps, and cards
 class SmsParserEngine {
   static final RegExp _otpPattern = RegExp(
@@ -438,5 +475,114 @@ class SmsParserEngine {
   static String _generateHash(String sender, String body, DateTime? timestamp) {
     final ts = timestamp?.millisecondsSinceEpoch ?? 0;
     return '${sender}_${body.hashCode}_$ts';
+  }
+
+  static final RegExp _totalDuePattern = RegExp(
+    r'(?:total\s*(?:amt\s*)?due|total\s*due\s*(?:is|:)?|due\s*amt|amount\s*due|statement\s*amount)\s*[:\s-]*\s*(?:rs\.?|inr|₹)?\s*([\d,]+(?:\.\d{1,2})?)',
+    caseSensitive: false,
+  );
+
+  static final RegExp _minDuePattern = RegExp(
+    r'(?:min(?:imum)?\s*(?:amt\s*)?due|min\s*due\s*(?:is|:)?)\s*[:\s-]*\s*(?:rs\.?|inr|₹)?\s*([\d,]+(?:\.\d{1,2})?)',
+    caseSensitive: false,
+  );
+
+  static final RegExp _dueDatePattern = RegExp(
+    r'(?:due\s*date|pay\s*by|before|payment\s*due\s*date)\s*(?:is|:)?\s*(\d{1,2}[-/\.](?:[A-Za-z]{3}|\d{1,2})[-/\.]\d{2,4})',
+    caseSensitive: false,
+  );
+
+  static DateTime? _parseDueDate(String raw) {
+    try {
+      final clean = raw.trim();
+      final parts = clean.split(RegExp(r'[-/\.]'));
+      if (parts.length != 3) return null;
+
+      final day = int.tryParse(parts[0]);
+      if (day == null || day < 1 || day > 31) return null;
+
+      int? month;
+      final mStr = parts[1].toLowerCase();
+      const monthNames = {
+        'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
+        'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12
+      };
+      if (monthNames.containsKey(mStr)) {
+        month = monthNames[mStr];
+      } else {
+        month = int.tryParse(parts[1]);
+      }
+      if (month == null || month < 1 || month > 12) return null;
+
+      int? year = int.tryParse(parts[2]);
+      if (year == null) return null;
+      if (year < 100) year += 2000;
+
+      return DateTime(year, month, day);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Parses an SMS message for credit card bill statement details
+  static ParsedSmsBillStatement? parseBillStatement({
+    required String id,
+    required String sender,
+    required String body,
+    DateTime? timestamp,
+  }) {
+    final cleanBody = body.trim();
+    if (cleanBody.isEmpty) return null;
+    if (_isOtpOrSpam(cleanBody)) return null;
+
+    final lower = cleanBody.toLowerCase();
+    final hasStatementKeywords = lower.contains('statement') ||
+        lower.contains('total due') ||
+        lower.contains('total amt due') ||
+        lower.contains('bill generated') ||
+        (lower.contains('amt due') && lower.contains('due date'));
+
+    if (!hasStatementKeywords) return null;
+
+    // 1. Extract total due
+    double? totalDue;
+    final totalMatch = _totalDuePattern.firstMatch(cleanBody);
+    if (totalMatch != null && totalMatch.group(1) != null) {
+      final str = totalMatch.group(1)!.replaceAll(',', '');
+      totalDue = double.tryParse(str);
+    }
+    totalDue ??= _extractAmount(cleanBody);
+    if (totalDue == null || totalDue <= 0) return null;
+
+    // 2. Extract min due
+    double? minDue;
+    final minMatch = _minDuePattern.firstMatch(cleanBody);
+    if (minMatch != null && minMatch.group(1) != null) {
+      final str = minMatch.group(1)!.replaceAll(',', '');
+      minDue = double.tryParse(str);
+    }
+
+    // 3. Extract due date
+    DateTime? dueDate;
+    final dueMatch = _dueDatePattern.firstMatch(cleanBody);
+    if (dueMatch != null && dueMatch.group(1) != null) {
+      dueDate = _parseDueDate(dueMatch.group(1)!);
+    }
+
+    // 4. Extract Card Last 4 & Bank Name
+    final cardLast4 = _extractAccountLast4(cleanBody);
+    final bankName = _extractBankName(sender, cleanBody);
+
+    return ParsedSmsBillStatement(
+      smsId: id.isNotEmpty ? id : _generateHash(sender, cleanBody, timestamp),
+      sender: sender,
+      rawBody: cleanBody,
+      totalDue: totalDue,
+      minDue: minDue,
+      dueDate: dueDate,
+      bankName: bankName,
+      cardLast4: cardLast4,
+      timestamp: timestamp ?? DateTime.now(),
+    );
   }
 }

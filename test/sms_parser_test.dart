@@ -130,5 +130,62 @@ void main() {
 
       expect(result, isNull);
     });
+
+    test('Parses HDFC Credit Card statement SMS correctly', () {
+      const body =
+          'Statement for HDFC Bank Credit Card ending 1234 for Feb 2026. Total Amt Due: Rs 24,500.00, Min Amt Due: Rs 1,225.00, Due Date: 15-Mar-2026.';
+      const sender = 'VM-HDFCBK';
+
+      final result = SmsParserEngine.parseBillStatement(
+        id: 'stmt_1',
+        sender: sender,
+        body: body,
+      );
+
+      expect(result, isNotNull);
+      expect(result!.totalDue, 24500.0);
+      expect(result.minDue, 1225.0);
+      expect(result.cardLast4, '1234');
+      expect(result.bankName, 'HDFC Bank');
+      expect(result.dueDate, DateTime(2026, 3, 15));
+    });
+
+    test('Parses ICICI Credit Card statement SMS correctly', () {
+      const body =
+          'Dear Customer, ICICI Bank Credit Card XX4001 statement generated. Total Due: INR 12,300.00, Min Due: INR 650.00, Pay by 10-Mar-26.';
+      const sender = 'VK-ICICIB';
+
+      final result = SmsParserEngine.parseBillStatement(
+        id: 'stmt_2',
+        sender: sender,
+        body: body,
+      );
+
+      expect(result, isNotNull);
+      expect(result!.totalDue, 12300.0);
+      expect(result.minDue, 650.0);
+      expect(result.cardLast4, '4001');
+      expect(result.bankName, 'ICICI Bank');
+      expect(result.dueDate, DateTime(2026, 3, 10));
+    });
+
+    test('Parses SBI Card statement SMS correctly', () {
+      const body =
+          'SBI Card ending 5678: Total Amt Due is Rs. 18,900.00, Min Amt Due Rs. 950.00. Payment due date 22/03/2026.';
+      const sender = 'AD-SBISMS';
+
+      final result = SmsParserEngine.parseBillStatement(
+        id: 'stmt_3',
+        sender: sender,
+        body: body,
+      );
+
+      expect(result, isNotNull);
+      expect(result!.totalDue, 18900.0);
+      expect(result.minDue, 950.0);
+      expect(result.cardLast4, '5678');
+      expect(result.bankName, 'State Bank of India');
+      expect(result.dueDate, DateTime(2026, 3, 22));
+    });
   });
 }
