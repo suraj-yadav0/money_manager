@@ -17,6 +17,9 @@ import '../../accounts/screens/bank_accounts_screen.dart';
 import '../../sms/screens/sms_card_deck_screen.dart';
 import '../../sms/providers/sms_providers.dart';
 import '../../../core/services/backup_service.dart';
+import '../../../core/presentation/update_prompt_sheet.dart';
+import '../../../core/providers/update_providers.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 /// Settings screen for user preferences and monthly income
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -380,34 +383,106 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Card(
               child: Column(
                 children: [
-                  ListTile(
-                    leading: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [colorScheme.primary, colorScheme.secondary],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final pkgAsync = ref.watch(packageInfoProvider);
+                      final versionText = pkgAsync.when(
+                        data: (pkg) => 'v${pkg.version} (Build ${pkg.buildNumber})',
+                        loading: () => 'v1.0.3',
+                        error: (err, stack) => 'v1.0.3',
+                      );
+
+                      return ListTile(
+                        leading: Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [colorScheme.primary, colorScheme.secondary],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.account_balance_wallet_rounded,
+                            color: colorScheme.onPrimary,
+                          ),
                         ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.account_balance_wallet_rounded,
-                        color: colorScheme.onPrimary,
-                      ),
-                    ),
-                    title: Text(
-                      'Money Manager',
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
-                    ),
-                    subtitle: const Text('Version 1.0.0'),
+                        title: Text(
+                          'Quantro',
+                          style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Text(versionText),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1),
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final updateState = ref.watch(updateCheckNotifierProvider);
+                      return ListTile(
+                        leading: Icon(
+                          Icons.system_update_rounded,
+                          color: colorScheme.primary,
+                        ),
+                        title: const Text('Check for Updates'),
+                        subtitle: Text(
+                          updateState.lastChecked != null
+                              ? 'Last checked: ${Formatters.date(updateState.lastChecked!)}'
+                              : 'Check GitHub for new app releases',
+                        ),
+                        trailing: updateState.isChecking
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.chevron_right),
+                        onTap: updateState.isChecking
+                            ? null
+                            : () async {
+                                final info = await ref
+                                    .read(updateCheckNotifierProvider.notifier)
+                                    .checkForUpdate(force: true);
+                                if (!context.mounted) return;
+                                if (info != null && info.isNewer) {
+                                  UpdatePromptSheet.show(context, info);
+                                } else if (info != null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Quantro is up to date (v${info.currentVersion})',
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Could not check for updates. Check your connection.',
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                      );
+                    },
                   ),
                   const Divider(height: 1),
                   ListTile(
-                    leading: Icon(Icons.code, color: colorScheme.primary),
-                    title: const Text('Built with Flutter'),
-                    subtitle: const Text('Cross-platform personal finance app'),
+                    leading: Icon(
+                      Icons.open_in_new_rounded,
+                      color: colorScheme.primary,
+                    ),
+                    title: const Text('Release Notes & Downloads'),
+                    subtitle: const Text('View releases on GitHub'),
+                    onTap: () {
+                      launchUrlString(
+                        'https://github.com/suraj-yadav0/money_manager/releases',
+                        mode: LaunchMode.externalApplication,
+                      );
+                    },
                   ),
                 ],
               ),

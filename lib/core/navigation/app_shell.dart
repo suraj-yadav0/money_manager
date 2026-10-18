@@ -12,6 +12,8 @@ import '../presentation/glass_widgets.dart';
 import '../providers/app_state_provider.dart';
 import '../providers/auth_providers.dart';
 import '../services/notification_service.dart';
+import '../presentation/update_prompt_sheet.dart';
+import '../providers/update_providers.dart';
 import '../theme/app_theme.dart';
 
 /// Main app shell with floating vibrant navigation dock
@@ -41,7 +43,21 @@ class _AppShellState extends ConsumerState<AppShell> {
       _scanSmsInbox();
       _triggerCloudSync();
       _checkCreditCardBillReminders();
+      _checkAppUpdates();
     });
+  }
+
+  Future<void> _checkAppUpdates() async {
+    try {
+      final info = await ref
+          .read(updateCheckNotifierProvider.notifier)
+          .checkForUpdate();
+      if (info != null && info.isNewer && mounted) {
+        UpdatePromptSheet.show(context, info);
+      }
+    } catch (e) {
+      debugPrint('Error checking startup app updates: $e');
+    }
   }
 
   Future<void> _checkCreditCardBillReminders() async {
