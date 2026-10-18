@@ -34,6 +34,16 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
+      - name: Configure google-services.json
+        run: |
+          if [ ! -f android/app/google-services.json ]; then
+            if [ -n "${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
+              echo "${{ secrets.GOOGLE_SERVICES_JSON }}" > android/app/google-services.json
+            else
+              echo '{"project_info":{"project_number":"1234567890","project_id":"quantro-build","storage_bucket":"quantro-build.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:1234567890:android:abcdef123456","android_client_info":{"package_name":"com.example.money_manager"}},"oauth_client":[],"api_key":[{"current_key":"dummy_api_key"}],"services":{"analytics_service":{"status":1}}}],"configuration_version":"1"}' > android/app/google-services.json
+            fi
+          fi
+
       - name: Build Android Release APK
         run: flutter build apk --release
 
