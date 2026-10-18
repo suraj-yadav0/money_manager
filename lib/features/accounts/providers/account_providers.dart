@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/database.dart';
 import '../../../core/providers/app_state_provider.dart';
+import 'package:uuid/uuid.dart';
 
 /// Stream provider for all bank accounts
 final bankAccountsStreamProvider = StreamProvider<List<BankAccount>>((ref) {
@@ -225,6 +226,7 @@ class AccountNotifier extends StateNotifier<AsyncValue<void>> {
       // Record transaction as transfer so it settles liability without double counting as category expense
       await db.into(db.transactions).insert(
             TransactionsCompanion.insert(
+              syncId: Value(const Uuid().v4()),
               amount: amount,
               type: 'transfer',
               categoryId: billCat.id,

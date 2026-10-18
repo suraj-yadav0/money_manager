@@ -221,6 +221,7 @@ class AppDatabase extends _$AppDatabase {
             );
           } catch (_) {}
         }
+        await deduplicateAll();
       },
       onCreate: (Migrator m) async {
         await m.createAll();
@@ -680,6 +681,294 @@ class AppDatabase extends _$AppDatabase {
     }
 
     return removedCount;
+  }
+
+  /// Deduplicate transactions in local DB by syncId or matching content signature.
+  /// Returns list of duplicate syncIds removed.
+  Future<List<String>> deduplicateTransactions() async {
+    final allTx = await select(transactions).get();
+    if (allTx.length <= 1) return [];
+
+    final List<String> removedSyncIds = [];
+    final Set<int> removedIds = {};
+
+    // 1. Group by non-null syncId
+    final Map<String, List<Transaction>> bySyncId = {};
+    for (final tx in allTx) {
+      if (tx.syncId != null && tx.syncId!.trim().isNotEmpty) {
+        bySyncId.putIfAbsent(tx.syncId!.trim(), () => []).add(tx);
+      }
+    }
+
+    for (final entry in bySyncId.entries) {
+      final list = entry.value;
+      if (list.length <= 1) continue;
+
+      list.sort((a, b) {
+        if (a.isSynced && !b.isSynced) return -1;
+        if (!a.isSynced && b.isSynced) return 1;
+        final aTime = a.updatedAt ?? a.createdAt;
+        final bTime = b.updatedAt ?? b.createdAt;
+        final comp = bTime.compareTo(aTime);
+        if (comp != 0) return comp;
+        return a.id.compareTo(b.id);
+      });
+
+      final canonical = list.first;
+      for (int i = 1; i < list.length; i++) {
+        final dup = list[i];
+        if (removedIds.contains(dup.id)) continue;
+        removedIds.add(dup.id);
+        await (update(smsTransactions)..where((s) => s.transactionId.equals(dup.id)))
+            .write(SmsTransactionsCompanion(transactionId: Value(canonical.id)));
+        await (delete(transactions)..where((t) => t.id.equals(dup.id))).go();
+      }
+    }
+
+    // 2. Group by content signature
+    final remainingTx = allTx.where((t) => !removedIds.contains(t.id)).toList();
+    final Map<String, List<Transaction>> byContent = {};
+    for (final tx in remainingTx) {
+      final tsSec = tx.timestamp.millisecondsSinceEpoch ~/ 1000;
+      final noteNorm = (tx.note ?? '').trim().toLowerCase();
+      final key = '${tx.amount.toStringAsFixed(2)}_${tx.type}_${tx.categoryId}_${tsSec}_$noteNorm';
+      byContent.putIfAbsent(key, () => []).add(tx);
+    }
+
+    for (final entry in byContent.entries) {
+      final list = entry.value;
+      if (list.length <= 1) continue;
+
+      list.sort((a, b) {
+        if (a.syncId != null && b.syncId == null) return -1;
+        if (a.syncId == null && b.syncId != null) return 1;
+        if (a.isSynced && !b.isSynced) return -1;
+        if (!a.isSynced && b.isSynced) return 1;
+        final aTime = a.updatedAt ?? a.createdAt;
+        final bTime = b.updatedAt ?? b.createdAt;
+        final comp = bTime.compareTo(aTime);
+        if (comp != 0) return comp;
+        return a.id.compareTo(b.id);
+      });
+
+      final canonical = list.first;
+      for (int i = 1; i < list.length; i++) {
+        final dup = list[i];
+        if (removedIds.contains(dup.id)) continue;
+        removedIds.add(dup.id);
+        if (dup.syncId != null && dup.syncId != canonical.syncId) {
+          removedSyncIds.add(dup.syncId!);
+        }
+        await (update(smsTransactions)..where((s) => s.transactionId.equals(dup.id)))
+            .write(SmsTransactionsCompanion(transactionId: Value(canonical.id)));
+        await (delete(transactions)..where((t) => t.id.equals(dup.id))).go();
+      }
+    }
+
+    return removedSyncIds;
+  }
+
+  /// Deduplicate goals by syncId or name.
+  Future<List<String>> deduplicateGoals() async {
+    final allGoals = await select(goals).get();
+    if (allGoals.length <= 1) return [];
+
+    final List<String> removedSyncIds = [];
+    final Set<int> removedIds = {};
+
+    // 1. Group by syncId
+    final Map<String, List<Goal>> bySyncId = {};
+    for (final g in allGoals) {
+      if (g.syncId != null && g.syncId!.trim().isNotEmpty) {
+        bySyncId.putIfAbsent(g.syncId!.trim(), () => []).add(g);
+      }
+    }
+
+    for (final entry in bySyncId.entries) {
+      final list = entry.value;
+      if (list.length <= 1) continue;
+      list.sort((a, b) {
+        if (a.isSynced && !b.isSynced) return -1;
+        if (!a.isSynced && b.isSynced) return 1;
+        final aTime = a.updatedAt ?? a.createdAt;
+        final bTime = b.updatedAt ?? b.createdAt;
+        return bTime.compareTo(aTime);
+      });
+      final canonical = list.first;
+      for (int i = 1; i < list.length; i++) {
+        final dup = list[i];
+        removedIds.add(dup.id);
+        await (update(transactions)..where((t) => t.goalId.equals(dup.id)))
+            .write(TransactionsCompanion(goalId: Value(canonical.id)));
+        await (update(goalContributions)..where((gc) => gc.goalId.equals(dup.id)))
+            .write(GoalContributionsCompanion(goalId: Value(canonical.id)));
+        await (delete(goals)..where((g) => g.id.equals(dup.id))).go();
+      }
+    }
+
+    // 2. Group by name
+    final remaining = allGoals.where((g) => !removedIds.contains(g.id)).toList();
+    final Map<String, List<Goal>> byName = {};
+    for (final g in remaining) {
+      final key = g.name.trim().toLowerCase();
+      byName.putIfAbsent(key, () => []).add(g);
+    }
+
+    for (final entry in byName.entries) {
+      final list = entry.value;
+      if (list.length <= 1) continue;
+      list.sort((a, b) {
+        if (a.syncId != null && b.syncId == null) return -1;
+        if (a.syncId == null && b.syncId != null) return 1;
+        if (a.savedAmount != b.savedAmount) return b.savedAmount.compareTo(a.savedAmount);
+        final aTime = a.updatedAt ?? a.createdAt;
+        final bTime = b.updatedAt ?? b.createdAt;
+        return bTime.compareTo(aTime);
+      });
+      final canonical = list.first;
+      for (int i = 1; i < list.length; i++) {
+        final dup = list[i];
+        removedIds.add(dup.id);
+        if (dup.syncId != null && dup.syncId != canonical.syncId) {
+          removedSyncIds.add(dup.syncId!);
+        }
+        await (update(transactions)..where((t) => t.goalId.equals(dup.id)))
+            .write(TransactionsCompanion(goalId: Value(canonical.id)));
+        await (update(goalContributions)..where((gc) => gc.goalId.equals(dup.id)))
+            .write(GoalContributionsCompanion(goalId: Value(canonical.id)));
+        await (delete(goals)..where((g) => g.id.equals(dup.id))).go();
+      }
+    }
+
+    return removedSyncIds;
+  }
+
+  /// Deduplicate assets by syncId or name and type.
+  Future<List<String>> deduplicateAssets() async {
+    final allAssets = await select(assets).get();
+    if (allAssets.length <= 1) return [];
+
+    final List<String> removedSyncIds = [];
+    final Set<int> removedIds = {};
+
+    // 1. Group by syncId
+    final Map<String, List<Asset>> bySyncId = {};
+    for (final a in allAssets) {
+      if (a.syncId != null && a.syncId!.trim().isNotEmpty) {
+        bySyncId.putIfAbsent(a.syncId!.trim(), () => []).add(a);
+      }
+    }
+
+    for (final entry in bySyncId.entries) {
+      final list = entry.value;
+      if (list.length <= 1) continue;
+      list.sort((a, b) {
+        if (a.isSynced && !b.isSynced) return -1;
+        if (!a.isSynced && b.isSynced) return 1;
+        final aTime = a.updatedAt ?? a.createdAt;
+        final bTime = b.updatedAt ?? b.createdAt;
+        return bTime.compareTo(aTime);
+      });
+      final canonical = list.first;
+      for (int i = 1; i < list.length; i++) {
+        final dup = list[i];
+        removedIds.add(dup.id);
+        await (delete(assets)..where((a) => a.id.equals(dup.id))).go();
+      }
+    }
+
+    // 2. Group by name and type
+    final remaining = allAssets.where((a) => !removedIds.contains(a.id)).toList();
+    final Map<String, List<Asset>> byName = {};
+    for (final a in remaining) {
+      final key = '${a.name.trim().toLowerCase()}_${a.type.trim().toLowerCase()}';
+      byName.putIfAbsent(key, () => []).add(a);
+    }
+
+    for (final entry in byName.entries) {
+      final list = entry.value;
+      if (list.length <= 1) continue;
+      list.sort((a, b) {
+        if (a.syncId != null && b.syncId == null) return -1;
+        if (a.syncId == null && b.syncId != null) return 1;
+        final aTime = a.updatedAt ?? a.createdAt;
+        final bTime = b.updatedAt ?? b.createdAt;
+        return bTime.compareTo(aTime);
+      });
+      final canonical = list.first;
+      for (int i = 1; i < list.length; i++) {
+        final dup = list[i];
+        removedIds.add(dup.id);
+        if (dup.syncId != null && dup.syncId != canonical.syncId) {
+          removedSyncIds.add(dup.syncId!);
+        }
+        await (delete(assets)..where((a) => a.id.equals(dup.id))).go();
+      }
+    }
+
+    return removedSyncIds;
+  }
+
+  /// Deduplicate goal contributions by syncId or identical goal, amount, and timestamp.
+  Future<void> deduplicateGoalContributions() async {
+    final allContributions = await select(goalContributions).get();
+    if (allContributions.length <= 1) return;
+
+    final Set<int> removedIds = {};
+    final Map<String, List<GoalContribution>> groups = {};
+    for (final gc in allContributions) {
+      final key = gc.syncId != null && gc.syncId!.isNotEmpty
+          ? 'sync_${gc.syncId}'
+          : 'content_${gc.goalId}_${gc.amount.toStringAsFixed(2)}_${gc.createdAt.millisecondsSinceEpoch ~/ 1000}';
+      groups.putIfAbsent(key, () => []).add(gc);
+    }
+
+    for (final entry in groups.entries) {
+      final list = entry.value;
+      if (list.length <= 1) continue;
+      list.sort((a, b) => a.id.compareTo(b.id));
+      for (int i = 1; i < list.length; i++) {
+        final dup = list[i];
+        if (removedIds.contains(dup.id)) continue;
+        removedIds.add(dup.id);
+        await (delete(goalContributions)..where((g) => g.id.equals(dup.id))).go();
+      }
+    }
+  }
+
+  /// Deduplicate categorization rules by keyword and category.
+  Future<void> deduplicateCategorizationRules() async {
+    final allRules = await select(categorizationRules).get();
+    if (allRules.length <= 1) return;
+
+    final Set<int> removedIds = {};
+    final Map<String, List<CategorizationRule>> groups = {};
+    for (final r in allRules) {
+      final key = '${r.keyword.trim().toLowerCase()}_${r.categoryId}';
+      groups.putIfAbsent(key, () => []).add(r);
+    }
+
+    for (final entry in groups.entries) {
+      final list = entry.value;
+      if (list.length <= 1) continue;
+      list.sort((a, b) => b.weight.compareTo(a.weight));
+      for (int i = 1; i < list.length; i++) {
+        final dup = list[i];
+        if (removedIds.contains(dup.id)) continue;
+        removedIds.add(dup.id);
+        await (delete(categorizationRules)..where((rule) => rule.id.equals(dup.id))).go();
+      }
+    }
+  }
+
+  /// Run all deduplication routines across all local tables.
+  Future<void> deduplicateAll() async {
+    await deduplicateBankAccounts();
+    await deduplicateTransactions();
+    await deduplicateGoals();
+    await deduplicateAssets();
+    await deduplicateGoalContributions();
+    await deduplicateCategorizationRules();
   }
 
   /// Seed default bank accounts

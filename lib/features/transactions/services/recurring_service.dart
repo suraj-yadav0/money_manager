@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/database.dart';
 import '../../../core/providers/app_state_provider.dart';
+import 'package:uuid/uuid.dart';
 
 /// Service to handle recurring transactions
 /// Automatically generates monthly income transactions based on recurring templates
@@ -89,6 +90,7 @@ class RecurringTransactionService {
         .into(db.transactions)
         .insert(
           TransactionsCompanion.insert(
+            syncId: Value(const Uuid().v4()),
             amount: template.amount,
             type: template.type,
             categoryId: template.categoryId,

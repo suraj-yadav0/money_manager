@@ -84,22 +84,34 @@ class SyncNotifier extends StateNotifier<SyncStatusState> {
       : super(SyncStatusState(status: SyncStatus.idle));
 
   Future<SyncResult> triggerSync() async {
+    if (state.status == SyncStatus.syncing) {
+      return await _syncService.syncAll();
+    }
     state = state.copyWith(status: SyncStatus.syncing, message: 'Syncing with cloud...');
-    final result = await _syncService.syncAll();
+    try {
+      final result = await _syncService.syncAll();
 
-    if (result.success) {
-      state = state.copyWith(
-        status: SyncStatus.success,
-        message: result.message,
-        lastSyncTime: DateTime.now(),
-      );
-    } else {
+      if (result.success) {
+        state = state.copyWith(
+          status: SyncStatus.success,
+          message: result.message,
+          lastSyncTime: DateTime.now(),
+        );
+      } else {
+        state = state.copyWith(
+          status: SyncStatus.error,
+          message: result.message,
+        );
+      }
+      return result;
+    } catch (e) {
+      final res = SyncResult(success: false, message: 'Sync failed: $e');
       state = state.copyWith(
         status: SyncStatus.error,
-        message: result.message,
+        message: res.message,
       );
+      return res;
     }
-    return result;
   }
 }
 

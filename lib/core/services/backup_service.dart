@@ -203,8 +203,8 @@ class BackupService {
       }
     }
 
-    // Deduplicate any bank accounts that might have clashed
-    await _db.deduplicateBankAccounts();
+    // Deduplicate any records that might have clashed
+    await _db.deduplicateAll();
 
     // Invalidate state providers to refresh all screens
     ref.invalidate(dashboardStatsProvider);

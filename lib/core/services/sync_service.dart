@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
@@ -28,6 +28,7 @@ class SyncResult {
 class SyncService {
   final AppDatabase _db;
   final Uuid _uuid = const Uuid();
+  Future<SyncResult>? _activeSyncFuture;
 
   SyncService(this._db);
 
@@ -47,7 +48,22 @@ class SyncService {
   }
 
   /// Triggers full synchronization (Upload local unsynced records, then Download remote cloud records)
+  /// Protected against concurrent executions via single-flight lock.
   Future<SyncResult> syncAll() async {
+    if (_activeSyncFuture != null) {
+      return await _activeSyncFuture!;
+    }
+
+    final future = _performSyncAll();
+    _activeSyncFuture = future;
+    try {
+      return await future;
+    } finally {
+      _activeSyncFuture = null;
+    }
+  }
+
+  Future<SyncResult> _performSyncAll() async {
     final db = FirebaseConfig.db;
     final auth = FirebaseConfig.auth;
 
@@ -67,8 +83,32 @@ class SyncService {
     }
 
     try {
+      // 1. Deduplicate local records before pushing and prune duplicate remote docs
+      final txDups = await _db.deduplicateTransactions();
+      final goalDups = await _db.deduplicateGoals();
+      final assetDups = await _db.deduplicateAssets();
+      await _db.deduplicateBankAccounts();
+      await _db.deduplicateGoalContributions();
+      await _db.deduplicateCategorizationRules();
+
+      for (final syncId in txDups) {
+        await deleteRemoteDoc('transactions', syncId);
+      }
+      for (final syncId in goalDups) {
+        await deleteRemoteDoc('goals', syncId);
+      }
+      for (final syncId in assetDups) {
+        await deleteRemoteDoc('assets', syncId);
+      }
+
+      // 2. Push unsynced local data
       int uploaded = await _pushLocalData(user.uid);
+
+      // 3. Pull remote data
       int downloaded = await _pullRemoteData(user.uid);
+
+      // 4. Clean any duplicates that may have resolved after pull
+      await _db.deduplicateAll();
 
       return SyncResult(
         success: true,
@@ -596,14 +636,42 @@ class SyncService {
         final catId = await resolveCategoryId(raw['category_id'], raw['category_name']);
         final goalId = await resolveGoalId(raw['goal_id']);
 
-        final existing = await (_db.select(_db.transactions)..where((t) => t.syncId.equals(syncId))).getSingleOrNull();
+        final existingBySyncId = await (_db.select(_db.transactions)
+              ..where((t) => t.syncId.equals(syncId))
+              ..limit(1))
+            .getSingleOrNull();
 
+        final tsSec = timestamp.millisecondsSinceEpoch ~/ 1000;
+        final rawNote = (raw['note'] as String? ?? '').trim().toLowerCase();
+        final rawAmount = (raw['amount'] as num).toDouble();
+        final rawType = raw['type'] as String;
+
+        Transaction? existing = existingBySyncId;
         if (existing == null) {
+          final candidateMatches = await (_db.select(_db.transactions)
+                ..where((t) =>
+                    t.amount.equals(rawAmount) &
+                    t.type.equals(rawType) &
+                    t.categoryId.equals(catId)))
+              .get();
+
+          for (final cand in candidateMatches) {
+            final candTsSec = cand.timestamp.millisecondsSinceEpoch ~/ 1000;
+            final candNote = (cand.note ?? '').trim().toLowerCase();
+            if ((candTsSec - tsSec).abs() <= 2 && candNote == rawNote) {
+              existing = cand;
+              break;
+            }
+          }
+        }
+
+        final matchTx = existing;
+        if (matchTx == null) {
           await _db.into(_db.transactions).insert(
                 TransactionsCompanion.insert(
                   syncId: Value(syncId),
-                  amount: (raw['amount'] as num).toDouble(),
-                  type: raw['type'] as String,
+                  amount: rawAmount,
+                  type: rawType,
                   categoryId: catId,
                   goalId: Value(goalId),
                   accountId: raw['account_id'] != null ? Value(parseInt(raw['account_id'])) : const Value.absent(),
@@ -618,11 +686,12 @@ class SyncService {
                 ),
               );
           totalDownloaded++;
-        } else if (updatedAt.isAfter(existing.updatedAt ?? DateTime(2000))) {
-          await (_db.update(_db.transactions)..where((t) => t.id.equals(existing.id))).write(
+        } else if (matchTx.syncId != syncId || updatedAt.isAfter(matchTx.updatedAt ?? DateTime(2000))) {
+          await (_db.update(_db.transactions)..where((t) => t.id.equals(matchTx.id))).write(
             TransactionsCompanion(
-              amount: Value((raw['amount'] as num).toDouble()),
-              type: Value(raw['type'] as String),
+              syncId: Value(syncId),
+              amount: Value(rawAmount),
+              type: Value(rawType),
               categoryId: Value(catId),
               goalId: Value(goalId),
               timestamp: Value(timestamp),
@@ -666,13 +735,23 @@ class SyncService {
         final deadline = parseDate(raw['deadline']);
         final updatedAt = raw['updated_at'] != null ? parseDate(raw['updated_at']) : DateTime.now();
 
-        final existing = await (_db.select(_db.goals)..where((g) => g.syncId.equals(syncId))).getSingleOrNull();
+        final goalName = (raw['name'] as String? ?? 'Savings Goal').trim();
+        final existingBySyncId = await (_db.select(_db.goals)
+              ..where((g) => g.syncId.equals(syncId))
+              ..limit(1))
+            .getSingleOrNull();
+
+        final existing = existingBySyncId ??
+            await (_db.select(_db.goals)
+                  ..where((g) => g.name.equals(goalName))
+                  ..limit(1))
+                .getSingleOrNull();
 
         if (existing == null) {
           await _db.into(_db.goals).insert(
                 GoalsCompanion.insert(
                   syncId: Value(syncId),
-                  name: raw['name'] as String? ?? 'Savings Goal',
+                  name: goalName,
                   targetAmount: (raw['target_amount'] as num).toDouble(),
                   deadline: deadline,
                   savedAmount: Value((raw['saved_amount'] as num? ?? 0).toDouble()),
@@ -684,10 +763,11 @@ class SyncService {
                 ),
               );
           totalDownloaded++;
-        } else if (updatedAt.isAfter(existing.updatedAt ?? DateTime(2000))) {
+        } else if (existing.syncId != syncId || updatedAt.isAfter(existing.updatedAt ?? DateTime(2000))) {
           await (_db.update(_db.goals)..where((g) => g.id.equals(existing.id))).write(
             GoalsCompanion(
-              name: Value(raw['name'] as String? ?? existing.name),
+              syncId: Value(syncId),
+              name: Value(goalName),
               targetAmount: Value((raw['target_amount'] as num).toDouble()),
               deadline: Value(deadline),
               savedAmount: Value((raw['saved_amount'] as num? ?? existing.savedAmount).toDouble()),
@@ -728,14 +808,25 @@ class SyncService {
         final syncId = (raw['sync_id'] as String?) ?? doc.id;
         final updatedAt = raw['updated_at'] != null ? parseDate(raw['updated_at']) : DateTime.now();
 
-        final existing = await (_db.select(_db.assets)..where((a) => a.syncId.equals(syncId))).getSingleOrNull();
+        final assetName = (raw['name'] as String? ?? 'Asset').trim();
+        final assetType = raw['type'] as String? ?? 'savings';
+        final existingBySyncId = await (_db.select(_db.assets)
+              ..where((a) => a.syncId.equals(syncId))
+              ..limit(1))
+            .getSingleOrNull();
+
+        final existing = existingBySyncId ??
+            await (_db.select(_db.assets)
+                  ..where((a) => a.name.equals(assetName) & a.type.equals(assetType))
+                  ..limit(1))
+                .getSingleOrNull();
 
         if (existing == null) {
           await _db.into(_db.assets).insert(
                 AssetsCompanion.insert(
                   syncId: Value(syncId),
-                  name: raw['name'] as String? ?? 'Asset',
-                  type: raw['type'] as String? ?? 'savings',
+                  name: assetName,
+                  type: assetType,
                   value: (raw['value'] as num).toDouble(),
                   isLiability: Value(raw['is_liability'] as bool? ?? false),
                   note: Value(raw['note'] as String?),
@@ -745,11 +836,12 @@ class SyncService {
                 ),
               );
           totalDownloaded++;
-        } else if (updatedAt.isAfter(existing.updatedAt ?? DateTime(2000))) {
+        } else if (existing.syncId != syncId || updatedAt.isAfter(existing.updatedAt ?? DateTime(2000))) {
           await (_db.update(_db.assets)..where((a) => a.id.equals(existing.id))).write(
             AssetsCompanion(
-              name: Value(raw['name'] as String? ?? existing.name),
-              type: Value(raw['type'] as String? ?? existing.type),
+              syncId: Value(syncId),
+              name: Value(assetName),
+              type: Value(assetType),
               value: Value((raw['value'] as num).toDouble()),
               isLiability: Value(raw['is_liability'] as bool? ?? existing.isLiability),
               note: Value(raw['note'] as String?),
@@ -796,7 +888,10 @@ class SyncService {
         final syncId = (raw['sync_id'] as String?) ?? doc.id;
         final goalId = await resolveGoalId(raw['goal_id']) ?? 1;
 
-        final existing = await (_db.select(_db.goalContributions)..where((gc) => gc.syncId.equals(syncId))).getSingleOrNull();
+        final existing = await (_db.select(_db.goalContributions)
+              ..where((gc) => gc.syncId.equals(syncId))
+              ..limit(1))
+            .getSingleOrNull();
 
         if (existing == null) {
           await _db.into(_db.goalContributions).insert(
@@ -823,7 +918,10 @@ class SyncService {
         final syncId = (raw['sync_id'] as String?) ?? doc.id;
         final catId = await resolveCategoryId(raw['category_id'], null);
 
-        final existing = await (_db.select(_db.categorizationRules)..where((r) => r.syncId.equals(syncId))).getSingleOrNull();
+        final existing = await (_db.select(_db.categorizationRules)
+              ..where((r) => r.syncId.equals(syncId))
+              ..limit(1))
+            .getSingleOrNull();
 
         if (existing == null) {
           await _db.into(_db.categorizationRules).insert(

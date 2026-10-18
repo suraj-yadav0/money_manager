@@ -84,7 +84,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           ),
         );
         ref.invalidate(isOnboardedProvider);
-        ref.read(syncNotifierProvider.notifier).triggerSync();
       }
     } catch (e) {
       setState(() {
@@ -117,7 +116,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         ),
       );
       ref.invalidate(isOnboardedProvider);
-      ref.read(syncNotifierProvider.notifier).triggerSync();
     } catch (e) {
       setState(() {
         final err = e.toString().replaceAll('Exception:', '').trim();

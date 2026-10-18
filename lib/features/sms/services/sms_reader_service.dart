@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../core/database/database.dart';
 import '../../transactions/services/categorization_engine.dart';
@@ -355,6 +356,7 @@ class SmsReaderService {
     // 1. Insert into Transactions
     final txId = await db.into(db.transactions).insert(
           TransactionsCompanion.insert(
+            syncId: Value(const Uuid().v4()),
             amount: finalAmount,
             type: smsTx.type,
             categoryId: finalCatId,

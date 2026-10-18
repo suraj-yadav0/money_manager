@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:uuid/uuid.dart';
 
 import '../../../core/database/database.dart';
 import '../../../core/providers/app_state_provider.dart';
@@ -492,6 +493,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         // Insert new
         await db.into(db.transactions).insert(
               TransactionsCompanion.insert(
+                syncId: Value(const Uuid().v4()),
                 amount: amount,
                 type: _type.name,
                 categoryId: categoryId,
