@@ -34,9 +34,6 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
-      - name: Run Code Generation
-        run: flutter pub run build_runner build --delete-conflicting-outputs
-
       - name: Build Android Release APK
         run: flutter build apk --release
 
@@ -44,10 +41,13 @@ jobs:
         run: |
           mkdir -p dist
           cp build/app/outputs/flutter-apk/app-release.apk dist/money_manager.apk
+          cp build/app/outputs/flutter-apk/app-release.apk "dist/quantro-${{ github.ref_name }}.apk"
 
       - name: Upload APK to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/money_manager.apk
+          files: |
+            dist/money_manager.apk
+            dist/quantro-*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
