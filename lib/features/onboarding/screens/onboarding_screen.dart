@@ -215,91 +215,103 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Column(
-      key: const ValueKey('welcome'),
-      children: [
-        const Spacer(),
-        Container(
-          width: 96,
-          height: 96,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [colorScheme.primary, colorScheme.tertiary],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: [
-              BoxShadow(
-                color: colorScheme.primary.withAlpha(50),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: IntrinsicHeight(
+              child: Column(
+                key: const ValueKey('welcome'),
+                children: [
+                  const Spacer(),
+                  Container(
+                    width: 96,
+                    height: 96,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [colorScheme.primary, colorScheme.tertiary],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colorScheme.primary.withAlpha(50),
+                          blurRadius: 24,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.account_balance_wallet_rounded,
+                      size: 48,
+                      color: colorScheme.onPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  Text(
+                    'Welcome to Quantro',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.outfit(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Smart personal finance with month-end projections and real-time expense tracking.',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  _buildFeaturePill(
+                    icon: Icons.trending_up_rounded,
+                    title: 'Predictive Projections',
+                    subtitle: 'Know your exact month-end balance in advance.',
+                  ),
+                  const SizedBox(height: 12),
+                  _buildFeaturePill(
+                    icon: Icons.security_rounded,
+                    title: 'Private & Local-First',
+                    subtitle: 'Works completely offline with optional cloud sync.',
+                  ),
+                  const Spacer(),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () => setState(() => _currentStep = 1),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 4),
+                        child: Text('Get Started'),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _isLoading ? null : _navigateToSignIn,
+                      icon: const Icon(Icons.sync_rounded, size: 18),
+                      label: const Text('Sign In to Sync Account'),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: _isLoading ? null : _skipToGuest,
+                    child: const Text('Explore as Guest'),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Icon(
-            Icons.account_balance_wallet_rounded,
-            size: 48,
-            color: colorScheme.onPrimary,
-          ),
-        ),
-        const SizedBox(height: 28),
-        Text(
-          'Welcome to Quantro',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.outfit(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            letterSpacing: -0.5,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Smart personal finance with month-end projections and real-time expense tracking.',
-          textAlign: TextAlign.center,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-            height: 1.4,
-          ),
-        ),
-        const SizedBox(height: 32),
-        _buildFeaturePill(
-          icon: Icons.trending_up_rounded,
-          title: 'Predictive Projections',
-          subtitle: 'Know your exact month-end balance in advance.',
-        ),
-        const SizedBox(height: 12),
-        _buildFeaturePill(
-          icon: Icons.security_rounded,
-          title: 'Private & Local-First',
-          subtitle: 'Works completely offline with optional cloud sync.',
-        ),
-        const Spacer(),
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton(
-            onPressed: () => setState(() => _currentStep = 1),
-            child: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 4),
-              child: Text('Get Started'),
             ),
           ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: _isLoading ? null : _navigateToSignIn,
-            icon: const Icon(Icons.sync_rounded, size: 18),
-            label: const Text('Sign In to Sync Account'),
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextButton(
-          onPressed: _isLoading ? null : _skipToGuest,
-          child: const Text('Explore as Guest'),
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -359,115 +371,127 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Form(
-      key: _formKey,
-      child: Column(
-        key: const ValueKey('income'),
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 16),
-          Text(
-            'Monthly income baseline',
-            style: GoogleFonts.outfit(
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.4,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: IntrinsicHeight(
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  key: const ValueKey('income'),
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    Text(
+                      'Monthly income baseline',
+                      style: GoogleFonts.outfit(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.4,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Used to calculate daily spending limits and track savings rate. You can change this anytime in Settings.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    TextFormField(
+                      controller: _incomeController,
+                      keyboardType: TextInputType.number,
+                      style: GoogleFonts.outfit(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      decoration: InputDecoration(
+                        prefixText: '${AppConstants.currencySymbol} ',
+                        prefixStyle: GoogleFonts.outfit(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.primary,
+                        ),
+                        hintText: '50,000',
+                        hintStyle: GoogleFonts.outfit(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurfaceVariant.withAlpha(100),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        filled: true,
+                        fillColor: colorScheme.surfaceContainerHighest.withAlpha(80),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter your monthly income';
+                        }
+                        final parsed = double.tryParse(value.replaceAll(',', '').trim());
+                        if (parsed == null || parsed <= 0) {
+                          return 'Please enter a valid amount greater than 0';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Quick select:',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: _presetIncomes.map((amount) {
+                        final formatted = Formatters.currency(amount);
+                        return ActionChip(
+                          label: Text(formatted),
+                          onPressed: () {
+                            _incomeController.text = amount.toInt().toString();
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    const Spacer(),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        OutlinedButton(
+                          onPressed: () => setState(() => _currentStep = 0),
+                          child: const Text('Back'),
+                        ),
+                        const SizedBox(width: 8),
+                        TextButton(
+                          onPressed: () {
+                            _incomeController.text = '0';
+                            setState(() => _currentStep = 2);
+                          },
+                          child: const Text('Skip for now'),
+                        ),
+                        const Spacer(),
+                        FilledButton(
+                          onPressed: () {
+                            if (_formKey.currentState!.validate()) {
+                              setState(() => _currentStep = 2);
+                            }
+                          },
+                          child: const Text('Continue'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Used to calculate daily spending limits and track savings rate. You can change this anytime in Settings.',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 28),
-          TextFormField(
-            controller: _incomeController,
-            keyboardType: TextInputType.number,
-            style: GoogleFonts.outfit(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-            ),
-            decoration: InputDecoration(
-              prefixText: '${AppConstants.currencySymbol} ',
-              prefixStyle: GoogleFonts.outfit(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.primary,
-              ),
-              hintText: '50,000',
-              hintStyle: GoogleFonts.outfit(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurfaceVariant.withAlpha(100),
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              filled: true,
-              fillColor: colorScheme.surfaceContainerHighest.withAlpha(80),
-            ),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter your monthly income';
-              }
-              final parsed = double.tryParse(value.replaceAll(',', '').trim());
-              if (parsed == null || parsed <= 0) {
-                return 'Please enter a valid amount greater than 0';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Quick select:',
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: _presetIncomes.map((amount) {
-              final formatted = Formatters.currency(amount);
-              return ActionChip(
-                label: Text(formatted),
-                onPressed: () {
-                  _incomeController.text = amount.toInt().toString();
-                },
-              );
-            }).toList(),
-          ),
-          const Spacer(),
-          Row(
-            children: [
-              OutlinedButton(
-                onPressed: () => setState(() => _currentStep = 0),
-                child: const Text('Back'),
-              ),
-              const SizedBox(width: 8),
-              TextButton(
-                onPressed: () {
-                  _incomeController.text = '0';
-                  setState(() => _currentStep = 2);
-                },
-                child: const Text('Skip for now'),
-              ),
-              const Spacer(),
-              FilledButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    setState(() => _currentStep = 2);
-                  }
-                },
-                child: const Text('Continue'),
-              ),
-            ],
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -479,94 +503,106 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final dailyBudget =
         income > 0 ? income / Formatters.daysInCurrentMonth() : 0.0;
 
-    return Column(
-      key: const ValueKey('ready'),
-      children: [
-        const Spacer(),
-        Container(
-          width: 88,
-          height: 88,
-          decoration: BoxDecoration(
-            color: colorScheme.primaryContainer,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.check_rounded,
-            size: 44,
-            color: colorScheme.onPrimaryContainer,
-          ),
-        ),
-        const SizedBox(height: 24),
-        Text(
-          'Setup complete',
-          style: GoogleFonts.outfit(
-            fontSize: 26,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Your initial profile is ready. Here is a snapshot of your plan:',
-          textAlign: TextAlign.center,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 24),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHighest.withAlpha(90),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: colorScheme.outlineVariant.withAlpha(100),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: IntrinsicHeight(
+              child: Column(
+                key: const ValueKey('ready'),
+                children: [
+                  const Spacer(),
+                  Container(
+                    width: 88,
+                    height: 88,
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.check_rounded,
+                      size: 44,
+                      color: colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Setup complete',
+                    style: GoogleFonts.outfit(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Your initial profile is ready. Here is a snapshot of your plan:',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHighest.withAlpha(90),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: colorScheme.outlineVariant.withAlpha(100),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildSummaryRow(
+                          label: 'Monthly Income',
+                          value: income > 0 ? Formatters.currency(income) : 'Not specified',
+                          highlight: true,
+                        ),
+                        const Divider(height: 24),
+                        _buildSummaryRow(
+                          label: 'Estimated Daily Budget',
+                          value: income > 0 ? Formatters.currency(dailyBudget) : 'Flexible',
+                          highlight: false,
+                        ),
+                        const Divider(height: 24),
+                        _buildSummaryRow(
+                          label: 'Storage & Sync',
+                          value: 'Local SQLite (Offline Ready)',
+                          highlight: false,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: _isLoading ? null : _completeOnboarding,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Text('Start Using Quantro'),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () => setState(() => _currentStep = 1),
+                    child: const Text('Adjust Income'),
+                  ),
+                ],
+              ),
             ),
           ),
-          child: Column(
-            children: [
-              _buildSummaryRow(
-                label: 'Monthly Income',
-                value: income > 0 ? Formatters.currency(income) : 'Not specified',
-                highlight: true,
-              ),
-              const Divider(height: 24),
-              _buildSummaryRow(
-                label: 'Estimated Daily Budget',
-                value: income > 0 ? Formatters.currency(dailyBudget) : 'Flexible',
-                highlight: false,
-              ),
-              const Divider(height: 24),
-              _buildSummaryRow(
-                label: 'Storage & Sync',
-                value: 'Local SQLite (Offline Ready)',
-                highlight: false,
-              ),
-            ],
-          ),
-        ),
-        const Spacer(),
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton(
-            onPressed: _isLoading ? null : _completeOnboarding,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: _isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Start Using Quantro'),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextButton(
-          onPressed: () => setState(() => _currentStep = 1),
-          child: const Text('Adjust Income'),
-        ),
-      ],
+        );
+      },
     );
   }
 

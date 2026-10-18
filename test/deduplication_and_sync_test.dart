@@ -76,6 +76,7 @@ void main() {
       expect(allTx.length, 1);
       expect(allTx.first.syncId, 'dup-sync-1');
       expect(allTx.first.isSynced, true);
+      expect(removedSyncIds, isEmpty);
     });
 
     test('Deduplicates transactions with identical content signature and different syncIds', () async {

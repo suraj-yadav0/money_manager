@@ -5,6 +5,7 @@ import 'package:money_manager/features/dashboard/widgets/analytics_card.dart';
 import 'package:money_manager/features/dashboard/providers/chart_type_provider.dart';
 import 'package:money_manager/features/dashboard/providers/dashboard_providers.dart';
 import 'package:money_manager/features/dashboard/screens/dashboard_screen.dart';
+import 'package:money_manager/features/sms/providers/sms_providers.dart';
 
 void main() {
   testWidgets('AnalyticsCard renders responsively without overflow across screen sizes and text scales',
@@ -19,6 +20,11 @@ void main() {
 
         await tester.pumpWidget(
           ProviderScope(
+            overrides: [
+              dashboardStatsProvider.overrideWith(
+                (ref) => Stream.value(DashboardStats.empty()),
+              ),
+            ],
             child: MaterialApp(
               builder: (context, child) => MediaQuery(
                 data: MediaQuery.of(context).copyWith(
@@ -54,7 +60,13 @@ void main() {
   });
 
   testWidgets('AnalyticsCard controls switch states seamlessly', (tester) async {
-    final container = ProviderContainer();
+    final container = ProviderContainer(
+      overrides: [
+        dashboardStatsProvider.overrideWith(
+          (ref) => Stream.value(DashboardStats.empty()),
+        ),
+      ],
+    );
     addTearDown(container.dispose);
 
     await tester.pumpWidget(
@@ -98,7 +110,7 @@ void main() {
     expect(container.read(dashboardTransactionTypeProvider), 'expense');
 
     await tester.tap(find.byIcon(Icons.pie_chart_outline_rounded));
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(container.read(dashboardChartTypeProvider), DashboardChartType.pie);
   });
 
@@ -110,14 +122,26 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
+        ProviderScope(
+          overrides: [
+            dashboardStatsProvider.overrideWith(
+              (ref) => Stream.value(DashboardStats.empty()),
+            ),
+            recentTransactionsProvider.overrideWith(
+              (ref) => Stream.value([]),
+            ),
+            pendingSmsTransactionsProvider.overrideWith(
+              (ref) => Stream.value([]),
+            ),
+          ],
+          child: const MaterialApp(
             home: DashboardScreen(),
           ),
         ),
       );
 
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.byType(AnalyticsCard), findsOneWidget);
       expect(find.text('Expense'), findsOneWidget);

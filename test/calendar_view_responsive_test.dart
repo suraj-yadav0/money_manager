@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:money_manager/features/dashboard/screens/calendar_view_screen.dart';
+import 'package:money_manager/features/dashboard/providers/calendar_providers.dart';
 
 void main() {
   testWidgets('CalendarViewScreen renders without overflow in landscape and portrait',
@@ -25,6 +26,12 @@ void main() {
 
         await tester.pumpWidget(
           ProviderScope(
+            overrides: [
+              calendarDailySummariesProvider.overrideWith((ref) => {}),
+              calendarMonthTotalsProvider.overrideWith(
+                (ref) => (expenses: 0.0, income: 0.0),
+              ),
+            ],
             child: MaterialApp(
               builder: (context, child) => MediaQuery(
                 data: MediaQuery.of(context).copyWith(

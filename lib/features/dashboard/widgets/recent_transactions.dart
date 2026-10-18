@@ -197,18 +197,6 @@ class RecentTransactions extends ConsumerWidget {
     );
   }
 
-  Color? _parseColor(String? hexString) {
-    if (hexString == null || hexString.isEmpty) return null;
-    try {
-      final buffer = StringBuffer();
-      if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
-      buffer.write(hexString.replaceFirst('#', ''));
-      return Color(int.parse(buffer.toString(), radix: 16));
-    } catch (_) {
-      return null;
-    }
-  }
-
   IconData _getCategoryIcon(String? iconName) {
     final iconMap = {
       'restaurant': Icons.restaurant_rounded,

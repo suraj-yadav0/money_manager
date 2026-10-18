@@ -105,34 +105,41 @@ class BalanceCard extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: AppTheme.narutoOrange.withValues(alpha: 0.15),
-                                border: Border.all(
-                                  color: AppTheme.narutoOrange.withValues(alpha: 0.3),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.narutoOrange.withValues(alpha: 0.15),
+                                  border: Border.all(
+                                    color: AppTheme.narutoOrange.withValues(alpha: 0.3),
+                                  ),
+                                  shape: BoxShape.circle,
                                 ),
-                                shape: BoxShape.circle,
+                                child: const Icon(
+                                  Icons.account_balance_wallet_rounded,
+                                  color: AppTheme.narutoOrange,
+                                  size: 18,
+                                ),
                               ),
-                              child: const Icon(
-                                Icons.account_balance_wallet_rounded,
-                                color: AppTheme.narutoOrange,
-                                size: 18,
+                              const SizedBox(width: 10),
+                              Flexible(
+                                child: Text(
+                                  'Net Balance',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFFA1A7C4),
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
-                              'Net Balance',
-                              style: GoogleFonts.inter(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFFA1A7C4),
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 10,
@@ -161,23 +168,27 @@ class BalanceCard extends ConsumerWidget {
                     const SizedBox(height: 16),
 
                     // Net Balance Figure
-                    Text(
-                      Formatters.currency(
-                        stats.balance,
-                        symbol: currencySymbol,
-                      ),
-                      style: GoogleFonts.outfit(
-                        fontSize: 38,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: -0.5,
-                        shadows: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        Formatters.currency(
+                          stats.balance,
+                          symbol: currencySymbol,
+                        ),
+                        style: GoogleFonts.outfit(
+                          fontSize: 38,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: -0.5,
+                          shadows: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -218,11 +229,15 @@ class BalanceCard extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          'In selected period',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            color: const Color(0xFF94A3B8),
+                        Flexible(
+                          child: Text(
+                            'In selected period',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: const Color(0xFF94A3B8),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],

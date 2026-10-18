@@ -869,7 +869,6 @@ class AppDatabase extends _$AppDatabase {
         final bTime = b.updatedAt ?? b.createdAt;
         return bTime.compareTo(aTime);
       });
-      final canonical = list.first;
       for (int i = 1; i < list.length; i++) {
         final dup = list[i];
         removedIds.add(dup.id);

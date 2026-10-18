@@ -379,20 +379,27 @@ class CalendarViewScreen extends ConsumerWidget {
       children: [
         Icon(icon, size: 14, color: color),
         const SizedBox(width: 6),
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            color: color.withValues(alpha: 0.9),
+        Expanded(
+          child: Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: color.withValues(alpha: 0.9),
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
-        const Spacer(),
-        Text(
-          Formatters.currency(amount),
-          style: GoogleFonts.outfit(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            color: color,
+        const SizedBox(width: 8),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            Formatters.currency(amount),
+            style: GoogleFonts.outfit(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
           ),
         ),
       ],
@@ -446,20 +453,28 @@ class CalendarViewScreen extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  '${summary.transactionCount} transaction${summary.transactionCount > 1 ? 's' : ''}',
-                  style: GoogleFonts.inter(fontSize: 11, color: subTextColor),
+                Expanded(
+                  child: Text(
+                    '${summary.transactionCount} transaction${summary.transactionCount > 1 ? 's' : ''}',
+                    style: GoogleFonts.inter(fontSize: 11, color: subTextColor),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                Text(
-                  summary.netAmount >= 0
-                      ? '+${Formatters.currency(summary.netAmount)}'
-                      : Formatters.currency(summary.netAmount),
-                  style: GoogleFonts.outfit(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: summary.netAmount >= 0
-                        ? AppTheme.leafGreen
-                        : AppTheme.kuramaRed,
+                const SizedBox(width: 6),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    summary.netAmount >= 0
+                        ? '+${Formatters.currency(summary.netAmount)}'
+                        : Formatters.currency(summary.netAmount),
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: summary.netAmount >= 0
+                          ? AppTheme.leafGreen
+                          : AppTheme.kuramaRed,
+                    ),
                   ),
                 ),
               ],

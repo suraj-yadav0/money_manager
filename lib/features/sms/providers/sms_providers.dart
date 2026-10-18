@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/database/database.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../dashboard/providers/dashboard_providers.dart';
+import '../../budget/providers/budget_provider.dart';
+import '../../networth/providers/net_worth_providers.dart';
 import '../../transactions/services/categorization_engine.dart';
 import '../services/sms_reader_service.dart';
 
@@ -116,6 +118,10 @@ class SmsScanNotifier extends StateNotifier<SmsScanState> {
     ref.invalidate(pendingSmsTransactionsProvider);
     ref.invalidate(dashboardStatsProvider);
     ref.invalidate(recentTransactionsProvider);
+    ref.invalidate(allTransactionsProvider);
+    ref.invalidate(budgetStatsProvider);
+    ref.invalidate(netWorthProvider);
+    ref.invalidate(monthlyNetWorthProvider);
   }
 
   Future<void> rejectCard(int smsId) async {
@@ -130,6 +136,10 @@ class SmsScanNotifier extends StateNotifier<SmsScanState> {
     ref.invalidate(pendingSmsTransactionsProvider);
     ref.invalidate(dashboardStatsProvider);
     ref.invalidate(recentTransactionsProvider);
+    ref.invalidate(allTransactionsProvider);
+    ref.invalidate(budgetStatsProvider);
+    ref.invalidate(netWorthProvider);
+    ref.invalidate(monthlyNetWorthProvider);
   }
 
   Future<SmsTransaction?> simulateSms(String body, {String sender = 'VM-HDFCBK'}) async {

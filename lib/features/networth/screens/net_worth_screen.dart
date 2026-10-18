@@ -8,6 +8,7 @@ import '../../../core/presentation/glass_widgets.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/providers/app_state_provider.dart';
+import '../../settings/screens/settings_screen.dart';
 import '../providers/net_worth_providers.dart';
 import '../widgets/add_asset_sheet.dart';
 
@@ -35,6 +36,15 @@ class NetWorthScreen extends ConsumerWidget {
             icon: const Icon(Icons.add_circle_outline),
             tooltip: 'Add Asset',
             onPressed: () => _showAddAssetSheet(context, ref),
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Settings',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              );
+            },
           ),
         ],
       ),
@@ -72,13 +82,18 @@ class NetWorthScreen extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'My Assets & Liabilities',
-                    style: GoogleFonts.outfit(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Text(
+                      'My Assets & Liabilities',
+                      style: GoogleFonts.outfit(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  const SizedBox(width: 8),
                   TextButton.icon(
                     onPressed: () => _showAddAssetSheet(context, ref),
                     icon: const Icon(Icons.add, size: 18),
@@ -438,27 +453,36 @@ class _AssetCard extends StatelessWidget {
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     Text(
                       type.label,
                       style: Theme.of(context).textTheme.bodySmall,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
               // Value
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
-                    '${asset.isLiability ? '-' : ''}${Formatters.currency(asset.value, symbol: currencySymbol)}',
-                    style: GoogleFonts.outfit(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: asset.isLiability
-                          ? AppTheme.kuramaRed
-                          : AppTheme.leafGreen,
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      '${asset.isLiability ? '-' : ''}${Formatters.currency(asset.value, symbol: currencySymbol)}',
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: asset.isLiability
+                            ? AppTheme.kuramaRed
+                            : AppTheme.leafGreen,
+                      ),
                     ),
                   ),
                   Text(
@@ -554,12 +578,16 @@ class _NetWorthCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          Text(
-            Formatters.currency(data.netWorth, symbol: currencySymbol),
-            style: GoogleFonts.outfit(
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              Formatters.currency(data.netWorth, symbol: currencySymbol),
+              style: GoogleFonts.outfit(
+                fontSize: 36,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
           ),
           const SizedBox(height: 6),

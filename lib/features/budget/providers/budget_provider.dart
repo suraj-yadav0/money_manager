@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/database/database.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/utils/formatters.dart';
+import '../../dashboard/providers/dashboard_providers.dart';
 
 /// Budget statistics for a category
 class CategoryBudgetStats {
@@ -60,12 +61,13 @@ final budgetSelectedMonthProvider = StateProvider<DateTime>((ref) {
   return DateTime(now.year, now.month, 1);
 });
 
-/// Provider for budget statistics - respects selected budget month
-final budgetStatsProvider = FutureProvider<BudgetStats>((ref) async {
+/// Provider for budget statistics - respects selected budget month and reacts live to database changes
+final budgetStatsProvider = StreamProvider<BudgetStats>((ref) async* {
   final db = ref.watch(databaseProvider);
   final selectedMonth = ref.watch(budgetSelectedMonthProvider);
-  final now = DateTime.now();
+  ref.watch(categoriesProvider); // Re-run when category budgets change
 
+  final now = DateTime.now();
   final monthStart = DateTime(selectedMonth.year, selectedMonth.month, 1);
   final lastDay = DateTime(selectedMonth.year, selectedMonth.month + 1, 0);
   final monthEnd = DateTime(
@@ -94,12 +96,7 @@ final budgetStatsProvider = FutureProvider<BudgetStats>((ref) async {
     periodLabel = Formatters.month(selectedMonth);
   }
 
-  // Get categories with positive monthly budgets
-  final categoriesQuery = db.select(db.categories)
-    ..where((c) => c.monthlyBudget.isBiggerThanValue(0));
-  final categories = await categoriesQuery.get();
-
-  // Get all expenses for current month (exclude goal-linked) filtered in SQL
+  // Watch all expenses for current month (exclude goal-linked)
   final transactionsQuery = db.select(db.transactions)
     ..where(
       (t) =>
@@ -107,47 +104,53 @@ final budgetStatsProvider = FutureProvider<BudgetStats>((ref) async {
           t.type.equals('expense') &
           t.goalId.isNull(),
     );
-  final transactions = await transactionsQuery.get();
 
-  // Calculate spending per category
-  final Map<int, double> categorySpending = {};
-  for (final tx in transactions) {
-    categorySpending[tx.categoryId] =
-        (categorySpending[tx.categoryId] ?? 0) + tx.amount;
-  }
+  await for (final transactions in transactionsQuery.watch()) {
+    // Get categories with positive monthly budgets
+    final categoriesQuery = db.select(db.categories)
+      ..where((c) => c.monthlyBudget.isBiggerThanValue(0));
+    final categories = await categoriesQuery.get();
 
-  // Build category stats for categories with budgets
-  final List<CategoryBudgetStats> categoryStats = [];
-  double totalBudget = 0;
-  double totalSpent = 0;
-
-  for (final category in categories) {
-    if (category.monthlyBudget != null && category.monthlyBudget! > 0) {
-      final spent = categorySpending[category.id] ?? 0;
-      categoryStats.add(
-        CategoryBudgetStats(
-          id: category.id,
-          name: category.name,
-          icon: category.icon,
-          budget: category.monthlyBudget!,
-          spent: spent,
-        ),
-      );
-      totalBudget += category.monthlyBudget!;
-      totalSpent += spent;
+    // Calculate spending per category
+    final Map<int, double> categorySpending = {};
+    for (final tx in transactions) {
+      categorySpending[tx.categoryId] =
+          (categorySpending[tx.categoryId] ?? 0) + tx.amount;
     }
+
+    // Build category stats for categories with budgets
+    final List<CategoryBudgetStats> categoryStats = [];
+    double totalBudget = 0;
+    double totalSpent = 0;
+
+    for (final category in categories) {
+      if (category.monthlyBudget != null && category.monthlyBudget! > 0) {
+        final spent = categorySpending[category.id] ?? 0;
+        categoryStats.add(
+          CategoryBudgetStats(
+            id: category.id,
+            name: category.name,
+            icon: category.icon,
+            budget: category.monthlyBudget!,
+            spent: spent,
+          ),
+        );
+        totalBudget += category.monthlyBudget!;
+        totalSpent += spent;
+      }
+    }
+
+    // Sort by percent used (highest first)
+    categoryStats.sort((a, b) => b.percentUsed.compareTo(a.percentUsed));
+
+    yield BudgetStats(
+      totalBudget: totalBudget,
+      totalSpent: totalSpent,
+      daysRemaining: daysRemaining,
+      categoryStats: categoryStats,
+      periodLabel: periodLabel,
+    );
   }
-
-  // Sort by percent used (highest first)
-  categoryStats.sort((a, b) => b.percentUsed.compareTo(a.percentUsed));
-
-  return BudgetStats(
-    totalBudget: totalBudget,
-    totalSpent: totalSpent,
-    daysRemaining: daysRemaining,
-    categoryStats: categoryStats,
-    periodLabel: periodLabel,
-  );
 });
 
 /// Provider to update a category's budget

@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,7 +21,6 @@ class _SmsCardDeckScreenState extends ConsumerState<SmsCardDeckScreen>
     with SingleTickerProviderStateMixin {
   // Drag animation state
   Offset _dragOffset = Offset.zero;
-  bool _isDragging = false;
   final List<int> _historyStack = []; // IDs of swiped cards for undo
 
   // Local overrides for top card (category, account, note, amount)
@@ -71,7 +69,6 @@ class _SmsCardDeckScreenState extends ConsumerState<SmsCardDeckScreen>
     _resetOverrides();
     setState(() {
       _dragOffset = Offset.zero;
-      _isDragging = false;
     });
 
     if (mounted) {
@@ -106,7 +103,6 @@ class _SmsCardDeckScreenState extends ConsumerState<SmsCardDeckScreen>
     _resetOverrides();
     setState(() {
       _dragOffset = Offset.zero;
-      _isDragging = false;
     });
   }
 
@@ -335,9 +331,6 @@ class _SmsCardDeckScreenState extends ConsumerState<SmsCardDeckScreen>
 
                           // TOP ACTIVE INTERACTIVE CARD
                           GestureDetector(
-                            onPanStart: (_) {
-                              setState(() => _isDragging = true);
-                            },
                             onPanUpdate: (details) {
                               setState(() {
                                 _dragOffset += details.delta;
@@ -353,7 +346,6 @@ class _SmsCardDeckScreenState extends ConsumerState<SmsCardDeckScreen>
                                 // Snap back
                                 setState(() {
                                   _dragOffset = Offset.zero;
-                                  _isDragging = false;
                                 });
                               }
                             },

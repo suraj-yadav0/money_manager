@@ -82,12 +82,16 @@ class SmsDetectedBanner extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        Text(
-                          '$pendingCount New Transaction${pendingCount > 1 ? "s" : ""}',
-                          style: GoogleFonts.outfit(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: Colors.white,
+                        Expanded(
+                          child: Text(
+                            '$pendingCount New Transaction${pendingCount > 1 ? "s" : ""}',
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const SizedBox(width: 6),
@@ -95,7 +99,7 @@ class SmsDetectedBanner extends ConsumerWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.3),
+                            color: Colors.white.withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: const Text(
@@ -114,8 +118,10 @@ class SmsDetectedBanner extends ConsumerWidget {
                       'Swipe right to add, left to dismiss',
                       style: GoogleFonts.outfit(
                         fontSize: 12,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),

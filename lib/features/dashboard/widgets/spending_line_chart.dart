@@ -70,9 +70,9 @@ class _SpendingLineChartState extends ConsumerState<SpendingLineChart> {
 
         if (snapshot.hasError) {
           final errorView = Container(
-            height: 200,
+            constraints: const BoxConstraints(minHeight: 180),
             width: double.infinity,
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -101,9 +101,9 @@ class _SpendingLineChartState extends ConsumerState<SpendingLineChart> {
 
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           final emptyView = Container(
-            height: 200,
+            constraints: const BoxConstraints(minHeight: 180),
             width: double.infinity,
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

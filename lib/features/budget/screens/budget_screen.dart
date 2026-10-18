@@ -9,6 +9,7 @@ import '../../../core/database/database.dart';
 import '../../../core/providers/app_state_provider.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/icon_helper.dart';
+import '../../settings/screens/settings_screen.dart';
 import '../providers/budget_provider.dart';
 import '../widgets/budget_summary_card.dart';
 import '../widgets/category_budget_card.dart';
@@ -28,6 +29,17 @@ class BudgetScreen extends ConsumerWidget {
           'Budget',
           style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Settings',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: budgetAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -111,7 +123,7 @@ class BudgetScreen extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
 
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -119,10 +131,10 @@ class BudgetScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppTheme.narutoOrange.withOpacity(0.1),
+                color: AppTheme.narutoOrange.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.account_balance_wallet_outlined,
                 size: 64,
                 color: AppTheme.narutoOrange,

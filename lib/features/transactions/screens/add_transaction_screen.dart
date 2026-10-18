@@ -19,6 +19,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../dashboard/providers/dashboard_providers.dart';
 import '../../goals/providers/goals_provider.dart';
 import '../../accounts/providers/account_providers.dart';
+import '../../budget/providers/budget_provider.dart';
+import '../../networth/providers/net_worth_providers.dart';
 import '../services/categorization_engine.dart';
 
 // Re-export GoalsCompanion for goal updates
@@ -349,6 +351,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       ref.invalidate(dashboardStatsProvider);
       ref.invalidate(recentTransactionsProvider);
       ref.invalidate(allTransactionsProvider);
+      ref.invalidate(budgetStatsProvider);
+      ref.invalidate(netWorthProvider);
+      ref.invalidate(monthlyNetWorthProvider);
+      ref.invalidate(assetsProvider);
       ref.invalidate(activeGoalsProvider);
       ref.invalidate(activeGoalProvider);
       ref.invalidate(bankAccountsStreamProvider);
@@ -605,6 +611,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       ref.invalidate(dashboardStatsProvider);
       ref.invalidate(recentTransactionsProvider);
       ref.invalidate(allTransactionsProvider);
+      ref.invalidate(budgetStatsProvider);
+      ref.invalidate(netWorthProvider);
+      ref.invalidate(monthlyNetWorthProvider);
+      ref.invalidate(assetsProvider);
       ref.invalidate(bankAccountsStreamProvider);
 
       // Trigger background cloud sync if user is logged in

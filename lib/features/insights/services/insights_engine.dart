@@ -77,7 +77,6 @@ class InsightsEngine {
     final expenses = transactions.where((t) => t.type == 'expense').toList();
     final totalExpenses = expenses.fold<double>(0, (sum, t) => sum + t.amount);
 
-    double capitalAllocations = 0;
     double consumptionExpenses = 0;
     for (final t in expenses) {
       final cat = categoryMap[t.categoryId];
@@ -91,9 +90,7 @@ class InsightsEngine {
           catIcon == 'trending_up' ||
           catIcon == 'savings';
 
-      if (isCapital) {
-        capitalAllocations += t.amount;
-      } else {
+      if (!isCapital) {
         consumptionExpenses += t.amount;
       }
     }

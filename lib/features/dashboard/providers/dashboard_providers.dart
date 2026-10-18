@@ -180,135 +180,133 @@ class DashboardStats {
   );
 }
 
-/// Provider for dashboard statistics based on selected filter
-final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
+/// Provider for dashboard statistics based on selected filter - live & reactive
+final dashboardStatsProvider = StreamProvider<DashboardStats>((ref) async* {
   final db = ref.watch(databaseProvider);
   final range = ref.watch(dateRangeProvider);
-  final filter = ref.read(dashboardDateFilterProvider);
+  final filter = ref.watch(dashboardDateFilterProvider);
+  ref.watch(categoriesProvider);
+  ref.watch(userSettingsStreamProvider);
 
-  // Get settings for forecast calculations (monthlyIncome used for projections reference)
-  final settings = await db.select(db.userSettings).getSingleOrNull();
-  final monthlyIncome = settings?.monthlyIncome ?? 0;
+  // Watch transactions for range
+  final query = db.select(db.transactions)
+    ..where((t) => t.timestamp.isBetweenValues(range.start, range.end));
 
-  // Query transactions for range
-  final transactions = await (db.select(
-    db.transactions,
-  )..where((t) => t.timestamp.isBetweenValues(range.start, range.end))).get();
+  await for (final transactions in query.watch()) {
+    // Get settings for forecast calculations (monthlyIncome used for projections reference)
+    final settings = await db.select(db.userSettings).getSingleOrNull();
+    final monthlyIncome = settings?.monthlyIncome ?? 0;
 
-  // Get categories first to classify spending
-  final categories = await db.select(db.categories).get();
-  final categoryObjMap = {for (var c in categories) c.id: c};
-  final categoryMap = {for (var c in categories) c.id: c.name};
+    // Get categories first to classify spending
+    final categories = await db.select(db.categories).get();
+    final categoryObjMap = {for (var c in categories) c.id: c};
+    final categoryMap = {for (var c in categories) c.id: c.name};
 
-  // Calculate totals from actual transactions only
-  double totalIncome = 0;
-  double totalExpenses = 0;
-  double goalAllocatedAmount = 0;
-  double capitalAllocations = 0;
-  double consumptionExpenses = 0;
-  Map<int, double> expenseCategoryTotals = {};
-  Map<int, double> incomeCategoryTotals = {};
+    // Calculate totals from actual transactions only
+    double totalIncome = 0;
+    double totalExpenses = 0;
+    double goalAllocatedAmount = 0;
+    double capitalAllocations = 0;
+    double consumptionExpenses = 0;
+    Map<int, double> expenseCategoryTotals = {};
+    Map<int, double> incomeCategoryTotals = {};
 
-  for (final tx in transactions) {
-    if (tx.type == 'income') {
-      totalIncome += tx.amount;
-      incomeCategoryTotals[tx.categoryId] =
-          (incomeCategoryTotals[tx.categoryId] ?? 0) + tx.amount;
-    } else {
-      totalExpenses += tx.amount;
-
-      final cat = categoryObjMap[tx.categoryId];
-      final catName = (cat?.name ?? '').toLowerCase();
-      final catIcon = (cat?.icon ?? '').toLowerCase();
-      final isCapital = tx.goalId != null ||
-          catName == 'investments' ||
-          catName == 'investment' ||
-          catName == 'savings' ||
-          catIcon == 'show_chart' ||
-          catIcon == 'trending_up' ||
-          catIcon == 'savings';
-
-      if (isCapital) {
-        capitalAllocations += tx.amount;
+    for (final tx in transactions) {
+      if (tx.type == 'income') {
+        totalIncome += tx.amount;
+        incomeCategoryTotals[tx.categoryId] =
+            (incomeCategoryTotals[tx.categoryId] ?? 0) + tx.amount;
       } else {
-        consumptionExpenses += tx.amount;
-      }
+        totalExpenses += tx.amount;
 
-      // Track goal allocations separately - don't add to category breakdown
-      if (tx.goalId != null) {
-        goalAllocatedAmount += tx.amount;
-      } else {
-        // Only add non-goal expenses to category breakdown
-        expenseCategoryTotals[tx.categoryId] =
-            (expenseCategoryTotals[tx.categoryId] ?? 0) + tx.amount;
+        final cat = categoryObjMap[tx.categoryId];
+        final catName = (cat?.name ?? '').toLowerCase();
+        final catIcon = (cat?.icon ?? '').toLowerCase();
+        final isCapital = tx.goalId != null ||
+            catName == 'investments' ||
+            catName == 'investment' ||
+            catName == 'savings' ||
+            catIcon == 'show_chart' ||
+            catIcon == 'trending_up' ||
+            catIcon == 'savings';
+
+        if (isCapital) {
+          capitalAllocations += tx.amount;
+        } else {
+          consumptionExpenses += tx.amount;
+        }
+
+        // Track goal allocations separately - don't add to category breakdown
+        if (tx.goalId != null) {
+          goalAllocatedAmount += tx.amount;
+        } else {
+          // Only add non-goal expenses to category breakdown
+          expenseCategoryTotals[tx.categoryId] =
+              (expenseCategoryTotals[tx.categoryId] ?? 0) + tx.amount;
+        }
       }
     }
-  }
 
-  Map<String, double> categoryBreakdown = {};
-  for (final entry in expenseCategoryTotals.entries) {
-    final name = categoryMap[entry.key] ?? 'Other';
-    categoryBreakdown[name] = entry.value;
-  }
-
-  Map<String, double> incomeCategoryBreakdown = {};
-  for (final entry in incomeCategoryTotals.entries) {
-    final name = categoryMap[entry.key] ?? 'Other';
-    incomeCategoryBreakdown[name] = entry.value;
-  }
-
-  // Add goal allocations as a separate entry if any exist
-  if (goalAllocatedAmount > 0) {
-    categoryBreakdown['Savings Goals'] = goalAllocatedAmount;
-  }
-
-  // Calculate metrics
-  final balance = totalIncome - totalExpenses;
-
-  // Burn rate / Projection logic only makes strict sense for "This Month" in the original context.
-  // For others, we can just zero them out or provide simple averages.
-
-  double dailyBurnRate = 0;
-  int daysRemaining = 0;
-  double projectedBalance = 0;
-  ForecastStatus forecastStatus = ForecastStatus.safe;
-
-  if (filter == DashboardDateFilter.thisMonth) {
-    final daysElapsed = Formatters.daysElapsedInMonth();
-    daysRemaining = Formatters.daysRemainingInMonth();
-    // Daily burn rate is computed strictly on recurring consumption expenses.
-    // Periodic capital allocations (savings, investments, goals) do not burn ongoing daily runway.
-    dailyBurnRate = daysElapsed > 0 ? consumptionExpenses / daysElapsed : 0;
-    final projectedAdditionalSpend = dailyBurnRate * daysRemaining;
-    projectedBalance = balance - projectedAdditionalSpend;
-
-    if (projectedBalance > monthlyIncome * AppConstants.safeBalanceThreshold) {
-      forecastStatus = ForecastStatus.safe;
-    } else if (projectedBalance > AppConstants.cautionBalanceThreshold) {
-      forecastStatus = ForecastStatus.caution;
-    } else {
-      forecastStatus = ForecastStatus.deficit;
+    Map<String, double> categoryBreakdown = {};
+    for (final entry in expenseCategoryTotals.entries) {
+      final name = categoryMap[entry.key] ?? 'Other';
+      categoryBreakdown[name] = entry.value;
     }
-  } else {
-    // For other views, projected isn't as relevant or requires complex logic.
-    // Just use actuals.
-    projectedBalance = balance;
-  }
 
-  return DashboardStats(
-    totalIncome: totalIncome,
-    totalExpenses: totalExpenses,
-    balance: balance,
-    dailyBurnRate: dailyBurnRate.toDouble(),
-    daysRemaining: daysRemaining,
-    projectedBalance: projectedBalance,
-    forecastStatus: forecastStatus,
-    categoryBreakdown: categoryBreakdown,
-    incomeCategoryBreakdown: incomeCategoryBreakdown,
-    goalAllocations: goalAllocatedAmount,
-    consumptionExpenses: consumptionExpenses,
-    capitalAllocations: capitalAllocations,
-  );
+    Map<String, double> incomeCategoryBreakdown = {};
+    for (final entry in incomeCategoryTotals.entries) {
+      final name = categoryMap[entry.key] ?? 'Other';
+      incomeCategoryBreakdown[name] = entry.value;
+    }
+
+    // Add goal allocations as a separate entry if any exist
+    if (goalAllocatedAmount > 0) {
+      categoryBreakdown['Savings Goals'] = goalAllocatedAmount;
+    }
+
+    // Calculate metrics
+    final balance = totalIncome - totalExpenses;
+
+    double dailyBurnRate = 0;
+    int daysRemaining = 0;
+    double projectedBalance = 0;
+    ForecastStatus forecastStatus = ForecastStatus.safe;
+
+    if (filter == DashboardDateFilter.thisMonth) {
+      final daysElapsed = Formatters.daysElapsedInMonth();
+      daysRemaining = Formatters.daysRemainingInMonth();
+      // Daily burn rate is computed strictly on recurring consumption expenses.
+      // Periodic capital allocations (savings, investments, goals) do not burn ongoing daily runway.
+      dailyBurnRate = daysElapsed > 0 ? consumptionExpenses / daysElapsed : 0;
+      final projectedAdditionalSpend = dailyBurnRate * daysRemaining;
+      projectedBalance = balance - projectedAdditionalSpend;
+
+      if (projectedBalance > monthlyIncome * AppConstants.safeBalanceThreshold) {
+        forecastStatus = ForecastStatus.safe;
+      } else if (projectedBalance > AppConstants.cautionBalanceThreshold) {
+        forecastStatus = ForecastStatus.caution;
+      } else {
+        forecastStatus = ForecastStatus.deficit;
+      }
+    } else {
+      projectedBalance = balance;
+    }
+
+    yield DashboardStats(
+      totalIncome: totalIncome,
+      totalExpenses: totalExpenses,
+      balance: balance,
+      dailyBurnRate: dailyBurnRate.toDouble(),
+      daysRemaining: daysRemaining,
+      projectedBalance: projectedBalance,
+      forecastStatus: forecastStatus,
+      categoryBreakdown: categoryBreakdown,
+      incomeCategoryBreakdown: incomeCategoryBreakdown,
+      goalAllocations: goalAllocatedAmount,
+      consumptionExpenses: consumptionExpenses,
+      capitalAllocations: capitalAllocations,
+    );
+  }
 });
 
 // Deprecate old name to avoid immediate breaking, pointing to new one if possible,

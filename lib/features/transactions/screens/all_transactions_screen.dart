@@ -15,6 +15,8 @@ import 'add_transaction_screen.dart';
 import '../../dashboard/providers/dashboard_providers.dart';
 import '../../accounts/providers/account_providers.dart';
 import '../../goals/providers/goals_provider.dart';
+import '../../budget/providers/budget_provider.dart';
+import '../../networth/providers/net_worth_providers.dart';
 
 class AllTransactionsScreen extends ConsumerStatefulWidget {
   const AllTransactionsScreen({super.key});
@@ -642,6 +644,10 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
     ref.invalidate(dashboardStatsProvider);
     ref.invalidate(recentTransactionsProvider);
     ref.invalidate(allTransactionsProvider);
+    ref.invalidate(budgetStatsProvider);
+    ref.invalidate(netWorthProvider);
+    ref.invalidate(monthlyNetWorthProvider);
+    ref.invalidate(assetsProvider);
     ref.invalidate(bankAccountsStreamProvider);
     ref.invalidate(activeGoalsProvider);
 

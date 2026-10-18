@@ -7,6 +7,7 @@ import '../../../core/database/database.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/providers/auth_providers.dart';
+import '../../settings/screens/settings_screen.dart';
 import '../providers/goals_provider.dart';
 import '../widgets/add_contribution_sheet.dart';
 import '../widgets/edit_goal_sheet.dart';
@@ -25,6 +26,17 @@ class GoalsScreen extends ConsumerWidget {
           'Savings Goals',
           style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Settings',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: goalsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -79,7 +91,7 @@ class _NoGoalView extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -135,7 +147,7 @@ class _GoalsListView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
       itemCount: goals.length,
       itemBuilder: (context, index) {
         final goal = goals[index];
