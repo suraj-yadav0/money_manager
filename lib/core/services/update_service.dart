@@ -217,6 +217,8 @@ class UpdateService {
       final stream = OtaUpdate().execute(
         downloadUrl,
         destinationFilename: 'quantro_update.apk',
+        androidProviderAuthority:
+            'com.example.money_manager.ota_update_provider',
       );
 
       await for (final event in stream) {
