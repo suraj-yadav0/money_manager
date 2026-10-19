@@ -1,5 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../features/budget/screens/budget_screen.dart';
 import '../../features/dashboard/screens/dashboard_screen.dart';
@@ -16,7 +19,7 @@ import '../presentation/update_prompt_sheet.dart';
 import '../providers/update_providers.dart';
 import '../theme/app_theme.dart';
 
-/// Main app shell with floating vibrant navigation dock
+/// Main app shell with frosted iOS navigation bar
 class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key});
 
@@ -101,108 +104,171 @@ class _AppShellState extends ConsumerState<AppShell> {
     }
   }
 
+  void _openAddTransaction() {
+    HapticFeedback.lightImpact();
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const AddTransactionScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(0.0, 1.0);
+          const end = Offset.zero;
+          const curve = Curves.easeOutCubic;
+          final tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          return SlideTransition(position: animation.drive(tween), child: child);
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentIndex = ref.watch(navIndexProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = theme.colorScheme.primary;
+    final borderColor = isDark ? const Color(0x1AFFFFFF) : AppTheme.borderLight;
+    final navBgColor = isDark
+        ? const Color(0xFF09090D).withValues(alpha: 0.88)
+        : Colors.white.withValues(alpha: 0.90);
 
     return GlassScaffold(
       extendBody: true,
       body: IndexedStack(index: currentIndex, children: _screens),
-      bottomNavigationBar: Container(
-        margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-        height: 70,
-        decoration: BoxDecoration(
-          color: isDark ? AppTheme.bgSurfaceDark : Colors.white,
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(
-            color: isDark ? AppTheme.borderDark : AppTheme.borderLight,
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.08),
-              blurRadius: 20,
-              offset: const Offset(0, 6),
+      bottomNavigationBar: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+          child: Container(
+            decoration: BoxDecoration(
+              color: navBgColor,
+              border: Border(top: BorderSide(color: borderColor, width: 0.8)),
             ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _buildNavItem(0, Icons.grid_view_rounded, 'Overview'),
-            _buildNavItem(1, Icons.pie_chart_outline_rounded, 'Budget'),
+            child: SafeArea(
+              top: false,
+              child: SizedBox(
+                height: 58,
+                child: Row(
+                  children: [
+                    _buildNavItem(
+                      index: 0,
+                      icon: Icons.space_dashboard_outlined,
+                      activeIcon: Icons.space_dashboard_rounded,
+                      label: 'Overview',
+                      isSelected: currentIndex == 0,
+                      primaryColor: primaryColor,
+                      isDark: isDark,
+                    ),
+                    _buildNavItem(
+                      index: 1,
+                      icon: Icons.pie_chart_outline_rounded,
+                      activeIcon: Icons.pie_chart_rounded,
+                      label: 'Budget',
+                      isSelected: currentIndex == 1,
+                      primaryColor: primaryColor,
+                      isDark: isDark,
+                    ),
 
-            // Center Floating Action Button with Signature Orange Gradient
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation, secondaryAnimation) =>
-                        const AddTransactionScreen(),
-                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                      const begin = Offset(0.0, 1.0);
-                      const end = Offset.zero;
-                      const curve = Curves.easeOutCubic;
-                      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                      return SlideTransition(position: animation.drive(tween), child: child);
-                    },
-                  ),
-                );
-              },
-              child: Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  gradient: AppTheme.neonGradient,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.narutoOrange.withValues(alpha: 0.45),
-                      blurRadius: 14,
-                      offset: const Offset(0, 4),
+                    // Refined Center Action
+                    Expanded(
+                      child: Center(
+                        child: GestureDetector(
+                          onTap: _openAddTransaction,
+                          behavior: HitTestBehavior.opaque,
+                          child: Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: primaryColor,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: primaryColor.withValues(alpha: 0.3),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.add_rounded,
+                              color: (primaryColor == Colors.white)
+                                  ? const Color(0xFF09090B)
+                                  : Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    _buildNavItem(
+                      index: 2,
+                      icon: Icons.account_balance_wallet_outlined,
+                      activeIcon: Icons.account_balance_wallet_rounded,
+                      label: 'Net Worth',
+                      isSelected: currentIndex == 2,
+                      primaryColor: primaryColor,
+                      isDark: isDark,
+                    ),
+                    _buildNavItem(
+                      index: 3,
+                      icon: Icons.savings_outlined,
+                      activeIcon: Icons.savings_rounded,
+                      label: 'Goals',
+                      isSelected: currentIndex == 3,
+                      primaryColor: primaryColor,
+                      isDark: isDark,
                     ),
                   ],
                 ),
-                child: const Icon(
-                  Icons.add_rounded,
-                  color: Colors.white,
-                  size: 28,
-                ),
               ),
             ),
-
-            _buildNavItem(2, Icons.account_balance_wallet_outlined, 'Net Worth'),
-            _buildNavItem(3, Icons.savings_outlined, 'Goals'),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon, String label) {
-    final currentIndex = ref.watch(navIndexProvider);
-    final isSelected = currentIndex == index;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  Widget _buildNavItem({
+    required int index,
+    required IconData icon,
+    required IconData activeIcon,
+    required String label,
+    required bool isSelected,
+    required Color primaryColor,
+    required bool isDark,
+  }) {
+    final inactiveColor =
+        isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight;
 
-    return GestureDetector(
-      onTap: () => ref.read(navIndexProvider.notifier).state = index,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppTheme.narutoOrange.withValues(alpha: isDark ? 0.15 : 0.1)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Icon(
-          icon,
-          color: isSelected
-              ? AppTheme.narutoOrange
-              : (isDark ? AppTheme.textMutedDark : const Color(0xFF94A3B8)),
-          size: 22,
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          ref.read(navIndexProvider.notifier).state = index;
+        },
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              isSelected ? activeIcon : icon,
+              color: isSelected ? primaryColor : inactiveColor,
+              size: 22,
+            ),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 10.5,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                letterSpacing: -0.1,
+                color: isSelected ? primaryColor : inactiveColor,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
       ),
     );

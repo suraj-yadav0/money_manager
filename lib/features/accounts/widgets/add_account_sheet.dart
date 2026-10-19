@@ -463,15 +463,15 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _saveAccount,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.narutoOrange,
-                    foregroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                   child: _isLoading
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 24,
                           height: 24,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          child: CircularProgressIndicator(color: Theme.of(context).colorScheme.onPrimary, strokeWidth: 2),
                         )
                       : Text(
                           widget.accountToEdit != null ? 'Update Account' : 'Add Account',

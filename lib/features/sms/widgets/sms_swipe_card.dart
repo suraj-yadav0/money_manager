@@ -122,7 +122,7 @@ class _SmsSwipeCardState extends ConsumerState<SmsSwipeCard> {
                     acc.accountType == 'credit_card'
                         ? Icons.credit_card
                         : Icons.account_balance,
-                    color: AppTheme.narutoOrange,
+                    color: Theme.of(ctx).colorScheme.primary,
                   ),
                   title: Text(acc.name,
                       style: const TextStyle(fontWeight: FontWeight.w600)),
@@ -237,7 +237,7 @@ class _SmsSwipeCardState extends ConsumerState<SmsSwipeCard> {
                                   ? Icons.credit_card
                                   : Icons.account_balance,
                               size: 14,
-                              color: AppTheme.narutoOrange,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                             const SizedBox(width: 6),
                             Text(
@@ -355,12 +355,12 @@ class _SmsSwipeCardState extends ConsumerState<SmsSwipeCard> {
                           width: 38,
                           height: 38,
                           decoration: BoxDecoration(
-                            color: AppTheme.narutoOrange.withOpacity(0.15),
+                            color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.storefront_rounded,
-                            color: AppTheme.narutoOrange,
+                            color: Theme.of(context).colorScheme.primary,
                             size: 20,
                           ),
                         ),

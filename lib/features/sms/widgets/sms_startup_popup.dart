@@ -25,6 +25,7 @@ class SmsStartupPopup extends ConsumerWidget {
     final pendingAsync = ref.watch(pendingSmsTransactionsProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = theme.colorScheme.primary;
 
     return pendingAsync.when(
       loading: () => const SizedBox.shrink(),
@@ -56,7 +57,7 @@ class SmsStartupPopup extends ConsumerWidget {
             border: Border(
               top: BorderSide(
                 color: isDark
-                    ? AppTheme.narutoOrange.withValues(alpha: 0.4)
+                    ? primaryColor.withValues(alpha: 0.4)
                     : Colors.grey.withValues(alpha: 0.2),
                 width: 1.5,
               ),
@@ -87,7 +88,7 @@ class SmsStartupPopup extends ConsumerWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.narutoOrange.withValues(alpha: 0.4),
+                          color: primaryColor.withValues(alpha: 0.4),
                           blurRadius: 16,
                         ),
                       ],
@@ -215,7 +216,7 @@ class SmsStartupPopup extends ConsumerWidget {
                       icon: const Icon(Icons.style_rounded, size: 18),
                       label: const Text('Review & Swipe Cards'),
                       style: FilledButton.styleFrom(
-                        backgroundColor: AppTheme.narutoOrange,
+                        backgroundColor: primaryColor,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),

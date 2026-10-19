@@ -672,7 +672,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     'Save',
                     style: GoogleFonts.outfit(
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.narutoOrange,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
           ),
@@ -684,8 +684,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           child: ElevatedButton(
             onPressed: _isLoading ? null : _saveTransaction,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.narutoOrange,
-              foregroundColor: Colors.white,
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
               minimumSize: const Size(double.infinity, 52),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
@@ -693,12 +693,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               elevation: 2,
             ),
             child: _isLoading
-                ? const SizedBox(
+                ? SizedBox(
                     width: 22,
                     height: 22,
                     child: CircularProgressIndicator(
                       strokeWidth: 2.5,
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onPrimary,
                     ),
                   )
                 : Text(

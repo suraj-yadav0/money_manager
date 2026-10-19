@@ -113,7 +113,7 @@ class AnalyticsCard extends ConsumerWidget {
             label: 'Expense',
             icon: Icons.arrow_downward_rounded,
             isSelected: currentType == 'expense',
-            activeColor: AppTheme.kuramaRed,
+            activeColor: AppTheme.expenseRed,
             isDark: isDark,
             onTap: () {
               ref.read(dashboardTransactionTypeProvider.notifier).state =
@@ -125,7 +125,7 @@ class AnalyticsCard extends ConsumerWidget {
             label: 'Income',
             icon: Icons.arrow_upward_rounded,
             isSelected: currentType == 'income',
-            activeColor: AppTheme.leafGreen,
+            activeColor: AppTheme.incomeGreen,
             isDark: isDark,
             onTap: () {
               ref.read(dashboardTransactionTypeProvider.notifier).state =
@@ -211,6 +211,7 @@ class AnalyticsCard extends ConsumerWidget {
             type: type,
             isSelected: isSelected,
             isDark: isDark,
+            primaryColor: Theme.of(context).colorScheme.primary,
             onTap: () {
               ref.read(dashboardChartTypeProvider.notifier).state = type;
             },
@@ -224,6 +225,7 @@ class AnalyticsCard extends ConsumerWidget {
     required DashboardChartType type,
     required bool isSelected,
     required bool isDark,
+    required Color primaryColor,
     required VoidCallback onTap,
   }) {
     final inactiveColor =
@@ -258,7 +260,7 @@ class AnalyticsCard extends ConsumerWidget {
               type.icon,
               size: 16,
               color: isSelected
-                  ? (isDark ? Colors.white : AppTheme.narutoOrange)
+                  ? (isDark ? Colors.white : primaryColor)
                   : inactiveColor,
             ),
           ),

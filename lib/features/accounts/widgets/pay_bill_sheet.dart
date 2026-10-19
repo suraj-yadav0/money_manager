@@ -313,10 +313,10 @@ class _PayBillSheetState extends ConsumerState<PayBillSheet> {
               height: 50,
               child: ElevatedButton.icon(
                 icon: _isLoading
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        child: CircularProgressIndicator(color: Theme.of(context).colorScheme.onPrimary, strokeWidth: 2),
                       )
                     : const Icon(Icons.check_circle_outline),
                 label: Text(
@@ -324,8 +324,8 @@ class _PayBillSheetState extends ConsumerState<PayBillSheet> {
                   style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.narutoOrange,
-                  foregroundColor: Colors.white,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 onPressed: _isLoading ? null : _submitPayment,

@@ -107,8 +107,8 @@ class BudgetSummaryCard extends StatelessWidget {
                     stats.totalRemaining.clamp(0, double.infinity),
                   ),
                   color: stats.isOverBudget
-                      ? AppTheme.kuramaRed
-                      : AppTheme.leafGreen,
+                      ? AppTheme.expenseRed
+                      : AppTheme.incomeGreen,
                 ),
               ),
               Container(
@@ -122,7 +122,7 @@ class BudgetSummaryCard extends StatelessWidget {
                   value: Formatters.currency(
                     stats.dailyAllowance.clamp(0, double.infinity),
                   ),
-                  color: stats.dailyAllowance < 0 ? AppTheme.kuramaRed : null,
+                  color: stats.dailyAllowance < 0 ? AppTheme.expenseRed : null,
                 ),
               ),
               Container(
@@ -134,7 +134,7 @@ class BudgetSummaryCard extends StatelessWidget {
                 child: _StatItem(
                   label: 'Days Left',
                   value: '${stats.daysRemaining}',
-                  color: AppTheme.narutoOrange,
+                  color: theme.colorScheme.primary,
                 ),
               ),
             ],

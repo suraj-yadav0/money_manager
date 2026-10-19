@@ -80,7 +80,7 @@ class RecentTransactions extends ConsumerWidget {
                       child: const Icon(Icons.delete_outline, color: Colors.white),
                     ),
                     secondaryBackground: Container(
-                      color: AppTheme.narutoOrange,
+                      color: Theme.of(context).colorScheme.primary,
                       alignment: Alignment.centerRight,
                       padding: const EdgeInsets.only(right: 20),
                       child: const Icon(Icons.edit_outlined, color: Colors.white),

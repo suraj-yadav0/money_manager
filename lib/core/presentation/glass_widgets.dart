@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../theme/app_theme.dart';
 
-/// A high-performance fintech container with crisp micro-borders and subtle elevation
+/// An iOS-grade inset container with hairline micro-borders and subtle tactile depth
 class GlassContainer extends StatelessWidget {
   final Widget child;
   final double width;
@@ -22,7 +22,7 @@ class GlassContainer extends StatelessWidget {
     this.height,
     this.padding = const EdgeInsets.all(16),
     this.margin = EdgeInsets.zero,
-    this.borderRadius = 22,
+    this.borderRadius = 18,
     this.color,
     this.gradientColors,
     this.border,
@@ -32,9 +32,11 @@ class GlassContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final defaultBg = isDark ? AppTheme.bgSurfaceDark : AppTheme.bgSurfaceLight;
-    final defaultBorder = isDark ? AppTheme.borderDark : AppTheme.borderLight;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final defaultBg = theme.cardTheme.color ??
+        (isDark ? AppTheme.bgSurfaceDark : AppTheme.bgSurfaceLight);
+    final defaultBorder = isDark ? const Color(0x1AFFFFFF) : AppTheme.borderLight;
 
     return Container(
       width: width,
@@ -44,7 +46,7 @@ class GlassContainer extends StatelessWidget {
       decoration: BoxDecoration(
         color: color ?? (gradientColors == null ? defaultBg : null),
         borderRadius: BorderRadius.circular(borderRadius),
-        border: border ?? Border.all(color: defaultBorder, width: 1),
+        border: border ?? Border.all(color: defaultBorder, width: 0.8),
         gradient: gradientColors != null
             ? LinearGradient(
                 begin: Alignment.topLeft,
@@ -54,9 +56,9 @@ class GlassContainer extends StatelessWidget {
             : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -65,7 +67,7 @@ class GlassContainer extends StatelessWidget {
   }
 }
 
-/// Fast elevated action button
+/// Tactile elevated primary action button
 class GlassButton extends StatelessWidget {
   final VoidCallback onPressed;
   final String text;
@@ -74,6 +76,7 @@ class GlassButton extends StatelessWidget {
   final double height;
   final double borderRadius;
   final List<Color>? gradientColors;
+  final Color? color;
 
   const GlassButton({
     super.key,
@@ -81,30 +84,35 @@ class GlassButton extends StatelessWidget {
     required this.text,
     this.icon,
     this.width = double.infinity,
-    this.height = 52,
-    this.borderRadius = 16,
+    this.height = 50,
+    this.borderRadius = 14,
     this.gradientColors,
+    this.color,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = color ?? theme.colorScheme.primary;
+
     return Container(
       width: width,
       height: height,
       decoration: BoxDecoration(
+        color: gradientColors == null ? primary : null,
         gradient: gradientColors != null
             ? LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: gradientColors!,
               )
-            : AppTheme.neonGradient,
+            : null,
         borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.narutoOrange.withValues(alpha: 0.3),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
+            color: primary.withValues(alpha: 0.25),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -113,6 +121,8 @@ class GlassButton extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(borderRadius),
           onTap: onPressed,
+          splashColor: Colors.white.withValues(alpha: 0.12),
+          highlightColor: Colors.white.withValues(alpha: 0.06),
           child: Center(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -121,8 +131,9 @@ class GlassButton extends StatelessWidget {
                 Text(
                   text,
                   style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.2,
                     color: Colors.white,
                   ),
                 ),
@@ -135,7 +146,7 @@ class GlassButton extends StatelessWidget {
   }
 }
 
-/// A clean, zero-lag Scaffold wrapper
+/// A clean, zero-lag Scaffold wrapper matching Apple Human Interface Guidelines
 class GlassScaffold extends StatelessWidget {
   final Widget body;
   final Widget? bottomNavigationBar;
@@ -156,7 +167,7 @@ class GlassScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
 
     return Scaffold(
       extendBody: extendBody,
@@ -164,18 +175,9 @@ class GlassScaffold extends StatelessWidget {
       appBar: appBar,
       floatingActionButton: floatingActionButton,
       floatingActionButtonLocation: floatingActionButtonLocation,
-      backgroundColor: isDark ? AppTheme.bgMainDark : AppTheme.bgMainLight,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
-          // Background Gradient
-          Container(
-            decoration: BoxDecoration(
-              gradient: isDark
-                  ? AppTheme.glassGradientDark
-                  : AppTheme.glassGradientLight,
-            ),
-          ),
-
           // Main Body Content
           SafeArea(child: body),
 
@@ -190,7 +192,7 @@ class GlassScaffold extends StatelessWidget {
   }
 }
 
-/// A clean AppBar that implements PreferredSizeWidget
+/// A clean iOS-style AppBar that implements PreferredSizeWidget
 class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final List<Widget>? actions;
@@ -212,28 +214,27 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final backgroundColor = isDark
-        ? AppTheme.bgMainDark.withValues(alpha: 0.95)
-        : AppTheme.bgMainLight.withValues(alpha: 0.95);
-
-    final borderColor = isDark ? AppTheme.borderDark : AppTheme.borderLight;
+    final backgroundColor = theme.scaffoldBackgroundColor.withValues(alpha: 0.95);
+    final borderColor = isDark ? const Color(0x1AFFFFFF) : AppTheme.borderLight;
 
     return Container(
       decoration: BoxDecoration(
         color: backgroundColor,
-        border: Border(bottom: BorderSide(color: borderColor, width: 1)),
+        border: Border(bottom: BorderSide(color: borderColor, width: 0.8)),
       ),
       child: AppBar(
         title: Text(
           title,
           style: GoogleFonts.outfit(
             fontWeight: FontWeight.w600,
+            letterSpacing: -0.3,
             color: theme.colorScheme.onSurface,
           ),
         ),
         centerTitle: centerTitle,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         leading: leading,
         actions: actions,
         iconTheme: IconThemeData(color: theme.colorScheme.onSurface),

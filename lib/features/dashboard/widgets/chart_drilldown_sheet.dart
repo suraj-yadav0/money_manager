@@ -239,8 +239,8 @@ class _SheetHeader extends StatelessWidget {
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: transactionType == 'expense'
-                        ? AppTheme.kuramaRed
-                        : AppTheme.leafGreen,
+                        ? AppTheme.expenseRed
+                        : AppTheme.incomeGreen,
                   ),
                 ),
                 Text(
@@ -359,7 +359,7 @@ class _TransactionTile extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: tx.type == 'expense' ? AppTheme.kuramaRed : AppTheme.leafGreen,
+              color: tx.type == 'expense' ? AppTheme.expenseRed : AppTheme.incomeGreen,
             ),
           ),
         ],

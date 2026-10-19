@@ -209,7 +209,7 @@ class CalendarViewScreen extends ConsumerWidget {
                     style: GoogleFonts.outfit(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.leafGreen,
+                      color: AppTheme.incomeGreen,
                     ),
                   ),
                 ),
@@ -234,7 +234,7 @@ class CalendarViewScreen extends ConsumerWidget {
                     style: GoogleFonts.outfit(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.kuramaRed,
+                      color: AppTheme.expenseRed,
                     ),
                   ),
                 ),
@@ -331,14 +331,14 @@ class CalendarViewScreen extends ConsumerWidget {
                   _buildSidebarStatRow(
                     label: 'Income',
                     amount: totals.income,
-                    color: AppTheme.leafGreen,
+                    color: AppTheme.incomeGreen,
                     icon: Icons.arrow_upward_rounded,
                   ),
                   const SizedBox(height: 8),
                   _buildSidebarStatRow(
                     label: 'Expenses',
                     amount: totals.expenses,
-                    color: AppTheme.kuramaRed,
+                    color: AppTheme.expenseRed,
                     icon: Icons.arrow_downward_rounded,
                   ),
                   Divider(height: 16, thickness: 1, color: borderColor),
@@ -417,6 +417,7 @@ class CalendarViewScreen extends ConsumerWidget {
     Color elevatedBg,
   ) {
     final hasTx = summary != null && summary.hasTransactions;
+    final primaryColor = Theme.of(context).colorScheme.primary;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -430,10 +431,10 @@ class CalendarViewScreen extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.event_outlined,
                 size: 14,
-                color: AppTheme.narutoOrange,
+                color: primaryColor,
               ),
               const SizedBox(width: 6),
               Expanded(
@@ -472,8 +473,8 @@ class CalendarViewScreen extends ConsumerWidget {
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: summary.netAmount >= 0
-                          ? AppTheme.leafGreen
-                          : AppTheme.kuramaRed,
+                          ? AppTheme.incomeGreen
+                          : AppTheme.expenseRed,
                     ),
                   ),
                 ),
@@ -489,7 +490,7 @@ class CalendarViewScreen extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   side: BorderSide(
-                    color: AppTheme.narutoOrange.withValues(alpha: 0.5),
+                    color: primaryColor.withValues(alpha: 0.5),
                   ),
                 ),
                 onPressed: () {
@@ -507,14 +508,14 @@ class CalendarViewScreen extends ConsumerWidget {
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.narutoOrange,
+                        color: primaryColor,
                       ),
                     ),
                     const SizedBox(width: 4),
-                    const Icon(
+                    Icon(
                       Icons.arrow_forward_rounded,
                       size: 12,
-                      color: AppTheme.narutoOrange,
+                      color: primaryColor,
                     ),
                   ],
                 ),
@@ -545,6 +546,8 @@ class CalendarViewScreen extends ConsumerWidget {
     final borderClr =
         isDark ? AppTheme.borderDark.withValues(alpha: 0.2) : AppTheme.borderLight;
 
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
@@ -555,6 +558,7 @@ class CalendarViewScreen extends ConsumerWidget {
       child: Row(
         children: [
           _buildFormatPill(
+            context: context,
             label: 'Month',
             isSelected: currentFormat == CalendarViewFormat.month,
             isDark: isDark,
@@ -564,6 +568,7 @@ class CalendarViewScreen extends ConsumerWidget {
             },
           ),
           _buildFormatPill(
+            context: context,
             label: '2 Weeks',
             isSelected: currentFormat == CalendarViewFormat.twoWeeks,
             isDark: isDark,
@@ -573,6 +578,7 @@ class CalendarViewScreen extends ConsumerWidget {
             },
           ),
           _buildFormatPill(
+            context: context,
             label: 'Week',
             isSelected: currentFormat == CalendarViewFormat.week,
             isDark: isDark,
@@ -587,15 +593,17 @@ class CalendarViewScreen extends ConsumerWidget {
   }
 
   Widget _buildFormatPill({
+    required BuildContext context,
     required String label,
     required bool isSelected,
     required bool isDark,
     required VoidCallback onTap,
   }) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
     final activeBg = isDark
-        ? AppTheme.narutoOrange.withValues(alpha: 0.25)
-        : AppTheme.narutoOrange.withValues(alpha: 0.15);
-    final activeColor = AppTheme.narutoOrange;
+        ? primaryColor.withValues(alpha: 0.25)
+        : primaryColor.withValues(alpha: 0.15);
+    final activeColor = primaryColor;
     final inactiveColor =
         isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight;
 
@@ -680,12 +688,12 @@ class CalendarViewScreen extends ConsumerWidget {
         ),
         leftChevronIcon: Icon(
           Icons.chevron_left,
-          color: AppTheme.narutoOrange,
+          color: theme.colorScheme.primary,
           size: isLandscape ? 20 : 24,
         ),
         rightChevronIcon: Icon(
           Icons.chevron_right,
-          color: AppTheme.narutoOrange,
+          color: theme.colorScheme.primary,
           size: isLandscape ? 20 : 24,
         ),
       ),
@@ -722,8 +730,8 @@ class CalendarViewScreen extends ConsumerWidget {
         dowBuilder: (context, day) {
           final text = Formatters.dayOfWeek(day);
           Color color = textColor;
-          if (day.weekday == DateTime.sunday) color = AppTheme.kuramaRed;
-          if (day.weekday == DateTime.saturday) color = AppTheme.leafGreen;
+          if (day.weekday == DateTime.sunday) color = AppTheme.expenseRed;
+          if (day.weekday == DateTime.saturday) color = AppTheme.incomeGreen;
 
           return Center(
             child: Text(
@@ -791,11 +799,13 @@ class CalendarViewScreen extends ConsumerWidget {
   }) {
     final hasExpenses = summary != null && summary.totalExpenses > 0;
     final hasIncome = summary != null && summary.totalIncome > 0;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = theme.colorScheme.primary;
 
     Color backgroundColor = Colors.transparent;
     if (isToday) {
-      backgroundColor = AppTheme.narutoOrange.withValues(alpha: 0.2);
+      backgroundColor = primaryColor.withValues(alpha: 0.2);
     } else if (isSelected) {
       backgroundColor = isDark
           ? Colors.white.withValues(alpha: 0.08)
@@ -804,11 +814,11 @@ class CalendarViewScreen extends ConsumerWidget {
 
     Color dayTextColor = isDark ? Colors.white : Colors.black;
     if (isToday) {
-      dayTextColor = AppTheme.narutoOrange;
+      dayTextColor = primaryColor;
     } else if (date.weekday == DateTime.sunday) {
-      dayTextColor = AppTheme.kuramaRed;
+      dayTextColor = AppTheme.expenseRed;
     } else if (date.weekday == DateTime.saturday) {
-      dayTextColor = AppTheme.leafGreen;
+      dayTextColor = AppTheme.incomeGreen;
     }
 
     final dayNumberWidget = Text(
@@ -834,7 +844,7 @@ class CalendarViewScreen extends ConsumerWidget {
                     style: GoogleFonts.outfit(
                       fontSize: isLandscape ? 9.5 : 10,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.leafGreen,
+                      color: AppTheme.incomeGreen,
                     ),
                   ),
                 ),
@@ -846,7 +856,7 @@ class CalendarViewScreen extends ConsumerWidget {
                     style: GoogleFonts.outfit(
                       fontSize: isLandscape ? 9.5 : 10,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.kuramaRed,
+                      color: AppTheme.expenseRed,
                     ),
                   ),
                 ),
@@ -887,7 +897,7 @@ class CalendarViewScreen extends ConsumerWidget {
         border: isSelected
             ? Border(
                 bottom: BorderSide(
-                  color: AppTheme.narutoOrange,
+                  color: primaryColor,
                   width: 2.5,
                 ),
               )

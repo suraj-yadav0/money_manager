@@ -494,7 +494,7 @@ class _SmsCardDeckScreenState extends ConsumerState<SmsCardDeckScreen>
                 gradient: AppTheme.neonGradient,
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.narutoOrange.withOpacity(0.4),
+                    color: colorScheme.primary.withOpacity(0.4),
                     blurRadius: 20,
                     spreadRadius: 2,
                   ),
@@ -528,7 +528,7 @@ class _SmsCardDeckScreenState extends ConsumerState<SmsCardDeckScreen>
               icon: const Icon(Icons.sync),
               label: const Text('Scan Inbox Now'),
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.narutoOrange,
+                backgroundColor: colorScheme.primary,
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
               ),
               onPressed: () {

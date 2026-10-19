@@ -380,6 +380,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
             const SizedBox(height: 24),
 
+            // Appearance & Fintech Palette Section
+            _buildSectionHeader(context, 'Appearance & Theme', Icons.palette_outlined),
+            const SizedBox(height: 12),
+            _buildAppearanceCard(context),
+
+            const SizedBox(height: 24),
+
             // About Section
             _buildSectionHeader(context, 'About', Icons.info_outline),
             const SizedBox(height: 12),
@@ -547,6 +554,224 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAppearanceCard(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final currentMode = ref.watch(themeModeNotifierProvider);
+    final currentPalette = ref.watch(fintechPaletteNotifierProvider);
+    final borderColor = isDark ? const Color(0x1AFFFFFF) : AppTheme.borderLight;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Interface Style',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: isDark ? AppTheme.textSecondaryDark : AppTheme.textSecondaryLight,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF131318) : const Color(0xFFEBECEF),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: borderColor, width: 0.8),
+              ),
+              padding: const EdgeInsets.all(3),
+              child: Row(
+                children: [
+                  _buildThemeModeOption(
+                    label: 'System',
+                    icon: Icons.brightness_auto_outlined,
+                    isSelected: currentMode == ThemeMode.system,
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      ref.read(themeModeNotifierProvider.notifier).setThemeMode(ThemeMode.system);
+                    },
+                    isDark: isDark,
+                  ),
+                  _buildThemeModeOption(
+                    label: 'Dark',
+                    icon: Icons.dark_mode_outlined,
+                    isSelected: currentMode == ThemeMode.dark,
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      ref.read(themeModeNotifierProvider.notifier).setThemeMode(ThemeMode.dark);
+                    },
+                    isDark: isDark,
+                  ),
+                  _buildThemeModeOption(
+                    label: 'Light',
+                    icon: Icons.light_mode_outlined,
+                    isSelected: currentMode == ThemeMode.light,
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      ref.read(themeModeNotifierProvider.notifier).setThemeMode(ThemeMode.light);
+                    },
+                    isDark: isDark,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              'Fintech Palette',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: isDark ? AppTheme.textSecondaryDark : AppTheme.textSecondaryLight,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Curated color schemes inspired by top iOS apps',
+              style: GoogleFonts.inter(
+                fontSize: 11.5,
+                color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 58,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: FintechPalette.values.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final p = FintechPalette.values[index];
+                  final isSelected = p == currentPalette;
+                  return GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      ref.read(fintechPaletteNotifierProvider.notifier).setPalette(p);
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? p.swatchColor.withValues(alpha: isDark ? 0.22 : 0.12)
+                            : (isDark ? const Color(0xFF131318) : const Color(0xFFEBECEF)),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isSelected ? p.swatchColor : borderColor,
+                          width: isSelected ? 1.5 : 0.8,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 22,
+                            height: 22,
+                            decoration: BoxDecoration(
+                              color: p.swatchColor,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isDark ? Colors.white24 : Colors.black12,
+                                width: 1,
+                              ),
+                            ),
+                            child: isSelected
+                                ? const Icon(Icons.check, size: 13, color: Colors.white)
+                                : null,
+                          ),
+                          const SizedBox(width: 8),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                p.displayName,
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                ),
+                              ),
+                              Text(
+                                p.subtitle,
+                                style: GoogleFonts.inter(
+                                  fontSize: 10,
+                                  color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThemeModeOption({
+    required String label,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required bool isDark,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? (isDark ? const Color(0xFF24242C) : Colors.white)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 15,
+                color: isSelected
+                    ? (isDark ? Colors.white : const Color(0xFF0F172A))
+                    : (isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: isSelected
+                      ? (isDark ? Colors.white : const Color(0xFF0F172A))
+                      : (isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -962,6 +1187,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Widget _buildSmsAndBankAccountsCard(BuildContext context) {
+    final theme = Theme.of(context);
     final pendingCount = ref.watch(pendingSmsCountProvider);
     final scanState = ref.watch(smsScanNotifierProvider);
 
@@ -991,10 +1217,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             leading: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.narutoOrange.withValues(alpha: 0.15),
+                color: theme.colorScheme.primary.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(Icons.style_rounded, color: AppTheme.narutoOrange),
+              child: Icon(Icons.style_rounded, color: theme.colorScheme.primary),
             ),
             title: const Text('Review SMS Transactions'),
             subtitle: Text(
@@ -1009,7 +1235,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppTheme.narutoOrange,
+                      color: theme.colorScheme.primary,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(

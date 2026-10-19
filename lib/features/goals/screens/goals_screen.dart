@@ -250,7 +250,7 @@ class _GoalsListView extends ConsumerWidget {
             Icon(
               Icons.emoji_events_rounded,
               size: 64,
-              color: AppTheme.narutoOrange,
+              color: Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(height: 16),
             Text(

@@ -17,6 +17,7 @@ class SmsDetectedBanner extends ConsumerWidget {
 
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = theme.colorScheme.primary;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -33,26 +34,26 @@ class SmsDetectedBanner extends ConsumerWidget {
             gradient: LinearGradient(
               colors: isDark
                   ? [
-                      AppTheme.narutoOrange.withOpacity(0.3),
-                      AppTheme.electricAmber.withOpacity(0.15),
+                      primaryColor.withOpacity(0.35),
+                      primaryColor.withOpacity(0.15),
                     ]
                   : [
-                      AppTheme.narutoOrange.withOpacity(0.9),
-                      AppTheme.electricAmber.withOpacity(0.85),
+                      primaryColor.withOpacity(0.9),
+                      primaryColor.withOpacity(0.75),
                     ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.narutoOrange.withOpacity(0.3),
+                color: primaryColor.withOpacity(0.3),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),
             ],
             border: Border.all(
               color: isDark
-                  ? AppTheme.narutoOrange.withOpacity(0.5)
+                  ? primaryColor.withOpacity(0.5)
                   : Colors.white.withOpacity(0.4),
               width: 1.5,
             ),
@@ -143,14 +144,14 @@ class SmsDetectedBanner extends ConsumerWidget {
                       style: GoogleFonts.outfit(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
-                        color: AppTheme.narutoOrange,
+                        color: primaryColor,
                       ),
                     ),
                     const SizedBox(width: 4),
-                    const Icon(
+                    Icon(
                       Icons.arrow_forward_rounded,
                       size: 16,
-                      color: AppTheme.narutoOrange,
+                      color: primaryColor,
                     ),
                   ],
                 ),

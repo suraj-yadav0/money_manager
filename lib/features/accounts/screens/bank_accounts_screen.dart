@@ -61,8 +61,8 @@ class BankAccountsScreen extends ConsumerWidget {
               GlassContainer(
                 padding: const EdgeInsets.all(20),
                 gradientColors: [
-                  AppTheme.narutoOrange.withOpacity(0.25),
-                  AppTheme.electricAmber.withOpacity(0.1),
+                  colorScheme.primary.withOpacity(0.25),
+                  colorScheme.primary.withOpacity(0.1),
                 ],
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,13 +83,13 @@ class BankAccountsScreen extends ConsumerWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: AppTheme.narutoOrange.withOpacity(0.2),
+                            color: colorScheme.primary.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             '${accounts.length} Accounts',
                             style: GoogleFonts.outfit(
-                              color: AppTheme.narutoOrange,
+                              color: colorScheme.primary,
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
                             ),
@@ -162,8 +162,8 @@ class BankAccountsScreen extends ConsumerWidget {
                         icon: const Icon(Icons.add),
                         label: const Text('Add Account'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.narutoOrange,
-                          foregroundColor: Colors.white,
+                          backgroundColor: colorScheme.primary,
+                          foregroundColor: colorScheme.onPrimary,
                         ),
                         onPressed: () => _showAddEditSheet(context),
                       ),

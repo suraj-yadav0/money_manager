@@ -21,12 +21,15 @@ class MoneyManagerApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeModeNotifierProvider);
+    final palette = ref.watch(fintechPaletteNotifierProvider);
+
     return MaterialApp(
       title: 'Quantro',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      theme: AppTheme.buildTheme(palette, Brightness.light),
+      darkTheme: AppTheme.buildTheme(palette, Brightness.dark),
+      themeMode: themeMode,
       home: const AuthWrapper(),
     );
   }

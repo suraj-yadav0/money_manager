@@ -106,18 +106,18 @@ class _AddAssetSheetState extends ConsumerState<AddAssetSheet> {
                         setState(() => _selectedType = type);
                       }
                     },
-                    selectedColor: AppTheme.narutoOrange.withAlpha(50),
+                    selectedColor: theme.colorScheme.primary.withAlpha(50),
                     labelStyle: GoogleFonts.inter(
                       fontWeight: isSelected
                           ? FontWeight.w600
                           : FontWeight.normal,
                       color: isSelected
-                          ? AppTheme.narutoOrange
+                          ? theme.colorScheme.primary
                           : theme.colorScheme.onSurface,
                     ),
                     side: BorderSide(
                       color: isSelected
-                          ? AppTheme.narutoOrange
+                          ? theme.colorScheme.primary
                           : (isDark
                                 ? Colors.white.withAlpha(30)
                                 : Colors.black.withAlpha(25)),
@@ -195,15 +195,15 @@ class _AddAssetSheetState extends ConsumerState<AddAssetSheet> {
                         onPressed: _deleteAsset,
                         icon: const Icon(
                           Icons.delete_outline,
-                          color: AppTheme.kuramaRed,
+                          color: AppTheme.expenseRed,
                         ),
                         label: Text(
                           'Delete',
-                          style: GoogleFonts.inter(color: AppTheme.kuramaRed),
+                          style: GoogleFonts.inter(color: AppTheme.expenseRed),
                         ),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          side: const BorderSide(color: AppTheme.kuramaRed),
+                          side: const BorderSide(color: AppTheme.expenseRed),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
@@ -319,7 +319,7 @@ class _AddAssetSheetState extends ConsumerState<AddAssetSheet> {
             onPressed: () => Navigator.pop(context, true),
             child: const Text(
               'Delete',
-              style: TextStyle(color: AppTheme.kuramaRed),
+              style: TextStyle(color: AppTheme.expenseRed),
             ),
           ),
         ],

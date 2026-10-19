@@ -99,7 +99,7 @@ class NetWorthScreen extends ConsumerWidget {
                     icon: const Icon(Icons.add, size: 18),
                     label: const Text('Add'),
                     style: TextButton.styleFrom(
-                      foregroundColor: AppTheme.narutoOrange,
+                      foregroundColor: colorScheme.primary,
                     ),
                   ),
                 ],
@@ -358,6 +358,7 @@ class _FilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = Theme.of(context).colorScheme.primary;
     return GestureDetector(
       onTap: onSelected,
       child: AnimatedContainer(
@@ -365,14 +366,14 @@ class _FilterChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppTheme.narutoOrange.withAlpha(30)
+              ? primaryColor.withAlpha(30)
               : (isDark
                     ? Colors.white.withAlpha(15)
                     : Colors.black.withAlpha(10)),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected
-                ? AppTheme.narutoOrange
+                ? primaryColor
                 : (isDark
                       ? Colors.white.withAlpha(20)
                       : Colors.black.withAlpha(15)),
@@ -385,7 +386,7 @@ class _FilterChip extends StatelessWidget {
             fontSize: 13,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             color: isSelected
-                ? AppTheme.narutoOrange
+                ? primaryColor
                 : Theme.of(context).colorScheme.onSurface,
           ),
         ),
@@ -427,8 +428,8 @@ class _AssetCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color:
                       (asset.isLiability
-                              ? AppTheme.kuramaRed
-                              : AppTheme.leafGreen)
+                              ? AppTheme.expenseRed
+                              : AppTheme.incomeGreen)
                           .withAlpha(25),
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -437,8 +438,8 @@ class _AssetCard extends StatelessWidget {
                   type.icon,
                   size: 22,
                   color: asset.isLiability
-                      ? AppTheme.kuramaRed
-                      : AppTheme.leafGreen,
+                      ? AppTheme.expenseRed
+                      : AppTheme.incomeGreen,
                 ),
               ),
               const SizedBox(width: 14),
@@ -480,8 +481,8 @@ class _AssetCard extends StatelessWidget {
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: asset.isLiability
-                            ? AppTheme.kuramaRed
-                            : AppTheme.leafGreen,
+                            ? AppTheme.expenseRed
+                            : AppTheme.incomeGreen,
                       ),
                     ),
                   ),
@@ -519,33 +520,27 @@ class _NetWorthCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final isPositive = data.netWorth >= 0;
+    final statusColor = isPositive ? AppTheme.incomeGreen : AppTheme.expenseRed;
 
     return GlassContainer(
       width: double.infinity,
-      borderRadius: 28,
-      padding: const EdgeInsets.all(28),
+      borderRadius: 24,
+      padding: const EdgeInsets.all(24),
       gradientColors: isDark
           ? [
-              (isPositive ? AppTheme.leafGreen : AppTheme.kuramaRed).withAlpha(
-                90,
-              ),
-              (isPositive ? AppTheme.chakraBlue : AppTheme.narutoOrange)
-                  .withAlpha(40),
+              statusColor.withAlpha(80),
+              theme.colorScheme.primary.withAlpha(35),
             ]
           : [
-              (isPositive ? AppTheme.leafGreen : AppTheme.kuramaRed).withAlpha(
-                215,
-              ),
-              (isPositive ? AppTheme.chakraBlue : AppTheme.narutoOrange)
-                  .withAlpha(165),
+              statusColor.withAlpha(200),
+              theme.colorScheme.primary.withAlpha(140),
             ],
       border: Border.all(
-        color: (isPositive ? AppTheme.leafGreen : AppTheme.kuramaRed).withAlpha(
-          100,
-        ),
-        width: 1.5,
+        color: statusColor.withAlpha(100),
+        width: 1,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -626,7 +621,7 @@ class _BreakdownRow extends StatelessWidget {
                   data.totalAssets,
                   symbol: currencySymbol,
                 ),
-                color: AppTheme.leafGreen,
+                color: AppTheme.incomeGreen,
               ),
             ),
             const SizedBox(width: 10),
@@ -638,7 +633,7 @@ class _BreakdownRow extends StatelessWidget {
                   data.totalLiabilities,
                   symbol: currencySymbol,
                 ),
-                color: AppTheme.kuramaRed,
+                color: AppTheme.expenseRed,
               ),
             ),
           ],
@@ -654,7 +649,7 @@ class _BreakdownRow extends StatelessWidget {
                   data.totalIncome,
                   symbol: currencySymbol,
                 ),
-                color: AppTheme.chakraBlue,
+                color: AppTheme.incomeGreen,
               ),
             ),
             const SizedBox(width: 10),
@@ -666,7 +661,7 @@ class _BreakdownRow extends StatelessWidget {
                   data.totalExpenses,
                   symbol: currencySymbol,
                 ),
-                color: AppTheme.narutoOrange,
+                color: AppTheme.expenseRed,
               ),
             ),
             const SizedBox(width: 10),
@@ -678,7 +673,7 @@ class _BreakdownRow extends StatelessWidget {
                   data.goalSavings,
                   symbol: currencySymbol,
                 ),
-                color: AppTheme.leafGreen,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
           ],
@@ -829,7 +824,7 @@ class _NetWorthChart extends StatelessWidget {
                   spots: spots,
                   isCurved: true,
                   curveSmoothness: 0.3,
-                  color: AppTheme.narutoOrange,
+                  color: theme.colorScheme.primary,
                   barWidth: 3,
                   isStrokeCapRound: true,
                   dotData: FlDotData(
@@ -837,7 +832,7 @@ class _NetWorthChart extends StatelessWidget {
                     getDotPainter: (spot, percent, bar, index) =>
                         FlDotCirclePainter(
                           radius: 4,
-                          color: AppTheme.narutoOrange,
+                          color: theme.colorScheme.primary,
                           strokeWidth: 2,
                           strokeColor: Colors.white,
                         ),
@@ -848,8 +843,8 @@ class _NetWorthChart extends StatelessWidget {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        AppTheme.narutoOrange.withAlpha(76),
-                        AppTheme.narutoOrange.withAlpha(0),
+                        theme.colorScheme.primary.withAlpha(76),
+                        theme.colorScheme.primary.withAlpha(0),
                       ],
                     ),
                   ),
@@ -1000,7 +995,7 @@ class _MonthCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color:
-                        (isPositive ? AppTheme.leafGreen : AppTheme.kuramaRed)
+                        (isPositive ? AppTheme.incomeGreen : AppTheme.expenseRed)
                             .withAlpha(30),
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -1010,8 +1005,8 @@ class _MonthCard extends StatelessWidget {
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: isPositive
-                          ? AppTheme.leafGreen
-                          : AppTheme.kuramaRed,
+                          ? AppTheme.incomeGreen
+                          : AppTheme.expenseRed,
                     ),
                   ),
                 ),
@@ -1027,7 +1022,7 @@ class _MonthCard extends StatelessWidget {
                       month.income,
                       symbol: currencySymbol,
                     ),
-                    color: AppTheme.leafGreen,
+                    color: AppTheme.incomeGreen,
                   ),
                 ),
                 Expanded(
@@ -1037,7 +1032,7 @@ class _MonthCard extends StatelessWidget {
                       month.expenses,
                       symbol: currencySymbol,
                     ),
-                    color: AppTheme.kuramaRed,
+                    color: AppTheme.expenseRed,
                   ),
                 ),
                 Expanded(
@@ -1047,7 +1042,7 @@ class _MonthCard extends StatelessWidget {
                       month.cumulativeNetWorth,
                       symbol: currencySymbol,
                     ),
-                    color: AppTheme.narutoOrange,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
               ],

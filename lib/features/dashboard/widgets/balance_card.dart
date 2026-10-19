@@ -8,7 +8,7 @@ import '../../../core/providers/app_state_provider.dart';
 import '../../../core/utils/constants.dart';
 import '../providers/dashboard_providers.dart';
 
-/// Vibrant Hero Net Balance Card
+/// Minimalist iOS-Grade Net Balance Hero Card
 class BalanceCard extends ConsumerWidget {
   const BalanceCard({super.key});
 
@@ -20,8 +20,16 @@ class BalanceCard extends ConsumerWidget {
     final currencyCode =
         settingsAsync.value?.currency ?? AppConstants.defaultCurrency;
 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final cardBg = theme.cardTheme.color ?? (isDark ? AppTheme.bgSurfaceDark : Colors.white);
+    final borderColor = isDark ? const Color(0x1AFFFFFF) : AppTheme.borderLight;
+    final textPrimary = theme.colorScheme.onSurface;
+    final textSecondary = isDark ? AppTheme.textSecondaryDark : AppTheme.textSecondaryLight;
+    final textMuted = isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight;
+
     return statsAsync.when(
-      loading: () => _buildLoadingCard(context),
+      loading: () => _buildLoadingCard(context, cardBg, borderColor),
       error: (e, st) {
         debugPrint('BALANCE_CARD_ERROR: $e\n$st');
         return _buildErrorCard(context, e.toString());
@@ -30,373 +38,302 @@ class BalanceCard extends ConsumerWidget {
         return Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF161A26),
-                Color(0xFF0F1118),
-                Color(0xFF090A0F),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(26),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.12),
-              width: 1.2,
-            ),
+            color: cardBg,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: borderColor, width: 0.8),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.45),
-                blurRadius: 24,
-                offset: const Offset(0, 10),
-              ),
-              BoxShadow(
-                color: AppTheme.narutoOrange.withValues(alpha: 0.08),
-                blurRadius: 32,
-                offset: const Offset(0, 2),
+                color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.04),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
-          child: Stack(
-            children: [
-              // Ambient Decorative Circles
-              Positioned(
-                right: -20,
-                top: -20,
-                child: Container(
-                  width: 160,
-                  height: 160,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        AppTheme.narutoOrange.withValues(alpha: 0.14),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: -30,
-                bottom: -30,
-                child: Container(
-                  width: 140,
-                  height: 140,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        const Color(0xFF00C6FF).withValues(alpha: 0.08),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-              Padding(
-                padding: const EdgeInsets.all(22),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Top Header Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Top Header Row
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.narutoOrange.withValues(alpha: 0.15),
-                                  border: Border.all(
-                                    color: AppTheme.narutoOrange.withValues(alpha: 0.3),
-                                  ),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.account_balance_wallet_rounded,
-                                  color: AppTheme.narutoOrange,
-                                  size: 18,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Flexible(
-                                child: Text(
-                                  'Net Balance',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 13.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFFA1A7C4),
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
+                        Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.account_balance_wallet_rounded,
+                            color: theme.colorScheme.primary,
+                            size: 15,
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.06),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.15),
-                              width: 1,
-                            ),
-                          ),
-                          child: Text(
-                            currencyCode,
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFFCBD5E1),
-                              letterSpacing: 0.5,
-                            ),
+                        Text(
+                          'Net Balance',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: -0.1,
+                            color: textSecondary,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-
-                    // Net Balance Figure
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.06)
+                            : Colors.black.withValues(alpha: 0.04),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       child: Text(
-                        Formatters.currency(
-                          stats.balance,
-                          symbol: currencySymbol,
-                        ),
-                        style: GoogleFonts.outfit(
-                          fontSize: 38,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: -0.5,
-                          shadows: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              blurRadius: 10,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
+                        currencyCode,
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.5,
+                          color: textMuted,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                  ],
+                ),
+                const SizedBox(height: 14),
 
-                    // Savings Rate Badge
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 9,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF10B981).withValues(alpha: 0.16),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: const Color(0xFF10B981).withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.trending_up,
-                                size: 14,
-                                color: Color(0xFF34D399),
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                '${stats.savingsRate}% saved',
-                                style: GoogleFonts.inter(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF34D399),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
-                            'In selected period',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              color: const Color(0xFF94A3B8),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                // Net Balance Figure
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    Formatters.currency(
+                      stats.balance,
+                      symbol: currencySymbol,
                     ),
-                    const SizedBox(height: 18),
+                    style: GoogleFonts.outfit(
+                      fontSize: 36,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.8,
+                      color: textPrimary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
 
-                    // Divider line
+                // Savings Rate Badge
+                Row(
+                  children: [
                     Container(
-                      height: 1,
-                      width: double.infinity,
-                      color: Colors.white.withValues(alpha: 0.08),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                      decoration: BoxDecoration(
+                        color: AppTheme.incomeGreen.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.trending_up_rounded,
+                            size: 13,
+                            color: isDark ? AppTheme.incomeGreen : const Color(0xFF059669),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${stats.savingsRate}% saved',
+                            style: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? AppTheme.incomeGreen : const Color(0xFF059669),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 14),
-
-                    // Inflow & Outflow details Row
-                    Row(
-                      children: [
-                        // Inflow Section
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(7),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF10B981).withValues(alpha: 0.16),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.arrow_downward_rounded,
-                                  color: Color(0xFF34D399),
-                                  size: 16,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Period Inflow',
-                                      style: GoogleFonts.inter(
-                                        fontSize: 11,
-                                        color: const Color(0xFF94A3B8),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 1),
-                                    FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      alignment: Alignment.centerLeft,
-                                      child: Text(
-                                        Formatters.currency(
-                                          stats.totalIncome,
-                                          symbol: currencySymbol,
-                                        ),
-                                        style: GoogleFonts.outfit(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.bold,
-                                          color: const Color(0xFF34D399),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'in selected period',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: textMuted,
                         ),
-
-                        // Vertical Divider
-                        Container(
-                          width: 1,
-                          height: 28,
-                          color: Colors.white.withValues(alpha: 0.08),
-                        ),
-                        const SizedBox(width: 14),
-
-                        // Outflow Section
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(7),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFF2A4B).withValues(alpha: 0.16),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.arrow_upward_rounded,
-                                  color: Color(0xFFF87171),
-                                  size: 16,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Period Outflow',
-                                      style: GoogleFonts.inter(
-                                        fontSize: 11,
-                                        color: const Color(0xFF94A3B8),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 1),
-                                    FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      alignment: Alignment.centerLeft,
-                                      child: Text(
-                                        Formatters.currency(
-                                          stats.totalExpenses,
-                                          symbol: currencySymbol,
-                                        ),
-                                        style: GoogleFonts.outfit(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.bold,
-                                          color: const Color(0xFFF87171),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+
+                // Hairline Divider
+                Divider(color: borderColor, height: 1, thickness: 0.8),
+                const SizedBox(height: 14),
+
+                // Inflow & Outflow details Row
+                Row(
+                  children: [
+                    // Inflow Section
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: AppTheme.incomeGreen.withValues(alpha: 0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.arrow_downward_rounded,
+                              color: isDark ? AppTheme.incomeGreen : const Color(0xFF059669),
+                              size: 14,
+                            ),
+                          ),
+                          const SizedBox(width: 9),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Period Inflow',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: textMuted,
+                                  ),
+                                ),
+                                const SizedBox(height: 1),
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    Formatters.currency(
+                                      stats.totalIncome,
+                                      symbol: currencySymbol,
+                                    ),
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDark ? AppTheme.incomeGreen : const Color(0xFF059669),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Vertical Hairline
+                    Container(
+                      width: 0.8,
+                      height: 26,
+                      color: borderColor,
+                    ),
+                    const SizedBox(width: 14),
+
+                    // Outflow Section
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: AppTheme.expenseRed.withValues(alpha: 0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.arrow_upward_rounded,
+                              color: isDark ? AppTheme.expenseRed : const Color(0xFFDC2626),
+                              size: 14,
+                            ),
+                          ),
+                          const SizedBox(width: 9),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Period Outflow',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: textMuted,
+                                  ),
+                                ),
+                                const SizedBox(height: 1),
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    Formatters.currency(
+                                      stats.totalExpenses,
+                                      symbol: currencySymbol,
+                                    ),
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDark ? AppTheme.expenseRed : const Color(0xFFDC2626),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },
     );
   }
 
-  Widget _buildLoadingCard(BuildContext context) {
+  Widget _buildLoadingCard(BuildContext context, Color cardBg, Color borderColor) {
     return Container(
       width: double.infinity,
-      height: 180,
+      height: 170,
       decoration: BoxDecoration(
-        color: AppTheme.narutoOrange.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(26),
+        color: cardBg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: borderColor, width: 0.8),
       ),
-      child: const Center(child: CircularProgressIndicator(color: Colors.white)),
+      child: Center(
+        child: SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+      ),
     );
   }
 
   Widget _buildErrorCard(BuildContext context, String error) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.errorContainer,
-        borderRadius: BorderRadius.circular(26),
+        color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(16),
       ),
-      child: Text('Error: $error'),
+      child: Text(
+        'Unable to load balance: $error',
+        style: GoogleFonts.inter(fontSize: 12),
+      ),
     );
   }
 }

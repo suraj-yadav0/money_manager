@@ -131,13 +131,13 @@ class BudgetScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppTheme.narutoOrange.withValues(alpha: 0.1),
+                color: colorScheme.primary.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.account_balance_wallet_outlined,
                 size: 64,
-                color: AppTheme.narutoOrange,
+                color: colorScheme.primary,
               ),
             ),
             const SizedBox(height: 24),

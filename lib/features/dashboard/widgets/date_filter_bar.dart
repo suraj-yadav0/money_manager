@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -11,60 +12,54 @@ class DateFilterBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedFilter = ref.watch(dashboardDateFilterProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = theme.colorScheme.primary;
+    final unselectedBg = isDark
+        ? const Color(0xFF131318)
+        : const Color(0xFFEBECEF);
+    final unselectedBorder = isDark ? const Color(0x1AFFFFFF) : AppTheme.borderLight;
 
     return SizedBox(
-      height: 38,
+      height: 34,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: DashboardDateFilter.values.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final filter = DashboardDateFilter.values[index];
           final isSelected = filter == selectedFilter;
-
           final label = _formatFilterLabel(filter);
 
           return GestureDetector(
             onTap: () {
               if (!isSelected) {
+                HapticFeedback.selectionClick();
                 ref.read(dashboardDateFilterProvider.notifier).state = filter;
                 ref.invalidate(dashboardStatsProvider);
                 ref.invalidate(recentTransactionsProvider);
               }
             },
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              duration: const Duration(milliseconds: 160),
+              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 6),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? AppTheme.narutoOrange
-                    : (isDark ? AppTheme.bgSurfaceElevatedDark : AppTheme.bgSurfaceElevatedLight),
-                borderRadius: BorderRadius.circular(20),
+                color: isSelected ? primaryColor : unselectedBg,
+                borderRadius: BorderRadius.circular(9),
                 border: Border.all(
-                  color: isSelected
-                      ? Colors.transparent
-                      : (isDark ? AppTheme.borderDark : AppTheme.borderLight),
-                  width: 1,
+                  color: isSelected ? Colors.transparent : unselectedBorder,
+                  width: 0.8,
                 ),
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: AppTheme.narutoOrange.withValues(alpha: 0.35),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        ),
-                      ]
-                    : null,
               ),
               child: Center(
                 child: Text(
                   label,
                   style: GoogleFonts.inter(
-                    fontSize: 12.5,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    fontSize: 12,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    letterSpacing: -0.1,
                     color: isSelected
-                        ? Colors.white
+                        ? (primaryColor == Colors.white ? const Color(0xFF09090B) : Colors.white)
                         : (isDark ? AppTheme.textSecondaryDark : AppTheme.textSecondaryLight),
                   ),
                 ),
