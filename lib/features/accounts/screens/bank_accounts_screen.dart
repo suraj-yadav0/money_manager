@@ -70,12 +70,15 @@ class BankAccountsScreen extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'Total Liquid Funds',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurface.withOpacity(0.8),
+                        Expanded(
+                          child: Text(
+                            'Total Liquid Funds',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurface.withOpacity(0.8),
+                            ),
                           ),
                         ),
+                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 4),
@@ -108,8 +111,11 @@ class BankAccountsScreen extends ConsumerWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Credit Card Outstanding:',
-                              style: theme.textTheme.bodySmall),
+                          Expanded(
+                            child: Text('Credit Card Outstanding:',
+                                style: theme.textTheme.bodySmall),
+                          ),
+                          const SizedBox(width: 8),
                           Text(
                             Formatters.currency(summary.totalCreditDebt),
                             style: GoogleFonts.outfit(

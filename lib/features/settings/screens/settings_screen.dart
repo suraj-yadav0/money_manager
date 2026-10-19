@@ -303,9 +303,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       onChanged: _onIncomeChanged,
                     ),
                     const SizedBox(height: 8),
-                    Row(
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 8,
                       children: [
-                        Expanded(
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 420),
                           child: Text(
                             'Monthly income baseline for budget pacing and savings analysis',
                             style: theme.textTheme.bodySmall?.copyWith(
@@ -313,8 +318,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ),
                           ),
                         ),
-                        if (_hasChanges) ...[
-                          const SizedBox(width: 8),
+                        if (_hasChanges)
                           ElevatedButton(
                             onPressed: _isLoading ? null : _saveSettings,
                             style: ElevatedButton.styleFrom(
@@ -334,7 +338,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   )
                                 : const Text('Save'),
                           ),
-                        ],
                       ],
                     ),
                   ],
@@ -576,6 +579,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               title: Text(
                 user != null ? (user.email ?? 'Cloud Account') : 'Offline Guest Mode',
                 style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
               subtitle: Text(
                 user != null
@@ -585,59 +590,63 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ),
             const Divider(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                if (user != null) ...[
-                  OutlinedButton.icon(
-                    icon: const Icon(Icons.password, size: 16),
-                    label: const Text('Password'),
-                    onPressed: () => _showChangePasswordDialog(context),
-                  ),
-                  const SizedBox(width: 8),
-                  OutlinedButton.icon(
-                    icon: syncState.status == SyncStatus.syncing
-                        ? const SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.sync, size: 16),
-                    label: const Text('Sync Now'),
-                    onPressed: syncState.status == SyncStatus.syncing
-                        ? null
-                        : () async {
-                            final res = await ref
-                                .read(syncNotifierProvider.notifier)
-                                .triggerSync();
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(res.message),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            }
-                          },
-                  ),
-                  const SizedBox(width: 8),
-                  TextButton.icon(
-                    icon: const Icon(Icons.logout, size: 16, color: Colors.redAccent),
-                    label: const Text('Sign Out', style: TextStyle(color: Colors.redAccent)),
-                    onPressed: () async {
-                      await ref.read(authServiceProvider).signOut();
-                    },
-                  ),
-                ] else ...[
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.login, size: 16),
-                    label: const Text('Sign In / Connect Cloud'),
-                    onPressed: () async {
-                      await ref.read(guestModeProvider.notifier).disableGuestMode();
-                    },
-                  ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Wrap(
+                alignment: WrapAlignment.end,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  if (user != null) ...[
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.password, size: 16),
+                      label: const Text('Password'),
+                      onPressed: () => _showChangePasswordDialog(context),
+                    ),
+                    OutlinedButton.icon(
+                      icon: syncState.status == SyncStatus.syncing
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.sync, size: 16),
+                      label: const Text('Sync Now'),
+                      onPressed: syncState.status == SyncStatus.syncing
+                          ? null
+                          : () async {
+                              final res = await ref
+                                  .read(syncNotifierProvider.notifier)
+                                  .triggerSync();
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(res.message),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            },
+                    ),
+                    TextButton.icon(
+                      icon: const Icon(Icons.logout, size: 16, color: Colors.redAccent),
+                      label: const Text('Sign Out', style: TextStyle(color: Colors.redAccent)),
+                      onPressed: () async {
+                        await ref.read(authServiceProvider).signOut();
+                      },
+                    ),
+                  ] else ...[
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.login, size: 16),
+                      label: const Text('Sign In / Connect Cloud'),
+                      onPressed: () async {
+                        await ref.read(guestModeProvider.notifier).disableGuestMode();
+                      },
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ],
         ),
@@ -660,9 +669,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             children: [
               const Icon(Icons.security, color: Colors.amber, size: 24),
               const SizedBox(width: 8),
-              Text(
-                'Account Security',
-                style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
+              Expanded(
+                child: Text(
+                  'Account Security',
+                  style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           ),
@@ -741,9 +752,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             children: [
               const Icon(Icons.password, color: Colors.amber, size: 24),
               const SizedBox(width: 8),
-              Text(
-                'Change Password',
-                style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
+              Expanded(
+                child: Text(
+                  'Change Password',
+                  style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           ),
@@ -1069,10 +1082,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       children: [
         Icon(icon, size: 20, color: theme.colorScheme.primary),
         const SizedBox(width: 8),
-        Text(
-          title,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
+        Expanded(
+          child: Text(
+            title,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],
@@ -1127,40 +1142,50 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? Theme.of(context).colorScheme.primaryContainer
-                            : Theme.of(
-                                context,
-                              ).colorScheme.surfaceContainerHighest,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        entry.value,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
                           color: isSelected
-                              ? Theme.of(context).colorScheme.onPrimaryContainer
-                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                              ? Theme.of(context).colorScheme.primaryContainer
+                              : Theme.of(
+                                  context,
+                                ).colorScheme.surfaceContainerHighest,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          entry.value,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.onPrimaryContainer
+                                : Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Text(entry.key, style: const TextStyle(fontSize: 16)),
-                  ],
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          entry.key,
+                          style: const TextStyle(fontSize: 16),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                if (isSelected)
+                if (isSelected) ...[
+                  const SizedBox(width: 8),
                   Icon(
                     Icons.check_circle,
                     color: Theme.of(context).colorScheme.primary,
                   ),
+                ],
               ],
             ),
           );
