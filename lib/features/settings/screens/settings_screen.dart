@@ -440,12 +440,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     color: const Color(0xFF6366F1),
                   ),
                   const SizedBox(width: 12),
-                  Text(
-                    'Interface Style',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  Expanded(
+                    child: Text(
+                      'Interface Style',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      ),
                     ),
                   ),
                 ],
@@ -535,7 +537,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               const SizedBox(height: 12),
               SizedBox(
-                height: 56,
+                height: 62,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
@@ -583,6 +585,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
                                   p.displayName,
@@ -630,7 +633,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         behavior: HitTestBehavior.opaque,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
           decoration: BoxDecoration(
             color: isSelected
                 ? (isDark ? const Color(0xFF2A2A38) : Colors.white)
@@ -648,23 +651,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 icon,
-                size: 15,
+                size: 14,
                 color: isSelected
                     ? (isDark ? Colors.white : const Color(0xFF0F172A))
                     : (isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight),
               ),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color: isSelected
-                      ? (isDark ? Colors.white : const Color(0xFF0F172A))
-                      : (isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    color: isSelected
+                        ? (isDark ? Colors.white : const Color(0xFF0F172A))
+                        : (isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight),
+                  ),
                 ),
               ),
             ],
@@ -829,14 +837,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 )
               : SizedBox(
                   width: double.infinity,
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.cloud_upload_outlined, size: 16),
-                    label: Text(
-                      'Sign In / Connect Cloud',
-                      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
-                    ),
+                  child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -844,6 +847,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     onPressed: () async {
                       await ref.read(guestModeProvider.notifier).disableGuestMode();
                     },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.cloud_upload_outlined, size: 16),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            'Sign In / Connect Cloud',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
         ),
