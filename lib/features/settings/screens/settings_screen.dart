@@ -648,7 +648,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 icon,
@@ -883,8 +882,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             final pkgAsync = ref.watch(packageInfoProvider);
             final versionText = pkgAsync.when(
               data: (pkg) => 'v${pkg.version} (${pkg.buildNumber})',
-              loading: () => 'v1.0.9',
-              error: (err, stack) => 'v1.0.9',
+              loading: () => 'v1.0.10',
+              error: (err, stack) => 'v1.0.10',
             );
 
             return Padding(
@@ -913,6 +912,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           'Quantro',
@@ -932,22 +932,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E1E28) : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: isDark ? const Color(0x1AFFFFFF) : AppTheme.borderLight,
-                        width: 0.8,
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E1E28) : const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: isDark ? const Color(0x1AFFFFFF) : AppTheme.borderLight,
+                          width: 0.8,
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      versionText,
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+                      child: Text(
+                        versionText,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+                        ),
                       ),
                     ),
                   ),
