@@ -241,25 +241,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
           children: [
             // Account & Cloud Sync Section
-            _buildSectionHeader(context, 'Account & Cloud Sync', Icons.cloud_sync_outlined),
-            const SizedBox(height: 12),
+            _buildSectionHeader(context, 'Account & Cloud'),
             _buildAccountCloudSyncCard(context),
 
-            const SizedBox(height: 24),
-
             // Bank Accounts & SMS Auto-Detection Section
-            _buildSectionHeader(context, 'Bank Accounts & SMS Auto-Detection', Icons.auto_awesome),
-            const SizedBox(height: 12),
+            _buildSectionHeader(context, 'Bank Accounts & SMS'),
             _buildSmsAndBankAccountsCard(context),
 
-            const SizedBox(height: 24),
-
             // Income Section
-            _buildSectionHeader(context, 'Income', Icons.attach_money),
-            const SizedBox(height: 12),
+            _buildSectionHeader(context, 'Monthly Income'),
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -345,51 +338,60 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ),
 
-            const SizedBox(height: 24),
-
             // Preferences Section
-            _buildSectionHeader(context, 'Preferences', Icons.tune),
-            const SizedBox(height: 12),
-            Card(
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        AppConstants.supportedCurrencies[_selectedCurrency] ??
-                            '?',
-                        style: TextStyle(
-                          color: colorScheme.onPrimaryContainer,
-                          fontWeight: FontWeight.bold,
-                        ),
+            _buildSectionHeader(context, 'Preferences'),
+            _buildInsetGroup(
+              context,
+              children: [
+                _buildSettingTile(
+                  context: context,
+                  icon: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      AppConstants.supportedCurrencies[_selectedCurrency] ?? '?',
+                      style: TextStyle(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
                     ),
-                    title: const Text('Currency'),
-                    subtitle: Text('Selected: $_selectedCurrency'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: _showCurrencyPicker,
                   ),
-                ],
-              ),
+                  title: 'Primary Currency',
+                  subtitle: 'Selected: $_selectedCurrency',
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _selectedCurrency,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? AppTheme.textMutedDark
+                              : AppTheme.textMutedLight,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      _buildChevron(context),
+                    ],
+                  ),
+                  onTap: _showCurrencyPicker,
+                ),
+              ],
             ),
 
-            const SizedBox(height: 24),
-
             // Appearance & Fintech Palette Section
-            _buildSectionHeader(context, 'Appearance & Theme', Icons.palette_outlined),
-            const SizedBox(height: 12),
+            _buildSectionHeader(context, 'Appearance & Theme'),
             _buildAppearanceCard(context),
 
-            const SizedBox(height: 24),
-
             // About Section
-            _buildSectionHeader(context, 'About', Icons.info_outline),
-            const SizedBox(height: 12),
+            _buildSectionHeader(context, 'About Quantro'),
             Card(
               child: Column(
                 children: [
@@ -498,10 +500,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ),
 
-            const SizedBox(height: 24),
-
             // Data Management Section
-            _buildSectionHeader(context, 'Data', Icons.storage_outlined),
+            _buildSectionHeader(context, 'Data Management'),
             const SizedBox(height: 12),
             Card(
               child: Column(
@@ -1190,133 +1190,277 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final theme = Theme.of(context);
     final pendingCount = ref.watch(pendingSmsCountProvider);
     final scanState = ref.watch(smsScanNotifierProvider);
+    final isDark = theme.brightness == Brightness.dark;
 
-    return Card(
-      child: Column(
-        children: [
-          ListTile(
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.account_balance_rounded, color: Colors.blue),
-            ),
-            title: const Text('Manage Bank Accounts & Cards'),
-            subtitle: const Text('Configure accounts, credit cards and starting balances'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const BankAccountsScreen()),
-              );
-            },
+    return _buildInsetGroup(
+      context,
+      children: [
+        _buildSettingTile(
+          context: context,
+          icon: _buildIconBadge(
+            icon: Icons.account_balance_rounded,
+            color: const Color(0xFF3B82F6),
           ),
-          const Divider(height: 1),
-          ListTile(
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(Icons.style_rounded, color: theme.colorScheme.primary),
-            ),
-            title: const Text('Review SMS Transactions'),
-            subtitle: Text(
-              pendingCount > 0
-                  ? '$pendingCount pending swipe cards to review'
-                  : 'All detected SMS transactions reviewed',
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (pendingCount > 0) ...[
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '$pendingCount NEW',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
+          title: 'Bank Accounts & Cards',
+          subtitle: 'Configure accounts, cards, and opening balances',
+          trailing: _buildChevron(context),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const BankAccountsScreen()),
+            );
+          },
+        ),
+        _buildSettingTile(
+          context: context,
+          icon: _buildIconBadge(
+            icon: Icons.style_rounded,
+            color: const Color(0xFF8B5CF6),
+          ),
+          title: 'Review SMS Transactions',
+          subtitle: pendingCount > 0
+              ? '$pendingCount pending swipe cards to review'
+              : 'All detected SMS transactions reviewed',
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (pendingCount > 0) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '$pendingCount NEW',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(width: 4),
-                ],
-                const Icon(Icons.chevron_right),
+                ),
+                const SizedBox(width: 6),
               ],
-            ),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SmsCardDeckScreen()),
-              );
-            },
+              _buildChevron(context),
+            ],
           ),
-          const Divider(height: 1),
-          ListTile(
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: scanState.isScanning
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.green),
-                    )
-                  : const Icon(Icons.sms_outlined, color: Colors.green),
-            ),
-            title: const Text('Scan SMS Inbox Now'),
-            subtitle: const Text('Scan recent bank SMS messages from Android inbox'),
-            trailing: const Icon(Icons.sync),
-            onTap: scanState.isScanning
-                ? null
-                : () async {
-                    final res = await ref
-                        .read(smsScanNotifierProvider.notifier)
-                        .scanInbox(forceFullScan: true);
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(res.message),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    }
-                  },
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SmsCardDeckScreen()),
+            );
+          },
+        ),
+        _buildSettingTile(
+          context: context,
+          icon: _buildIconBadge(
+            icon: Icons.sms_outlined,
+            color: const Color(0xFF10B981),
           ),
-        ],
-      ),
+          title: 'Scan SMS Inbox Now',
+          subtitle: 'Scan recent bank SMS messages from Android inbox',
+          trailing: scanState.isScanning
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Color(0xFF10B981),
+                  ),
+                )
+              : Icon(
+                  Icons.sync_rounded,
+                  size: 20,
+                  color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                ),
+          onTap: scanState.isScanning
+              ? null
+              : () async {
+                  final res = await ref
+                      .read(smsScanNotifierProvider.notifier)
+                      .scanInbox(forceFullScan: true);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(res.message),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                },
+        ),
+      ],
     );
   }
 
   Widget _buildSectionHeader(
     BuildContext context,
     String title,
-    IconData icon,
   ) {
     final theme = Theme.of(context);
-    return Row(
+    final isDark = theme.brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, right: 4, top: 20, bottom: 8),
+      child: Text(
+        title.toUpperCase(),
+        style: GoogleFonts.inter(
+          fontSize: 11.5,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.6,
+          color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInsetGroup(
+    BuildContext context, {
+    required List<Widget> children,
+    String? footer,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final borderColor = isDark ? const Color(0x1AFFFFFF) : AppTheme.borderLight;
+    final cardBg = isDark ? const Color(0xFF14141B) : Colors.white;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: theme.colorScheme.primary),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            title,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+        Container(
+          decoration: BoxDecoration(
+            color: cardBg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: borderColor, width: 0.8),
+            boxShadow: isDark
+                ? null
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              for (int i = 0; i < children.length; i++) ...[
+                if (i > 0)
+                  Divider(
+                    height: 0.8,
+                    thickness: 0.8,
+                    indent: 58,
+                    endIndent: 0,
+                    color: isDark ? const Color(0x14FFFFFF) : const Color(0x0F000000),
+                  ),
+                children[i],
+              ],
+            ],
           ),
         ),
+        if (footer != null)
+          Padding(
+            padding: const EdgeInsets.only(left: 6, right: 6, top: 6),
+            child: Text(
+              footer,
+              style: GoogleFonts.inter(
+                fontSize: 11.5,
+                color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+              ),
+            ),
+          ),
       ],
+    );
+  }
+
+  Widget _buildSettingTile({
+    required BuildContext context,
+    required Widget icon,
+    required String title,
+    String? subtitle,
+    Widget? trailing,
+    VoidCallback? onTap,
+    Color? titleColor,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              icon,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: titleColor ??
+                            (isDark ? Colors.white : const Color(0xFF0F172A)),
+                      ),
+                    ),
+                    if (subtitle != null && subtitle.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: GoogleFonts.inter(
+                          fontSize: 11.5,
+                          color: isDark
+                              ? AppTheme.textMutedDark
+                              : AppTheme.textMutedLight,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (trailing != null) ...[
+                const SizedBox(width: 8),
+                trailing,
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIconBadge({
+    required IconData icon,
+    required Color color,
+    Color? iconColor,
+  }) {
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      alignment: Alignment.center,
+      child: Icon(
+        icon,
+        size: 18,
+        color: iconColor ?? color,
+      ),
+    );
+  }
+
+  Widget _buildChevron(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Icon(
+      Icons.chevron_right_rounded,
+      size: 20,
+      color: isDark ? Colors.white30 : const Color(0xFF94A3B8),
     );
   }
 
