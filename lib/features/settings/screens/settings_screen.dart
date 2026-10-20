@@ -251,140 +251,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             _buildSectionHeader(context, 'Bank Accounts & SMS'),
             _buildSmsAndBankAccountsCard(context),
 
-            // Income Section
-            _buildSectionHeader(context, 'Monthly Income'),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Monthly Income',
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _incomeController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      decoration: InputDecoration(
-                        prefixText:
-                            '${AppConstants.supportedCurrencies[_selectedCurrency]} ',
-                        hintText: 'Enter your monthly income',
-                        filled: true,
-                        fillColor: colorScheme.surfaceContainerLowest,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your income';
-                        }
-                        final income = double.tryParse(
-                          value.replaceAll(',', ''),
-                        );
-                        if (income == null || income <= 0) {
-                          return 'Please enter a valid amount';
-                        }
-                        return null;
-                      },
-                      onChanged: _onIncomeChanged,
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      alignment: WrapAlignment.spaceBetween,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 420),
-                          child: Text(
-                            'Monthly income baseline for budget pacing and savings analysis',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                        if (_hasChanges)
-                          ElevatedButton(
-                            onPressed: _isLoading ? null : _saveSettings,
-                            style: ElevatedButton.styleFrom(
-                              visualDensity: VisualDensity.compact,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                            ),
-                            child: _isLoading
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Text('Save'),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Preferences Section
-            _buildSectionHeader(context, 'Preferences'),
-            _buildInsetGroup(
-              context,
-              children: [
-                _buildSettingTile(
-                  context: context,
-                  icon: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      AppConstants.supportedCurrencies[_selectedCurrency] ?? '?',
-                      style: TextStyle(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                  title: 'Primary Currency',
-                  subtitle: 'Selected: $_selectedCurrency',
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        _selectedCurrency,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? AppTheme.textMutedDark
-                              : AppTheme.textMutedLight,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      _buildChevron(context),
-                    ],
-                  ),
-                  onTap: _showCurrencyPicker,
-                ),
-              ],
-            ),
+            // Finances & Currency Section
+            _buildSectionHeader(context, 'Finances & Currency'),
+            _buildFinancesGroup(context),
 
             // Appearance & Fintech Palette Section
             _buildSectionHeader(context, 'Appearance & Theme'),
@@ -556,6 +425,151 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildFinancesGroup(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    return _buildInsetGroup(
+      context,
+      footer: 'Monthly baseline used for budget pacing, surplus calculations, and savings rate.',
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  _buildIconBadge(
+                    icon: Icons.account_balance_wallet_outlined,
+                    color: const Color(0xFF10B981),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Monthly Income',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      ),
+                    ),
+                  ),
+                  if (_hasChanges)
+                    TextButton(
+                      onPressed: _isLoading ? null : _saveSettings,
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(
+                              'Save',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.primary,
+                              ),
+                            ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: _incomeController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                ),
+                decoration: InputDecoration(
+                  prefixIcon: Container(
+                    width: 36,
+                    alignment: Alignment.center,
+                    child: Text(
+                      AppConstants.supportedCurrencies[_selectedCurrency] ?? '',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        color: isDark ? Colors.white70 : const Color(0xFF334155),
+                      ),
+                    ),
+                  ),
+                  hintText: 'Enter monthly income',
+                  filled: true,
+                  fillColor: isDark ? const Color(0xFF1B1B24) : const Color(0xFFF1F5F9),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your income';
+                  }
+                  final income = double.tryParse(value.replaceAll(',', ''));
+                  if (income == null || income <= 0) {
+                    return 'Please enter a valid amount';
+                  }
+                  return null;
+                },
+                onChanged: _onIncomeChanged,
+              ),
+            ],
+          ),
+        ),
+        _buildSettingTile(
+          context: context,
+          icon: Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              AppConstants.supportedCurrencies[_selectedCurrency] ?? '?',
+              style: TextStyle(
+                color: colorScheme.primary,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ),
+          title: 'Primary Currency',
+          subtitle: 'Display currency for transactions and reports',
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _selectedCurrency,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+                ),
+              ),
+              const SizedBox(width: 4),
+              _buildChevron(context),
+            ],
+          ),
+          onTap: _showCurrencyPicker,
+        ),
+      ],
     );
   }
 
