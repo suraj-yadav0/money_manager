@@ -580,157 +580,196 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final currentPalette = ref.watch(fintechPaletteNotifierProvider);
     final borderColor = isDark ? const Color(0x1AFFFFFF) : AppTheme.borderLight;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Interface Style',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: isDark ? AppTheme.textSecondaryDark : AppTheme.textSecondaryLight,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Container(
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF131318) : const Color(0xFFEBECEF),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: borderColor, width: 0.8),
-              ),
-              padding: const EdgeInsets.all(3),
-              child: Row(
+    return _buildInsetGroup(
+      context,
+      footer: 'Accent colors dynamically adapt charts, cards, tabs, and action items.',
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  _buildThemeModeOption(
-                    label: 'System',
-                    icon: Icons.brightness_auto_outlined,
-                    isSelected: currentMode == ThemeMode.system,
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      ref.read(themeModeNotifierProvider.notifier).setThemeMode(ThemeMode.system);
-                    },
-                    isDark: isDark,
+                  _buildIconBadge(
+                    icon: Icons.brightness_6_outlined,
+                    color: const Color(0xFF6366F1),
                   ),
-                  _buildThemeModeOption(
-                    label: 'Dark',
-                    icon: Icons.dark_mode_outlined,
-                    isSelected: currentMode == ThemeMode.dark,
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      ref.read(themeModeNotifierProvider.notifier).setThemeMode(ThemeMode.dark);
-                    },
-                    isDark: isDark,
-                  ),
-                  _buildThemeModeOption(
-                    label: 'Light',
-                    icon: Icons.light_mode_outlined,
-                    isSelected: currentMode == ThemeMode.light,
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      ref.read(themeModeNotifierProvider.notifier).setThemeMode(ThemeMode.light);
-                    },
-                    isDark: isDark,
+                  const SizedBox(width: 12),
+                  Text(
+                    'Interface Style',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              'Fintech Palette',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: isDark ? AppTheme.textSecondaryDark : AppTheme.textSecondaryLight,
+              const SizedBox(height: 12),
+              Container(
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1C1C26) : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: borderColor, width: 0.8),
+                ),
+                padding: const EdgeInsets.all(3),
+                child: Row(
+                  children: [
+                    _buildThemeModeOption(
+                      label: 'System',
+                      icon: Icons.brightness_auto_outlined,
+                      isSelected: currentMode == ThemeMode.system,
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        ref.read(themeModeNotifierProvider.notifier).setThemeMode(ThemeMode.system);
+                      },
+                      isDark: isDark,
+                    ),
+                    _buildThemeModeOption(
+                      label: 'Dark',
+                      icon: Icons.dark_mode_outlined,
+                      isSelected: currentMode == ThemeMode.dark,
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        ref.read(themeModeNotifierProvider.notifier).setThemeMode(ThemeMode.dark);
+                      },
+                      isDark: isDark,
+                    ),
+                    _buildThemeModeOption(
+                      label: 'Light',
+                      icon: Icons.light_mode_outlined,
+                      isSelected: currentMode == ThemeMode.light,
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        ref.read(themeModeNotifierProvider.notifier).setThemeMode(ThemeMode.light);
+                      },
+                      isDark: isDark,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Curated color schemes inspired by top iOS apps',
-              style: GoogleFonts.inter(
-                fontSize: 11.5,
-                color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  _buildIconBadge(
+                    icon: Icons.palette_outlined,
+                    color: currentPalette.swatchColor,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Fintech Palette',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        Text(
+                          currentPalette.displayName,
+                          style: GoogleFonts.inter(
+                            fontSize: 11.5,
+                            color: currentPalette.swatchColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 58,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: FintechPalette.values.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 8),
-                itemBuilder: (context, index) {
-                  final p = FintechPalette.values[index];
-                  final isSelected = p == currentPalette;
-                  return GestureDetector(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      ref.read(fintechPaletteNotifierProvider.notifier).setPalette(p);
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? p.swatchColor.withValues(alpha: isDark ? 0.22 : 0.12)
-                            : (isDark ? const Color(0xFF131318) : const Color(0xFFEBECEF)),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isSelected ? p.swatchColor : borderColor,
-                          width: isSelected ? 1.5 : 0.8,
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 56,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: FintechPalette.values.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 8),
+                  itemBuilder: (context, index) {
+                    final p = FintechPalette.values[index];
+                    final isSelected = p == currentPalette;
+                    return GestureDetector(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        ref.read(fintechPaletteNotifierProvider.notifier).setPalette(p);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? p.swatchColor.withValues(alpha: isDark ? 0.22 : 0.12)
+                              : (isDark ? const Color(0xFF1C1C26) : const Color(0xFFF1F5F9)),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isSelected ? p.swatchColor : borderColor,
+                            width: isSelected ? 1.5 : 0.8,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 22,
+                              height: 22,
+                              decoration: BoxDecoration(
+                                color: p.swatchColor,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: isDark ? Colors.white24 : Colors.black12,
+                                  width: 1,
+                                ),
+                              ),
+                              child: isSelected
+                                  ? const Icon(Icons.check, size: 13, color: Colors.white)
+                                  : null,
+                            ),
+                            const SizedBox(width: 8),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  p.displayName,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  ),
+                                ),
+                                Text(
+                                  p.subtitle,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    color: isDark
+                                        ? AppTheme.textMutedDark
+                                        : AppTheme.textMutedLight,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 22,
-                            height: 22,
-                            decoration: BoxDecoration(
-                              color: p.swatchColor,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: isDark ? Colors.white24 : Colors.black12,
-                                width: 1,
-                              ),
-                            ),
-                            child: isSelected
-                                ? const Icon(Icons.check, size: 13, color: Colors.white)
-                                : null,
-                          ),
-                          const SizedBox(width: 8),
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                p.displayName,
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                ),
-                              ),
-                              Text(
-                                p.subtitle,
-                                style: GoogleFonts.inter(
-                                  fontSize: 10,
-                                  color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -750,13 +789,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
             color: isSelected
-                ? (isDark ? const Color(0xFF24242C) : Colors.white)
+                ? (isDark ? const Color(0xFF2A2A38) : Colors.white)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
+                      color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
                       blurRadius: 4,
                       offset: const Offset(0, 1),
                     ),
