@@ -37,7 +37,7 @@ jobs:
         run: flutter analyze lib/core/services/auth_service.dart lib/features/auth/screens/auth_screen.dart lib/features/settings/screens/settings_screen.dart
 
       - name: Run Flutter Unit Tests
-        run: flutter test test/password_reset_auth_test.dart test/insights_engine_test.dart test/sms_parser_test.dart test/database_and_sms_service_test.dart test/deduplication_and_sync_test.dart test/update_service_test.dart
+        run: flutter test test/password_reset_auth_test.dart test/insights_engine_test.dart test/sms_parser_test.dart test/database_and_sms_service_test.dart test/deduplication_and_sync_test.dart test/update_service_test.dart test/settings_screen_responsive_test.dart
 
   test-web-app:
     name: Web App Tests & Build
