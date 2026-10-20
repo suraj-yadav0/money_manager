@@ -259,169 +259,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             _buildSectionHeader(context, 'Appearance & Theme'),
             _buildAppearanceCard(context),
 
-            // About Section
-            _buildSectionHeader(context, 'About Quantro'),
-            Card(
-              child: Column(
-                children: [
-                  Consumer(
-                    builder: (context, ref, _) {
-                      final pkgAsync = ref.watch(packageInfoProvider);
-                      final versionText = pkgAsync.when(
-                        data: (pkg) => 'v${pkg.version} (Build ${pkg.buildNumber})',
-                        loading: () => 'v1.0.3',
-                        error: (err, stack) => 'v1.0.3',
-                      );
-
-                      return ListTile(
-                        leading: Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [colorScheme.primary, colorScheme.secondary],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            Icons.account_balance_wallet_rounded,
-                            color: colorScheme.onPrimary,
-                          ),
-                        ),
-                        title: Text(
-                          'Quantro',
-                          style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
-                        ),
-                        subtitle: Text(versionText),
-                      );
-                    },
-                  ),
-                  const Divider(height: 1),
-                  Consumer(
-                    builder: (context, ref, _) {
-                      final updateState = ref.watch(updateCheckNotifierProvider);
-                      return ListTile(
-                        leading: Icon(
-                          Icons.system_update_rounded,
-                          color: colorScheme.primary,
-                        ),
-                        title: const Text('Check for Updates'),
-                        subtitle: Text(
-                          updateState.lastChecked != null
-                              ? 'Last checked: ${Formatters.date(updateState.lastChecked!)}'
-                              : 'Check GitHub for new app releases',
-                        ),
-                        trailing: updateState.isChecking
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.chevron_right),
-                        onTap: updateState.isChecking
-                            ? null
-                            : () async {
-                                final info = await ref
-                                    .read(updateCheckNotifierProvider.notifier)
-                                    .checkForUpdate(force: true);
-                                if (!context.mounted) return;
-                                if (info != null && info.isNewer) {
-                                  UpdatePromptSheet.show(context, info);
-                                } else if (info != null) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Quantro is up to date (v${info.currentVersion})',
-                                      ),
-                                    ),
-                                  );
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Could not check for updates. Check your connection.',
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
-                      );
-                    },
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: Icon(
-                      Icons.open_in_new_rounded,
-                      color: colorScheme.primary,
-                    ),
-                    title: const Text('Release Notes & Downloads'),
-                    subtitle: const Text('View releases on GitHub'),
-                    onTap: () {
-                      launchUrlString(
-                        'https://github.com/suraj-yadav0/money_manager/releases',
-                        mode: LaunchMode.externalApplication,
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-
             // Data Management Section
             _buildSectionHeader(context, 'Data Management'),
-            const SizedBox(height: 12),
-            Card(
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: Icon(
-                      Icons.download_outlined,
-                      color: colorScheme.primary,
-                    ),
-                    title: const Text('Export Complete Backup (JSON)'),
-                    subtitle: const Text(
-                      'Share or save all transactions, goals, accounts, and assets',
-                    ),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: _exportBackup,
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: Icon(
-                      Icons.upload_outlined,
-                      color: colorScheme.primary,
-                    ),
-                    title: const Text('Import Backup from JSON'),
-                    subtitle: const Text(
-                      'Restore database from exported JSON backup file',
-                    ),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: _importBackup,
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: Icon(
-                      Icons.delete_outline,
-                      color: colorScheme.error,
-                    ),
-                    title: Text(
-                      'Clear All Data',
-                      style: TextStyle(color: colorScheme.error),
-                    ),
-                    subtitle: const Text(
-                      'Delete all transactions and settings',
-                    ),
-                    trailing: Icon(
-                      Icons.chevron_right,
-                      color: colorScheme.error,
-                    ),
-                    onTap: () => _showClearDataDialog(context),
-                  ),
-                ],
-              ),
-            ),
+            _buildDataManagementGroup(context),
+
+            // About Section
+            _buildSectionHeader(context, 'About Quantro'),
+            _buildAboutGroup(context),
           ],
         ),
       ),
@@ -835,100 +679,373 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final syncState = ref.watch(syncNotifierProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: CircleAvatar(
-                backgroundColor: user != null
-                    ? colorScheme.primaryContainer
-                    : colorScheme.surfaceContainerHighest,
+    return _buildInsetGroup(
+      context,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: user != null
+                      ? LinearGradient(
+                          colors: [colorScheme.primary, colorScheme.secondary],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
+                      : null,
+                  color: user == null
+                      ? (isDark ? const Color(0xFF262632) : const Color(0xFFE2E8F0))
+                      : null,
+                ),
+                alignment: Alignment.center,
                 child: Icon(
                   user != null ? Icons.cloud_done_rounded : Icons.cloud_off_rounded,
                   color: user != null
-                      ? colorScheme.onPrimaryContainer
-                      : colorScheme.onSurfaceVariant,
+                      ? Colors.white
+                      : (isDark ? Colors.white54 : const Color(0xFF64748B)),
+                  size: 22,
                 ),
               ),
-              title: Text(
-                user != null ? (user.email ?? 'Cloud Account') : 'Offline Guest Mode',
-                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              subtitle: Text(
-                user != null
-                    ? (syncState.message ?? 'Cloud Data Sync Active')
-                    : 'Data stored locally on this device only',
-                style: theme.textTheme.bodySmall,
-              ),
-            ),
-            const Divider(),
-            Align(
-              alignment: Alignment.centerRight,
-              child: Wrap(
-                alignment: WrapAlignment.end,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  if (user != null) ...[
-                    OutlinedButton.icon(
-                      icon: const Icon(Icons.password, size: 16),
-                      label: const Text('Password'),
-                      onPressed: () => _showChangePasswordDialog(context),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      user != null ? (user.email ?? 'Cloud Account') : 'Offline Guest Mode',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14.5,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    OutlinedButton.icon(
-                      icon: syncState.status == SyncStatus.syncing
-                          ? const SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.sync, size: 16),
-                      label: const Text('Sync Now'),
-                      onPressed: syncState.status == SyncStatus.syncing
-                          ? null
-                          : () async {
-                              final res = await ref
-                                  .read(syncNotifierProvider.notifier)
-                                  .triggerSync();
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(res.message),
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                              }
-                            },
+                    const SizedBox(height: 2),
+                    Text(
+                      user != null
+                          ? (syncState.message ?? 'Cloud sync active')
+                          : 'Data stored locally on this device',
+                      style: GoogleFonts.inter(
+                        fontSize: 11.5,
+                        color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    TextButton.icon(
-                      icon: const Icon(Icons.logout, size: 16, color: Colors.redAccent),
-                      label: const Text('Sign Out', style: TextStyle(color: Colors.redAccent)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+          child: user != null
+              ? Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: syncState.status == SyncStatus.syncing
+                            ? const SizedBox(
+                                width: 13,
+                                height: 13,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.sync_rounded, size: 15),
+                        label: Text(
+                          syncState.status == SyncStatus.syncing ? 'Syncing' : 'Sync',
+                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: syncState.status == SyncStatus.syncing
+                            ? null
+                            : () async {
+                                final res = await ref
+                                    .read(syncNotifierProvider.notifier)
+                                    .triggerSync();
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(res.message),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                }
+                              },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.lock_outline_rounded, size: 15),
+                        label: Text(
+                          'Password',
+                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: () => _showChangePasswordDialog(context),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.logout_rounded, size: 18, color: Colors.redAccent),
+                      tooltip: 'Sign Out',
+                      style: IconButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: BorderSide(
+                            color: isDark ? const Color(0x1AFFFFFF) : AppTheme.borderLight,
+                            width: 0.8,
+                          ),
+                        ),
+                      ),
                       onPressed: () async {
                         await ref.read(authServiceProvider).signOut();
                       },
                     ),
-                  ] else ...[
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.login, size: 16),
-                      label: const Text('Sign In / Connect Cloud'),
-                      onPressed: () async {
-                        await ref.read(guestModeProvider.notifier).disableGuestMode();
-                      },
-                    ),
                   ],
+                )
+              : SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.cloud_upload_outlined, size: 16),
+                    label: Text(
+                      'Sign In / Connect Cloud',
+                      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: () async {
+                      await ref.read(guestModeProvider.notifier).disableGuestMode();
+                    },
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAboutGroup(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    return _buildInsetGroup(
+      context,
+      children: [
+        Consumer(
+          builder: (context, ref, _) {
+            final pkgAsync = ref.watch(packageInfoProvider);
+            final versionText = pkgAsync.when(
+              data: (pkg) => 'v${pkg.version} (${pkg.buildNumber})',
+              loading: () => 'v1.0.9',
+              error: (err, stack) => 'v1.0.9',
+            );
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [colorScheme.primary, colorScheme.secondary],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(
+                      Icons.account_balance_wallet_rounded,
+                      size: 20,
+                      color: colorScheme.onPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Quantro',
+                          style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        Text(
+                          'Expense & Finance Manager',
+                          style: GoogleFonts.inter(
+                            fontSize: 11.5,
+                            color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E1E28) : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: isDark ? const Color(0x1AFFFFFF) : AppTheme.borderLight,
+                        width: 0.8,
+                      ),
+                    ),
+                    child: Text(
+                      versionText,
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? AppTheme.textMutedDark : AppTheme.textMutedLight,
+                      ),
+                    ),
+                  ),
                 ],
               ),
-            ),
-          ],
+            );
+          },
         ),
-      ),
+        Consumer(
+          builder: (context, ref, _) {
+            final updateState = ref.watch(updateCheckNotifierProvider);
+            return _buildSettingTile(
+              context: context,
+              icon: _buildIconBadge(
+                icon: Icons.system_update_rounded,
+                color: const Color(0xFF0284C7),
+              ),
+              title: 'Check for Updates',
+              subtitle: updateState.lastChecked != null
+                  ? 'Last checked: ${Formatters.date(updateState.lastChecked!)}'
+                  : 'Check GitHub releases for updates',
+              trailing: updateState.isChecking
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : _buildChevron(context),
+              onTap: updateState.isChecking
+                  ? null
+                  : () async {
+                      final info = await ref
+                          .read(updateCheckNotifierProvider.notifier)
+                          .checkForUpdate(force: true);
+                      if (!context.mounted) return;
+                      if (info != null && info.isNewer) {
+                        UpdatePromptSheet.show(context, info);
+                      } else if (info != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Quantro is up to date (v${info.currentVersion})',
+                            ),
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Could not check for updates. Check your connection.',
+                            ),
+                          ),
+                        );
+                      }
+                    },
+            );
+          },
+        ),
+        _buildSettingTile(
+          context: context,
+          icon: _buildIconBadge(
+            icon: Icons.open_in_new_rounded,
+            color: const Color(0xFF64748B),
+          ),
+          title: 'Release Notes & Downloads',
+          subtitle: 'View GitHub release log and APK downloads',
+          trailing: _buildChevron(context),
+          onTap: () {
+            launchUrlString(
+              'https://github.com/suraj-yadav0/money_manager/releases',
+              mode: LaunchMode.externalApplication,
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDataManagementGroup(BuildContext context) {
+    return _buildInsetGroup(
+      context,
+      children: [
+        _buildSettingTile(
+          context: context,
+          icon: _buildIconBadge(
+            icon: Icons.download_rounded,
+            color: const Color(0xFF0284C7),
+          ),
+          title: 'Export Complete Backup',
+          subtitle: 'Save transactions, accounts, and goals as JSON',
+          trailing: _buildChevron(context),
+          onTap: _exportBackup,
+        ),
+        _buildSettingTile(
+          context: context,
+          icon: _buildIconBadge(
+            icon: Icons.upload_rounded,
+            color: const Color(0xFFD97706),
+          ),
+          title: 'Import Backup from JSON',
+          subtitle: 'Restore database from an exported backup file',
+          trailing: _buildChevron(context),
+          onTap: _importBackup,
+        ),
+        _buildSettingTile(
+          context: context,
+          icon: _buildIconBadge(
+            icon: Icons.delete_outline_rounded,
+            color: const Color(0xFFEF4444),
+          ),
+          title: 'Clear All Data',
+          titleColor: const Color(0xFFEF4444),
+          subtitle: 'Permanently remove all local data and settings',
+          trailing: _buildChevron(context),
+          onTap: () => _showClearDataDialog(context),
+        ),
+      ],
     );
   }
 
