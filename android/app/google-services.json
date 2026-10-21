@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "277150463102",
+    "project_id": "quantro-money-manager",
+    "storage_bucket": "quantro-money-manager.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:277150463102:android:4540fe0bf9933dbf31d42f",
+        "android_client_info": {
+          "package_name": "com.example.money_manager"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "277150463102-vhdntrghqr5rbpep1brp7clg17ouaies.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.money_manager",
+            "certificate_hash": "1f586ec3ef28d63d4dbd3bc89fd60ff863cb5df2"
+          }
+        },
+        {
+          "client_id": "277150463102-2nve9qflhf00urksfbe290rpkm5gsv4f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCbixOc6qSv9R43bbVa3t52rQvE6wqI6uw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "277150463102-2nve9qflhf00urksfbe290rpkm5gsv4f.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "277150463102-medk276ai2ebs565gauce15a54kbm2r8.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.moneyManager"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

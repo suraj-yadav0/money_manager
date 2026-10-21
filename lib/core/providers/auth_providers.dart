@@ -19,7 +19,7 @@ final syncServiceProvider = Provider<SyncService>((ref) {
 /// Stream of Firebase Auth state changes
 final authStateStreamProvider = StreamProvider<User?>((ref) {
   final authService = ref.watch(authServiceProvider);
-  return authService.authStateStream ?? const Stream.empty();
+  return authService.authStateStream ?? Stream.value(null);
 });
 
 /// Current Logged-in Firebase User

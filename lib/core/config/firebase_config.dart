@@ -15,6 +15,11 @@ class FirebaseConfig {
   /// returns false so the app degrades gracefully to Offline Local-Only mode.
   static Future<bool> initialize() async {
     try {
+      if (Firebase.apps.isNotEmpty) {
+        _isConfigured = true;
+        debugPrint('Firebase already initialized via native provider.');
+        return true;
+      }
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
@@ -22,6 +27,11 @@ class FirebaseConfig {
       debugPrint('Firebase initialized successfully.');
       return true;
     } catch (e) {
+      if (Firebase.apps.isNotEmpty || e.toString().contains('duplicate-app')) {
+        _isConfigured = true;
+        debugPrint('Firebase already active: $e');
+        return true;
+      }
       debugPrint('Failed to initialize Firebase: $e. Running in offline mode.');
       _isConfigured = false;
       return false;
@@ -30,7 +40,7 @@ class FirebaseConfig {
 
   /// Safe accessor for FirebaseAuth instance (null if unconfigured)
   static FirebaseAuth? get auth {
-    if (!_isConfigured) return null;
+    if (!_isConfigured && Firebase.apps.isEmpty) return null;
     try {
       return FirebaseAuth.instance;
     } catch (_) {
@@ -40,7 +50,7 @@ class FirebaseConfig {
 
   /// Safe accessor for FirebaseFirestore instance (null if unconfigured)
   static FirebaseFirestore? get db {
-    if (!_isConfigured) return null;
+    if (!_isConfigured && Firebase.apps.isEmpty) return null;
     try {
       return FirebaseFirestore.instance;
     } catch (_) {

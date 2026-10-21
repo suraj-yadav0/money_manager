@@ -46,7 +46,7 @@ app.*.map.json
 /android/app/release
 
 # Firebase Credentials & Sensitive Configurations
-android/app/google-services.json
+# android/app/google-services.json (tracked for reliable Android builds)
 ios/Runner/GoogleService-Info.plist
 *.keystore
 !android/app/app.keystore

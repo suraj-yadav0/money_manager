@@ -57,8 +57,8 @@ void main() {
                   PackageInfo(
                     appName: 'Quantro',
                     packageName: 'com.surajyadav.quantro',
-                    version: '1.0.10',
-                    buildNumber: '11',
+                    version: '1.0.11',
+                    buildNumber: '12',
                   ),
                 ),
               ),

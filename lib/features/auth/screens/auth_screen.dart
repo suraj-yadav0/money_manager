@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -130,6 +131,15 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   Future<void> _continueAsGuest() async {
     await ref.read(guestModeProvider.notifier).enableGuestMode();
+    final db = ref.read(databaseProvider);
+    await db.into(db.userSettings).insertOnConflictUpdate(
+      UserSettingsCompanion(
+        id: const Value(1),
+        isOnboarded: const Value(true),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+    ref.invalidate(isOnboardedProvider);
   }
 
   Future<void> _showForgotPasswordDialog() async {
@@ -500,7 +510,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                       ),
                               ),
 
-                              if (FirebaseConfig.isConfigured) ...[
+                              if (FirebaseConfig.isConfigured || Firebase.apps.isNotEmpty) ...[
                                 const SizedBox(height: 20),
                                 Row(
                                   children: [

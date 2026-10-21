@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/config/firebase_config.dart';
 import 'core/theme/app_theme.dart';
@@ -12,8 +13,17 @@ import 'features/onboarding/screens/onboarding_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
   await FirebaseConfig.initialize();
-  runApp(const ProviderScope(child: MoneyManagerApp()));
+
+  runApp(
+    ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWith((ref) => prefs),
+      ],
+      child: const MoneyManagerApp(),
+    ),
+  );
 }
 
 class MoneyManagerApp extends ConsumerWidget {
@@ -40,25 +50,41 @@ class AuthWrapper extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentUser = ref.watch(currentUserProvider);
     final isGuestMode = ref.watch(guestModeProvider);
 
-    // If user is already authenticated or active guest, go straight to main app
-    if (currentUser != null || isGuestMode) {
+    // If user is an active offline guest, bypass auth gate
+    if (isGuestMode) {
       return const AppShell();
     }
 
-    final isOnboardedAsync = ref.watch(isOnboardedProvider);
+    final authStateAsync = ref.watch(authStateStreamProvider);
 
-    return isOnboardedAsync.when(
-      data: (isOnboarded) {
-        if (!isOnboarded) {
-          return const OnboardingScreen();
+    return authStateAsync.when(
+      data: (user) {
+        if (user != null) {
+          return const AppShell();
+        }
+
+        final isOnboardedAsync = ref.watch(isOnboardedProvider);
+        return isOnboardedAsync.when(
+          data: (isOnboarded) {
+            if (!isOnboarded) {
+              return const OnboardingScreen();
+            }
+            return const AuthScreen();
+          },
+          loading: () => const _SplashScreen(),
+          error: (err, stack) => const OnboardingScreen(),
+        );
+      },
+      loading: () => const _SplashScreen(),
+      error: (err, stack) {
+        final currentUser = ref.watch(currentUserProvider);
+        if (currentUser != null) {
+          return const AppShell();
         }
         return const AuthScreen();
       },
-      loading: () => const _SplashScreen(),
-      error: (err, stack) => const OnboardingScreen(),
     );
   }
 }

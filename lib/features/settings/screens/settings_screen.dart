@@ -882,8 +882,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             final pkgAsync = ref.watch(packageInfoProvider);
             final versionText = pkgAsync.when(
               data: (pkg) => 'v${pkg.version} (${pkg.buildNumber})',
-              loading: () => 'v1.0.10',
-              error: (err, stack) => 'v1.0.10',
+              loading: () => 'v1.0.11',
+              error: (err, stack) => 'v1.0.11',
             );
 
             return Padding(
