@@ -231,15 +231,14 @@ export const Router = {
         </main>
 
         <!-- Footer -->
-        <!-- Footer -->
         <footer class="site-footer">
           <div class="site-container">
-            <div class="footer-card">
+            <div class="footer-inner">
               
               <!-- Upper Architectural Grid -->
               <div class="footer-grid">
                 
-                <!-- Left: Identity, Mission & Telemetry Bezel -->
+                <!-- Left: Identity & Architecture Status -->
                 <div class="footer-brand-col">
                   <div class="footer-brand-header">
                     <div class="footer-brand-badge">
@@ -252,36 +251,28 @@ export const Router = {
                   </div>
 
                   <p class="footer-brand-description">
-                    Private, local-first financial matrix. Engineered with client-side SQLite storage, deterministic wealth forecasting, and zero telemetry.
+                    Private, local-first finance powered by client-side SQLite storage, deterministic forecasting, and zero telemetry.
                   </p>
 
-                  <!-- Double-Bezel Telemetry Capsule -->
-                  <div class="footer-engine-bezel">
-                    <div class="footer-engine-core">
-                      <div class="footer-engine-status">
-                        <span class="footer-engine-dot"></span>
-                        <span class="footer-engine-label">Engine: Drift SQLite (Active)</span>
-                      </div>
-                      <div class="footer-engine-metrics">
-                        <span class="footer-engine-tag">AES-256</span>
-                        <span class="footer-engine-tag">Zero Telemetry</span>
-                        <span class="footer-engine-tag">Offline First</span>
-                      </div>
-                    </div>
+                  <div class="footer-meta-row">
+                    <span class="footer-status-dot"></span>
+                    <span class="footer-meta-item">Local SQLite</span>
+                    <span class="footer-meta-sep">•</span>
+                    <span class="footer-meta-item">AES-256</span>
+                    <span class="footer-meta-sep">•</span>
+                    <span class="footer-meta-item">Zero Telemetry</span>
                   </div>
 
-                  <!-- Quick Action Pills -->
                   <div class="footer-actions-row">
-                    <a href="https://github.com/suraj-yadav0/money_manager/releases/download/v1.0.1/quantro-v1.0.1.apk" target="_blank" rel="noopener noreferrer" class="footer-action-btn">
+                    <a href="https://github.com/suraj-yadav0/money_manager/releases/latest" target="_blank" rel="noopener noreferrer" class="footer-action-btn">
                       <span class="material-icons" style="font-size: 15px;">android</span>
                       <span>Android App</span>
-                      <span class="footer-action-arrow">↗</span>
                     </a>
                     <button type="button" class="footer-action-btn footer-action-secondary" id="footer-setup-guide-btn">
                       <span class="material-icons" style="font-size: 15px;">dns</span>
                       <span>Self-Host</span>
                     </button>
-                    <a href="https://github.com/suraj-yadav0/money_manager" target="_blank" rel="noopener noreferrer" class="footer-icon-pill" title="GitHub Repository">
+                    <a href="https://github.com/suraj-yadav0/money_manager" target="_blank" rel="noopener noreferrer" class="footer-icon-pill" title="GitHub Repository" aria-label="GitHub Repository">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
                     </a>
                   </div>
@@ -307,7 +298,7 @@ export const Router = {
                     <div class="footer-col-title">ARCHITECTURE</div>
                     <div class="footer-links">
                       <span class="footer-link-static">Local SQLite</span>
-                      <span class="footer-link-static">Deterministic Burn</span>
+                      <span class="footer-link-static">Deterministic Runway</span>
                       <button class="footer-link footer-link-accent" id="footer-setup-guide-link">Self-Hosting Guide</button>
                       <a href="https://github.com/suraj-yadav0/money_manager#readme" target="_blank" rel="noopener noreferrer" class="footer-link">Architecture Specs</a>
                       <span class="footer-link-static">Zero External Calls</span>
@@ -317,8 +308,8 @@ export const Router = {
                   <div class="footer-col">
                     <div class="footer-col-title">ECOSYSTEM</div>
                     <div class="footer-links">
-                      <a href="https://github.com/suraj-yadav0/money_manager/releases/tag/v1.0.1" target="_blank" rel="noopener noreferrer" class="footer-link">Release v1.0.1</a>
-                      <a href="https://github.com/suraj-yadav0/money_manager/releases/download/v1.0.1/quantro-v1.0.1.apk" target="_blank" rel="noopener noreferrer" class="footer-link">Android APK</a>
+                      <a href="https://github.com/suraj-yadav0/money_manager/releases" target="_blank" rel="noopener noreferrer" class="footer-link">Release v1.0.11</a>
+                      <a href="https://github.com/suraj-yadav0/money_manager/releases/latest" target="_blank" rel="noopener noreferrer" class="footer-link">Android APK</a>
                       <a href="https://github.com/suraj-yadav0/money_manager" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub Source</a>
                       <a href="https://github.com/suraj-yadav0/money_manager/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" class="footer-link">MIT License</a>
                     </div>
@@ -328,24 +319,16 @@ export const Router = {
 
               </div>
 
-              <!-- Architectural Metallic Gradient Display Wordmark -->
-              <div class="footer-display-container">
-                <div class="footer-display-wrap">
-                  <span class="footer-display-wordmark">QUANTRO</span>
-                  <span class="footer-display-registered">®</span>
-                </div>
-              </div>
-
-              <!-- Lower Sub-Bar: Copyright, Security & Back-to-Top -->
+              <!-- Lower Sub-Bar: Copyright, Privacy & Back-to-Top -->
               <div class="footer-subbar">
                 <div class="footer-copyright">
                   © 2026 Quantro Finance. All ledger data resides strictly on your local hardware.
                 </div>
                 
                 <div class="footer-subbar-right">
-                  <div class="footer-security-pill">
+                  <div class="footer-privacy-badge">
                     <span class="material-icons" style="font-size: 13px;">shield</span>
-                    <span>Cryptographic Privacy Guarantee</span>
+                    <span>Local Hardware Encryption</span>
                   </div>
                   
                   <button type="button" class="footer-scroll-top-btn" id="footer-back-to-top" title="Back to top">
