@@ -9,7 +9,7 @@ Private, local-first financial intelligence engine. Automated bank SMS parsing, 
 
 [![Quantro Launch Video](assets/brag.gif)](assets/brag.mp4)
 
-<sub>Click the preview above to watch the full launch video with audio.</sub>
+
 
 ## Features
 
