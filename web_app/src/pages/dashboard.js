@@ -379,6 +379,11 @@ export const DashboardPage = {
       return isRec || isLikelyRecurring;
     });
 
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const currentDay = now.getDate();
+
     const map = new Map();
     for (const tx of list) {
       const key = (tx.note || 'Commitment').toLowerCase().trim();
@@ -386,6 +391,20 @@ export const DashboardPage = {
         const cat = findCategory(state.categories, tx.categoryId || tx.category_id);
         const d = new Date(tx.timestamp);
         const dayOfMonth = d.getDate();
+
+        // Check if an instance or payment already exists this month
+        const hasProcessedThisMonth = (state.transactions || []).some(t => {
+          if (t.type !== 'expense') return false;
+          const td = new Date(t.timestamp);
+          if (td.getFullYear() !== currentYear || td.getMonth() !== currentMonth) return false;
+          const noteMatch = (t.note || '').toLowerCase().trim() === key;
+          const amountMatch = Math.abs(Number(t.amount || 0) - Number(tx.amount || 0)) < 0.01;
+          return noteMatch && amountMatch;
+        });
+
+        const isDueOrPast = currentDay >= dayOfMonth;
+        const status = hasProcessedThisMonth ? 'processed' : (isDueOrPast ? 'due' : 'upcoming');
+
         map.set(key, {
           id: tx.id || tx.sync_id,
           name: tx.note || (cat ? cat.name : 'Subscription'),
@@ -394,11 +413,13 @@ export const DashboardPage = {
           categoryName: cat ? cat.name : 'Subscription',
           icon: cat ? cat.icon : 'receipt_long',
           dayOfMonth,
-          timestamp: tx.timestamp
+          timestamp: tx.timestamp,
+          status,
+          hasProcessedThisMonth
         });
       }
     }
-    return Array.from(map.values()).slice(0, 3);
+    return Array.from(map.values()).sort((a, b) => a.dayOfMonth - b.dayOfMonth);
   },
 
   renderRecurringWidget(state) {
@@ -413,7 +434,7 @@ export const DashboardPage = {
             <span>Recurring Liabilities</span>
           </div>
           <button class="btn-ghost" id="manage-recurring-btn">
-            View Schedule <span class="material-icons" style="font-size: 16px;">arrow_forward</span>
+            View All Records <span class="material-icons" style="font-size: 16px;">arrow_forward</span>
           </button>
         </div>
 
@@ -448,7 +469,9 @@ export const DashboardPage = {
                 </div>
                 <div class="recurring-item-right">
                   <div class="recurring-item-amount">-${Formatters.currency(item.amount)}</div>
-                  <span class="kpi-badge neutral" style="font-size: 10px; padding: 1px 6px;">Automated</span>
+                  <span class="kpi-badge ${item.status === 'processed' ? 'positive' : 'neutral'}" style="font-size: 10px; padding: 2px 7px;">
+                    ${item.status === 'processed' ? 'Processed' : `Due ${item.dayOfMonth}th`}
+                  </span>
                 </div>
               </div>
             `).join('')}
@@ -881,7 +904,10 @@ export const DashboardPage = {
 
     // Manage Recurring Liabilities CTA
     document.getElementById('manage-recurring-btn')?.addEventListener('click', () => {
-      StateManager.setState({ navIndex: 6 });
+      import('./all-transactions.js').then(({ AllTransactionsPage }) => {
+        AllTransactionsPage.activeTypeFilter = 'recurring';
+        StateManager.setState({ navIndex: 1 });
+      });
     });
 
     // View All Goals CTA
@@ -906,7 +932,10 @@ export const DashboardPage = {
             AddTransactionModal.show(tx);
           });
         } else {
-          StateManager.setState({ navIndex: 6 });
+          import('./all-transactions.js').then(({ AllTransactionsPage }) => {
+            AllTransactionsPage.activeTypeFilter = 'recurring';
+            StateManager.setState({ navIndex: 1 });
+          });
         }
       });
     });

@@ -213,6 +213,8 @@ function normalizeTransaction(raw, docId) {
   const accountId = raw.account_id !== undefined ? raw.account_id : raw.accountId;
   const paymentMode = raw.payment_mode || raw.paymentMode || 'Cash';
   const isRecurring = raw.is_recurring !== undefined ? Boolean(raw.is_recurring) : Boolean(raw.isRecurring);
+  const isRecurringInstance = raw.is_recurring_instance !== undefined ? Boolean(raw.is_recurring_instance) : Boolean(raw.isRecurringInstance);
+  const recurringParentId = raw.recurring_parent_id || raw.recurringParentId || null;
 
   return {
     ...raw,
@@ -233,6 +235,10 @@ function normalizeTransaction(raw, docId) {
     receipt_image_path: raw.receipt_image_path || raw.receiptImagePath || null,
     isRecurring,
     is_recurring: isRecurring,
+    is_recurring_instance: isRecurringInstance,
+    isRecurringInstance: isRecurringInstance,
+    recurring_parent_id: recurringParentId,
+    recurringParentId: recurringParentId,
     is_synced: true,
     created_at: parseTimestamp(raw.created_at || raw.createdAt),
     updated_at: parseTimestamp(raw.updated_at || raw.updatedAt)
@@ -794,6 +800,8 @@ export const DbService = {
       const accountId = tx.accountId !== undefined ? tx.accountId : (tx.account_id !== undefined ? tx.account_id : null);
       const paymentMode = tx.paymentMode || tx.payment_mode || 'Cash';
       const isRecurring = tx.isRecurring !== undefined ? Boolean(tx.isRecurring) : Boolean(tx.is_recurring);
+      const isRecurringInstance = tx.is_recurring_instance !== undefined ? Boolean(tx.is_recurring_instance) : Boolean(tx.isRecurringInstance);
+      const recurringParentId = tx.recurring_parent_id || tx.recurringParentId || null;
 
       const newTx = {
         sync_id: syncId,
@@ -809,6 +817,10 @@ export const DbService = {
         payment_mode: paymentMode,
         isRecurring,
         is_recurring: isRecurring,
+        is_recurring_instance: isRecurringInstance,
+        isRecurringInstance: isRecurringInstance,
+        recurring_parent_id: recurringParentId,
+        recurringParentId: recurringParentId,
         timestamp: tx.timestamp || new Date().toISOString(),
         note: tx.note || '',
         is_synced: !isGuest,
@@ -879,6 +891,21 @@ export const DbService = {
       const transactions = StateManager.state.transactions || [];
       if (transactions.length === 0) return;
 
+      // Unmark any recurring salary or income templates
+      let unmarkUpdated = false;
+      for (const t of transactions) {
+        if ((t.isRecurring || t.is_recurring) && (t.type === 'income' || (t.note || '').toLowerCase().includes('salary'))) {
+          t.isRecurring = false;
+          t.is_recurring = false;
+          unmarkUpdated = true;
+        }
+      }
+      if (unmarkUpdated) {
+        if (StateManager.state.isGuestMode && !StateManager.state.user) {
+          StateManager.saveGuestState();
+        }
+      }
+
       const now = customDate ? new Date(customDate) : new Date();
       const currentYear = now.getFullYear();
       const currentMonth = now.getMonth();
@@ -887,7 +914,6 @@ export const DbService = {
 
       // Find recurring expense templates
       const templates = transactions.filter(t => {
-        if (t.is_demo || t.isDemo) return false;
         if (t.type !== 'expense') return false;
         const isRec = Boolean(t.isRecurring || t.is_recurring);
         if (!isRec) return false;
@@ -905,8 +931,8 @@ export const DbService = {
         const templateYear = templateDate.getFullYear();
         const templateMonth = templateDate.getMonth();
 
-        // If template was created in current month or future, skip current month
-        if (templateYear > currentYear || (templateYear === currentYear && templateMonth >= currentMonth)) {
+        // If template was created in future, skip
+        if (templateYear > currentYear || (templateYear === currentYear && templateMonth > currentMonth)) {
           continue;
         }
 
@@ -929,7 +955,7 @@ export const DbService = {
 
           const catId = t.categoryId !== undefined ? t.categoryId : t.category_id;
           const templateCatId = template.categoryId !== undefined ? template.categoryId : template.category_id;
-          if (catId !== templateCatId) return false;
+          if (String(catId) !== String(templateCatId)) return false;
 
           const amountDiff = Math.abs(Number(t.amount || 0) - Number(template.amount || 0));
           if (amountDiff >= 0.01) return false;
@@ -978,7 +1004,10 @@ export const DbService = {
             timestamp: instanceTimestamp,
             note: template.note || '',
             is_recurring: false,
-            isRecurring: false
+            isRecurring: false,
+            is_recurring_instance: true,
+            isRecurringInstance: true,
+            recurring_parent_id: template.sync_id || template.id
           });
         }
       }

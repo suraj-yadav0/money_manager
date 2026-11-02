@@ -2,6 +2,8 @@ import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { DbService } from './db.js';
 import { StateManager } from './state.js';
+import { AllTransactionsPage } from './pages/all-transactions.js';
+import { DashboardPage } from './pages/dashboard.js';
 
 describe('Web Recurring Liabilities Auto-Addition Engine', () => {
   beforeEach(() => {
@@ -82,6 +84,8 @@ describe('Web Recurring Liabilities Auto-Addition Engine', () => {
     assert.equal(instance.note, 'Fiber Internet Bill');
     assert.equal(instance.categoryId, 1);
     assert.equal(Boolean(instance.isRecurring || instance.is_recurring), false);
+    assert.equal(instance.is_recurring_instance, true);
+    assert.equal(instance.recurring_parent_id, 'tx-template-1');
 
     const instanceDate = new Date(instance.timestamp);
     assert.equal(instanceDate.getDate(), 15); // Scheduled day
@@ -223,5 +227,128 @@ describe('Web Recurring Liabilities Auto-Addition Engine', () => {
     });
 
     assert.equal(novIncome.length, 0);
+    // Verified template was unmarked
+    const salaryTemplate = StateManager.state.transactions.find(t => t.id === 'tx-salary');
+    assert.equal(Boolean(salaryTemplate.isRecurring || salaryTemplate.is_recurring), false);
+  });
+
+  it('ledger recurring filter includes templates and auto-generated instances', async () => {
+    StateManager.state.transactions = [
+      {
+        id: 'tx-template-gym',
+        sync_id: 'tx-template-gym',
+        amount: 1500,
+        type: 'expense',
+        categoryId: 1,
+        timestamp: '2026-10-01T10:00:00.000Z',
+        note: 'Gym Membership',
+        is_recurring: true,
+        isRecurring: true
+      },
+      {
+        id: 'tx-adhoc-groceries',
+        sync_id: 'tx-adhoc-groceries',
+        amount: 850,
+        type: 'expense',
+        categoryId: 1,
+        timestamp: '2026-11-01T10:00:00.000Z',
+        note: 'Supermarket Groceries',
+        is_recurring: false,
+        isRecurring: false
+      }
+    ];
+
+    // Process on Nov 1
+    await DbService.processRecurringTransactions(new Date(2026, 10, 1));
+
+    AllTransactionsPage.activeTypeFilter = 'recurring';
+    const filtered = AllTransactionsPage.getFilteredTransactions(StateManager.state);
+
+    // Both template and auto-generated November instance match the recurring filter
+    assert.ok(filtered.length >= 2);
+    assert.ok(filtered.every(t => (t.note || '').includes('Gym')));
+    assert.ok(!filtered.some(t => (t.note || '').includes('Supermarket')));
+  });
+
+  it('handles string and number category id coercion in deduplication', async () => {
+    StateManager.state.transactions = [
+      {
+        id: 'tx-template-str',
+        sync_id: 'tx-template-str',
+        amount: 500,
+        type: 'expense',
+        categoryId: '2', // String category ID
+        timestamp: '2026-10-04T10:00:00.000Z',
+        note: 'Music Streaming',
+        is_recurring: true,
+        isRecurring: true
+      },
+      {
+        id: 'tx-existing-num',
+        sync_id: 'tx-existing-num',
+        amount: 500,
+        type: 'expense',
+        categoryId: 2, // Number category ID
+        timestamp: '2026-11-04T10:00:00.000Z',
+        note: 'Music Streaming',
+        is_recurring: false,
+        isRecurring: false
+      }
+    ];
+
+    await DbService.processRecurringTransactions(new Date(2026, 10, 5));
+
+    const novTxs = StateManager.state.transactions.filter(t => {
+      const d = new Date(t.timestamp);
+      return d.getFullYear() === 2026 && d.getMonth() === 10 && (t.note || '').includes('Music');
+    });
+
+    // Should not create duplicate because string '2' matches number 2
+    assert.equal(novTxs.length, 1);
+  });
+
+  it('dashboard recurring liabilities list shows all commitments with live status', async () => {
+    StateManager.state.transactions = [
+      {
+        id: 'tx-fiber',
+        amount: 2500,
+        type: 'expense',
+        categoryId: 1,
+        timestamp: '2026-10-04T10:00:00.000Z',
+        note: 'Fiber Internet',
+        is_recurring: true,
+        isRecurring: true
+      },
+      {
+        id: 'tx-cloud',
+        amount: 1200,
+        type: 'expense',
+        categoryId: 2,
+        timestamp: '2026-10-18T10:00:00.000Z',
+        note: 'Cloud Hosting',
+        is_recurring: true,
+        isRecurring: true
+      },
+      // Fiber has already been paid for November
+      {
+        id: 'tx-fiber-nov',
+        amount: 2500,
+        type: 'expense',
+        categoryId: 1,
+        timestamp: '2026-11-04T10:00:00.000Z',
+        note: 'Fiber Internet',
+        is_recurring: false,
+        isRecurring: false
+      }
+    ];
+
+    const commitments = DashboardPage.getRecurringCommitments(StateManager.state);
+    assert.equal(commitments.length, 2);
+
+    const fiberCommitment = commitments.find(c => c.name === 'Fiber Internet');
+    assert.equal(fiberCommitment.status, 'processed');
+
+    const cloudCommitment = commitments.find(c => c.name === 'Cloud Hosting');
+    assert.equal(cloudCommitment.status, 'upcoming');
   });
 });

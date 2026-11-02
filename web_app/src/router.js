@@ -68,9 +68,7 @@ export const Router = {
   },
 
   renderWebsite(state) {
-    if (!state.isDemoMode) {
-      DbService.processRecurringTransactions();
-    }
+    DbService.processRecurringTransactions();
     const navIndex = state.navIndex || 0;
 
     let contentHtml = '';

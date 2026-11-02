@@ -76,12 +76,24 @@ export const AllTransactionsPage = {
   },
 
   getFilteredTransactions(state) {
+    const recurringKeys = new Set(
+      state.transactions
+        .filter(t => t.type === 'expense' && (t.isRecurring || t.is_recurring))
+        .map(t => `${String(t.categoryId || t.category_id)}_${(t.note || '').trim().toLowerCase()}_${Number(t.amount || 0)}`)
+    );
+
     return state.transactions
       .filter(t => {
         // Type filter
         if (this.activeTypeFilter === 'income' && t.type !== 'income') return false;
         if (this.activeTypeFilter === 'expense' && t.type !== 'expense') return false;
-        if (this.activeTypeFilter === 'recurring' && !(t.isRecurring || t.is_recurring)) return false;
+        if (this.activeTypeFilter === 'recurring') {
+          const isTemplate = Boolean(t.isRecurring || t.is_recurring);
+          const isInstance = Boolean(t.is_recurring_instance || t.isRecurringInstance || t.recurring_parent_id || t.recurringParentId);
+          const key = `${String(t.categoryId || t.category_id)}_${(t.note || '').trim().toLowerCase()}_${Number(t.amount || 0)}`;
+          const isLinkedRecurring = t.type === 'expense' && recurringKeys.has(key);
+          if (!isTemplate && !isInstance && !isLinkedRecurring) return false;
+        }
 
         // Category filter
         if (this.activeCategoryFilter) {
@@ -554,6 +566,15 @@ export const AllTransactionsPage = {
     const isIncome = tx.type === 'income';
     const formattedAmount = (isIncome ? '+' : '-') + Formatters.currency(tx.amount);
 
+    const isRecurringRecord = Boolean(
+      tx.isRecurring || 
+      tx.is_recurring || 
+      tx.is_recurring_instance || 
+      tx.isRecurringInstance ||
+      tx.recurring_parent_id ||
+      tx.recurringParentId
+    );
+
     return `
       <div class="tx-row ledger-tx-row" data-sync-id="${tx.sync_id || ''}" data-id="${tx.id || ''}">
         <div class="tx-left">
@@ -566,7 +587,7 @@ export const AllTransactionsPage = {
               <span class="tx-tag">${cat ? cat.name : 'Other'}</span>
               <span>•</span>
               <span>${tx.paymentMode || tx.payment_mode || 'Cash'}</span>
-              ${tx.isRecurring || tx.is_recurring ? `<span class="tx-tag">Recurring</span>` : ''}
+              ${isRecurringRecord ? `<span class="tx-tag" style="background: rgba(99, 102, 241, 0.12); color: var(--primary); border: 1px solid rgba(99, 102, 241, 0.25);">Recurring</span>` : ''}
               ${tx.goalId || tx.goal_id ? `<span class="tx-tag">Goal Linked</span>` : ''}
             </div>
           </div>

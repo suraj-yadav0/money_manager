@@ -446,17 +446,26 @@ export const InsightsPage = {
     }
 
     // 5. RECURRING SUBSCRIPTION COMMITMENTS
-    const recurringExpenses = expenses.filter(t => t.isRecurring || t.is_recurring);
-    if (recurringExpenses.length > 0) {
-      const recurringTotal = recurringExpenses.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+    const recurringTemplates = (transactions || []).filter(t => t.type === 'expense' && Boolean(t.isRecurring || t.is_recurring));
+    const recurringInstances = expenses.filter(t => Boolean(t.is_recurring_instance || t.isRecurringInstance));
+    const recurringMap = new Map();
+    for (const t of [...recurringTemplates, ...recurringInstances]) {
+      const key = (t.note || 'Commitment').trim().toLowerCase();
+      if (!recurringMap.has(key)) {
+        recurringMap.set(key, Number(t.amount || 0));
+      }
+    }
+    const recurringCommitmentsCount = recurringMap.size;
+    if (recurringCommitmentsCount > 0) {
+      const recurringTotal = Array.from(recurringMap.values()).reduce((sum, amt) => sum + amt, 0);
       const annualized = recurringTotal * 12;
       insights.push({
         type: 'budget',
-        title: `${recurringExpenses.length} Fixed Subscriptions (${Formatters.currency(annualized)}/yr)`,
+        title: `${recurringCommitmentsCount} Fixed Subscriptions (${Formatters.currency(annualized)}/yr)`,
         severity: 'info',
         badge: 'RECURRING AUDIT',
         icon: 'autorenew',
-        description: `You have ${recurringExpenses.length} automated commitments totaling ${Formatters.currency(recurringTotal)}/mo, which equals ${Formatters.currency(annualized)} annually.`,
+        description: `You have ${recurringCommitmentsCount} automated commitments totaling ${Formatters.currency(recurringTotal)}/mo, which equals ${Formatters.currency(annualized)} annually.`,
         tip: 'Regularly audit recurring subscriptions to eliminate unused streaming, SaaS, or fitness memberships.'
       });
     }

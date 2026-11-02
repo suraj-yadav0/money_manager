@@ -160,6 +160,12 @@ export const CalendarPage = {
       }
     });
 
+    const recurringDays = new Set(
+      state.transactions
+        .filter(t => t.type === 'expense' && (t.isRecurring || t.is_recurring))
+        .map(t => new Date(t.timestamp).getDate())
+    );
+
     let cellsHtml = '';
 
     // Empty lead cells
@@ -173,6 +179,7 @@ export const CalendarPage = {
       const data = dayTotals[day];
       const hasSpend = data && data.expense > 0;
       const hasIncome = data && data.income > 0;
+      const isRecurringDay = recurringDays.has(day);
 
       let borderStyle = isSelected ? '1px solid var(--primary)' : '1px solid var(--glass-border)';
       let bgStyle = isSelected ? 'var(--bg-surface-elevated)' : 'var(--bg-surface-subtle)';
@@ -182,9 +189,12 @@ export const CalendarPage = {
              style="min-height: 48px; padding: 4px; border-radius: var(--radius-xs); background: ${bgStyle}; border: ${borderStyle}; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; transition: var(--transition-fast);">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <span style="font-size: 12px; font-weight: ${isSelected ? '800' : '600'}; color: ${isSelected ? 'var(--primary)' : 'var(--text-primary)'};">${day}</span>
-            ${data && data.count > 0 ? `
-              <span style="width: 5px; height: 5px; border-radius: 50%; background: var(--text-primary);"></span>
-            ` : ''}
+            <div style="display: flex; align-items: center; gap: 2px;">
+              ${isRecurringDay ? `<span class="material-icons" style="font-size: 12px; color: var(--primary);" title="Recurring liability scheduled">event_repeat</span>` : ''}
+              ${data && data.count > 0 ? `
+                <span style="width: 5px; height: 5px; border-radius: 50%; background: var(--text-primary);"></span>
+              ` : ''}
+            </div>
           </div>
           <div style="font-size: 9px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
             ${data ? (hasIncome ? `+${Formatters.compactCurrency(data.income)}` : `-${Formatters.compactCurrency(data.expense)}`) : ''}
@@ -201,6 +211,14 @@ export const CalendarPage = {
     const icon = IconHelper.getMaterialIcon(cat ? cat.icon : 'category');
     const isIncome = tx.type === 'income';
     const formattedAmount = (isIncome ? '+' : '-') + Formatters.currency(tx.amount);
+    const isRecurringRecord = Boolean(
+      tx.isRecurring || 
+      tx.is_recurring || 
+      tx.is_recurring_instance || 
+      tx.isRecurringInstance ||
+      tx.recurring_parent_id ||
+      tx.recurringParentId
+    );
 
     return `
       <div class="tx-row" data-sync-id="${tx.sync_id || ''}" data-id="${tx.id || ''}">
@@ -212,6 +230,7 @@ export const CalendarPage = {
             <div class="tx-title">${tx.note || (cat ? cat.name : 'Transaction')}</div>
             <div class="tx-meta">
               <span class="tx-tag">${cat ? cat.name : 'Other'}</span>
+              ${isRecurringRecord ? `<span class="tx-tag" style="background: rgba(99, 102, 241, 0.12); color: var(--primary); border: 1px solid rgba(99, 102, 241, 0.25);">Recurring</span>` : ''}
             </div>
           </div>
         </div>
