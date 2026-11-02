@@ -383,7 +383,7 @@ export const AuthPage = {
                   <div class="footer-col">
                     <div class="footer-col-title">ECOSYSTEM</div>
                     <div class="footer-links">
-                      <a href="https://github.com/suraj-yadav0/money_manager/releases" target="_blank" rel="noopener noreferrer" class="footer-link">Release v1.0.11</a>
+                      <a href="https://github.com/suraj-yadav0/money_manager/releases" target="_blank" rel="noopener noreferrer" class="footer-link">Release v1.0.12</a>
                       <a href="https://github.com/suraj-yadav0/money_manager/releases/latest" target="_blank" rel="noopener noreferrer" class="footer-link">Android APK</a>
                       <a href="https://github.com/suraj-yadav0/money_manager" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub Source</a>
                       <a href="https://github.com/suraj-yadav0/money_manager/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" class="footer-link">MIT License</a>
