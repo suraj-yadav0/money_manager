@@ -119,6 +119,7 @@ async function initApp() {
       // Check if user was using Guest/Offline Mode
       if (StateManager.state.isGuestMode) {
         StateManager.loadGuestState();
+        DbService.processRecurringTransactions();
       } else {
         // Clear active data lists since they are logged out and not guest
         StateManager.setState({

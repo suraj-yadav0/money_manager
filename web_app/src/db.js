@@ -412,6 +412,7 @@ export const DbService = {
         lastSyncedAt: new Date().toISOString(),
         syncError: null
       });
+      this.processRecurringTransactions();
     }, (err) => {
       console.error('[Quantro Sync] Firestore transactions error:', err);
       StateManager.setState({ syncStatus: 'error', syncError: err.message || err.code });
@@ -552,6 +553,7 @@ export const DbService = {
       updates.bankAccounts = bankAccountsSnap.docs.map(d => normalizeBankAccount(d.data(), d.id));
 
       StateManager.setState(updates);
+      await this.processRecurringTransactions();
 
       console.log(`[Quantro Sync] syncNow completed: ${updates.transactions.length} txs, ${updates.goals.length} goals, ${(updates.bankAccounts || []).length} accounts`);
 
@@ -789,6 +791,7 @@ export const DbService = {
       
       const catId = tx.categoryId !== undefined ? tx.categoryId : (tx.category_id !== undefined ? tx.category_id : 1);
       const goalId = tx.goalId !== undefined ? tx.goalId : (tx.goal_id !== undefined ? tx.goal_id : null);
+      const accountId = tx.accountId !== undefined ? tx.accountId : (tx.account_id !== undefined ? tx.account_id : null);
       const paymentMode = tx.paymentMode || tx.payment_mode || 'Cash';
       const isRecurring = tx.isRecurring !== undefined ? Boolean(tx.isRecurring) : Boolean(tx.is_recurring);
 
@@ -800,6 +803,8 @@ export const DbService = {
         category_id: catId,
         goalId: goalId || null,
         goal_id: goalId || null,
+        accountId: accountId || null,
+        account_id: accountId || null,
         paymentMode,
         payment_mode: paymentMode,
         isRecurring,
@@ -863,6 +868,124 @@ export const DbService = {
       }
     } catch (err) {
       console.error('Error in addTransaction:', err);
+    }
+  },
+
+  async processRecurringTransactions(customDate) {
+    if (this._isProcessingRecurring) return;
+    this._isProcessingRecurring = true;
+
+    try {
+      const transactions = StateManager.state.transactions || [];
+      if (transactions.length === 0) return;
+
+      const now = customDate ? new Date(customDate) : new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+      const currentDay = now.getDate();
+      const daysInCurrentMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+      // Find recurring expense templates
+      const templates = transactions.filter(t => {
+        if (t.is_demo || t.isDemo) return false;
+        if (t.type !== 'expense') return false;
+        const isRec = Boolean(t.isRecurring || t.is_recurring);
+        if (!isRec) return false;
+        const note = (t.note || '').toLowerCase();
+        if (note.includes('salary')) return false;
+        return true;
+      });
+
+      if (templates.length === 0) return;
+
+      for (const template of templates) {
+        const templateDate = new Date(template.timestamp);
+        if (isNaN(templateDate.getTime())) continue;
+
+        const templateYear = templateDate.getFullYear();
+        const templateMonth = templateDate.getMonth();
+
+        // If template was created in current month or future, skip current month
+        if (templateYear > currentYear || (templateYear === currentYear && templateMonth >= currentMonth)) {
+          continue;
+        }
+
+        // Target day clamped to current month
+        const originalDay = templateDate.getDate();
+        const targetDay = Math.min(originalDay, daysInCurrentMonth);
+
+        // Only generate on or after scheduled date
+        if (currentDay < targetDay) {
+          continue;
+        }
+
+        // Check if an instance already exists in the current month
+        const currentTransactions = StateManager.state.transactions || [];
+        const alreadyExists = currentTransactions.some(t => {
+          if (t.type !== 'expense') return false;
+          const d = new Date(t.timestamp);
+          if (isNaN(d.getTime())) return false;
+          if (d.getFullYear() !== currentYear || d.getMonth() !== currentMonth) return false;
+
+          const catId = t.categoryId !== undefined ? t.categoryId : t.category_id;
+          const templateCatId = template.categoryId !== undefined ? template.categoryId : template.category_id;
+          if (catId !== templateCatId) return false;
+
+          const amountDiff = Math.abs(Number(t.amount || 0) - Number(template.amount || 0));
+          if (amountDiff >= 0.01) return false;
+
+          const templateNote = (template.note || '').trim().toLowerCase();
+          if (templateNote) {
+            const tNote = (t.note || '').trim().toLowerCase();
+            return tNote === templateNote;
+          }
+
+          const templateAccId = template.accountId || template.account_id;
+          if (templateAccId) {
+            const tAccId = t.accountId || t.account_id;
+            if (tAccId && String(tAccId) !== String(templateAccId)) return false;
+          }
+
+          return true;
+        });
+
+        if (!alreadyExists) {
+          const instanceTimestamp = new Date(
+            currentYear,
+            currentMonth,
+            targetDay,
+            templateDate.getHours() || 12,
+            templateDate.getMinutes() || 0,
+            templateDate.getSeconds() || 0
+          ).toISOString();
+
+          const catId = template.categoryId !== undefined ? template.categoryId : template.category_id;
+          const accId = template.accountId !== undefined ? template.accountId : template.account_id;
+          const goalId = template.goalId !== undefined ? template.goalId : template.goal_id;
+          const paymentMode = template.paymentMode || template.payment_mode || 'Auto Debit';
+
+          await this.addTransaction({
+            amount: Number(template.amount),
+            type: 'expense',
+            category_id: catId,
+            categoryId: catId,
+            account_id: accId || null,
+            accountId: accId || null,
+            goal_id: goalId || null,
+            goalId: goalId || null,
+            payment_mode: paymentMode,
+            paymentMode: paymentMode,
+            timestamp: instanceTimestamp,
+            note: template.note || '',
+            is_recurring: false,
+            isRecurring: false
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Error processing recurring transactions:', err);
+    } finally {
+      this._isProcessingRecurring = false;
     }
   },
 
