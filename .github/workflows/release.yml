@@ -47,6 +47,11 @@ jobs:
             fi
           fi
 
+      - name: Accept Android Licenses & Pre-install NDK
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;28.2.13676358" || true
+
       - name: Build Android Release APK
         run: flutter build apk --release
 
