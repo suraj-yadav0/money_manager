@@ -12,6 +12,8 @@ class CategoryBudgetStats {
   final String name;
   final String icon;
   final double budget;
+  final double baseBudget;
+  final double rollover;
   final double spent;
   final double remaining;
   final double percentUsed;
@@ -21,9 +23,12 @@ class CategoryBudgetStats {
     required this.name,
     required this.icon,
     required this.budget,
+    double? baseBudget,
+    this.rollover = 0.0,
     required this.spent,
-  }) : remaining = budget - spent,
-       percentUsed = budget > 0 ? (spent / budget * 100).clamp(0, 200) : 0;
+  }) : baseBudget = baseBudget ?? budget,
+       remaining = budget - spent,
+       percentUsed = budget > 0 ? (spent / budget * 100).clamp(0, 200) : (spent > 0 ? 100 : 0);
 
   bool get isOverBudget => spent > budget;
   bool get isNearLimit => percentUsed >= 80 && !isOverBudget;
@@ -32,6 +37,8 @@ class CategoryBudgetStats {
 /// Overall budget statistics
 class BudgetStats {
   final double totalBudget;
+  final double totalBaseBudget;
+  final double totalRollover;
   final double totalSpent;
   final double totalRemaining;
   final double dailyAllowance;
@@ -41,17 +48,20 @@ class BudgetStats {
 
   BudgetStats({
     required this.totalBudget,
+    double? totalBaseBudget,
+    this.totalRollover = 0.0,
     required this.totalSpent,
     required this.daysRemaining,
     required this.categoryStats,
     this.periodLabel = 'This Month',
-  }) : totalRemaining = totalBudget - totalSpent,
+  }) : totalBaseBudget = totalBaseBudget ?? totalBudget,
+       totalRemaining = totalBudget - totalSpent,
        dailyAllowance = daysRemaining > 0
            ? (totalBudget - totalSpent) / daysRemaining
            : 0;
 
   double get percentUsed =>
-      totalBudget > 0 ? (totalSpent / totalBudget * 100).clamp(0, 200) : 0;
+      totalBudget > 0 ? (totalSpent / totalBudget * 100).clamp(0, 200) : (totalSpent > 0 ? 100 : 0);
   bool get isOverBudget => totalSpent > totalBudget;
 }
 
@@ -66,6 +76,9 @@ final budgetStatsProvider = StreamProvider<BudgetStats>((ref) async* {
   final db = ref.watch(databaseProvider);
   final selectedMonth = ref.watch(budgetSelectedMonthProvider);
   ref.watch(categoriesProvider); // Re-run when category budgets change
+
+  final settings = await db.select(db.userSettings).getSingleOrNull();
+  final carryForwardEnabled = settings?.carryForwardEnabled ?? true;
 
   final now = DateTime.now();
   final monthStart = DateTime(selectedMonth.year, selectedMonth.month, 1);
@@ -96,11 +109,11 @@ final budgetStatsProvider = StreamProvider<BudgetStats>((ref) async* {
     periodLabel = Formatters.month(selectedMonth);
   }
 
-  // Watch all expenses for current month (exclude goal-linked)
+  // Watch all expenses up to the end of the selected month
   final transactionsQuery = db.select(db.transactions)
     ..where(
       (t) =>
-          t.timestamp.isBetweenValues(monthStart, monthEnd) &
+          t.timestamp.isSmallerOrEqualValue(monthEnd) &
           t.type.equals('expense') &
           t.goalId.isNull(),
     );
@@ -111,31 +124,80 @@ final budgetStatsProvider = StreamProvider<BudgetStats>((ref) async* {
       ..where((c) => c.monthlyBudget.isBiggerThanValue(0));
     final categories = await categoriesQuery.get();
 
-    // Calculate spending per category
+    // Separate selected month transactions and historical prior transactions
     final Map<int, double> categorySpending = {};
+    final Map<int, Map<String, double>> historicalSpending = {};
+    DateTime earliestDate = selectedMonth;
+
     for (final tx in transactions) {
-      categorySpending[tx.categoryId] =
-          (categorySpending[tx.categoryId] ?? 0) + tx.amount;
+      if (tx.timestamp.isBefore(monthStart)) {
+        if (tx.timestamp.isBefore(earliestDate)) {
+          earliestDate = tx.timestamp;
+        }
+        final key = '${tx.timestamp.year}-${tx.timestamp.month.toString().padLeft(2, '0')}';
+        final catMap = historicalSpending.putIfAbsent(tx.categoryId, () => {});
+        catMap[key] = (catMap[key] ?? 0) + tx.amount;
+      } else if (!tx.timestamp.isAfter(monthEnd)) {
+        categorySpending[tx.categoryId] =
+            (categorySpending[tx.categoryId] ?? 0) + tx.amount;
+      }
     }
+
+    final maxLookback = DateTime(selectedMonth.year, selectedMonth.month - 24, 1);
+    final categoryStartMonth = earliestDate.isBefore(maxLookback) ? maxLookback : DateTime(earliestDate.year, earliestDate.month, 1);
 
     // Build category stats for categories with budgets
     final List<CategoryBudgetStats> categoryStats = [];
+    double totalBaseBudget = 0;
+    double totalRollover = 0;
     double totalBudget = 0;
     double totalSpent = 0;
 
     for (final category in categories) {
       if (category.monthlyBudget != null && category.monthlyBudget! > 0) {
+        final baseBudget = category.monthlyBudget!;
         final spent = categorySpending[category.id] ?? 0;
+        double rollover = 0.0;
+
+        if (carryForwardEnabled && historicalSpending.containsKey(category.id)) {
+          final catSpendMap = historicalSpending[category.id]!;
+          final sortedMonths = catSpendMap.keys.toList()..sort();
+          if (sortedMonths.isNotEmpty) {
+            final firstMonthParts = sortedMonths.first.split('-');
+            final firstMonthDate = DateTime(
+              int.parse(firstMonthParts[0]),
+              int.parse(firstMonthParts[1]),
+              1,
+            );
+            DateTime cur = firstMonthDate.isAfter(categoryStartMonth)
+                ? firstMonthDate
+                : categoryStartMonth;
+
+            while (cur.isBefore(monthStart)) {
+              final key = '${cur.year}-${cur.month.toString().padLeft(2, '0')}';
+              final spentInMonth = catSpendMap[key] ?? 0.0;
+              rollover = (baseBudget + rollover) - spentInMonth;
+              cur = DateTime(cur.year, cur.month + 1, 1);
+            }
+          }
+        }
+
+        final effectiveBudget = baseBudget + rollover;
+
         categoryStats.add(
           CategoryBudgetStats(
             id: category.id,
             name: category.name,
             icon: category.icon,
-            budget: category.monthlyBudget!,
+            budget: effectiveBudget,
+            baseBudget: baseBudget,
+            rollover: rollover,
             spent: spent,
           ),
         );
-        totalBudget += category.monthlyBudget!;
+        totalBaseBudget += baseBudget;
+        totalRollover += rollover;
+        totalBudget += effectiveBudget;
         totalSpent += spent;
       }
     }
@@ -145,6 +207,8 @@ final budgetStatsProvider = StreamProvider<BudgetStats>((ref) async* {
 
     yield BudgetStats(
       totalBudget: totalBudget,
+      totalBaseBudget: totalBaseBudget,
+      totalRollover: totalRollover,
       totalSpent: totalSpent,
       daysRemaining: daysRemaining,
       categoryStats: categoryStats,

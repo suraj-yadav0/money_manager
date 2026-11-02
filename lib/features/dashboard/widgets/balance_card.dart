@@ -125,6 +125,21 @@ class BalanceCard extends ConsumerWidget {
                     ),
                   ),
                 ),
+                if (stats.carriedForward != 0) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    stats.carriedForward > 0
+                        ? 'Includes +${Formatters.currency(stats.carriedForward, symbol: currencySymbol)} carried forward'
+                        : 'Includes -${Formatters.currency(stats.carriedForward.abs(), symbol: currencySymbol)} carried deficit',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: stats.carriedForward > 0
+                          ? (isDark ? AppTheme.incomeGreen : const Color(0xFF059669))
+                          : (isDark ? AppTheme.expenseRed : const Color(0xFFDC2626)),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 8),
 
                 // Savings Rate Badge

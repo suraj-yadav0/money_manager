@@ -12,6 +12,7 @@ import '../../../core/services/sync_service.dart';
 import '../../../core/utils/constants.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../budget/providers/budget_provider.dart';
 import '../../dashboard/providers/dashboard_providers.dart';
 import '../../accounts/screens/bank_accounts_screen.dart';
 import '../../sms/screens/sms_card_deck_screen.dart';
@@ -37,6 +38,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   double _originalIncome = 0;
   String _selectedCurrency = AppConstants.defaultCurrency;
   String _originalCurrency = AppConstants.defaultCurrency;
+  bool _carryForwardEnabled = true;
 
   @override
   void initState() {
@@ -53,6 +55,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         _originalIncome = settings.monthlyIncome;
         _originalCurrency = settings.currency;
         _selectedCurrency = settings.currency;
+        _carryForwardEnabled = settings.carryForwardEnabled;
 
         final symbol =
             AppConstants.supportedCurrencies[settings.currency] ??
@@ -107,6 +110,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           id: const Value(1),
           monthlyIncome: Value(newIncome),
           currency: Value(_selectedCurrency),
+          carryForwardEnabled: Value(_carryForwardEnabled),
           updatedAt: Value(DateTime.now()),
         ),
       );
@@ -141,6 +145,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _onCarryForwardToggled(bool value) async {
+    setState(() => _carryForwardEnabled = value);
+    final db = ref.read(databaseProvider);
+    await db.into(db.userSettings).insertOnConflictUpdate(
+      UserSettingsCompanion(
+        id: const Value(1),
+        carryForwardEnabled: Value(value),
+        isSynced: const Value(false),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+    ref.invalidate(dashboardStatsProvider);
+    ref.invalidate(budgetStatsProvider);
+    ref.invalidate(userSettingsProvider);
   }
 
   Future<void> _exportBackup() async {
@@ -409,6 +429,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ],
           ),
           onTap: _showCurrencyPicker,
+        ),
+        _buildSettingTile(
+          context: context,
+          icon: _buildIconBadge(
+            icon: Icons.sync_alt_rounded,
+            color: const Color(0xFF6366F1),
+          ),
+          title: 'Monthly Carry Forward',
+          subtitle: 'Roll over unspent budgets and net cash balance into next month',
+          trailing: Switch.adaptive(
+            value: _carryForwardEnabled,
+            onChanged: _onCarryForwardToggled,
+          ),
         ),
       ],
     );

@@ -53,6 +53,8 @@ class UserSettings extends Table {
       boolean().withDefault(const Constant(false))();
   BoolColumn get showIncomeChart =>
       boolean().withDefault(const Constant(false))();
+  BoolColumn get carryForwardEnabled =>
+      boolean().withDefault(const Constant(true))();
   BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt =>
@@ -196,7 +198,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration {
@@ -319,6 +321,10 @@ class AppDatabase extends _$AppDatabase {
               'ALTER TABLE bank_accounts ADD COLUMN min_amount_due REAL');
           await customStatement(
               'ALTER TABLE bank_accounts ADD COLUMN auto_notify_bill INTEGER NOT NULL DEFAULT 1');
+        }
+        if (from < 12) {
+          await customStatement(
+              'ALTER TABLE user_settings ADD COLUMN carry_forward_enabled INTEGER NOT NULL DEFAULT 1');
         }
       },
     );

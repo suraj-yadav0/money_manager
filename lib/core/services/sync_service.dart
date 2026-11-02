@@ -301,6 +301,7 @@ class SyncService {
         'is_onboarded': s.isOnboarded,
         'biometric_enabled': s.biometricEnabled,
         'show_income_chart': s.showIncomeChart,
+        'carry_forward_enabled': s.carryForwardEnabled,
         'created_at': s.createdAt.toIso8601String(),
         'updated_at': (s.updatedAt ?? DateTime.now()).toIso8601String(),
       };
@@ -871,6 +872,7 @@ class SyncService {
                 isOnboarded: Value(raw['is_onboarded'] as bool? ?? false),
                 biometricEnabled: Value(raw['biometric_enabled'] as bool? ?? false),
                 showIncomeChart: Value(raw['show_income_chart'] as bool? ?? false),
+                carryForwardEnabled: Value(raw['carry_forward_enabled'] as bool? ?? true),
                 isSynced: const Value(true),
               ),
             );

@@ -3315,6 +3315,20 @@ class $UserSettingsTable extends UserSettings
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _carryForwardEnabledMeta =
+      const VerificationMeta('carryForwardEnabled');
+  @override
+  late final GeneratedColumn<bool> carryForwardEnabled = GeneratedColumn<bool>(
+    'carry_forward_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("carry_forward_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
   static const VerificationMeta _isSyncedMeta = const VerificationMeta(
     'isSynced',
   );
@@ -3363,6 +3377,7 @@ class $UserSettingsTable extends UserSettings
     isOnboarded,
     biometricEnabled,
     showIncomeChart,
+    carryForwardEnabled,
     isSynced,
     createdAt,
     updatedAt,
@@ -3430,6 +3445,15 @@ class $UserSettingsTable extends UserSettings
         ),
       );
     }
+    if (data.containsKey('carry_forward_enabled')) {
+      context.handle(
+        _carryForwardEnabledMeta,
+        carryForwardEnabled.isAcceptableOrUnknown(
+          data['carry_forward_enabled']!,
+          _carryForwardEnabledMeta,
+        ),
+      );
+    }
     if (data.containsKey('is_synced')) {
       context.handle(
         _isSyncedMeta,
@@ -3485,6 +3509,10 @@ class $UserSettingsTable extends UserSettings
         DriftSqlType.bool,
         data['${effectivePrefix}show_income_chart'],
       )!,
+      carryForwardEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}carry_forward_enabled'],
+      )!,
       isSynced: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_synced'],
@@ -3514,6 +3542,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
   final bool isOnboarded;
   final bool biometricEnabled;
   final bool showIncomeChart;
+  final bool carryForwardEnabled;
   final bool isSynced;
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -3525,6 +3554,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
     required this.isOnboarded,
     required this.biometricEnabled,
     required this.showIncomeChart,
+    required this.carryForwardEnabled,
     required this.isSynced,
     required this.createdAt,
     this.updatedAt,
@@ -3541,6 +3571,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
     map['is_onboarded'] = Variable<bool>(isOnboarded);
     map['biometric_enabled'] = Variable<bool>(biometricEnabled);
     map['show_income_chart'] = Variable<bool>(showIncomeChart);
+    map['carry_forward_enabled'] = Variable<bool>(carryForwardEnabled);
     map['is_synced'] = Variable<bool>(isSynced);
     map['created_at'] = Variable<DateTime>(createdAt);
     if (!nullToAbsent || updatedAt != null) {
@@ -3560,6 +3591,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
       isOnboarded: Value(isOnboarded),
       biometricEnabled: Value(biometricEnabled),
       showIncomeChart: Value(showIncomeChart),
+      carryForwardEnabled: Value(carryForwardEnabled),
       isSynced: Value(isSynced),
       createdAt: Value(createdAt),
       updatedAt: updatedAt == null && nullToAbsent
@@ -3581,6 +3613,9 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
       isOnboarded: serializer.fromJson<bool>(json['isOnboarded']),
       biometricEnabled: serializer.fromJson<bool>(json['biometricEnabled']),
       showIncomeChart: serializer.fromJson<bool>(json['showIncomeChart']),
+      carryForwardEnabled: serializer.fromJson<bool>(
+        json['carryForwardEnabled'],
+      ),
       isSynced: serializer.fromJson<bool>(json['isSynced']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
@@ -3597,6 +3632,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
       'isOnboarded': serializer.toJson<bool>(isOnboarded),
       'biometricEnabled': serializer.toJson<bool>(biometricEnabled),
       'showIncomeChart': serializer.toJson<bool>(showIncomeChart),
+      'carryForwardEnabled': serializer.toJson<bool>(carryForwardEnabled),
       'isSynced': serializer.toJson<bool>(isSynced),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime?>(updatedAt),
@@ -3611,6 +3647,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
     bool? isOnboarded,
     bool? biometricEnabled,
     bool? showIncomeChart,
+    bool? carryForwardEnabled,
     bool? isSynced,
     DateTime? createdAt,
     Value<DateTime?> updatedAt = const Value.absent(),
@@ -3622,6 +3659,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
     isOnboarded: isOnboarded ?? this.isOnboarded,
     biometricEnabled: biometricEnabled ?? this.biometricEnabled,
     showIncomeChart: showIncomeChart ?? this.showIncomeChart,
+    carryForwardEnabled: carryForwardEnabled ?? this.carryForwardEnabled,
     isSynced: isSynced ?? this.isSynced,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
@@ -3643,6 +3681,9 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
       showIncomeChart: data.showIncomeChart.present
           ? data.showIncomeChart.value
           : this.showIncomeChart,
+      carryForwardEnabled: data.carryForwardEnabled.present
+          ? data.carryForwardEnabled.value
+          : this.carryForwardEnabled,
       isSynced: data.isSynced.present ? data.isSynced.value : this.isSynced,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -3659,6 +3700,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
           ..write('isOnboarded: $isOnboarded, ')
           ..write('biometricEnabled: $biometricEnabled, ')
           ..write('showIncomeChart: $showIncomeChart, ')
+          ..write('carryForwardEnabled: $carryForwardEnabled, ')
           ..write('isSynced: $isSynced, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -3675,6 +3717,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
     isOnboarded,
     biometricEnabled,
     showIncomeChart,
+    carryForwardEnabled,
     isSynced,
     createdAt,
     updatedAt,
@@ -3690,6 +3733,7 @@ class UserSetting extends DataClass implements Insertable<UserSetting> {
           other.isOnboarded == this.isOnboarded &&
           other.biometricEnabled == this.biometricEnabled &&
           other.showIncomeChart == this.showIncomeChart &&
+          other.carryForwardEnabled == this.carryForwardEnabled &&
           other.isSynced == this.isSynced &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -3703,6 +3747,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
   final Value<bool> isOnboarded;
   final Value<bool> biometricEnabled;
   final Value<bool> showIncomeChart;
+  final Value<bool> carryForwardEnabled;
   final Value<bool> isSynced;
   final Value<DateTime> createdAt;
   final Value<DateTime?> updatedAt;
@@ -3714,6 +3759,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
     this.isOnboarded = const Value.absent(),
     this.biometricEnabled = const Value.absent(),
     this.showIncomeChart = const Value.absent(),
+    this.carryForwardEnabled = const Value.absent(),
     this.isSynced = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -3726,6 +3772,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
     this.isOnboarded = const Value.absent(),
     this.biometricEnabled = const Value.absent(),
     this.showIncomeChart = const Value.absent(),
+    this.carryForwardEnabled = const Value.absent(),
     this.isSynced = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -3738,6 +3785,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
     Expression<bool>? isOnboarded,
     Expression<bool>? biometricEnabled,
     Expression<bool>? showIncomeChart,
+    Expression<bool>? carryForwardEnabled,
     Expression<bool>? isSynced,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -3750,6 +3798,8 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
       if (isOnboarded != null) 'is_onboarded': isOnboarded,
       if (biometricEnabled != null) 'biometric_enabled': biometricEnabled,
       if (showIncomeChart != null) 'show_income_chart': showIncomeChart,
+      if (carryForwardEnabled != null)
+        'carry_forward_enabled': carryForwardEnabled,
       if (isSynced != null) 'is_synced': isSynced,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -3764,6 +3814,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
     Value<bool>? isOnboarded,
     Value<bool>? biometricEnabled,
     Value<bool>? showIncomeChart,
+    Value<bool>? carryForwardEnabled,
     Value<bool>? isSynced,
     Value<DateTime>? createdAt,
     Value<DateTime?>? updatedAt,
@@ -3776,6 +3827,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
       isOnboarded: isOnboarded ?? this.isOnboarded,
       biometricEnabled: biometricEnabled ?? this.biometricEnabled,
       showIncomeChart: showIncomeChart ?? this.showIncomeChart,
+      carryForwardEnabled: carryForwardEnabled ?? this.carryForwardEnabled,
       isSynced: isSynced ?? this.isSynced,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -3806,6 +3858,9 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
     if (showIncomeChart.present) {
       map['show_income_chart'] = Variable<bool>(showIncomeChart.value);
     }
+    if (carryForwardEnabled.present) {
+      map['carry_forward_enabled'] = Variable<bool>(carryForwardEnabled.value);
+    }
     if (isSynced.present) {
       map['is_synced'] = Variable<bool>(isSynced.value);
     }
@@ -3828,6 +3883,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
           ..write('isOnboarded: $isOnboarded, ')
           ..write('biometricEnabled: $biometricEnabled, ')
           ..write('showIncomeChart: $showIncomeChart, ')
+          ..write('carryForwardEnabled: $carryForwardEnabled, ')
           ..write('isSynced: $isSynced, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -9213,6 +9269,7 @@ typedef $$UserSettingsTableCreateCompanionBuilder =
       Value<bool> isOnboarded,
       Value<bool> biometricEnabled,
       Value<bool> showIncomeChart,
+      Value<bool> carryForwardEnabled,
       Value<bool> isSynced,
       Value<DateTime> createdAt,
       Value<DateTime?> updatedAt,
@@ -9226,6 +9283,7 @@ typedef $$UserSettingsTableUpdateCompanionBuilder =
       Value<bool> isOnboarded,
       Value<bool> biometricEnabled,
       Value<bool> showIncomeChart,
+      Value<bool> carryForwardEnabled,
       Value<bool> isSynced,
       Value<DateTime> createdAt,
       Value<DateTime?> updatedAt,
@@ -9272,6 +9330,11 @@ class $$UserSettingsTableFilterComposer
 
   ColumnFilters<bool> get showIncomeChart => $composableBuilder(
     column: $table.showIncomeChart,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get carryForwardEnabled => $composableBuilder(
+    column: $table.carryForwardEnabled,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9335,6 +9398,11 @@ class $$UserSettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get carryForwardEnabled => $composableBuilder(
+    column: $table.carryForwardEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isSynced => $composableBuilder(
     column: $table.isSynced,
     builder: (column) => ColumnOrderings(column),
@@ -9389,6 +9457,11 @@ class $$UserSettingsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<bool> get carryForwardEnabled => $composableBuilder(
+    column: $table.carryForwardEnabled,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get isSynced =>
       $composableBuilder(column: $table.isSynced, builder: (column) => column);
 
@@ -9437,6 +9510,7 @@ class $$UserSettingsTableTableManager
                 Value<bool> isOnboarded = const Value.absent(),
                 Value<bool> biometricEnabled = const Value.absent(),
                 Value<bool> showIncomeChart = const Value.absent(),
+                Value<bool> carryForwardEnabled = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime?> updatedAt = const Value.absent(),
@@ -9448,6 +9522,7 @@ class $$UserSettingsTableTableManager
                 isOnboarded: isOnboarded,
                 biometricEnabled: biometricEnabled,
                 showIncomeChart: showIncomeChart,
+                carryForwardEnabled: carryForwardEnabled,
                 isSynced: isSynced,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -9461,6 +9536,7 @@ class $$UserSettingsTableTableManager
                 Value<bool> isOnboarded = const Value.absent(),
                 Value<bool> biometricEnabled = const Value.absent(),
                 Value<bool> showIncomeChart = const Value.absent(),
+                Value<bool> carryForwardEnabled = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime?> updatedAt = const Value.absent(),
@@ -9472,6 +9548,7 @@ class $$UserSettingsTableTableManager
                 isOnboarded: isOnboarded,
                 biometricEnabled: biometricEnabled,
                 showIncomeChart: showIncomeChart,
+                carryForwardEnabled: carryForwardEnabled,
                 isSynced: isSynced,
                 createdAt: createdAt,
                 updatedAt: updatedAt,

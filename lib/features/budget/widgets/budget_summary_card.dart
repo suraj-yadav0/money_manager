@@ -74,6 +74,21 @@ class BudgetSummaryCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (stats.totalRollover != 0) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        stats.totalRollover > 0
+                            ? 'Includes +${Formatters.currency(stats.totalRollover)} carried forward'
+                            : 'Includes -${Formatters.currency(stats.totalRollover.abs())} carried deficit',
+                        style: GoogleFonts.inter(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w500,
+                          color: stats.totalRollover > 0
+                              ? AppTheme.incomeGreen
+                              : AppTheme.expenseRed,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

@@ -65,6 +65,21 @@ class CategoryBudgetCard extends StatelessWidget {
                           '${Formatters.currency(stats.spent)} of ${Formatters.currency(stats.budget)}',
                           style: theme.textTheme.bodySmall,
                         ),
+                        if (stats.rollover != 0) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            stats.rollover > 0
+                                ? '+${Formatters.currency(stats.rollover)} carried forward'
+                                : '-${Formatters.currency(stats.rollover.abs())} carried deficit',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: stats.rollover > 0
+                                  ? AppTheme.incomeGreen
+                                  : AppTheme.expenseRed,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),

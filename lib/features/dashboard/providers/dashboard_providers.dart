@@ -137,6 +137,8 @@ class DashboardStats {
   final double totalIncome;
   final double totalExpenses;
   final double balance;
+  final double carriedForward;
+  final double periodNet;
   final double dailyBurnRate;
   final int daysRemaining;
   final double projectedBalance;
@@ -151,6 +153,8 @@ class DashboardStats {
     required this.totalIncome,
     required this.totalExpenses,
     required this.balance,
+    this.carriedForward = 0.0,
+    this.periodNet = 0.0,
     required this.dailyBurnRate,
     required this.daysRemaining,
     required this.projectedBalance,
@@ -168,6 +172,8 @@ class DashboardStats {
     totalIncome: 0,
     totalExpenses: 0,
     balance: 0,
+    carriedForward: 0,
+    periodNet: 0,
     dailyBurnRate: 0,
     daysRemaining: 0,
     projectedBalance: 0,
@@ -264,8 +270,31 @@ final dashboardStatsProvider = StreamProvider<DashboardStats>((ref) async* {
       categoryBreakdown['Savings Goals'] = goalAllocatedAmount;
     }
 
-    // Calculate metrics
-    final balance = totalIncome - totalExpenses;
+    // Calculate carry forward metrics if enabled
+    final carryForwardEnabled = settings?.carryForwardEnabled ?? true;
+    double carriedForward = 0.0;
+    final isEligibleFilter = filter == DashboardDateFilter.thisMonth ||
+        filter == DashboardDateFilter.lastMonth ||
+        filter == DashboardDateFilter.thisYear;
+
+    if (carryForwardEnabled && isEligibleFilter) {
+      final priorQuery = db.select(db.transactions)
+        ..where((t) => t.timestamp.isSmallerThanValue(range.start));
+      final priorTxs = await priorQuery.get();
+      double priorIncome = 0;
+      double priorExpenses = 0;
+      for (final tx in priorTxs) {
+        if (tx.type == 'income') {
+          priorIncome += tx.amount;
+        } else {
+          priorExpenses += tx.amount;
+        }
+      }
+      carriedForward = priorIncome - priorExpenses;
+    }
+
+    final periodNet = totalIncome - totalExpenses;
+    final balance = periodNet + carriedForward;
 
     double dailyBurnRate = 0;
     int daysRemaining = 0;
@@ -296,6 +325,8 @@ final dashboardStatsProvider = StreamProvider<DashboardStats>((ref) async* {
       totalIncome: totalIncome,
       totalExpenses: totalExpenses,
       balance: balance,
+      carriedForward: carriedForward,
+      periodNet: periodNet,
       dailyBurnRate: dailyBurnRate.toDouble(),
       daysRemaining: daysRemaining,
       projectedBalance: projectedBalance,
