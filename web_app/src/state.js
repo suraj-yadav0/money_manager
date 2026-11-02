@@ -45,6 +45,7 @@ class AppStateManager {
         currency: 'INR',
         isOnboarded: false,
         showIncomeChart: false,
+        carryForwardEnabled: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },

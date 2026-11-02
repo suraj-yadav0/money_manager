@@ -107,6 +107,11 @@ export const BudgetPage = {
                 <span class="kpi-badge ${stats.percentUsed > 100 ? 'negative' : 'positive'}">
                   ${stats.percentUsed.toFixed(0)}% Allocated
                 </span>
+                ${stats.totalRollover !== 0 ? `
+                  <span style="font-size: 11px; margin-left: 6px; color: ${stats.totalRollover > 0 ? 'var(--secondary)' : 'var(--error)'}; font-weight: 500;">
+                    (${stats.totalRollover > 0 ? '+' : '-'}${Formatters.currency(Math.abs(stats.totalRollover))} carried forward)
+                  </span>
+                ` : ''}
               </div>
             </div>
 
@@ -280,7 +285,14 @@ export const BudgetPage = {
 
                     <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
                       <span style="color: var(--text-muted);">Spent: <b style="color: var(--text-primary);">${Formatters.currency(item.spent)}</b></span>
-                      <span style="color: var(--text-muted);">Cap: <b style="color: var(--text-primary);">${Formatters.currency(item.budget)}</b></span>
+                      <span style="color: var(--text-muted);">
+                        Cap: <b style="color: var(--text-primary);">${Formatters.currency(item.budget)}</b>
+                        ${item.rollover !== 0 ? `
+                          <span style="font-size: 11px; margin-left: 4px; color: ${item.rollover > 0 ? 'var(--secondary)' : 'var(--error)'}; font-weight: 500;">
+                            (${item.rollover > 0 ? '+' : '-'}${Formatters.currency(Math.abs(item.rollover))} rollover)
+                          </span>
+                        ` : ''}
+                      </span>
                     </div>
 
                     <div class="progress-track">
@@ -321,6 +333,8 @@ export const BudgetPage = {
     const isPastMonth = year < now.getFullYear() || (year === now.getFullYear() && month < now.getMonth());
     const isFutureMonth = year > now.getFullYear() || (year === now.getFullYear() && month > now.getMonth());
 
+    const carryForwardEnabled = state.userSettings?.carryForwardEnabled !== false && state.userSettings?.carry_forward_enabled !== false;
+
     const expenses = (state.transactions || []).filter(t => {
       const ts = new Date(t.timestamp);
       return t.type === 'expense' && !t.goal_id && !t.goalId && ts >= start && ts <= end;
@@ -330,13 +344,49 @@ export const BudgetPage = {
     for (const tx of expenses) {
       const cat = findCategory(state.categories, tx.categoryId || tx.category_id);
       const key = cat ? (cat.id || cat.sync_id || cat.name) : (tx.categoryId || 'other');
-      categorySpending[key] = (categorySpending[key] || 0) + tx.amount;
+      categorySpending[key] = (categorySpending[key] || 0) + Number(tx.amount || 0);
       if (cat && cat.name) {
-        categorySpending[cat.name] = (categorySpending[cat.name] || 0) + tx.amount;
+        categorySpending[cat.name] = (categorySpending[cat.name] || 0) + Number(tx.amount || 0);
       }
     }
 
+    // Historical expenses before target month
+    const historicalCategorySpending = {};
+    let earliestTxDate = start;
+
+    if (carryForwardEnabled) {
+      const pastExpenses = (state.transactions || []).filter(t => {
+        const ts = new Date(t.timestamp);
+        return t.type === 'expense' && !t.goal_id && !t.goalId && ts < start;
+      });
+
+      for (const tx of pastExpenses) {
+        const ts = new Date(tx.timestamp);
+        if (ts < earliestTxDate) earliestTxDate = ts;
+        const monthKey = `${ts.getFullYear()}-${String(ts.getMonth() + 1).padStart(2, '0')}`;
+        const cat = findCategory(state.categories, tx.categoryId || tx.category_id);
+        const keys = [];
+        if (cat) {
+          if (cat.id) keys.push(cat.id);
+          if (cat.sync_id) keys.push(cat.sync_id);
+          if (cat.name) keys.push(cat.name);
+        } else if (tx.categoryId) {
+          keys.push(tx.categoryId);
+        }
+
+        for (const k of keys) {
+          if (!historicalCategorySpending[k]) historicalCategorySpending[k] = {};
+          historicalCategorySpending[k][monthKey] = (historicalCategorySpending[k][monthKey] || 0) + Number(tx.amount || 0);
+        }
+      }
+    }
+
+    const maxLookback = new Date(year, month - 24, 1);
+    const globalCategoryStart = earliestTxDate < maxLookback ? maxLookback : new Date(earliestTxDate.getFullYear(), earliestTxDate.getMonth(), 1);
+
     const categoryStats = [];
+    let totalBaseBudget = 0;
+    let totalRollover = 0;
     let totalBudget = 0;
     let totalSpent = 0;
 
@@ -352,21 +402,47 @@ export const BudgetPage = {
     }
 
     for (const cat of uniqueCategories) {
-      const budget = Number(cat.monthly_budget || cat.monthlyBudget || 0);
-      if (budget > 0) {
+      const baseBudget = Number(cat.monthly_budget || cat.monthlyBudget || 0);
+      if (baseBudget > 0) {
         const spent = categorySpending[cat.id] || categorySpending[cat.sync_id] || categorySpending[cat.name] || 0;
-        
+        let rollover = 0;
+
+        if (carryForwardEnabled) {
+          const catHistMap = historicalCategorySpending[cat.id] || historicalCategorySpending[cat.sync_id] || historicalCategorySpending[cat.name];
+          if (catHistMap) {
+            const sortedMonths = Object.keys(catHistMap).sort();
+            if (sortedMonths.length > 0) {
+              const [firstY, firstM] = sortedMonths[0].split('-').map(Number);
+              const firstMonthDate = new Date(firstY, firstM - 1, 1);
+              let cur = firstMonthDate > globalCategoryStart ? firstMonthDate : globalCategoryStart;
+
+              while (cur < start) {
+                const curKey = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`;
+                const spentInCur = catHistMap[curKey] || 0;
+                rollover = (baseBudget + rollover) - spentInCur;
+                cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+              }
+            }
+          }
+        }
+
+        const effectiveBudget = baseBudget + rollover;
+
         categoryStats.push({
           id: cat.id,
           sync_id: cat.sync_id,
           name: cat.name,
           icon: cat.icon,
-          budget: budget,
+          budget: effectiveBudget,
+          baseBudget,
+          rollover,
           spent,
-          percentUsed: (spent / budget) * 100
+          percentUsed: effectiveBudget > 0 ? (spent / effectiveBudget) * 100 : (spent > 0 ? 100 : 0)
         });
 
-        totalBudget += budget;
+        totalBaseBudget += baseBudget;
+        totalRollover += rollover;
+        totalBudget += effectiveBudget;
         totalSpent += spent;
       }
     }
@@ -396,9 +472,11 @@ export const BudgetPage = {
 
     return {
       totalBudget,
+      totalBaseBudget,
+      totalRollover,
       totalSpent,
       totalRemaining,
-      percentUsed: totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0,
+      percentUsed: totalBudget > 0 ? (totalSpent / totalBudget) * 100 : (totalSpent > 0 ? 100 : 0),
       dailyAllowance,
       daysRemaining,
       daysLabel,

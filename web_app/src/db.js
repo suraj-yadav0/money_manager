@@ -317,6 +317,7 @@ function normalizeSettings(raw, docId) {
   const syncId = raw.sync_id || docId;
   const monthlyIncome = Number(raw.monthly_income !== undefined ? raw.monthly_income : (raw.monthlyIncome || 0));
   const isOnboarded = raw.is_onboarded !== undefined ? Boolean(raw.is_onboarded) : (raw.isOnboarded !== undefined ? Boolean(raw.isOnboarded) : true);
+  const carryForwardEnabled = raw.carry_forward_enabled !== undefined ? Boolean(raw.carry_forward_enabled) : (raw.carryForwardEnabled !== undefined ? Boolean(raw.carryForwardEnabled) : true);
 
   return {
     ...raw,
@@ -326,6 +327,8 @@ function normalizeSettings(raw, docId) {
     currency: raw.currency || 'INR',
     isOnboarded,
     is_onboarded: isOnboarded,
+    carryForwardEnabled,
+    carry_forward_enabled: carryForwardEnabled,
     showIncomeChart: Boolean(raw.show_income_chart || raw.showIncomeChart),
     show_income_chart: Boolean(raw.show_income_chart || raw.showIncomeChart),
     created_at: parseTimestamp(raw.created_at || raw.createdAt),
@@ -579,6 +582,7 @@ export const DbService = {
       currency: 'INR',
       is_onboarded: true, // Logged in cloud user is considered onboarded
       show_income_chart: false,
+      carry_forward_enabled: true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -752,6 +756,14 @@ export const DbService = {
     if (updates.monthlyIncome !== undefined) settings.monthly_income = updates.monthlyIncome;
     if (updates.isOnboarded !== undefined) settings.is_onboarded = updates.isOnboarded;
     if (updates.showIncomeChart !== undefined) settings.show_income_chart = updates.showIncomeChart;
+    if (updates.carryForwardEnabled !== undefined) {
+      settings.carryForwardEnabled = Boolean(updates.carryForwardEnabled);
+      settings.carry_forward_enabled = Boolean(updates.carryForwardEnabled);
+    }
+    if (updates.carry_forward_enabled !== undefined) {
+      settings.carryForwardEnabled = Boolean(updates.carry_forward_enabled);
+      settings.carry_forward_enabled = Boolean(updates.carry_forward_enabled);
+    }
 
     if (isGuest) {
       StateManager.state.userSettings = settings;

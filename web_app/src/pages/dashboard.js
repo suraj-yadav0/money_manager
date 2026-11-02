@@ -87,6 +87,11 @@ export const DashboardPage = {
                   ${stats.savingsRate}% retained
                 </span>
               </div>
+              ${stats.carriedForward !== 0 ? `
+                <div style="font-size: 11.5px; color: ${stats.carriedForward > 0 ? 'var(--secondary)' : 'var(--error)'}; margin-top: 4px; font-weight: 500;">
+                  Includes ${stats.carriedForward > 0 ? '+' : '-'}${Formatters.currency(Math.abs(stats.carriedForward))} carried forward
+                </div>
+              ` : ''}
               <div class="kpi-ratio-section">
                 <div class="kpi-ratio-bar">
                   <div class="kpi-ratio-fill inflow" style="width: ${stats.inflowRatio}%;"></div>
@@ -754,7 +759,25 @@ export const DashboardPage = {
       }
     }
 
-    const balance = totalIncome - totalExpenses;
+    const carryForwardEnabled = state.userSettings?.carryForwardEnabled !== false && state.userSettings?.carry_forward_enabled !== false;
+    let carriedForward = 0;
+
+    const isEligibleFilter = state.dateFilter === 'thisMonth' || state.dateFilter === 'lastMonth' || state.dateFilter === 'thisYear';
+    if (carryForwardEnabled && isEligibleFilter) {
+      for (const tx of (state.transactions || [])) {
+        const ts = new Date(tx.timestamp);
+        if (ts < range.start) {
+          if (tx.type === 'income') {
+            carriedForward += Number(tx.amount || 0);
+          } else {
+            carriedForward -= Number(tx.amount || 0);
+          }
+        }
+      }
+    }
+
+    const periodNet = totalIncome - totalExpenses;
+    const balance = periodNet + carriedForward;
     const savingsRate = totalIncome > 0 ? Math.max(0, Math.round(((totalIncome - totalExpenses) / totalIncome) * 100)) : 0;
 
     const totalVolume = totalIncome + totalExpenses;
@@ -811,6 +834,8 @@ export const DashboardPage = {
       capitalAllocations,
       consumptionExpenses,
       balance,
+      carriedForward,
+      periodNet,
       savingsRate,
       inflowRatio,
       dailyBurnRate,

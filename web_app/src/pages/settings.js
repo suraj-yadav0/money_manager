@@ -166,6 +166,18 @@ export const SettingsPage = {
             <span class="material-icons" style="color: var(--text-muted);">chevron_right</span>
           </div>
 
+          <!-- Monthly Carry Forward Toggle -->
+          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-surface-subtle); border: 1px solid var(--glass-border); padding: 16px 20px; border-radius: var(--radius-md);">
+            <div>
+              <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">Monthly Carry Forward</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Roll over unspent budgets and net cash balance into next month</div>
+            </div>
+            <label class="modern-switch">
+              <input type="checkbox" id="settings-carry-forward-toggle" ${settings.carryForwardEnabled !== false && settings.carry_forward_enabled !== false ? 'checked' : ''}>
+              <span class="modern-switch-slider"></span>
+            </label>
+          </div>
+
           <!-- Data Export -->
           <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-surface-subtle); border: 1px solid var(--glass-border); padding: 16px 20px; border-radius: var(--radius-md); cursor: pointer;" id="settings-export-row">
             <div>
@@ -261,15 +273,25 @@ export const SettingsPage = {
     // Save preferences
     document.getElementById('settings-save-btn')?.addEventListener('click', async () => {
       const incomeVal = parseFloat(document.getElementById('settings-income-field')?.value) || 0;
+      const carryForwardToggle = document.getElementById('settings-carry-forward-toggle');
+      const carryForwardEnabled = carryForwardToggle ? carryForwardToggle.checked : true;
       await DbService.saveUserSettings({
         monthlyIncome: incomeVal,
         isOnboarded: true,
+        carryForwardEnabled,
         theme: StateManager.state.theme
       });
       this.initialTheme = null;
       this.incomeInputVal = '';
       Router.closeOverlay();
       StateManager.notify();
+    });
+
+    // Immediate carry forward toggle change
+    document.getElementById('settings-carry-forward-toggle')?.addEventListener('change', async (e) => {
+      await DbService.saveUserSettings({
+        carryForwardEnabled: e.target.checked
+      });
     });
 
     // Manual sync button
