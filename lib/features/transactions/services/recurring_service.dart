@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -6,17 +7,18 @@ import '../../../core/providers/app_state_provider.dart';
 import 'package:uuid/uuid.dart';
 
 /// Service to handle recurring transactions
-/// Automatically generates monthly income transactions based on recurring templates
+/// Automatically generates monthly liability transactions based on recurring templates
 class RecurringTransactionService {
   final AppDatabase db;
 
   RecurringTransactionService(this.db);
 
-  /// Process recurring transactions on app startup
-  /// Creates new transaction instances for the current month if they don't exist
-  Future<void> processRecurringTransactions() async {
-    final now = DateTime.now();
+  /// Process recurring transactions on app startup or resume
+  /// Creates new transaction instances for the current month when the scheduled date has arrived
+  Future<void> processRecurringTransactions({DateTime? currentDate}) async {
+    final now = currentDate ?? DateTime.now();
     final currentMonthStart = DateTime(now.year, now.month, 1);
+    final daysInCurrentMonth = DateTime(now.year, now.month + 1, 0).day;
 
     // Unmark any recurring salary or income templates so they never auto-credit
     await (db.update(db.transactions)
@@ -38,16 +40,29 @@ class RecurringTransactionService {
         continue;
       }
 
-      // Check if a transaction for this month already exists
-      // We look for transactions with the same categoryId, type, and amount
-      // in the current month
+      // If template was created in the current month or future, skip current month
+      final templateMonth =
+          DateTime(template.timestamp.year, template.timestamp.month);
+      if (!templateMonth.isBefore(currentMonthStart)) {
+        continue;
+      }
+
+      // Target day in the current month, clamped to days in month
+      final targetDay = math.min(template.timestamp.day, daysInCurrentMonth);
+
+      // Only generate on or after the scheduled date of the month
+      if (now.day < targetDay) {
+        continue;
+      }
+
+      // Check if a transaction for this template already exists in this month
       final existingThisMonth = await _hasTransactionThisMonth(
         template,
         currentMonthStart,
       );
 
       if (!existingThisMonth) {
-        await _createRecurringInstance(template, currentMonthStart);
+        await _createRecurringInstance(template, now.year, now.month, targetDay);
       }
     }
   }
@@ -67,40 +82,97 @@ class RecurringTransactionService {
       999,
     );
 
-    // For recurring income (like salary), we check by categoryId and type
-    // For the same month - we don't want duplicate salary entries
-    final existing =
-        await (db.select(db.transactions)..where(
-              (t) =>
-                  t.categoryId.equals(template.categoryId) &
-                  t.type.equals(template.type) &
-                  t.timestamp.isBetweenValues(monthStart, monthEnd),
-            ))
-            .get();
+    final transactionsInMonth = await (db.select(db.transactions)
+          ..where((t) =>
+              t.categoryId.equals(template.categoryId) &
+              t.type.equals(template.type) &
+              t.timestamp.isBetweenValues(monthStart, monthEnd)))
+        .get();
 
-    return existing.isNotEmpty;
+    final templateNote = template.note?.trim().toLowerCase() ?? '';
+
+    return transactionsInMonth.any((t) {
+      // Verify amount within 1 cent/paisa
+      final amountMatches = (t.amount - template.amount).abs() < 0.01;
+      if (!amountMatches) return false;
+
+      // If template has a note, match it
+      final tNote = t.note?.trim().toLowerCase() ?? '';
+      if (templateNote.isNotEmpty) {
+        return tNote == templateNote;
+      }
+
+      // If template has no note, also check account if linked
+      if (template.accountId != null && t.accountId != null) {
+        return t.accountId == template.accountId;
+      }
+
+      return true;
+    });
   }
 
-  /// Create a new instance of a recurring transaction for the given month
+  /// Create a new instance of a recurring transaction for the given month on its target day
   Future<void> _createRecurringInstance(
     Transaction template,
-    DateTime monthStart,
+    int year,
+    int month,
+    int day,
   ) async {
-    await db
-        .into(db.transactions)
-        .insert(
+    final instanceDate = DateTime(
+      year,
+      month,
+      day,
+      template.timestamp.hour,
+      template.timestamp.minute,
+      template.timestamp.second,
+    );
+
+    await db.into(db.transactions).insert(
           TransactionsCompanion.insert(
             syncId: Value(const Uuid().v4()),
             amount: template.amount,
             type: template.type,
             categoryId: template.categoryId,
             goalId: Value(template.goalId),
-            timestamp: monthStart, // Set to 1st of the month
+            accountId: Value(template.accountId),
+            timestamp: instanceDate,
             note: Value(template.note),
             paymentMode: Value(template.paymentMode),
-            isRecurring: const Value(false), // Instance is not a template
+            isRecurring: const Value(false),
+            isSynced: const Value(false),
           ),
         );
+
+    // If an account is linked, adjust balance
+    if (template.accountId != null) {
+      final currentAcc = await (db.select(db.bankAccounts)
+            ..where((a) => a.id.equals(template.accountId!)))
+          .getSingleOrNull();
+
+      if (currentAcc != null) {
+        final isCredit = currentAcc.accountType == 'credit_card';
+        final double newBal;
+        if (isCredit) {
+          newBal = template.type == 'expense'
+              ? currentAcc.balance + template.amount
+              : (currentAcc.balance - template.amount).clamp(0.0, double.infinity);
+        } else {
+          newBal = template.type == 'expense'
+              ? currentAcc.balance - template.amount
+              : currentAcc.balance + template.amount;
+        }
+
+        await (db.update(db.bankAccounts)
+              ..where((a) => a.id.equals(currentAcc.id)))
+            .write(
+          BankAccountsCompanion(
+            balance: Value(newBal),
+            updatedAt: Value(DateTime.now()),
+            isSynced: const Value(false),
+          ),
+        );
+      }
+    }
   }
 
   /// Get all recurring transaction templates
@@ -118,6 +190,8 @@ class RecurringTransactionService {
     String? note,
     String? paymentMode,
     int? goalId,
+    int? accountId,
+    DateTime? timestamp,
   }) async {
     final now = DateTime.now();
 
@@ -126,11 +200,13 @@ class RecurringTransactionService {
         .into(db.transactions)
         .insert(
           TransactionsCompanion.insert(
+            syncId: Value(const Uuid().v4()),
             amount: amount,
             type: type,
             categoryId: categoryId,
             goalId: Value(goalId),
-            timestamp: DateTime(now.year, now.month, 1),
+            accountId: Value(accountId),
+            timestamp: timestamp ?? DateTime(now.year, now.month, 1),
             note: Value(note),
             paymentMode: Value(paymentMode),
             isRecurring: const Value(true),

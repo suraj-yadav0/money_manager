@@ -30,7 +30,8 @@ class AppShell extends ConsumerStatefulWidget {
 /// Provider for the current bottom navigation index
 final navIndexProvider = StateProvider<int>((ref) => 0);
 
-class _AppShellState extends ConsumerState<AppShell> {
+class _AppShellState extends ConsumerState<AppShell>
+    with WidgetsBindingObserver {
   final _screens = const [
     DashboardScreen(),
     BudgetScreen(),
@@ -41,6 +42,7 @@ class _AppShellState extends ConsumerState<AppShell> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _processRecurringTransactions();
       _scanSmsInbox();
@@ -48,6 +50,20 @@ class _AppShellState extends ConsumerState<AppShell> {
       _checkCreditCardBillReminders();
       _checkAppUpdates();
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _processRecurringTransactions();
+      _checkCreditCardBillReminders();
+    }
   }
 
   Future<void> _checkAppUpdates() async {
