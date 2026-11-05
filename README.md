@@ -61,6 +61,6 @@ cd web_app && npm test
 
 ## License
 
-Quantro is licensed under the [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE) to guarantee that it remains strictly copyleft and open source. Any network deployments or modifications must share their complete source code under the same terms.
+**Quantro** is licensed under the [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE) to guarantee that it remains strictly copyleft and open source. Any network deployments or modifications must share their complete source code under the same terms.
 
 For contribution workflow and coding standards, refer to [CONTRIBUTING.md](CONTRIBUTING.md).
